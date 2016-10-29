@@ -38,10 +38,24 @@
 
 #define SU_COS cos
 #define SU_SIN sin
+#define SU_LOG log10
+#define SU_EXP exp
+#define SU_POW pow
+#define SU_ABS fabs
 
+#define SUFLOAT_MIN_REF_MAG 1e-8
+#define SUFLOAT_MIN_REF_DB  -160
 #define SUFLOAT_THRESHOLD 1e-15
+#define SUFLOAT_MAX_REF_MAG 1
+#define SUFLOAT_MAX_REF_DB  0
 
 #define SUFLOAT_EQUAL(a, b) (fabs(a - b) <= SUFLOAT_THRESHOLD)
 #define SU_MAX(a, b) ((a) > (b) ? (a) : (b))
+
+#define SU_DB_RAW(p) (20 * SU_LOG(p))
+#define SU_DB(p) SU_DB_RAW((p) + SUFLOAT_MIN_REF_MAG)
+
+#define SU_MAG_RAW(d) SU_POW(10.0, (d) / 20.)
+#define SU_MAG(d) (SU_MAG_RAW(d) - SUFLOAT_MIN_REF_MAG)
 
 #endif /* _SIGUTILS_TYPES_H */

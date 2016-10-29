@@ -56,4 +56,7 @@
 #define SU_REL2ANG_FREQ(freq) (PI * (freq))
 #define SU_ANG2REL_FREQ(omrel) ((omrel) / (PI))
 
+#define SU_T2N(fs, t) ((unsigned int) floor((t) * (SUFLOAT) (fs)))
+#define SU_N2T(fs, n) ((unsigned int) floor((n) / (SUFLOAT) (fs)))
+
 #endif /* _SIGUTILS_SAMPLING_H */

@@ -93,9 +93,8 @@ su_test_buffer_mean(const SUFLOAT *buffer, unsigned int size)
   SUFLOAT size_inv = 1. / size;
   SUFLOAT result = 0.;
 
-  while (size--) {
+  while (size--)
     result += size_inv * buffer[size];
-  }
 
   return result;
 }
@@ -109,11 +108,22 @@ su_test_buffer_std(const SUFLOAT *buffer, unsigned int size)
 
   mean = su_test_buffer_mean(buffer, size);
 
-  while (size--) {
+  while (size--)
     result += size_inv * (buffer[size] - mean) * (buffer[size] - mean);
-  }
 
   return sqrt(result);
+}
+
+SUFLOAT
+su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size)
+{
+  SUFLOAT max = 0;
+
+  while (size--)
+    if (max < SU_ABS(buffer[size]))
+      max = SU_ABS(buffer[size]);
+
+  return SU_DB(max);
 }
 
 SUFLOAT

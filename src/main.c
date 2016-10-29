@@ -14,6 +14,7 @@
 #include <sigutils/sampling.h>
 #include <sigutils/ncqo.h>
 #include <sigutils/iir.h>
+#include <sigutils/agc.h>
 #include "test.h"
 
 SUBOOL
@@ -126,18 +127,18 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
         &lpf,
         su_ncqo_read_i(&ncqo));
 
-#ifdef SU_DUMP_SIGNALS
-  SU_TEST_ASSERT(
-      su_test_buffer_dump_matlab(
-          buffer,
-          SU_TEST_SIGNAL_BUFFER_SIZE,
-          "hi.m",
-          "hi"));
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            buffer,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "hi.m",
+            "hi"));
 
-  printf(" hi pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-  printf(" hi mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-  printf(" hi std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-#endif
+    printf(" hi pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+  }
 
   su_ncqo_set_freq(&ncqo, .125);
 
@@ -146,18 +147,18 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
         &lpf,
         su_ncqo_read_i(&ncqo));
 
-#ifdef SU_DUMP_SIGNALS
-  SU_TEST_ASSERT(
-      su_test_buffer_dump_matlab(
-          buffer,
-          SU_TEST_SIGNAL_BUFFER_SIZE,
-          "lo.m",
-          "lo"));
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            buffer,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "lo.m",
+            "lo"));
 
-  printf(" lo pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-  printf(" lo mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-  printf(" lo std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-#endif
+    printf(" lo pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+  }
 
   ok = SU_TRUE;
 
@@ -172,13 +173,306 @@ done:
   return ok;
 }
 
+SUBOOL
+su_test_check_peak(
+    const su_test_context_t *ctx,
+    const SUFLOAT *buffer,
+    unsigned int size,
+    unsigned int window,
+    SUFLOAT peak_low,
+    SUFLOAT peak_high)
+{
+  unsigned int i, j;
+  SUFLOAT peak = 0;
+  SUBOOL ok = SU_FALSE;
+
+  /* Skip window. AGC needs some time to start */
+  for (i = window; i < size - window; ++i) {
+    peak = 0;
+    for (j = 0; j < window; ++j) {
+      if (SU_ABS(buffer[i + j]) > peak)
+        peak = SU_ABS(buffer[i + j]);
+    }
+
+    SU_TEST_ASSERT(peak >= peak_low);
+    SU_TEST_ASSERT(peak <= peak_high);
+  }
+
+  ok = SU_TRUE;
+
+done:
+  return ok;
+}
+
+SUBOOL
+su_test_agc_transient(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  SUFLOAT t;
+  su_agc_t agc = su_agc_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+
+  unsigned int p = 0;
+
+  SU_TEST_START_TICKLESS(ctx);
+
+  /* Initialize */
+  SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  agc_params.delay_line_size  = 10;
+  agc_params.mag_history_size = 10;
+  agc_params.fast_rise_t      = 2;
+  agc_params.fast_fall_t      = 4;
+
+  agc_params.slow_rise_t      = 20;
+  agc_params.slow_fall_t      = 40;
+
+  agc_params.threshold        = SU_DB(2e-2);
+
+  agc_params.hang_max         = 30;
+
+  if (!su_agc_init(&agc, &agc_params))
+    goto done;
+
+  /* Create a spike */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    t = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
+    buffer[p] = 1e-2 * rand() / (double) RAND_MAX;
+
+    buffer[p] += SU_EXP(-t * t);
+  }
+
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            buffer,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "spike.m",
+            "spike"));
+  }
+
+  SU_TEST_TICK(ctx);
+
+  /* Feed the AGC and put samples back in buffer */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    buffer[p] = su_agc_feed(&agc, buffer[p]);
+  }
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  su_agc_finalize(&agc);
+
+  if (buffer != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              buffer,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "corrected.m",
+              "corrected"));
+    }
+
+    free(buffer);
+  }
+
+  return ok;
+}
+
+#define SU_TEST_AGC_SIGNAL_FREQ 0.025
+#define SU_TEST_AGC_WINDOW (1. / SU_TEST_AGC_SIGNAL_FREQ)
+
+SUBOOL
+su_test_agc_steady_rising(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  SUFLOAT t;
+  su_agc_t agc = su_agc_INITIALIZER;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  unsigned int p = 0;
+
+  SU_TEST_START_TICKLESS(ctx);
+
+  /* Initialize */
+  SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  agc_params.delay_line_size  = 10;
+  agc_params.mag_history_size = 10;
+  agc_params.fast_rise_t      = 2;
+  agc_params.fast_fall_t      = 4;
+
+  agc_params.slow_rise_t      = 20;
+  agc_params.slow_fall_t      = 40;
+
+  agc_params.threshold        = SU_DB(2e-2);
+
+  agc_params.hang_max         = 30;
+  agc_params.slope_factor     = 0;
+
+  if (!su_agc_init(&agc, &agc_params))
+    goto done;
+
+  su_ncqo_init(&ncqo, SU_TEST_AGC_SIGNAL_FREQ);
+
+  /* Create a rising sinusoid */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    t = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
+    buffer[p] = 1e-2 * rand() / (double) RAND_MAX;
+
+    buffer[p] += 0.2 * floor(1 + 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE) * su_ncqo_read_i(&ncqo);
+  }
+
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            buffer,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "steady.m",
+            "steady"));
+  }
+
+  SU_TEST_TICK(ctx);
+
+  /* Feed the AGC and put samples back in buffer */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    buffer[p] = su_agc_feed(&agc, buffer[p]);
+  }
+
+  /* TODO: Improve levels */
+  SU_TEST_ASSERT(
+      su_test_check_peak(
+          ctx,
+          buffer,
+          SU_TEST_SIGNAL_BUFFER_SIZE,
+          2 * SU_TEST_AGC_WINDOW,
+          SU_AGC_RESCALE * 0.9 ,
+          SU_AGC_RESCALE * 1.1));
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  su_agc_finalize(&agc);
+
+  if (buffer != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              buffer,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "corrected.m",
+              "corrected"));
+    }
+
+    free(buffer);
+  }
+
+  return ok;
+}
+
+SUBOOL
+su_test_agc_steady_falling(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  SUFLOAT t;
+  su_agc_t agc = su_agc_INITIALIZER;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  unsigned int p = 0;
+
+  SU_TEST_START_TICKLESS(ctx);
+
+  /* Initialize */
+  SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  agc_params.delay_line_size  = 10;
+  agc_params.mag_history_size = 10;
+  agc_params.fast_rise_t      = 2;
+  agc_params.fast_fall_t      = 4;
+
+  agc_params.slow_rise_t      = 20;
+  agc_params.slow_fall_t      = 40;
+
+  agc_params.threshold        = SU_DB(2e-2);
+
+  agc_params.hang_max         = 30;
+  agc_params.slope_factor     = 0;
+
+  if (!su_agc_init(&agc, &agc_params))
+    goto done;
+
+  su_ncqo_init(&ncqo, SU_TEST_AGC_SIGNAL_FREQ);
+
+  /* Create a falling sinusoid */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    t = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
+    buffer[p] = 1e-2 * rand() / (double) RAND_MAX;
+
+    buffer[p] += 0.2 * floor(5 - 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE) * su_ncqo_read_i(&ncqo);
+  }
+
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            buffer,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "steady.m",
+            "steady"));
+  }
+
+  SU_TEST_TICK(ctx);
+
+  /* Feed the AGC and put samples back in buffer */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    buffer[p] = su_agc_feed(&agc, buffer[p]);
+  }
+
+  /* TODO: Improve levels */
+  SU_TEST_ASSERT(
+      su_test_check_peak(
+          ctx,
+          buffer,
+          SU_TEST_SIGNAL_BUFFER_SIZE,
+          2 * SU_TEST_AGC_WINDOW,
+          SU_AGC_RESCALE * 0.9 ,
+          SU_AGC_RESCALE * 1.1));
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  su_agc_finalize(&agc);
+
+  if (buffer != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              buffer,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "corrected.m",
+              "corrected"));
+    }
+
+    free(buffer);
+  }
+
+  return ok;
+}
 
 int
 main (int argc, char *argv[], char *envp[])
 {
   su_test_cb_t test_list[] = {
       su_test_ncqo,
-      su_test_butterworth_lpf};
+      su_test_butterworth_lpf,
+      su_test_agc_transient,
+      su_test_agc_steady_rising,
+      su_test_agc_steady_falling};
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
 
 

@@ -26,7 +26,7 @@
 #include <sigutils/types.h>
 #include <sys/time.h>
 
-#define SU_TEST_SIGNAL_BUFFER_SIZE 65536
+#define SU_TEST_SIGNAL_BUFFER_SIZE 4096
 
 enum sigutils_test_time_units {
   SU_TIME_UNITS_UNDEFINED,
@@ -38,6 +38,7 @@ enum sigutils_test_time_units {
 };
 
 struct sigutils_test_context {
+  SUBOOL dump_results;
   unsigned int testno;
   struct timeval start;
   struct timeval end;
@@ -48,7 +49,7 @@ struct sigutils_test_context {
 typedef struct sigutils_test_context su_test_context_t;
 
 #define su_test_context_INITIALIZER            \
-  {0, {0, 0}, {0, 0}, 0, SU_TIME_UNITS_UNDEFINED}
+  {SU_FALSE, 0, {0, 0}, {0, 0}, 0, SU_TIME_UNITS_UNDEFINED}
 
 #define SU_TEST_START(ctx)                     \
   printf("[t:%3d] %s: start\n",                \
@@ -101,6 +102,8 @@ SUFLOAT su_test_buffer_mean(const SUFLOAT *buffer, unsigned int size);
 SUFLOAT su_test_buffer_std(const SUFLOAT *buffer, unsigned int size);
 
 SUFLOAT su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size);
+
+SUFLOAT su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size);
 
 SUBOOL su_test_buffer_dump_matlab(
     const SUFLOAT *buffer,
