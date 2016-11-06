@@ -80,6 +80,22 @@ su_ncqo_set_phase(su_ncqo_t *ncqo, SUFLOAT phi)
 }
 
 SUFLOAT
+su_ncqo_get_phase(su_ncqo_t *ncqo)
+{
+  return ncqo->phi;
+}
+
+void
+su_ncqo_inc_phase(su_ncqo_t *ncqo, SUFLOAT delta)
+{
+  ncqo->phi += delta;
+
+  if (ncqo->phi < 0 || ncqo->phi >= 2 * PI) {
+    ncqo->phi -= 2 * PI * floor(ncqo->phi / (2 * PI));
+  }
+}
+
+SUFLOAT
 su_ncqo_get_i(su_ncqo_t *ncqo)
 {
   __su_ncqo_assert_cos(ncqo);
@@ -107,7 +123,11 @@ su_ncqo_read_i(su_ncqo_t *ncqo)
 {
   __su_ncqo_step(ncqo);
 
-  return SU_COS(ncqo->phi);
+  ncqo->cos_updated = SU_TRUE;
+  ncqo->sin_updated = SU_FALSE;
+  ncqo->cos = SU_COS(ncqo->phi);
+
+  return ncqo->cos;
 }
 
 SUFLOAT
@@ -115,7 +135,11 @@ su_ncqo_read_q(su_ncqo_t *ncqo)
 {
   __su_ncqo_step(ncqo);
 
-  return SU_SIN(ncqo->phi);
+  ncqo->cos_updated = SU_FALSE;
+  ncqo->sin_updated = SU_TRUE;
+  ncqo->sin = SU_SIN(ncqo->phi);
+
+  return ncqo->sin;
 }
 
 SUCOMPLEX
@@ -123,7 +147,13 @@ su_ncqo_read(su_ncqo_t *ncqo)
 {
   __su_ncqo_step(ncqo);
 
-  return SU_COS(ncqo->phi) + I * SU_SIN(ncqo->phi);
+  ncqo->cos_updated = SU_TRUE;
+  ncqo->sin_updated = SU_TRUE;
+
+  ncqo->cos = SU_COS(ncqo->phi);
+  ncqo->sin = SU_SIN(ncqo->phi);
+
+  return ncqo->cos + I * ncqo->sin;
 }
 
 void

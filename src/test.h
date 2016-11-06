@@ -89,11 +89,16 @@ typedef struct sigutils_test_context su_test_context_t;
 
 typedef SUBOOL (*su_test_cb_t) (su_test_context_t *);
 
+void su_test_context_update_times(su_test_context_t *ctx);
+
+const char *su_test_context_time_units(const su_test_context_t *ctx);
+
 SUBOOL su_test_run(
     const su_test_cb_t *test_list,
     unsigned int test_count,
     unsigned int range_start,
-    unsigned int range_end);
+    unsigned int range_end,
+    SUBOOL save);
 
 SUFLOAT *su_test_buffer_new(unsigned int size);
 

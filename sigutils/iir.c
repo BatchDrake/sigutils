@@ -229,3 +229,39 @@ fail:
 
   return SU_FALSE;
 }
+
+SUBOOL
+su_iir_bwbpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT f1, SUFLOAT f2)
+{
+  SUFLOAT *a = NULL;
+  SUFLOAT *b = NULL;
+  SUFLOAT scaling;
+
+  unsigned int i;
+
+  if ((a = su_dcof_bwbp(n, f1, f2)) == NULL)
+    goto fail;
+
+  if ((b = su_ccof_bwbp(n)) == NULL)
+    goto fail;
+
+  scaling = su_sf_bwbp(n, f1, f2);
+
+  for (i = 0; i < n + 1; ++i) {
+    b[i] *= scaling;
+  }
+
+  if (!__su_iir_filt_init(filt, 2 * n + 1, a, 2 * n + 1, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (a != NULL)
+    free(a);
+
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}

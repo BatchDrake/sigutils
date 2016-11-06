@@ -435,7 +435,7 @@ su_ccof_bwbp(int n)
   if ((tcof = su_ccof_bwhp(n)) == NULL)
     goto done;
 
-  if ((ccof = malloc((2 * n + 1) * sizeof (int))) == NULL)
+  if ((ccof = malloc((2 * n + 1) * sizeof (SUFLOAT))) == NULL)
     goto done;
 
   for (i = 0; i < n; ++i) {

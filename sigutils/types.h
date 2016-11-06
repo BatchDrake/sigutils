@@ -36,12 +36,13 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
-#define SU_COS cos
-#define SU_SIN sin
-#define SU_LOG log10
-#define SU_EXP exp
-#define SU_POW pow
-#define SU_ABS fabs
+#define SU_COS  cos
+#define SU_SIN  sin
+#define SU_LOG  log10
+#define SU_EXP  exp
+#define SU_POW  pow
+#define SU_ABS  fabs
+#define SU_SQRT sqrt
 
 #define SUFLOAT_MIN_REF_MAG 1e-8
 #define SUFLOAT_MIN_REF_DB  -160
@@ -57,5 +58,10 @@
 
 #define SU_MAG_RAW(d) SU_POW(10.0, (d) / 20.)
 #define SU_MAG(d) (SU_MAG_RAW(d) - SUFLOAT_MIN_REF_MAG)
+
+#define SU_ERROR(fmt, arg...) \
+  fprintf(stderr, "(e) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
+#define SU_WARNING(fmt, arg...) \
+  fprintf(stderr, "(!) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
 
 #endif /* _SIGUTILS_TYPES_H */

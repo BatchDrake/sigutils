@@ -23,6 +23,7 @@
 #include <stdarg.h> // strbuild()
 #include <string.h> // strsep()
 #include <unistd.h>
+#include <ctype.h>
 #include <time.h>
 
 #include "util.h"

@@ -62,6 +62,9 @@ SUBOOL su_iir_filt_init(
 /* Initialize Butterworth low-pass filter of order N */
 SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc);
 
+/* Initialize Butterworth band-pass filter of order N */
+SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT f1, SUFLOAT f2);
+
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
 

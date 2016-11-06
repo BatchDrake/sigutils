@@ -46,6 +46,15 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_MALLOC
 
+PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.2, ac_cv_sndfile=1, [AC_MSG_ERROR([Couldn't find libsndfile])])
+PKG_CHECK_MODULES([ASOUNDLIB], [ alsa >= 1.0.25 ])
+
+AC_SUBST(ASOUNDLIB_CFLAGS)
+AC_SUBST(ASOUNDLIB_LIBS)
+
+AC_SUBST(SNDFILE_CFLAGS)
+AC_SUBST(SNDFILE_LIBS)
+
 GLOBAL_LDFLAGS="-lm -lpthread -ldl -export-dynamic -rdynamic"
 
 

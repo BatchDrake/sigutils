@@ -189,12 +189,15 @@ su_test_run(
     const su_test_cb_t *test_list,
     unsigned int test_count,
     unsigned int range_start,
-    unsigned int range_end)
+    unsigned int range_end,
+    SUBOOL save)
 {
   su_test_context_t ctx = su_test_context_INITIALIZER;
   unsigned int i;
   unsigned int count = 0;
   unsigned int success = 0;
+
+  ctx.dump_results = save;
 
   if (range_end >= test_count)
     range_end = test_count - 1;

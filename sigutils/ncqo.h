@@ -51,6 +51,12 @@ void su_ncqo_step(su_ncqo_t *ncqo);
 /* Force phase */
 void su_ncqo_set_phase(su_ncqo_t *ncqo, SUFLOAT phi);
 
+/* Get current phase */
+SUFLOAT su_ncqo_get_phase(su_ncqo_t *ncqo);
+
+/* Increment current phase */
+void su_ncqo_inc_phase(su_ncqo_t *ncqo, SUFLOAT delta);
+
 /* Get in-phase component */
 SUFLOAT su_ncqo_get_i(su_ncqo_t *ncqo);
 
