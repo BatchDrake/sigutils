@@ -9,13 +9,13 @@
 #include <errno.h>
 #include <getopt.h>
 
-#include <sigutils.h>
-
 #include <sigutils/sampling.h>
 #include <sigutils/ncqo.h>
 #include <sigutils/iir.h>
 #include <sigutils/agc.h>
 #include <sigutils/pll.h>
+
+#include <sigutils/sigutils.h>
 
 #include "test.h"
 
@@ -605,6 +605,10 @@ main (int argc, char *argv[], char *envp[])
       su_test_pll};
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
 
+  if (!su_lib_init()) {
+    SU_ERROR("Failed to initialize sigutils library\n");
+    exit (EXIT_FAILURE);
+  }
 
   su_test_run(test_list, test_count, test_count - 1, test_count - 1, SU_TRUE);
 

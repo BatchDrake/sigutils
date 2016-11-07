@@ -123,6 +123,6 @@ void su_block_port_unplug(su_block_port_t *port);
 /* su_block_class operations */
 SUBOOL su_block_class_register(struct sigutils_block_class *class);
 
-su_block_class_t *su_class_lookup(const char *name);
+su_block_class_t *su_block_class_lookup(const char *name);
 
 #endif /* _SIGUTILS_BLOCK_H */

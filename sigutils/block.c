@@ -212,7 +212,7 @@ su_block_class_register(struct sigutils_block_class *class)
   su_block_class_t *tmp = NULL;
   unsigned int new_storage;
 
-  if (su_class_lookup(class->name) != NULL) {
+  if (su_block_class_lookup(class->name) != NULL) {
     SU_ERROR("block class `%s' already registered\n", class->name);
     return SU_FALSE;
   }
@@ -234,7 +234,7 @@ su_block_class_register(struct sigutils_block_class *class)
     class_storage = new_storage;
   }
 
-  memcpy(class_list + class_storage++, class, sizeof (su_block_class_t));
+  memcpy(class_list + class_count++, class, sizeof (su_block_class_t));
 
   return SU_TRUE;
 }
@@ -408,8 +408,3 @@ su_block_port_unplug(su_block_port_t *port)
   port->pos = 0;
 }
 
-SUBOOL
-su_lib_init(void)
-{
-
-}
