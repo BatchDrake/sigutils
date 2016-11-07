@@ -104,7 +104,50 @@ su_stream_tell(const su_stream_t *stream)
   return stream->pos - stream->avail;
 }
 
+
 size_t
+su_stream_get_contiguous(
+    const su_stream_t *stream,
+    SUCOMPLEX **start,
+    size_t size)
+{
+  size_t avail = stream->size - stream->ptr;
+
+  if (size > avail) {
+    size = avail;
+  }
+
+  *start = stream->buffer + stream->ptr;
+
+  return size;
+}
+
+size_t
+su_stream_advance_contiguous(
+    su_stream_t *stream,
+    size_t size)
+{
+  size_t avail = stream->size - stream->ptr;
+
+  if (size > avail) {
+    size = avail;
+  }
+
+  stream->pos += size;
+  stream->ptr += size;
+  if (stream->avail < stream->size) {
+    stream->avail += size;
+  }
+
+  /* Rollover */
+  if (stream->ptr == stream->size) {
+    stream->ptr = 0;
+  }
+
+  return size;
+}
+
+ssize_t
 su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
 {
   size_t avail;
@@ -306,20 +349,36 @@ su_block_port_plug(su_block_port_t *port,
   return SU_TRUE;
 }
 
-size_t
+ssize_t
 su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size)
 {
-  size_t got;
+  ssize_t got = 0;
+  ssize_t acquired = 0;
 
   if (!su_block_port_is_plugged(port)) {
     SU_ERROR("Port not plugged\n");
-    return -1;
+    return SU_BLOCK_PORT_READ_ERROR_NOT_INITIALIZED;
   }
 
-  if ((got = su_stream_read(port->stream, port->pos, obuf, size)) == -1) {
-    SU_ERROR("Port read failed (port desync)");
-    return -1;
-  }
+  do {
+    if ((got = su_stream_read(port->stream, port->pos, obuf, size)) == -1) {
+      SU_ERROR("Port read failed (port desync)\n");
+      return SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC;
+    } else if (got == 0) {
+      /* Stream exhausted, acquire more data */
+      if ((acquired = port->block->class->acquire(
+          port->block->private,
+          port->block->out,
+          port->block->in)) == -1) {
+        /* Acquire error */
+        SU_ERROR("%s: acquire failed\n", port->block->class->name);
+        return SU_BLOCK_PORT_READ_ERROR_ACQUIRE;
+      } else if (acquired == 0) {
+        /* Stream closed */
+        return SU_BLOCK_PORT_READ_END_OF_STREAM;
+      }
+    }
+  } while (got == 0);
 
   port->pos += got;
 

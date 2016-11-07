@@ -27,6 +27,11 @@
 
 #define SU_BLOCK_STREAM_BUFFER_SIZE 4096
 
+#define SU_BLOCK_PORT_READ_END_OF_STREAM          0
+#define SU_BLOCK_PORT_READ_ERROR_NOT_INITIALIZED -1
+#define SU_BLOCK_PORT_READ_ERROR_ACQUIRE         -2
+#define SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC     -3
+
 typedef uint64_t su_off_t;
 
 struct sigutils_stream {
@@ -60,7 +65,7 @@ struct sigutils_block_class {
   void (*dtor) (void *private);
 
   /* This function gets called when more data is required */
-  size_t (*acquire) (void *, su_stream_t *, su_block_port_t *);
+  ssize_t (*acquire) (void *, su_stream_t *, su_block_port_t *);
 };
 
 typedef struct sigutils_block_class su_block_class_t;
@@ -82,9 +87,16 @@ void su_stream_finalize(su_stream_t *stream);
 
 void su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, size_t size);
 
+size_t su_stream_get_contiguous(
+    const su_stream_t *stream,
+    SUCOMPLEX **start,
+    size_t size);
+
+size_t su_stream_advance_contiguous(su_stream_t *stream, size_t size);
+
 su_off_t su_stream_tell(const su_stream_t *);
 
-size_t su_stream_read(
+ssize_t su_stream_read(
     su_stream_t *stream,
     su_off_t off,
     SUCOMPLEX *data,
@@ -101,7 +113,7 @@ SUBOOL su_block_port_plug(
     struct sigutils_block *block,
     unsigned int portid); /* Position initialized with current stream pos */
 
-size_t su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size);
+ssize_t su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size);
 
 /* Sometimes, a port connection may go out of sync. This fixes it */
 SUBOOL su_block_port_resync(su_block_port_t *port);

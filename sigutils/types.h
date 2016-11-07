@@ -21,6 +21,7 @@
 #ifndef _SIGUTILS_TYPES_H
 #define _SIGUTILS_TYPES_H
 
+#include <stdio.h>
 #include <math.h>
 #include <complex.h>
 
