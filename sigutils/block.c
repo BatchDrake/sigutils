@@ -283,14 +283,18 @@ su_block_new(const char *class_name, ...)
     goto done;
   }
 
-  if ((new->in = calloc(class->in_size, sizeof(su_block_port_t))) == NULL) {
-    SU_ERROR("Cannot allocate block input ports\n");
-    goto done;
+  if (class->in_size > 0) {
+    if ((new->in = calloc(class->in_size, sizeof(su_block_port_t))) == NULL) {
+      SU_ERROR("Cannot allocate block input ports\n");
+      goto done;
+    }
   }
 
-  if ((new->out = calloc(class->out_size, sizeof(su_stream_t))) == NULL) {
-    SU_ERROR("Cannot allocate output streams\n");
-    goto done;
+  if (class->out_size > 0) {
+    if ((new->out = calloc(class->out_size, sizeof(su_stream_t))) == NULL) {
+      SU_ERROR("Cannot allocate output streams\n");
+      goto done;
+    }
   }
 
   /* Initialize all outputs */
