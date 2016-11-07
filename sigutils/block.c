@@ -207,7 +207,7 @@ su_block_class_lookup(const char *name)
 }
 
 SUBOOL
-su_bock_class_register(struct sigutils_block_class *class)
+su_block_class_register(struct sigutils_block_class *class)
 {
   su_block_class_t *tmp = NULL;
   unsigned int new_storage;
@@ -408,3 +408,8 @@ su_block_port_unplug(su_block_port_t *port)
   port->pos = 0;
 }
 
+SUBOOL
+su_lib_init(void)
+{
+
+}
