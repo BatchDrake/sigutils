@@ -55,6 +55,8 @@ struct sigutils_block_port {
 
 typedef struct sigutils_block_port su_block_port_t;
 
+#define su_block_port_INITIALIZER {0, NULL, NULL}
+
 struct sigutils_block_class {
   const char *name;
   unsigned int in_size;
@@ -117,6 +119,8 @@ ssize_t su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size);
 
 /* Sometimes, a port connection may go out of sync. This fixes it */
 SUBOOL su_block_port_resync(su_block_port_t *port);
+
+SUBOOL su_block_port_is_plugged(const su_block_port_t *port);
 
 void su_block_port_unplug(su_block_port_t *port);
 

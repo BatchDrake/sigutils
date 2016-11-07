@@ -593,6 +593,52 @@ done:
   return ok;
 }
 
+SUBOOL
+su_test_block(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  su_block_t *block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX samp = 0;
+
+  SU_TEST_START(ctx);
+
+  agc_params.delay_line_size  = 10;
+  agc_params.mag_history_size = 10;
+  agc_params.fast_rise_t      = 2;
+  agc_params.fast_fall_t      = 4;
+
+  agc_params.slow_rise_t      = 20;
+  agc_params.slow_fall_t      = 40;
+
+  agc_params.threshold        = SU_DB(2e-2);
+
+  agc_params.hang_max         = 30;
+  agc_params.slope_factor     = 0;
+
+  block = su_block_new("agc", &agc_params);
+  SU_TEST_ASSERT(block != NULL);
+
+  /* Plug block to the reading port */
+  SU_TEST_ASSERT(su_block_port_plug(&port, block, 0));
+
+  /* Try to read (this must fail) */
+  SU_TEST_ASSERT(su_block_port_read(&port, &samp, 1) == SU_BLOCK_PORT_READ_ERROR_ACQUIRE);
+
+  ok = SU_TRUE;
+done:
+  SU_TEST_END(ctx);
+
+  if (su_block_port_is_plugged(&port))
+    su_block_port_unplug(&port);
+
+  if (block != NULL)
+    su_block_destroy(block);
+
+  return ok;
+}
+
 int
 main (int argc, char *argv[], char *envp[])
 {
@@ -602,7 +648,9 @@ main (int argc, char *argv[], char *envp[])
       su_test_agc_transient,
       su_test_agc_steady_rising,
       su_test_agc_steady_falling,
-      su_test_pll};
+      su_test_pll,
+      su_test_block
+  };
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
 
   if (!su_lib_init()) {

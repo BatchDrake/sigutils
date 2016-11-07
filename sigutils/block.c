@@ -32,7 +32,7 @@ su_stream_init(su_stream_t *stream, size_t size)
 {
   SUCOMPLEX *buffer = NULL;
 
-  if ((buffer = malloc(size * sizeof (SUCOMPLEX)))) {
+  if ((buffer = malloc(size * sizeof (SUCOMPLEX))) == NULL) {
     SU_ERROR("buffer allocation failed\n");
     return SU_FALSE;
   }
@@ -283,6 +283,8 @@ su_block_new(const char *class_name, ...)
     goto done;
   }
 
+  new->class = class;
+
   if (class->in_size > 0) {
     if ((new->in = calloc(class->in_size, sizeof(su_block_port_t))) == NULL) {
       SU_ERROR("Cannot allocate block input ports\n");
@@ -305,7 +307,6 @@ su_block_new(const char *class_name, ...)
     }
 
   /* Initialize object */
-  new->class = class;
   if (!class->ctor(&new->private, ap)) {
     SU_ERROR("Call to `%s' constructor failed\n", class_name);
     goto done;
