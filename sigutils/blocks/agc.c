@@ -75,6 +75,7 @@ su_block_agc_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
   su_agc_t *agc;
   ssize_t size;
   ssize_t got;
+  int i = 0;
 
   SUCOMPLEX *start;
 
@@ -84,7 +85,11 @@ su_block_agc_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
 
   do {
     if ((got = su_block_port_read(in, start, size)) > 0) {
-      /* Got data, increment position */
+      /* Got data, process in place */
+      for (i = 0; i < got; ++i)
+        start[i] = su_agc_feed(agc, start[i]);
+
+      /* Increment position */
       if (su_stream_advance_contiguous(out, got) != got) {
         SU_ERROR("Unexpected size after su_stream_advance_contiguous\n");
         return -1;

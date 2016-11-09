@@ -41,7 +41,7 @@ struct sigutils_agc {
   unsigned int hang_n;   /* Hang timer */
 
   /* AGC memory - delay line */
-  SUFLOAT     *delay_line;
+  SUCOMPLEX   *delay_line;
   unsigned int delay_line_size;
   unsigned int delay_line_ptr;
 
@@ -90,7 +90,7 @@ struct su_agc_params {
 
 SUBOOL su_agc_init(su_agc_t *agc, const struct su_agc_params *params);
 
-SUFLOAT su_agc_feed(su_agc_t *agc, SUFLOAT x);
+SUCOMPLEX su_agc_feed(su_agc_t *agc, SUCOMPLEX x);
 
 void su_agc_finalize(su_agc_t *agc);
 

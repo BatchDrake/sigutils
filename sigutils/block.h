@@ -107,6 +107,16 @@ ssize_t su_stream_read(
 /* su_block operations */
 su_block_t *su_block_new(const char *, ...);
 
+su_block_port_t *su_block_get_port(const su_block_t *, unsigned int);
+
+su_stream_t *su_block_get_stream(const su_block_t *, unsigned int);
+
+SUBOOL su_block_plug(
+    su_block_t *source,
+    unsigned int out_id,
+    unsigned int in_id,
+    su_block_t *sink);
+
 void su_block_destroy(su_block_t *);
 
 /* su_block_port operations */

@@ -45,6 +45,10 @@
 #define SU_ABS  fabs
 #define SU_SQRT sqrt
 
+#define SU_C_ABS  cabs
+#define SU_C_REAL creal
+#define SU_C_IMAG cimag
+
 #define SUFLOAT_MIN_REF_MAG 1e-8
 #define SUFLOAT_MIN_REF_DB  -160
 #define SUFLOAT_THRESHOLD 1e-15
@@ -53,6 +57,7 @@
 
 #define SUFLOAT_EQUAL(a, b) (fabs(a - b) <= SUFLOAT_THRESHOLD)
 #define SU_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define SU_MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define SU_DB_RAW(p) (20 * SU_LOG(p))
 #define SU_DB(p) SU_DB_RAW((p) + SUFLOAT_MIN_REF_MAG)

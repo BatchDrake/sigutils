@@ -174,6 +174,11 @@ su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
 
   /* Compute position in the stream buffer to read from */
   ptr = stream->ptr + reloff;
+
+  /* Adjust in case reloff causes ptr to rollover */
+  if (ptr > stream->size)
+    ptr = ptr - stream->size;
+
   if (ptr + size > stream->size)
     chunksz = stream->size - ptr;
   else
@@ -210,7 +215,7 @@ SUBOOL
 su_block_class_register(struct sigutils_block_class *class)
 {
   su_block_class_t *tmp = NULL;
-  unsigned int new_storage;
+  unsigned int new_storage = 0;
 
   if (su_block_class_lookup(class->name) != NULL) {
     SU_ERROR("block class `%s' already registered\n", class->name);
@@ -221,7 +226,7 @@ su_block_class_register(struct sigutils_block_class *class)
     if (class_storage == 0)
       new_storage = 1;
     else
-      new_storage <<= 1;
+      new_storage = class_storage << 1;
 
     if ((tmp = realloc(
         class_list,
@@ -321,6 +326,46 @@ done:
   va_end(ap);
 
   return result;
+}
+
+su_block_port_t *
+su_block_get_port(const su_block_t *block, unsigned int id)
+{
+  if (id >= block->class->in_size) {
+    return NULL;
+  }
+
+  return block->in + id;
+}
+
+su_stream_t *
+su_block_get_stream(const su_block_t *block, unsigned int id)
+{
+  if (id >= block->class->out_size) {
+    return NULL;
+  }
+
+  return block->out + id;
+}
+
+SUBOOL
+su_block_plug(
+    su_block_t *source,
+    unsigned int out_id,
+    unsigned int in_id,
+    su_block_t *sink)
+{
+  su_block_port_t *input;
+
+  if ((input = su_block_get_port(sink, in_id)) == NULL) {
+    SU_ERROR(
+        "Block `%s' doesn't have input port #%d\n",
+        sink->class->name,
+        in_id);
+    return SU_FALSE;
+  }
+
+  return su_block_port_plug(input, source, out_id);
 }
 
 /************************** su_block_port API ********************************/

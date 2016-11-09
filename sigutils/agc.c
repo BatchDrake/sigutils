@@ -26,14 +26,14 @@ SUBOOL
 su_agc_init(su_agc_t *agc, const struct su_agc_params *params)
 {
   SUFLOAT *mag_buf = NULL;
-  SUFLOAT *delay_line = NULL;
+  SUCOMPLEX *delay_line = NULL;
 
   memset(agc, 0, sizeof (su_agc_t));
 
   if ((mag_buf = calloc(params->mag_history_size, sizeof (SUFLOAT))) == NULL)
     goto fail;
 
-  if ((delay_line = calloc(params->delay_line_size, sizeof (SUFLOAT))) == NULL)
+  if ((delay_line = calloc(params->delay_line_size, sizeof (SUCOMPLEX))) == NULL)
     goto fail;
 
   agc->mag_history      = mag_buf;
@@ -82,12 +82,12 @@ su_agc_finalize(su_agc_t *agc)
  *  7. Output sample
  */
 
-SUFLOAT
-su_agc_feed(su_agc_t *agc, SUFLOAT x)
+SUCOMPLEX
+su_agc_feed(su_agc_t *agc, SUCOMPLEX x)
 {
   unsigned int i;
 
-  SUFLOAT x_delayed;
+  SUCOMPLEX x_delayed;
   SUFLOAT x_dBFS;
   SUFLOAT x_dBFS_delayed;
   SUFLOAT peak_delta;
@@ -100,7 +100,7 @@ su_agc_feed(su_agc_t *agc, SUFLOAT x)
     agc->delay_line_ptr = 0;
 
   if (agc->enabled) {
-    x_dBFS = SU_DB(SU_ABS(x)) - SUFLOAT_MAX_REF_DB;
+    x_dBFS = SU_DB(SU_C_ABS(x)) - SUFLOAT_MAX_REF_DB;
 
     /* Push mag */
     x_dBFS_delayed = agc->mag_history[agc->mag_history_ptr];

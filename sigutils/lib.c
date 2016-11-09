@@ -21,6 +21,7 @@
 #include "sigutils.h"
 
 extern struct sigutils_block_class su_block_class_AGC;
+extern struct sigutils_block_class su_block_class_WAVFILE;
 
 SUBOOL
 su_lib_init(void)
@@ -29,7 +30,8 @@ su_lib_init(void)
 
   struct sigutils_block_class *classes[] =
       {
-          &su_block_class_AGC
+          &su_block_class_AGC,
+          &su_block_class_WAVFILE
       };
 
   for (i = 0; i < sizeof (classes) / sizeof (classes[0]); ++i)
