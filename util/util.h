@@ -103,16 +103,16 @@
 #define error ERROR
 
 #define PTR_LIST(type, name)                         \
-  type ** name ## _list;                             \
-  int     name ## _count;
+  type       **name ## _list;                        \
+  unsigned int name ## _count;
 
 #define PTR_LIST_LOCAL(type, name)                   \
-  type ** name ## _list = NULL;                      \
-  int     name ## _count = 0;
+  type       **name ## _list = NULL;                 \
+  unsigned int name ## _count = 0;
 
 #define PTR_LIST_EXTERN(type, name)                  \
-  extern type ** name ## _list;                      \
-  extern int     name ## _count;
+  extern type       **name ## _list;                 \
+  extern unsigned int name ## _count;
 
 #define PTR_LIST_INIT(where, name)                   \
   where->name ## _list = NULL;                       \
@@ -130,13 +130,9 @@
   ptr_list_remove_first ((void ***) &JOIN (name, _list),   \
                    &JOIN (name, _count), ptr)
 
-#define FOR_EACH_PTR(this, where, name)              \
-  int JOIN (_idx_, __LINE__);                             \
-  for (JOIN (_idx_, __LINE__) = 0;                        \
-       JOIN (_idx_, __LINE__) < where->name ## _count;    \
-       JOIN (_idx_, __LINE__)++)                          \
-    if ((this = where->name ## _list[                \
-      JOIN (_idx_, __LINE__)]) != NULL)
+#define FOR_EACH_PTR(this, idx, name)                     \
+  for (idx = 0; idx  < name ## _count; ++idx)             \
+    if ((this = name ## _list[idx]) != NULL)
 
 # define __UNITS(x, wrdsiz) ((((x) + (wrdsiz - 1)) / wrdsiz))
 # define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)

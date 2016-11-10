@@ -5,7 +5,7 @@ bin_PROGRAMS = sigutils
 sigutils_CFLAGS = -I. -I.. -I../util @GLOBAL_CFLAGS@
 sigutils_LDFLAGS = @GLOBAL_LDFLAGS@
 
-sigutils_LDADD = ../util/libutil.la ../sigutils/libsigutils.la @GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
+sigutils_LDADD = ../sigutils/libsigutils.la ../util/libutil.la  @GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
 
 sigutils_SOURCES = main.c sigutils.h test.c test.h
 

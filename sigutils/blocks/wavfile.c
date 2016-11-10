@@ -86,7 +86,7 @@ done:
 }
 
 SUPRIVATE SUBOOL
-su_block_wavfile_ctor(void **private, va_list ap)
+su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
 {
   struct su_wavfile *wav = NULL;
   const char *path = NULL;
@@ -99,6 +99,19 @@ su_block_wavfile_ctor(void **private, va_list ap)
   }
 
   *private = (void *) wav;
+
+  if (!su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      "samp_rate",
+      &wav->info.samplerate) ||
+      !su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      "channels",
+      &wav->info.channels)) {
+    return SU_FALSE;
+  }
 
   return SU_TRUE;
 }

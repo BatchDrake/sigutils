@@ -23,7 +23,7 @@
 #include "agc.h"
 
 SUPRIVATE SUBOOL
-su_block_agc_ctor(void **private, va_list ap)
+su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
 {
   SUBOOL ok = SU_FALSE;
   su_agc_t *agc = NULL;
@@ -44,6 +44,18 @@ su_block_agc_ctor(void **private, va_list ap)
   *private = agc;
 
   ok = SU_TRUE;
+
+  ok = ok && su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      "peak",
+      &agc->peak);
+
+  ok = ok && su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_BOOL,
+      "enabled",
+      &agc->enabled);
 
 done:
   if (!ok) {

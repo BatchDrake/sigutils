@@ -54,7 +54,7 @@ su_stream_finalize(su_stream_t *stream)
 }
 
 void
-su_stream_write (su_stream_t *stream, const SUCOMPLEX *data, size_t size)
+su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, size_t size)
 {
   size_t skip = 0;
   size_t chunksz;
@@ -244,11 +244,50 @@ su_block_class_register(struct sigutils_block_class *class)
   return SU_TRUE;
 }
 
+/************************** su_block_property API ****************************/
+su_block_property_t *
+su_block_property_new(const char *name, su_block_property_type_t type, void *p)
+{
+  su_block_property_t *new = NULL;
+  char *namedup = NULL;
+
+  if ((new = malloc(sizeof (su_block_property_t))) == NULL)
+    goto fail;
+
+  if ((namedup = strdup(name)) == NULL)
+    goto fail;
+
+  new->name = namedup;
+  new->type = type;
+  new->generic_ptr = p;
+
+  return new;
+
+fail:
+  if (new != NULL)
+    free(new);
+
+  if (namedup != NULL)
+    free(namedup);
+
+  return NULL;
+}
+
+void
+su_block_property_destroy(su_block_property_t *prop)
+{
+  if (prop->name != NULL)
+    free(prop->name);
+
+  free(prop);
+}
+
 /****************************** su_block API *********************************/
 void
 su_block_destroy(su_block_t *block)
 {
   unsigned int i;
+  su_block_property_t *prop;
 
   if (block->private != NULL)
     block->class->dtor(block->private);
@@ -264,7 +303,77 @@ su_block_destroy(su_block_t *block)
     free(block->out);
   }
 
+  FOR_EACH_PTR(prop, i, block->property)
+    su_block_property_destroy(prop);
+
+  if (block->property_list != NULL)
+    free(block->property_list);
+
   free(block);
+}
+
+su_block_property_t *
+su_block_lookup_property(const su_block_t *block, const char *name)
+{
+  unsigned int i;
+  su_block_property_t *prop;
+
+  FOR_EACH_PTR(prop, i, block->property)
+    if (strcmp(prop->name, name) == 0)
+      return prop;
+
+  return NULL;
+}
+
+void *
+su_block_get_property_ref(
+    const su_block_t *block,
+    su_block_property_type_t type,
+    const char *name) {
+  const su_block_property_t *prop;
+
+  if ((prop = su_block_lookup_property(block, name)) == NULL)
+    return NULL;
+
+  if (type != SU_BLOCK_PROPERTY_TYPE_ANY && prop->type != type)
+    return NULL;
+
+  return prop->generic_ptr;
+}
+
+SUBOOL
+su_block_set_property_ref(
+    su_block_t *block,
+    su_block_property_type_t type,
+    const char *name,
+    void *ptr)
+{
+  su_block_property_t *prop;
+
+  if ((prop = su_block_lookup_property(block, name)) == NULL) {
+    if (type == SU_BLOCK_PROPERTY_TYPE_ANY) {
+      SU_ERROR("Cannot use TYPE_ANY to create new properties\n");
+      return SU_FALSE;
+    }
+
+    if ((prop = su_block_property_new(name, type, ptr)) == NULL) {
+      SU_ERROR("Failed to create new property `%s'\n", name);
+      return SU_FALSE;
+    }
+
+    if (PTR_LIST_APPEND_CHECK(block->property, prop) == -1) {
+      SU_ERROR("Failed to add new property `%s'\n", name);
+      su_block_property_destroy(prop);
+      return SU_FALSE;
+    }
+  } else if (type != SU_BLOCK_PROPERTY_TYPE_ANY && prop->type != type) {
+    SU_ERROR("Set property `%s': type mismatch\n", name);
+    return SU_FALSE;
+  }
+
+  prop->generic_ptr = ptr;
+
+  return SU_TRUE;
 }
 
 su_block_t *
@@ -312,7 +421,7 @@ su_block_new(const char *class_name, ...)
     }
 
   /* Initialize object */
-  if (!class->ctor(&new->private, ap)) {
+  if (!class->ctor(new, &new->private, ap)) {
     SU_ERROR("Call to `%s' constructor failed\n", class_name);
     goto done;
   }
