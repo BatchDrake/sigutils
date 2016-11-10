@@ -191,7 +191,7 @@ su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
   if (size > 0) {
     data += chunksz;
 
-    memcpy(data, stream->buffer + ptr + chunksz, size * sizeof (SUCOMPLEX));
+    memcpy(data, stream->buffer, size * sizeof (SUCOMPLEX));
   }
 
   return chunksz + size;
