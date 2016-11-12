@@ -34,7 +34,7 @@ su_pll_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc)
 {
   memset(pll, 0, sizeof(su_pll_t));
 
-  pll->alpha = SU_REL2ANG_FREQ(fc);
+  pll->alpha = SU_NORM2ANG_FREQ(fc);
   pll->beta  = SU_SQRT(pll->alpha);
 
   su_ncqo_init(&pll->ncqo, fhint);

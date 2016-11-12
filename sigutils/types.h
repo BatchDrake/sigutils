@@ -25,7 +25,8 @@
 #include <math.h>
 #include <complex.h>
 
-#define SUPRIVATE  static inline
+#define SUPRIVATE  static
+#define SUINLINE   static inline
 #define SUFLOAT    double
 #define SUSCOUNT   unsigned long
 #define SUBOOL     int
@@ -44,6 +45,7 @@
 #define SU_POW  pow
 #define SU_ABS  fabs
 #define SU_SQRT sqrt
+#define SU_CEIL ceil
 
 #define SU_C_ABS  cabs
 #define SU_C_REAL creal
@@ -55,7 +57,7 @@
 #define SUFLOAT_MAX_REF_MAG 1
 #define SUFLOAT_MAX_REF_DB  0
 
-#define SUFLOAT_EQUAL(a, b) (fabs(a - b) <= SUFLOAT_THRESHOLD)
+#define SUFLOAT_EQUAL(a, b) (SU_ABS(a - b) <= SUFLOAT_THRESHOLD)
 #define SU_MAX(a, b) ((a) > (b) ? (a) : (b))
 #define SU_MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -69,5 +71,16 @@
   fprintf(stderr, "(e) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
 #define SU_WARNING(fmt, arg...) \
   fprintf(stderr, "(!) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
+
+/* Inline functions */
+SUINLINE SUFLOAT
+su_sinc(SUFLOAT t)
+{
+  /* Use l'Hôpital's near 0 */
+  if (SU_ABS(t) <= SUFLOAT_THRESHOLD)
+    return SU_COS(M_PI * t);
+
+  return SU_SIN(M_PI * t) / M_PI;
+}
 
 #endif /* _SIGUTILS_TYPES_H */

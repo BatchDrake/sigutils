@@ -27,7 +27,8 @@
 struct sigutils_ncqo {
   SUSCOUNT n; /* Sample count */
   SUFLOAT phi;
-  SUFLOAT omega; /* Relative angular frequency */
+  SUFLOAT omega; /* Normalized angular frequency */
+  SUFLOAT fnor;  /* Normalized frequency in hcps */
 
   SUBOOL  sin_updated;
   SUFLOAT sin;
@@ -75,22 +76,22 @@ SUFLOAT su_ncqo_read_q(su_ncqo_t *ncqo);
 /* Read (compute next + get) both components as complex */
 SUCOMPLEX su_ncqo_read(su_ncqo_t *ncqo);
 
-/* Set oscillator frequency (relative angular freq) */
+/* Set oscillator frequency (normalized angular freq) */
 void su_ncqo_set_angfreq(su_ncqo_t *ncqo, SUFLOAT omrel);
 
-/* Increase or decrease current frequency (relative angular freq) */
+/* Increase or decrease current frequency (normalized angular freq) */
 void su_ncqo_inc_angfreq(su_ncqo_t *ncqo, SUFLOAT delta);
 
-/* Get current frequency (relative angular freq) */
+/* Get current frequency (normalized angular freq) */
 SUFLOAT su_ncqo_get_angfreq(const su_ncqo_t *ncqo);
 
-/* Set oscillator frequency (relative freq) */
+/* Set oscillator frequency (normalized freq) */
 void su_ncqo_set_freq(su_ncqo_t *ncqo, SUFLOAT frel);
 
-/* Increase or decrease current frequency (relative freq) */
+/* Increase or decrease current frequency (normalized freq) */
 void su_ncqo_inc_freq(su_ncqo_t *ncqo, SUFLOAT delta);
 
-/* Get current frequency (relative freq) */
+/* Get current frequency (normalized freq) */
 SUFLOAT su_ncqo_get_freq(const su_ncqo_t *ncqo);
 
 #endif /* _SIGUTILS_NCQO_H */

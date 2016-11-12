@@ -413,18 +413,28 @@ su_block_new(const char *class_name, ...)
     }
   }
 
-  /* Initialize all outputs */
-  for (i = 0; i < class->out_size; ++i)
-    if (!su_stream_init(new->out, SU_BLOCK_STREAM_BUFFER_SIZE)) {
-      SU_ERROR("Cannot allocate memory for block output #%d\n", i + 1);
-      goto done;
-    }
+  /* Set decimation to 1, this may be changed by block constructor */
+  new->decimation = 1;
 
   /* Initialize object */
   if (!class->ctor(new, &new->private, ap)) {
     SU_ERROR("Call to `%s' constructor failed\n", class_name);
     goto done;
   }
+
+  if (new->decimation < 1 || new->decimation > SU_BLOCK_STREAM_BUFFER_SIZE) {
+    SU_ERROR("Block requested impossible decimation %d\n", new->decimation);
+    goto done;
+  }
+
+  /* Initialize all outputs */
+  for (i = 0; i < class->out_size; ++i)
+    if (!su_stream_init(
+        new->out,
+        SU_BLOCK_STREAM_BUFFER_SIZE / new->decimation)) {
+      SU_ERROR("Cannot allocate memory for block output #%d\n", i + 1);
+      goto done;
+    }
 
   result = new;
 

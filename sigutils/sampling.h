@@ -32,29 +32,29 @@
  * ---------------------------------------------
  * SAMPLING FREQUENCY (fs): How many samples are taken per second, in Hz.
  *
- * RELATIVE FREQUENCY (frel): Represents the frequency of a discretized signal,
+ * NORMALIZED FREQUENCY (fnor): Represents the frequency of a discretized signal,
  * ranging from 0 (constant signal) to 1 (a signal that flips sign on each
- * time step).
+ * time step). Units: hcps ("half cycles per sample")
  *
  * ABSOLUTE FREQUENCY (freq): Represents the actual frequency of the signal,
  * in Hz. It is defined as:
  *
- *   freq = frel * fs / 2.
+ *   freq = fnor * fs / 2.
  *
- * RELATIVE ANGULAR FREQUENCY (omrel): Represents how many radians are added
+ * NORMALIZED ANGULAR FREQUENCY (omrel): Represents how many radians are added
  * to the signal phase in each time step. It is defined as:
  *
- *   omrel = PI * frel
+ *   omrel = PI * fnor
  *
  * as the flipping sign signal's phase increments in 180 degrees on each
  * time step.
  */
 
-#define SU_ABS2REL_FREQ(fs, freq) (2 * (SUFLOAT) (freq) / (SUFLOAT) (fs))
-#define SU_REL2ABS_FREQ(fs, frel) ((SUFLOAT) (fs) * (SUFLOAT) (frel) / 2)
+#define SU_ABS2NORM_FREQ(fs, freq) (2 * (SUFLOAT) (freq) / (SUFLOAT) (fs))
+#define SU_REL2ABS_FREQ(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor) / 2)
 
-#define SU_REL2ANG_FREQ(freq) (PI * (freq))
-#define SU_ANG2REL_FREQ(omrel) ((omrel) / (PI))
+#define SU_NORM2ANG_FREQ(freq) (PI * (freq))
+#define SU_ANG2NORM_FREQ(omrel) ((omrel) / (PI))
 
 #define SU_T2N(fs, t) ((unsigned int) floor((t) * (SUFLOAT) (fs)))
 #define SU_N2T(fs, n) ((unsigned int) floor((n) / (SUFLOAT) (fs)))

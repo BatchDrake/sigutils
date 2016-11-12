@@ -41,8 +41,6 @@ su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
-  *private = agc;
-
   ok = SU_TRUE;
 
   ok = ok && su_block_set_property_ref(
@@ -64,6 +62,8 @@ done:
       free(agc);
     }
   }
+  else
+    *private = agc;
 
   return ok;
 }

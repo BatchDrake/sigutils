@@ -105,6 +105,7 @@ struct sigutils_block {
 
   su_block_port_t *in; /* Input ports */
   su_stream_t *out; /* Output streams */
+  unsigned int decimation; /* Block decimation */
 
   /* Property list */
   PTR_LIST(su_block_property_t, property);

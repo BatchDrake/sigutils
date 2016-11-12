@@ -25,11 +25,12 @@
 
 /* Expects: relative frequency */
 void
-su_ncqo_init(su_ncqo_t *ncqo, SUFLOAT frel)
+su_ncqo_init(su_ncqo_t *ncqo, SUFLOAT fnor)
 {
   ncqo->n     = 0;
   ncqo->phi   = .0;
-  ncqo->omega = SU_REL2ANG_FREQ(frel);
+  ncqo->omega = SU_NORM2ANG_FREQ(fnor);
+  ncqo->fnor  = fnor;
   ncqo->sin   = 0;
   ncqo->cos   = 1;
 }
@@ -160,12 +161,14 @@ void
 su_ncqo_set_angfreq(su_ncqo_t *ncqo, SUFLOAT omrel)
 {
   ncqo->omega = omrel;
+  ncqo->fnor  = SU_ANG2NORM_FREQ(omrel);
 }
 
 void
 su_ncqo_inc_angfreq(su_ncqo_t *ncqo, SUFLOAT delta)
 {
   ncqo->omega += delta;
+  ncqo->fnor   = SU_ANG2NORM_FREQ(ncqo->omega);
 }
 
 SUFLOAT
@@ -175,19 +178,21 @@ su_ncqo_get_angfreq(const su_ncqo_t *ncqo)
 }
 
 void
-su_ncqo_set_freq(su_ncqo_t *ncqo, SUFLOAT frel)
+su_ncqo_set_freq(su_ncqo_t *ncqo, SUFLOAT fnor)
 {
-  ncqo->omega = SU_REL2ANG_FREQ(frel);
+  ncqo->fnor  = fnor;
+  ncqo->omega = SU_NORM2ANG_FREQ(fnor);
 }
 
 void
 su_ncqo_inc_freq(su_ncqo_t *ncqo, SUFLOAT delta)
 {
-  ncqo->omega += SU_REL2ANG_FREQ(delta);
+  ncqo->fnor  += delta;
+  ncqo->omega  = SU_NORM2ANG_FREQ(ncqo->fnor);
 }
 
 SUFLOAT
 su_ncqo_get_freq(const su_ncqo_t *ncqo)
 {
-  return SU_ANG2REL_FREQ(ncqo->omega);
+  return ncqo->fnor;
 }
