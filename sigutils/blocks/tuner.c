@@ -300,7 +300,7 @@ su_block_tuner_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
     /* Read d samples */
     for (j = 0; j < tu->d; ++j) {
       /* XXX: this is awful. Please fix */
-      if ((got = su_block_port_read(in, &samp, 1)) < got)
+      if ((got = su_block_port_read(in, &samp, 1)) < 1)
         return got;
 
       /* Feed tunner */
