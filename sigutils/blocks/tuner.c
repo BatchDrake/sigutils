@@ -21,17 +21,19 @@
 #include <string.h>
 #include "block.h"
 #include "ncqo.h"
+#include "iir.h"
 
 #define SU_HAMMING_ALPHA 0.54
 #define SU_MAMMING_BETA (1 - SU_HAMMING_ALPHA)
 
 /* A tuner is just a NCQO + Low pass filter */
 struct sigutils_tuner {
-  su_ncqo_t  lo;   /* Local oscillator */
-  SUFLOAT   *h;    /* Filter */
-  SUCOMPLEX *x;    /* Signal input buffer */
-  unsigned int x_p; /* Buffer pointer */
-  unsigned int d; /* Decimation */
+  su_iir_filt_t lpf; /* Lowpass filter */
+  su_ncqo_t  lo;     /* Local oscillator */
+  SUFLOAT   *h;      /* RRC filter coefcients */
+  SUCOMPLEX *x;      /* Signal input buffer */
+  unsigned int x_p;  /* Buffer pointer */
+  unsigned int d;    /* Decimation */
 
   /* Filter params */
   SUFLOAT T;           /* Samples per symbol */
@@ -92,17 +94,19 @@ su_tuner_filter_has_changed(su_tuner_t *tu)
 SUPRIVATE SUBOOL
 su_tuner_lo_has_changed(su_tuner_t *tu)
 {
-  return su_ncqo_get_freq(&tu->lo) != tu->rq_fc;
+  return -su_ncqo_get_freq(&tu->lo) != tu->rq_fc;
 }
 
 SUPRIVATE void
 su_tuner_feed(su_tuner_t *tu, const SUCOMPLEX *data, size_t size)
 {
   unsigned int i;
+  SUCOMPLEX losamp;
 
   /* Mixing happens here */
   for (i = 0; i < size; ++i) {
-    tu->x[tu->x_p++] = data[i] * su_ncqo_get(&tu->lo);
+    losamp = su_ncqo_read(&tu->lo);
+    tu->x[tu->x_p++] = su_iir_filt_feed(&tu->lpf, data[i] * losamp);
     if (tu->x_p == tu->h_size)
       tu->x_p = 0;
   }
@@ -128,39 +132,77 @@ su_tuner_read(const su_tuner_t *tu)
 SUPRIVATE SUBOOL
 su_tuner_update_filter(su_tuner_t *tu)
 {
+  su_iir_filt_t lpf_new = su_iir_filt_INITIALIZER;
   SUFLOAT *h_new = tu->h;
   SUCOMPLEX *x_new = tu->x;
+  SUBOOL reallocate_rrc = SU_FALSE;
+  SUBOOL reallocate_lpf = SU_FALSE;
+
+  reallocate_rrc = tu->rq_h_size > tu->h_size;
+  reallocate_lpf = tu->rq_T != tu->T;
 
   /* Filter has grown */
-  if (tu->rq_h_size > tu->h_size) {
+  if (reallocate_rrc) {
     if ((h_new = malloc(tu->rq_h_size * sizeof(SUFLOAT))) == NULL)
-      return SU_FALSE;
+      goto fail;
 
-    if ((x_new = calloc(sizeof(SUCOMPLEX), tu->rq_h_size)) == NULL) {
-      free(h_new);
-      return SU_FALSE;
-    }
+    if ((x_new = calloc(sizeof(SUCOMPLEX), tu->rq_h_size)) == NULL)
+      goto fail;
+
+  } else {
+    h_new = tu->h;
+    x_new = tu->x;
   }
 
-  if (tu->h != NULL)
-    free(tu->h);
+  /* If baudrate has changed, we must change the LPF */
+  if (reallocate_lpf) {
+    if (!su_iir_bwlpf_init(&lpf_new, 5, 1. / tu->rq_T))
+      goto fail;
+  }
 
   /* Initialize it */
   su_rrc_init(h_new, tu->rq_T, tu->rq_beta, tu->rq_h_size);
 
-  /* Update filter params */
-  tu->h = h_new;
-  tu->T = tu->rq_T;
+  /* Update filter params. Nothing must fail from here */
+  if (reallocate_rrc) {
+    if (tu->h != NULL)
+      free(tu->h);
+    if (tu->x != NULL)
+      free(tu->x);
+    tu->h = h_new;
+    tu->x = x_new; /* TODO: copy old samples */
+
+  }
+
+  if (reallocate_lpf) {
+    su_iir_filt_finalize(&tu->lpf);
+    tu->lpf = lpf_new;
+    tu->T   = tu->rq_T;
+  }
+
   tu->beta = tu->rq_beta;
   tu->h_size = tu->rq_h_size;
-
   return SU_TRUE;
+
+fail:
+  if (reallocate_rrc) {
+    if (h_new != NULL)
+      free(h_new);
+
+    if (x_new != NULL)
+      free(x_new);
+  }
+
+  if (reallocate_lpf)
+    su_iir_filt_finalize(&lpf_new);
+
+  return SU_FALSE;
 }
 
 SUPRIVATE void
 su_tuner_update_lo(su_tuner_t *tu)
 {
-  su_ncqo_set_freq(&tu->lo, tu->rq_fc);
+  su_ncqo_set_freq(&tu->lo, -tu->rq_fc);
 }
 
 void
@@ -168,6 +210,9 @@ su_tuner_destroy(su_tuner_t *tu)
 {
   if (tu->h != NULL)
     free(tu->h);
+
+  if (tu->x != NULL)
+    free(tu->x);
 
   free(tu);
 }
@@ -247,8 +292,14 @@ su_block_tuner_ctor(struct sigutils_block *block, void **private, va_list ap)
   ok = ok && su_block_set_property_ref(
       block,
       SU_BLOCK_PROPERTY_TYPE_INTEGER,
-      "T",
+      "size",
       &tu->rq_h_size);
+
+  ok = ok && su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      "decimation",
+      &tu->d);
 
 done:
   if (!ok) {
@@ -258,7 +309,7 @@ done:
   else
     *private = tu;
 
-  return SU_FALSE;
+  return ok;
 }
 
 /* Tuner destructor */

@@ -34,8 +34,8 @@ struct sigutils_iir_filt {
   int x_ptr;
   int y_ptr;
 
-  SUFLOAT *y;
-  SUFLOAT *x;
+  SUCOMPLEX *y;
+  SUCOMPLEX *x;
 
   SUFLOAT *a;
   SUFLOAT *b;
@@ -46,10 +46,10 @@ typedef struct sigutils_iir_filt su_iir_filt_t;
 #define su_iir_filt_INITIALIZER {0, 0, 0, 0, NULL, NULL, NULL, NULL }
 
 /* Push sample to filter */
-SUFLOAT su_iir_filt_feed(su_iir_filt_t *filt, SUFLOAT x);
+SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
 
 /* Get last output */
-SUFLOAT su_iir_filt_get(const su_iir_filt_t *filt);
+SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
 
 /* Initialize filter */
 SUBOOL su_iir_filt_init(

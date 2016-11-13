@@ -59,4 +59,7 @@
 #define SU_T2N(fs, t) ((unsigned int) floor((t) * (SUFLOAT) (fs)))
 #define SU_N2T(fs, n) ((unsigned int) floor((n) / (SUFLOAT) (fs)))
 
+#define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT) (fs))
+#define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT) (fs))
+
 #endif /* _SIGUTILS_SAMPLING_H */
