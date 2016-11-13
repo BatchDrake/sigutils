@@ -26,7 +26,7 @@
 #include "coef.h"
 
 SUPRIVATE void
-__su_iir_filt_push_x(su_iir_filt_t *filt, SUFLOAT x)
+__su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 {
   filt->x[filt->x_ptr++] = x;
   if (filt->x_ptr >= filt->x_size)
@@ -34,20 +34,20 @@ __su_iir_filt_push_x(su_iir_filt_t *filt, SUFLOAT x)
 }
 
 SUPRIVATE void
-__su_iir_filt_push_y(su_iir_filt_t *filt, SUFLOAT y)
+__su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
 {
   filt->y[filt->y_ptr++] = y;
   if (filt->y_ptr >= filt->y_size)
     filt->y_ptr = 0;
 }
 
-SUPRIVATE SUFLOAT
+SUPRIVATE SUCOMPLEX
 __su_iir_filt_eval(const su_iir_filt_t *filt)
 {
   unsigned int i;
   int p;
 
-  SUFLOAT y = 0;
+  SUCOMPLEX y = 0;
 
   /* Input feedback */
   p = filt->x_ptr - 1;
@@ -86,10 +86,10 @@ su_iir_filt_finalize(su_iir_filt_t *filt)
     free(filt->y);
 }
 
-SUFLOAT
-su_iir_filt_feed(su_iir_filt_t *filt, SUFLOAT x)
+SUCOMPLEX
+su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
 {
-  SUFLOAT y;
+  SUCOMPLEX y;
 
   __su_iir_filt_push_x(filt, x);
   y = __su_iir_filt_eval(filt);
@@ -98,7 +98,7 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUFLOAT x)
   return y;
 }
 
-SUFLOAT
+SUCOMPLEX
 su_iir_filt_get(const su_iir_filt_t *filt)
 {
   int p;
@@ -119,17 +119,17 @@ __su_iir_filt_init(
     SUFLOAT *b,
     SUBOOL copy_coef)
 {
-  SUFLOAT *x = NULL;
-  SUFLOAT *y = NULL;
+  SUCOMPLEX *x = NULL;
+  SUCOMPLEX *y = NULL;
   SUFLOAT *a_copy = NULL;
   SUFLOAT *b_copy = NULL;
 
   memset(filt, 0, sizeof (su_iir_filt_t));
 
-  if ((x = calloc(x_size, sizeof (SUFLOAT))) == NULL)
+  if ((x = calloc(x_size, sizeof (SUCOMPLEX))) == NULL)
     goto fail;
 
-  if ((y = calloc(y_size, sizeof (SUFLOAT))) == NULL)
+  if ((y = calloc(y_size, sizeof (SUCOMPLEX))) == NULL)
     goto fail;
 
   if (copy_coef) {
