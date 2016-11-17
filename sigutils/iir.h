@@ -34,6 +34,8 @@ struct sigutils_iir_filt {
   int x_ptr;
   int y_ptr;
 
+  SUCOMPLEX  curr_y;
+
   SUCOMPLEX *y;
   SUCOMPLEX *x;
 
@@ -43,7 +45,10 @@ struct sigutils_iir_filt {
 
 typedef struct sigutils_iir_filt su_iir_filt_t;
 
-#define su_iir_filt_INITIALIZER {0, 0, 0, 0, NULL, NULL, NULL, NULL }
+#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, NULL, NULL, NULL, NULL }
+
+/* Get coefficients of a RRC filter */
+void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size);
 
 /* Push sample to filter */
 SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
@@ -64,6 +69,9 @@ SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc);
 
 /* Initialize Butterworth band-pass filter of order N */
 SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT f1, SUFLOAT f2);
+
+/* Initialize Root Raised Cosine filter */
+SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT T, SUFLOAT beta);
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);

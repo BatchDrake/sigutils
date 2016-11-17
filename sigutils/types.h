@@ -38,18 +38,24 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
-#define SU_COS  cos
-#define SU_SIN  sin
-#define SU_LOG  log10
-#define SU_EXP  exp
-#define SU_POW  pow
-#define SU_ABS  fabs
-#define SU_SQRT sqrt
-#define SU_CEIL ceil
+#define SU_COS   cos
+#define SU_ACOS  acos
+#define SU_SIN   sin
+#define SU_ASIN  asin
+#define SU_LOG   log10
+#define SU_EXP   exp
+#define SU_POW   pow
+#define SU_ABS   fabs
+#define SU_SQRT  sqrt
+#define SU_CEIL  ceil
+#define SU_COSH  cosh
+#define SU_ACOSH acosh
 
 #define SU_C_ABS  cabs
+#define SU_C_ARG  carg
 #define SU_C_REAL creal
 #define SU_C_IMAG cimag
+#define SU_C_EXP  cexp
 
 #define SUFLOAT_MIN_REF_MAG 1e-8
 #define SUFLOAT_MIN_REF_DB  -160

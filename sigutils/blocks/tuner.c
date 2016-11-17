@@ -22,9 +22,7 @@
 #include "block.h"
 #include "ncqo.h"
 #include "iir.h"
-
-#define SU_HAMMING_ALPHA 0.54
-#define SU_MAMMING_BETA (1 - SU_HAMMING_ALPHA)
+#include "taps.h"
 
 /* A tuner is just a NCQO + Low pass filter */
 struct sigutils_tuner {
@@ -48,39 +46,6 @@ struct sigutils_tuner {
 };
 
 typedef struct sigutils_tuner su_tuner_t;
-
-SUPRIVATE void
-su_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size)
-{
-  unsigned int i;
-  SUFLOAT r_t;
-  SUFLOAT dem;
-  SUFLOAT f;
-  SUFLOAT norm = 0;
-
-  for (i = 0; i < size; ++i) {
-    r_t = (i - size / 2.) / T;
-    f = 2 * beta * r_t;
-
-    /* Using wikipedia approximation around T / 2beta */
-    if (SU_ABS(dem = 1. - f * f) < SUFLOAT_THRESHOLD)
-      h[i] = M_PI / 4 * su_sinc(0.5 / beta);
-    else
-      h[i] = su_sinc(r_t) * cos(M_PI * beta * r_t) / dem;
-
-    /* Apply Hamming window */
-    h[i] *=
-        SU_HAMMING_ALPHA - SU_MAMMING_BETA * SU_COS(2 * M_PI * i / (size - 1));
-
-    /* Update norm */
-    norm += h[i];
-  }
-
-  /* Normalize filter */
-  for (i = 0; i < size; ++i) {
-    h[i] /= norm;
-  }
-}
 
 SUPRIVATE SUBOOL
 su_tuner_filter_has_changed(su_tuner_t *tu)
@@ -161,7 +126,7 @@ su_tuner_update_filter(su_tuner_t *tu)
   }
 
   /* Initialize it */
-  su_rrc_init(h_new, tu->rq_T, tu->rq_beta, tu->rq_h_size);
+  su_taps_rrc_init(h_new, tu->rq_T, tu->rq_beta, tu->rq_h_size);
 
   /* Update filter params. Nothing must fail from here */
   if (reallocate_rrc) {

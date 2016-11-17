@@ -87,6 +87,12 @@ su_test_buffer_new(unsigned int size)
   return calloc(size, sizeof (SUFLOAT));
 }
 
+SUCOMPLEX *
+su_test_complex_buffer_new(unsigned int size)
+{
+  return calloc(size, sizeof (SUCOMPLEX));
+}
+
 SUFLOAT
 su_test_buffer_mean(const SUFLOAT *buffer, unsigned int size)
 {
@@ -143,6 +149,49 @@ su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
   }
 
   return max - min;
+}
+
+SUBOOL
+su_test_complex_buffer_dump_matlab(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file,
+    const char *arrname)
+{
+  FILE *fp = NULL;
+  unsigned int i;
+
+  if ((fp = fopen(file, "w")) == NULL)
+    goto fail;
+
+  if (fprintf(fp, "%s = [\n", arrname) < 0)
+    goto fail;
+
+  for (i = 0; i < size; ++i) {
+    if (i > 0)
+      if (fprintf(fp, ";\n") < 0)
+        goto fail;
+
+    if (fprintf(
+        fp,
+        SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
+        SU_C_REAL(buffer[i]),
+        SU_C_IMAG(buffer[i])) < 0)
+      goto fail;
+  }
+
+  if (fprintf(fp, "\n];\n", arrname) < 0)
+      goto fail;
+
+  fclose(fp);
+
+  return SU_TRUE;
+
+fail:
+  if (fp != NULL)
+    fclose(fp);
+
+  return SU_FALSE;
 }
 
 SUBOOL

@@ -31,17 +31,22 @@ struct sigutils_pll {
   SUFLOAT   alpha;
   SUFLOAT   beta;
   SUFLOAT   lock;
+  SUCOMPLEX a;
   su_ncqo_t ncqo;
 };
 
 typedef struct sigutils_pll su_pll_t;
 
-#define su_pll_INITIALIZER {0., 0., 0., su_ncqo_INITIALIZER}
+#define su_pll_INITIALIZER {0., 0., 0., 0, su_ncqo_INITIALIZER}
 
 void su_pll_finalize(su_pll_t *);
+
+SUBOOL su_costas_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc);
 
 SUBOOL su_pll_init(su_pll_t *, SUFLOAT, SUFLOAT);
 
 void su_pll_feed(su_pll_t *, SUFLOAT);
+
+void su_costas_feed(su_pll_t *, SUCOMPLEX);
 
 #endif /* _SIGUTILS_PLL_H */

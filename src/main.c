@@ -25,6 +25,11 @@
 #define SU_TEST_PLL_SIGNAL_FREQ 0.025
 #define SU_TEST_PLL_BANDWIDTH   (1e-4)
 
+#define SU_TEST_COSTAS_SYMBOL_PERIOD 0x200
+#define SU_TEST_COSTAS_SIGNAL_FREQ 1e-4
+#define SU_TEST_COSTAS_BANDWIDTH (1. / (2 * SU_TEST_COSTAS_SYMBOL_PERIOD))
+
+
 SUBOOL
 su_test_ncqo(su_test_context_t *ctx)
 {
@@ -836,6 +841,330 @@ done:
   return ok;
 }
 
+SUBOOL
+su_test_costas(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *input = NULL;
+  SUFLOAT *omgerr = NULL;
+  SUFLOAT *phierr = NULL;
+  SUFLOAT *lock = NULL;
+
+  SUFLOAT t;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_pll_t pll = su_pll_INITIALIZER;
+  unsigned int p = 0;
+
+  SU_TEST_START_TICKLESS(ctx);
+
+  /* Initialize */
+  SU_TEST_ASSERT(input  = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(omgerr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(phierr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+
+  SU_TEST_ASSERT(su_costas_init(&pll,
+      0,
+      SU_TEST_COSTAS_BANDWIDTH));
+
+  su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
+
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    input[p] = 0 * (0.5 - rand() / (double) RAND_MAX);
+    input[p] += su_ncqo_read_i(&ncqo);
+  }
+
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_buffer_dump_matlab(
+            input,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "costas_input.m",
+            "x"));
+  }
+
+  /* Restart NCQO */
+  su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
+
+  SU_TEST_TICK(ctx);
+
+  /* Feed the PLL and save phase value */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    (void) su_ncqo_read_i(&ncqo); /* Used to compute phase errors */
+    su_costas_feed(&pll, (SUCOMPLEX) input[p]);
+    input[p]  = su_ncqo_get_i(&pll.ncqo);
+    phierr[p] = su_ncqo_get_phase(&pll.ncqo) - su_ncqo_get_phase(&ncqo);
+    lock[p]   = pll.lock;
+
+    if (phierr[p] < 0 || phierr[p] > 2 * PI) {
+      phierr[p] -= 2 * PI * floor(phierr[p] / (2 * PI));
+      if (phierr[p] > PI)
+        phierr[p] -= 2 * PI;
+    }
+    omgerr[p] = pll.ncqo.fnor;
+  }
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  su_pll_finalize(&pll);
+
+  if (input != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              input,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_output.m",
+              "y"));
+    }
+
+    free(input);
+  }
+
+  if (phierr != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              phierr,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_phierr.m",
+              "pe"));
+    }
+
+    free(phierr);
+  }
+
+  if (omgerr != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              omgerr,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_omgerr.m",
+              "oe"));
+    }
+
+    free(omgerr);
+  }
+
+  if (lock != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              lock,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_lock.m",
+              "lock"));
+    }
+
+    free(lock);
+  }
+
+  return ok;
+}
+
+SUBOOL
+su_test_costas_complex(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  SUCOMPLEX *input = NULL;
+  SUFLOAT *omgerr = NULL;
+  SUCOMPLEX *phierr = NULL;
+  SUFLOAT *lock = NULL;
+
+  SUCOMPLEX x = 0;
+  SUCOMPLEX bbs = 1;
+  SUCOMPLEX symbols[] = { /* Out of phase BPSK signal */
+      SU_SQRT(2) + I * SU_SQRT(2),
+      -SU_SQRT(2) - I * SU_SQRT(2)};
+  unsigned int filter_period;
+  unsigned int symbol_period;
+  unsigned int sync_period;
+  unsigned int message;
+  unsigned int msgbuf;
+
+  unsigned int rx_delay;
+  unsigned int rx_buf = 0;
+
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_pll_t pll = su_pll_INITIALIZER;
+  su_iir_filt_t lpf = su_iir_filt_INITIALIZER;
+  unsigned int p = 0;
+  unsigned int t = 0;
+  unsigned int bit;
+
+  SU_TEST_START_TICKLESS(ctx);
+
+  /* Initialize some parameters */
+  symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
+  filter_period = 4 * symbol_period;
+  sync_period   = 4096; /* Number of samples to allow loop to synchronize */
+  message       = 0x414c4f48; /* Some greeting message */
+  rx_delay      = filter_period / 2 + sync_period;
+
+  /* Initialize buffers */
+  SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(omgerr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(phierr = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+
+  SU_TEST_ASSERT(su_costas_init(
+      &pll,
+      0,
+      SU_TEST_COSTAS_BANDWIDTH));
+
+  su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
+
+  /* Create Root-Raised-Cosine filter. We will use this to reduce ISI */
+  SU_TEST_ASSERT(
+      su_iir_rrc_init(
+          &lpf,
+          filter_period,
+          symbol_period,
+          0));
+
+  /* Send data */
+  msgbuf = message;
+  SU_INFO("Modulating 0x%x in BPSK...\n", msgbuf);
+
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    if (p >= sync_period) {
+      if (p >= sync_period && p % symbol_period == 0) {
+          bit = msgbuf & 1;
+          msgbuf >>= 1;
+          bbs = symbol_period * symbols[bit];
+        } else {
+          bbs = 0;
+        }
+      } else {
+        bbs = symbols[1];
+      }
+
+    x = su_iir_filt_feed(&lpf, bbs);
+
+    input[p] = x * su_ncqo_read(&ncqo);
+  }
+
+  if (ctx->dump_results) {
+    SU_TEST_ASSERT(
+        su_test_complex_buffer_dump_matlab(
+            input,
+            SU_TEST_SIGNAL_BUFFER_SIZE,
+            "costas_input.m",
+            "x"));
+  }
+
+  /* Restart NCQO */
+  su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
+
+  SU_TEST_TICK(ctx);
+
+  /* Feed the loop and perform demodulation */
+  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+    (void) su_ncqo_step(&ncqo);
+    su_costas_feed(&pll, input[p]);
+    input[p]  = su_ncqo_get(&pll.ncqo);
+    phierr[p] = pll.a;
+    lock[p]   = pll.lock;
+    omgerr[p] = pll.ncqo.fnor - ncqo.fnor;
+
+    if (p % symbol_period == 0) {
+      if (p >= rx_delay) {
+        t = (p - rx_delay) / symbol_period;
+        bit = SU_C_ARG(phierr[p]) > 0;
+
+        if (t < 32) {
+          rx_buf |= bit << t;
+        }
+      }
+    }
+  }
+
+  SU_INFO(
+      "RX: 0x%x = ~0x%x in %d samples\n",
+      rx_buf,
+      ~rx_buf,
+      SU_TEST_SIGNAL_BUFFER_SIZE);
+
+  SU_TEST_ASSERT(rx_buf == message || rx_buf == ~message);
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  su_pll_finalize(&pll);
+
+  if (input != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_complex_buffer_dump_matlab(
+              input,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_output.m",
+              "y"));
+    }
+
+    free(input);
+  }
+
+  if (phierr != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_complex_buffer_dump_matlab(
+              phierr,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_phierr.m",
+              "pe"));
+    }
+
+    free(phierr);
+  }
+
+  if (omgerr != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              omgerr,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_omgerr.m",
+              "oe"));
+    }
+
+    free(omgerr);
+  }
+
+  if (lock != NULL) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              lock,
+              SU_TEST_SIGNAL_BUFFER_SIZE,
+              "costas_lock.m",
+              "lock"));
+    }
+
+    free(lock);
+  }
+
+  if (lpf.x_size > 0) {
+    if (ctx->dump_results) {
+      su_test_buffer_dump_matlab(
+          lpf.b,
+          lpf.x_size,
+          "costas_rrc.m",
+          "rrc");
+    }
+  }
+
+  su_iir_filt_finalize(&lpf);
+
+  return ok;
+}
+
 int
 main (int argc, char *argv[], char *envp[])
 {
@@ -848,7 +1177,9 @@ main (int argc, char *argv[], char *envp[])
       su_test_pll,
       su_test_block,
       su_test_block_plugging,
-      su_test_tuner
+      su_test_tuner,
+      su_test_costas,
+      su_test_costas_complex
   };
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
 
@@ -857,7 +1188,7 @@ main (int argc, char *argv[], char *envp[])
     exit (EXIT_FAILURE);
   }
 
-  su_test_run(test_list, test_count, 0, test_count - 1, SU_TRUE);
+  su_test_run(test_list, test_count, 10, test_count - 1, SU_TRUE);
 
   return 0;
 }

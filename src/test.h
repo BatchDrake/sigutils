@@ -26,7 +26,7 @@
 #include <sigutils/types.h>
 #include <sys/time.h>
 
-#define SU_TEST_SIGNAL_BUFFER_SIZE 4096
+#define SU_TEST_SIGNAL_BUFFER_SIZE (8 * 4096)
 
 enum sigutils_test_time_units {
   SU_TIME_UNITS_UNDEFINED,
@@ -102,6 +102,8 @@ SUBOOL su_test_run(
 
 SUFLOAT *su_test_buffer_new(unsigned int size);
 
+SUCOMPLEX *su_test_complex_buffer_new(unsigned int size);
+
 SUFLOAT su_test_buffer_mean(const SUFLOAT *buffer, unsigned int size);
 
 SUFLOAT su_test_buffer_std(const SUFLOAT *buffer, unsigned int size);
@@ -109,6 +111,12 @@ SUFLOAT su_test_buffer_std(const SUFLOAT *buffer, unsigned int size);
 SUFLOAT su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size);
 
 SUFLOAT su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size);
+
+SUBOOL su_test_complex_buffer_dump_matlab(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file,
+    const char *arrname);
 
 SUBOOL su_test_buffer_dump_matlab(
     const SUFLOAT *buffer,

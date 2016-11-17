@@ -24,6 +24,7 @@
 #include "sampling.h"
 #include "iir.h"
 #include "coef.h"
+#include "taps.h"
 
 SUPRIVATE void
 __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
@@ -36,9 +37,11 @@ __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 SUPRIVATE void
 __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
 {
-  filt->y[filt->y_ptr++] = y;
-  if (filt->y_ptr >= filt->y_size)
-    filt->y_ptr = 0;
+  if (filt->y_size > 0) {
+    filt->y[filt->y_ptr++] = y;
+    if (filt->y_ptr >= filt->y_size)
+      filt->y_ptr = 0;
+  }
 }
 
 SUPRIVATE SUCOMPLEX
@@ -58,13 +61,15 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
     y += filt->b[i] * filt->x[p--];
   }
 
-  /* Output feedback - assumes that a[0] is 1 */
-  p = filt->y_ptr - 1;
-  for (i = 1; i < filt->y_size; ++i) {
-    if (p < 0)
-      p += filt->y_size;
+  if (filt->y_size > 0) {
+    /* Output feedback - assumes that a[0] is 1 */
+    p = filt->y_ptr - 1;
+    for (i = 1; i < filt->y_size; ++i) {
+      if (p < 0)
+        p += filt->y_size;
 
-    y -= filt->a[i] * filt->y[p--];
+      y -= filt->a[i] * filt->y[p--];
+    }
   }
 
   return y;
@@ -95,19 +100,14 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
   y = __su_iir_filt_eval(filt);
   __su_iir_filt_push_y(filt, y);
 
+  filt->curr_y = y;
   return y;
 }
 
 SUCOMPLEX
 su_iir_filt_get(const su_iir_filt_t *filt)
 {
-  int p;
-
-  p = filt->y_ptr - 1;
-  if (p < 0)
-    p += filt->y_size;
-
-  return filt->y[p];
+  return filt->curr_y;
 }
 
 SUPRIVATE SUBOOL
@@ -129,17 +129,21 @@ __su_iir_filt_init(
   if ((x = calloc(x_size, sizeof (SUCOMPLEX))) == NULL)
     goto fail;
 
-  if ((y = calloc(y_size, sizeof (SUCOMPLEX))) == NULL)
-    goto fail;
+  if (y_size > 0)
+    if ((y = calloc(y_size, sizeof (SUCOMPLEX))) == NULL)
+      goto fail;
 
   if (copy_coef) {
-    if ((a_copy = malloc(y_size * sizeof (SUFLOAT))) == NULL)
-      goto fail;
+    if (y_size > 0) {
+      if ((a_copy = malloc(y_size * sizeof (SUFLOAT))) == NULL)
+        goto fail;
+
+      memcpy(a_copy, a, y_size * sizeof (SUFLOAT));
+    }
 
     if ((b_copy = malloc(x_size * sizeof (SUFLOAT))) == NULL)
       goto fail;
 
-    memcpy(a_copy, a, y_size * sizeof (SUFLOAT));
     memcpy(b_copy, b, x_size * sizeof (SUFLOAT));
   } else {
     a_copy = a;
@@ -260,6 +264,32 @@ fail:
   if (a != NULL)
     free(a);
 
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+SUBOOL
+su_iir_rrc_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT T, SUFLOAT beta)
+{
+  SUFLOAT *b = NULL;
+  unsigned int i;
+
+  if (n < 1)
+    goto fail;
+
+  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+    goto fail;
+
+  su_taps_rrc_init(b, T, beta, n);
+
+  if (!__su_iir_filt_init(filt, 0, NULL, n, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
   if (b != NULL)
     free(b);
 
