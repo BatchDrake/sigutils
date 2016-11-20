@@ -31,7 +31,8 @@ SUPRIVATE su_test_cb_t test_list[] = {
     su_test_tuner,
     su_test_costas_lock,
     su_test_costas_bpsk,
-    su_test_costas_qpsk
+    su_test_costas_qpsk,
+    su_test_costas_qpsk_noisy
 };
 
 SUPRIVATE void
@@ -59,6 +60,8 @@ SUPRIVATE struct option long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
+extern int optind;
+
 int
 main (int argc, char *argv[], char *envp[])
 {
@@ -68,9 +71,9 @@ main (int argc, char *argv[], char *envp[])
   SUBOOL dump_results = SU_FALSE;
   SUBOOL result;
   int c;
-  int optind;
+  int index;
 
-  while ((c = getopt_long(argc, argv, "dhc", long_options, &optind)) != -1) {
+  while ((c = getopt_long(argc, argv, "dhc", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -99,23 +102,23 @@ main (int argc, char *argv[], char *envp[])
     exit (EXIT_FAILURE);
   }
 
-  if (argc - optind > 1) {
-    if (sscanf(argv[++optind], "%u", &test_start) < 1) {
-      fprintf(stderr, "%s: invalid test start\n", argv[0]);
+  if (argc - optind >= 1) {
+    if (sscanf(argv[optind++], "%u", &test_start) < 1) {
+      fprintf(stderr, "%s: invalid test start `%s'\n", argv[0], argv[optind - 1]);
       exit (EXIT_FAILURE);
     }
 
     test_end = test_start;
   }
 
-  if (argc - optind > 1) {
-    if (sscanf(argv[++optind], "%u", &test_end) < 1) {
+  if (argc - optind >= 1) {
+    if (sscanf(argv[optind++], "%u", &test_end) < 1) {
       fprintf(stderr, "%s: invalid test end\n", argv[0]);
       exit (EXIT_FAILURE);
     }
   }
 
-  if (argc - optind > 1) {
+  if (argc - optind >= 1) {
     fprintf(stderr, "%s: too many arguments\n", argv[0]);
     help(argv[0]);
     exit (EXIT_FAILURE);

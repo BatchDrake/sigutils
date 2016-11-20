@@ -46,5 +46,6 @@ SUBOOL su_test_tuner(su_test_context_t *ctx);
 SUBOOL su_test_costas_lock(su_test_context_t *ctx);
 SUBOOL su_test_costas_bpsk(su_test_context_t *ctx);
 SUBOOL su_test_costas_qpsk(su_test_context_t *ctx);
+SUBOOL su_test_costas_qpsk_noisy(su_test_context_t *ctx);
 
 #endif /* _SRC_TESTS_TEST_LIST_H */

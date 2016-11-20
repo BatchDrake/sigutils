@@ -82,6 +82,9 @@ SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT f1, SUFLOA
 /* Initialize Root Raised Cosine filter */
 SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT T, SUFLOAT beta);
 
+/* Initialize brickwall LPF filter */
+SUBOOL su_iir_brickwall_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc);
+
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
 

@@ -35,6 +35,7 @@
 #define SU_TEST_COSTAS_SYMBOL_PERIOD 0x200
 #define SU_TEST_COSTAS_SIGNAL_FREQ 1e-4
 #define SU_TEST_COSTAS_BANDWIDTH (1. / (2 * SU_TEST_COSTAS_SYMBOL_PERIOD))
+#define SU_TEST_COSTAS_BETA .35
 
 SUBOOL
 su_test_costas_lock(su_test_context_t *ctx)
@@ -222,9 +223,9 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   filter_period = 4 * symbol_period;
   sync_period   = 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
-  rx_delay      = filter_period / 2 + sync_period;
+  rx_delay      = filter_period + sync_period;
   rx_size       = (SU_TEST_SIGNAL_BUFFER_SIZE - rx_delay) / symbol_period;
-  N0            = 5e-1; /* Noise amplitude */
+  N0            = 1; /* Noise amplitude */
 
   /* Initialize buffers */
   SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
@@ -254,7 +255,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   /* Send data */
   msgbuf = message;
   SU_INFO("Modulating 0x%x in BPSK...\n", msgbuf);
-  SU_INFO("  AWGN amplitude: %lg dBFS\n", SU_DB_RAW(N0));
+  SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0));
 
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
     if (p >= sync_period) {
@@ -269,7 +270,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
         bbs = symbols[1];
       }
 
-    x = su_iir_filt_feed(&mf, bbs);
+    x = su_iir_filt_feed(&mf, .5 * bbs);
 
     input[p] = x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
@@ -293,7 +294,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas, input[p]);
     input[p]  = su_ncqo_get(&costas.ncqo);
-    phierr[p] = costas.y;
+    phierr[p] = su_iir_filt_feed(&mf, costas.y);
     lock[p]   = costas.lock;
     omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
 
@@ -302,11 +303,10 @@ su_test_costas_bpsk(su_test_context_t *ctx)
         t = (p - rx_delay) / symbol_period;
         bit = SU_C_ARG(phierr[p]) > 0;
 
-        if (t < 32) {
+        if (t < 32)
           rx_buf |= bit << t;
-        }
 
-        rx[rx_count++] = phierr[p];
+        rx[rx_count++] = 2 * phierr[p];
       }
     }
   }
@@ -482,8 +482,14 @@ su_test_rotcompare(uint32_t original, uint32_t recv)
 #define SU_QPSK_ROT_2 0x10101010
 #define SU_QPSK_ROT_3 (SU_QPSK_ROT_1 | SU_QPSK_ROT_2)
 
-SUBOOL
-su_test_costas_qpsk(su_test_context_t *ctx)
+#undef __CURRFUNC__
+#define __CURRFUNC__ __caller
+
+SUPRIVATE SUBOOL
+__su_test_costas_qpsk(
+    su_test_context_t *ctx,
+    const char *__caller,
+    SUBOOL noisy)
 {
   SUBOOL ok = SU_FALSE;
   SUCOMPLEX *input = NULL;
@@ -525,11 +531,15 @@ su_test_costas_qpsk(su_test_context_t *ctx)
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
   filter_period = 4 * symbol_period;
-  sync_period   = 2 * 4096; /* Number of samples to allow loop to synchronize */
+  sync_period   = 4 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
-  rx_delay      = filter_period / 2 + sync_period - symbol_period / 2;
+  rx_delay      = filter_period + sync_period - symbol_period / 2;
   rx_size       = (SU_TEST_SIGNAL_BUFFER_SIZE - rx_delay) / symbol_period;
-  N0            = 4e-1; /* Noise amplitude */
+
+  if (noisy)
+    N0          = SU_MAG_RAW(12);
+  else
+    N0          = SU_MAG_RAW(-10);
 
   /* Initialize buffers */
   SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
@@ -538,10 +548,14 @@ su_test_costas_qpsk(su_test_context_t *ctx)
   SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
   SU_TEST_ASSERT(rx     = su_test_complex_buffer_new(rx_size));
 
+  /*
+   * In noisy test we assume we are on lock, we just want to retrieve
+   * phase offsets from the loop
+   */
   SU_TEST_ASSERT(su_costas_init(
       &costas,
       SU_COSTAS_KIND_QPSK,
-      0,
+      noisy ? SU_TEST_COSTAS_SIGNAL_FREQ : 0,
       SU_TEST_COSTAS_BANDWIDTH,
       10,
       2e-1 * SU_TEST_COSTAS_BANDWIDTH));
@@ -557,13 +571,20 @@ su_test_costas_qpsk(su_test_context_t *ctx)
 
   su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
 
-  /* Create Root-Raised-Cosine filter. We will use this to reduce ISI */
+#ifndef SU_TEST_COSTAS_USE_RRC
   SU_TEST_ASSERT(
       su_iir_rrc_init(
           &mf,
           filter_period,
           symbol_period,
-          0));
+          0.35));
+#else
+  SU_TEST_ASSERT(
+      su_iir_brickwall_init(
+          &mf,
+          filter_period,
+          1. / symbol_period));
+#endif
 
   if (ctx->dump_results) {
     SU_TEST_ASSERT(
@@ -577,13 +598,12 @@ su_test_costas_qpsk(su_test_context_t *ctx)
   /* Send data */
   msgbuf = message;
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
-  SU_INFO("  AWGN amplitude: %lg dBFS\n", SU_DB_RAW(N0));
+  SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0));
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
     if (p >= sync_period) {
-      if (p >= sync_period && p % symbol_period == 0) {
-          if (n == 32) {
+      if (p % symbol_period == 0) {
+          if (n == 32)
             n = 0;
-          }
           msgbuf = message >> n;
           sym = msgbuf & 3;
           n += 2;
@@ -596,7 +616,7 @@ su_test_costas_qpsk(su_test_context_t *ctx)
         bbs = symbols[1];
       }
 
-    x = su_iir_filt_feed(&mf, bbs);
+    x = su_iir_filt_feed(&mf, .5 * bbs);
 
     input[p] = x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
@@ -620,7 +640,7 @@ su_test_costas_qpsk(su_test_context_t *ctx)
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas, input[p]);
     input[p]  = su_ncqo_get(&costas.ncqo);
-    phierr[p] = costas.y;
+    phierr[p] = su_iir_filt_feed(&mf, costas.y);
     lock[p]   = costas.lock;
     omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
 
@@ -632,7 +652,7 @@ su_test_costas_qpsk(su_test_context_t *ctx)
           rx_buf |= sym << (2 * t);
         }
 
-        rx[rx_count++] = phierr[p];
+        rx[rx_count++] = SU_SQRT(2) * phierr[p];
       }
     }
   }
@@ -733,3 +753,19 @@ done:
 
   return ok;
 }
+
+#undef __CURRFUNC__
+#define __CURRFUNC__ __FUNCTION__
+
+SUBOOL
+su_test_costas_qpsk(su_test_context_t *ctx)
+{
+  __su_test_costas_qpsk(ctx, __FUNCTION__, SU_FALSE);
+}
+
+SUBOOL
+su_test_costas_qpsk_noisy(su_test_context_t *ctx)
+{
+  __su_test_costas_qpsk(ctx, __FUNCTION__, SU_TRUE);
+}
+

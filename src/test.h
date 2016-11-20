@@ -48,19 +48,21 @@ struct sigutils_test_context {
 
 typedef struct sigutils_test_context su_test_context_t;
 
+#define __CURRFUNC__ __FUNCTION__
+
 #define su_test_context_INITIALIZER            \
   {SU_FALSE, 0, {0, 0}, {0, 0}, 0, SU_TIME_UNITS_UNDEFINED}
 
 #define SU_TEST_START(ctx)                     \
   printf("[t:%3d] %s: start\n",                \
          ctx->testno,                          \
-         __FUNCTION__);                        \
+         __CURRFUNC__);                        \
   gettimeofday(&ctx->start, NULL);             \
 
 #define SU_TEST_START_TICKLESS(ctx)            \
   printf("[t:%3d] %s: start\n",                \
          ctx->testno,                          \
-         __FUNCTION__);
+         __CURRFUNC__);
 
 #define SU_TEST_TICK(ctx)                      \
   gettimeofday(&ctx->start, NULL)              \
@@ -71,7 +73,7 @@ typedef struct sigutils_test_context su_test_context_t;
   su_test_context_update_times(ctx);           \
   printf("[t:%3d] %s: end (%g %s)\n",          \
          ctx->testno,                          \
-         __FUNCTION__,                         \
+         __CURRFUNC__,                         \
          ctx->elapsed_time,                    \
          su_test_context_time_units(ctx));     \
 
@@ -79,10 +81,10 @@ typedef struct sigutils_test_context su_test_context_t;
     if (!(cond)) {                             \
       printf("[t:%3d] %s: assertion failed\n", \
              ctx->testno,                      \
-             __FUNCTION__);                    \
+             __CURRFUNC__);                    \
       printf("[t:%3d] %s: !(%s)\n",            \
              ctx->testno,                      \
-             __FUNCTION__,                     \
+             __CURRFUNC__,                     \
              STRINGIFY(cond));                 \
       goto done;                               \
     }
