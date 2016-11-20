@@ -1303,7 +1303,7 @@ su_test_costas_qpsk(su_test_context_t *ctx)
       0,
       SU_TEST_COSTAS_BANDWIDTH,
       10,
-      1e-1 * SU_TEST_COSTAS_BANDWIDTH));
+      2e-1 * SU_TEST_COSTAS_BANDWIDTH));
 
   if (ctx->dump_results) {
     SU_TEST_ASSERT(
@@ -1517,7 +1517,7 @@ main (int argc, char *argv[], char *envp[])
     exit (EXIT_FAILURE);
   }
 
-  su_test_run(test_list, test_count, test_count - 1, test_count - 1, SU_TRUE);
+  su_test_run(test_list, test_count, test_count - 2, test_count - 1, SU_TRUE);
 
   return 0;
 }

@@ -134,8 +134,9 @@ su_costas_init(
 
   memset(costas, 0, sizeof(su_costas_t));
 
+  /* Make LPF filter critically damped (Eric Hagemann) */
   costas->a = SU_NORM2ANG_FREQ(loop_bw);
-  costas->b = costas->a * costas->a;
+  costas->b = .25 * costas->a * costas->a;
   costas->y_alpha = 1;
   costas->kind = kind;
 
@@ -213,7 +214,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   costas->lock += costas->a * (1 - e - costas->lock);
   costas->y += costas->y_alpha * (conj(s) * x - costas->y);
 
-  /* Loop filter suggested by Eric Hagemann */
+  /* IIR loop filter suggested by Eric Hagemann */
   su_ncqo_inc_angfreq(&costas->ncqo, costas->b * e);
   su_ncqo_inc_phase(&costas->ncqo, costas->a * e);
 
