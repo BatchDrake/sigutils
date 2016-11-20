@@ -48,24 +48,6 @@ fail:
   return SU_FALSE;
 }
 
-SUBOOL
-su_pll_costas_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc)
-{
-  memset(pll, 0, sizeof(su_pll_t));
-
-  pll->alpha = SU_NORM2ANG_FREQ(fc);
-  pll->beta  = 2 * SU_SQRT(pll->alpha);
-
-  su_ncqo_init(&pll->ncqo, fhint);
-
-  return SU_TRUE;
-
-fail:
-  su_pll_finalize(pll);
-
-  return SU_FALSE;
-}
-
 void
 su_pll_feed(su_pll_t *pll, SUFLOAT x)
 {
@@ -80,32 +62,6 @@ su_pll_feed(su_pll_t *pll, SUFLOAT x)
   lck =  x * SU_C_REAL(s); /* Lock: projection against I */
 
   pll->lock += pll->beta * (2 * lck - pll->lock);
-
-  if (pll->ncqo.omega > -pll->alpha * err) {
-    su_ncqo_inc_angfreq(&pll->ncqo, pll->alpha * err);
-  }
-
-  su_ncqo_inc_phase(&pll->ncqo, pll->beta * err);
-}
-
-void
-su_pll_costas_feed(su_pll_t *pll, SUCOMPLEX x)
-{
-  SUFLOAT err;
-  SUFLOAT lck;
-
-  SUCOMPLEX s;
-  SUCOMPLEX mix;
-
-  s = su_ncqo_read(&pll->ncqo);
-  mix = x * conj(s);
-
-  pll->a += 1 * (mix - pll->a);
-
-  /* Use product of I and Q as error signal */
-  err = -SU_C_REAL(pll->a) * SU_C_IMAG(pll->a);
-
-  pll->lock = 1 - SU_ABS(2 * err);
 
   if (pll->ncqo.omega > -pll->alpha * err) {
     su_ncqo_inc_angfreq(&pll->ncqo, pll->alpha * err);
@@ -154,7 +110,7 @@ su_costas_init(
   else
     taps[0] = 1;
 
-  if (!su_iir_filt_init(&costas->af, 0, NULL, arm_order, taps))
+  if (!__su_iir_filt_init(&costas->af, 0, NULL, arm_order, taps, SU_FALSE))
     goto fail;
 
   taps = NULL;
@@ -182,7 +138,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
    * s = cos(wt) + sin(wt). Signal sQ be 90 deg delayed wrt sI, therefore
    * we must multiply by conj(s).
    */
-  costas->z = su_iir_filt_feed(&costas->af, conj(s) * x);
+  costas->z = conj(s) * x; //su_iir_filt_feed(&costas->af, conj(s) * x);
 
   switch (costas->kind) {
     case SU_COSTAS_KIND_NONE:

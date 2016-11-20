@@ -72,12 +72,10 @@ typedef struct sigutils_costas su_costas_t;
   su_ncqo_INITIALIZER           \
 }
 
-/* PLL API allows to initialize a basic Costas loop for BPSK */
+/* Second order PLL */
 void su_pll_finalize(su_pll_t *);
 SUBOOL su_pll_init(su_pll_t *, SUFLOAT, SUFLOAT);
-SUBOOL su_pll_costas_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc);
 void su_pll_feed(su_pll_t *, SUFLOAT);
-void su_pll_costas_feed(su_pll_t *, SUCOMPLEX);
 
 /* QPSK costas loops are way more complex than that */
 void su_costas_finalize(su_costas_t *);

@@ -64,6 +64,15 @@ SUBOOL su_iir_filt_init(
     unsigned int x_size,
     const SUFLOAT *b);
 
+/* Initialize filter (internal) */
+SUBOOL __su_iir_filt_init(
+    su_iir_filt_t *filt,
+    unsigned int y_size,
+    SUFLOAT *a,
+    unsigned int x_size,
+    SUFLOAT *b,
+    SUBOOL copy_coef);
+
 /* Initialize Butterworth low-pass filter of order N */
 SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc);
 

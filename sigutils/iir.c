@@ -110,7 +110,7 @@ su_iir_filt_get(const su_iir_filt_t *filt)
   return filt->curr_y;
 }
 
-SUPRIVATE SUBOOL
+SUBOOL
 __su_iir_filt_init(
     su_iir_filt_t *filt,
     unsigned int y_size,

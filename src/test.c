@@ -246,13 +246,12 @@ su_test_run(
   unsigned int count = 0;
   unsigned int success = 0;
 
-  ctx.dump_results = save;
-
   if (range_end >= test_count)
     range_end = test_count - 1;
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;
+    ctx.dump_results = save;
     if ((test_list[i])(&ctx))
       ++success;
     else {
