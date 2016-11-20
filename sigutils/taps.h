@@ -29,4 +29,6 @@
 
 void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size);
 
+void su_taps_brickwall_init(SUFLOAT *h, SUFLOAT B, unsigned int size);
+
 #endif /* _SIGUTILS_TAPS_H */

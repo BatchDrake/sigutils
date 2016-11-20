@@ -63,6 +63,19 @@ su_taps_apply_hann(SUFLOAT *h, unsigned int size)
 }
 
 void
+su_taps_normalize(SUFLOAT *h, unsigned int size)
+{
+  unsigned int i;
+  SUFLOAT norm = 0;
+
+  for (i = 0; i < size; ++i) {
+    norm += h[i];
+  }
+
+  su_taps_scale(h, 1. / norm, size);
+}
+
+void
 su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size)
 {
   unsigned int i;
@@ -87,6 +100,20 @@ su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size)
           (1 - 2 / M_PI) * cos(M_PI / (4 * beta)));
     else
       h[i] = num / dem;
+  }
+
+  su_taps_apply_hamming(h, size);
+}
+
+void
+su_taps_brickwall_init(SUFLOAT *h, SUFLOAT B, unsigned int size)
+{
+  unsigned int i;
+  SUFLOAT t = 0;
+
+  for (i = 0; i < size; ++i) {
+    t = 2 * B * (i - size / 2.);
+    h[i] = 2 * B * su_sinc(t);
   }
 
   su_taps_apply_hamming(h, size);

@@ -39,14 +39,57 @@ typedef struct sigutils_pll su_pll_t;
 
 #define su_pll_INITIALIZER {0., 0., 0., 0, su_ncqo_INITIALIZER}
 
+enum sigutils_costas_kind {
+  SU_COSTAS_KIND_NONE,
+  SU_COSTAS_KIND_BPSK,
+  SU_COSTAS_KIND_QPSK
+};
+
+struct sigutils_costas {
+  enum sigutils_costas_kind kind;
+  SUFLOAT a;
+  SUFLOAT b;
+  SUFLOAT lock;
+  su_iir_filt_t af; /* Arm filter */
+  SUCOMPLEX z; /* Arm filter output */
+  SUCOMPLEX y; /* Demodulation result */
+  SUCOMPLEX y_alpha; /* Result alpha */
+  su_ncqo_t ncqo;
+};
+
+typedef struct sigutils_costas su_costas_t;
+
+#define su_costas_INITIALIZER   \
+{                               \
+  SU_COSTAS_KIND_NONE,          \
+  0.,                           \
+  0.,                           \
+  0.,                           \
+  su_iir_filt_INITIALIZER,      \
+  0.,                           \
+  0.,                           \
+  0.,                           \
+  su_ncqo_INITIALIZER           \
+}
+
+/* PLL API allows to initialize a basic Costas loop for BPSK */
 void su_pll_finalize(su_pll_t *);
-
-SUBOOL su_costas_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc);
-
 SUBOOL su_pll_init(su_pll_t *, SUFLOAT, SUFLOAT);
-
+SUBOOL su_pll_costas_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc);
 void su_pll_feed(su_pll_t *, SUFLOAT);
+void su_pll_costas_feed(su_pll_t *, SUCOMPLEX);
 
-void su_costas_feed(su_pll_t *, SUCOMPLEX);
+/* QPSK costas loops are way more complex than that */
+void su_costas_finalize(su_costas_t *);
+
+SUBOOL su_costas_init(
+    su_costas_t *costas,
+    enum sigutils_costas_kind kind,
+    SUFLOAT fhint,
+    SUFLOAT arm_bw,
+    unsigned int arm_order,
+    SUFLOAT loop_bw);
+
+void su_costas_feed(su_costas_t *costas, SUCOMPLEX x);
 
 #endif /* _SIGUTILS_PLL_H */

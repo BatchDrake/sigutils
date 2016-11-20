@@ -22,6 +22,7 @@
 #define _SIGUTILS_TYPES_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <complex.h>
 
@@ -38,24 +39,27 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
-#define SU_COS   cos
-#define SU_ACOS  acos
-#define SU_SIN   sin
-#define SU_ASIN  asin
-#define SU_LOG   log10
-#define SU_EXP   exp
-#define SU_POW   pow
-#define SU_ABS   fabs
-#define SU_SQRT  sqrt
-#define SU_CEIL  ceil
-#define SU_COSH  cosh
-#define SU_ACOSH acosh
+#define SU_COS    cos
+#define SU_ACOS   acos
+#define SU_SIN    sin
+#define SU_ASIN   asin
+#define SU_LOG    log10
+#define SU_LN     log
+#define SU_EXP    exp
+#define SU_POW    pow
+#define SU_ABS    fabs
+#define SU_SQRT   sqrt
+#define SU_CEIL   ceil
+#define SU_COSH   cosh
+#define SU_ACOSH  acosh
+#define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
 
-#define SU_C_ABS  cabs
-#define SU_C_ARG  carg
-#define SU_C_REAL creal
-#define SU_C_IMAG cimag
-#define SU_C_EXP  cexp
+#define SU_C_ABS    cabs
+#define SU_C_ARG    carg
+#define SU_C_REAL   creal
+#define SU_C_IMAG   cimag
+#define SU_C_EXP    cexp
+#define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
 #define SUFLOAT_MIN_REF_MAG 1e-8
 #define SUFLOAT_MIN_REF_DB  -160
@@ -81,6 +85,8 @@
   fprintf(stderr, "(i) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
 
 /* Inline functions */
+
+/* Normalized sinc */
 SUINLINE SUFLOAT
 su_sinc(SUFLOAT t)
 {
@@ -88,7 +94,19 @@ su_sinc(SUFLOAT t)
   if (SU_ABS(t) <= SUFLOAT_THRESHOLD)
     return SU_COS(M_PI * t);
 
-  return SU_SIN(M_PI * t) / M_PI;
+  return SU_SIN(M_PI * t) / (M_PI * t);
+}
+
+/* Additive white gaussian noise (AWGN) generator, Box-Muller method */
+SUINLINE SUCOMPLEX
+su_c_awgn(void)
+{
+  SUFLOAT U1 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
+  SUFLOAT U2 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
+  SUFLOAT SQ = SU_SQRT(-2 * SU_LN(U1));
+  SUFLOAT PH = 2 * M_PI * U2;
+
+  return  SQ * (SU_COS(PH) + I * SU_SIN(PH));
 }
 
 #endif /* _SIGUTILS_TYPES_H */
