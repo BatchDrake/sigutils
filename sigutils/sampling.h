@@ -51,7 +51,7 @@
  */
 
 #define SU_ABS2NORM_FREQ(fs, freq) (2 * (SUFLOAT) (freq) / (SUFLOAT) (fs))
-#define SU_REL2ABS_FREQ(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor) / 2)
+#define SU_NORM2ABS_FREQ(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor) / 2.)
 
 #define SU_NORM2ANG_FREQ(freq) (PI * (freq))
 #define SU_ANG2NORM_FREQ(omrel) ((omrel) / (PI))

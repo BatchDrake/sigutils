@@ -32,7 +32,8 @@ SUPRIVATE su_test_cb_t test_list[] = {
     su_test_costas_lock,
     su_test_costas_bpsk,
     su_test_costas_qpsk,
-    su_test_costas_qpsk_noisy
+    su_test_costas_qpsk_noisy,
+    su_test_costas_block
 };
 
 SUPRIVATE void

@@ -138,7 +138,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
    * s = cos(wt) + sin(wt). Signal sQ be 90 deg delayed wrt sI, therefore
    * we must multiply by conj(s).
    */
-  costas->z = conj(s) * x; //su_iir_filt_feed(&costas->af, conj(s) * x);
+  costas->z = su_iir_filt_feed(&costas->af, conj(s) * x);
 
   switch (costas->kind) {
     case SU_COSTAS_KIND_NONE:
@@ -168,7 +168,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   }
 
   costas->lock += costas->a * (1 - e - costas->lock);
-  costas->y += costas->y_alpha * (conj(s) * x - costas->y);
+  costas->y += costas->y_alpha * (costas->z - costas->y);
 
   /* IIR loop filter suggested by Eric Hagemann */
   su_ncqo_inc_angfreq(&costas->ncqo, costas->b * e);
