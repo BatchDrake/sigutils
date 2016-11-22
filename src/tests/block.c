@@ -410,3 +410,160 @@ done:
   return ok;
 }
 
+SUBOOL
+su_test_rrc_block(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  su_block_t *costas_block = NULL;
+  su_block_t *agc_block = NULL;
+  su_block_t *rrc_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUFLOAT samp = 0;
+  int i;
+  unsigned int j = 0;
+  FILE *fp = NULL;
+  FILE *argfp = NULL;
+  ssize_t got;
+
+  /* Signal properties */
+  const SUFLOAT baud = 468;
+  const SUFLOAT arm_bw = .5 * baud;
+  const unsigned int arm_order = 10;
+  const SUFLOAT loop_bw = 1e-1 * baud;
+  const unsigned int sample_count = 8000 * 59;
+  /* Block properties */
+  int *samp_rate;
+  SUFLOAT *f;
+
+  unsigned int *size;
+
+  SU_TEST_START(ctx);
+
+  if (ctx->dump_results) {
+    fp = fopen("su_test_rrc_block.raw", "wb");
+    SU_TEST_ASSERT(fp != NULL);
+    argfp = fopen("su_test_rrc_block_phase.raw", "wb");
+    SU_TEST_ASSERT(argfp != NULL);
+  }
+
+  agc_params.delay_line_size  = 10;
+  agc_params.mag_history_size = 10;
+  agc_params.fast_rise_t      = 2;
+  agc_params.fast_fall_t      = 4;
+
+  agc_params.slow_rise_t      = 20;
+  agc_params.slow_fall_t      = 40;
+
+  agc_params.threshold        = SU_DB(2e-2);
+
+  agc_params.hang_max         = 30;
+  agc_params.slope_factor     = 0;
+
+  wav_block = su_block_new("wavfile", "test.wav");
+  SU_TEST_ASSERT(wav_block != NULL);
+
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
+  SU_TEST_ASSERT(samp_rate != NULL);
+  SU_TEST_ASSERT(*samp_rate == 8000);
+
+  SU_INFO("Wav file opened, sample rate: %d\n", *samp_rate);
+
+  agc_block = su_block_new("agc", &agc_params);
+  SU_TEST_ASSERT(agc_block != NULL);
+
+  rrc_block = su_block_new(
+      "rrc",
+      (unsigned int) (4. * 8000. / (SUFLOAT) baud),
+      SU_T2N_FLOAT(8000, 1. / 468),
+      0.35);
+  SU_TEST_ASSERT(rrc_block != NULL);
+
+  costas_block = su_block_new(
+      "costas",
+      SU_COSTAS_KIND_QPSK,
+      SU_ABS2NORM_FREQ(*samp_rate, 900),
+      SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
+      arm_order,
+      SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
+  SU_TEST_ASSERT(costas_block != NULL);
+
+  f = su_block_get_property_ref(
+      costas_block,
+      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      "f");
+  SU_TEST_ASSERT(f != NULL);
+  SU_INFO(
+      "Costas loop created, initial frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(*samp_rate, *f));
+
+  /* Plug wav file directly to AGC (there should be a tuner before this) */
+  SU_TEST_ASSERT(su_block_plug(wav_block, 0, 0, agc_block));
+
+  /* Plug AGC to Costas loop */
+  SU_TEST_ASSERT(su_block_plug(agc_block, 0, 0, costas_block));
+
+  /* Plug Costas loop to RRC filter */
+  SU_TEST_ASSERT(su_block_plug(costas_block, 0, 0, rrc_block));
+
+  /* Plug RRC filter to reading port */
+  SU_TEST_ASSERT(su_block_port_plug(&port, rrc_block, 0));
+
+  /* Try to read (this must work) */
+  while (j < sample_count) {
+    got = su_block_port_read(&port, buffer, 17);
+    SU_TEST_ASSERT(got >= 0);
+
+    if (fp != NULL)
+      for (i = 0; i < got; ++i) {
+        samp = SU_C_REAL(buffer[i]);
+        fwrite(&samp, sizeof(SUFLOAT), 1, fp);
+        samp = SU_C_IMAG(buffer[i]);
+        fwrite(&samp, sizeof(SUFLOAT), 1, fp);
+        samp = SU_C_ARG(buffer[i]) / M_PI;
+        fwrite(&samp, sizeof(SUFLOAT), 1, argfp);
+      }
+
+    if ((j % (17 * 25)) == 0)
+      SU_INFO("Center frequency: %lg Hz\r", SU_NORM2ABS_FREQ(*samp_rate, *f));
+    j += got;
+  }
+
+  SU_INFO("\n");
+  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909 &&
+                 SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  if (su_block_port_is_plugged(&port))
+    su_block_port_unplug(&port);
+
+  if (rrc_block != NULL)
+    su_block_destroy(rrc_block);
+
+  if (costas_block != NULL)
+    su_block_destroy(costas_block);
+
+  if (agc_block != NULL)
+    su_block_destroy(agc_block);
+
+  if (wav_block != NULL)
+    su_block_destroy(wav_block);
+
+  if (fp != NULL)
+    fclose(fp);
+
+  if (argfp != NULL)
+    fclose(argfp);
+
+  return ok;
+}
+
