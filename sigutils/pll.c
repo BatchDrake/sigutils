@@ -138,7 +138,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
    * s = cos(wt) + sin(wt). Signal sQ be 90 deg delayed wrt sI, therefore
    * we must multiply by conj(s).
    */
-  costas->z = su_iir_filt_feed(&costas->af, conj(s) * x);
+  costas->z = su_iir_filt_feed(&costas->af, SU_C_CONJ(s) * x);
 
   switch (costas->kind) {
     case SU_COSTAS_KIND_NONE:

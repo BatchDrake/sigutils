@@ -46,6 +46,15 @@ struct sigutils_stream {
 
 typedef struct sigutils_stream su_stream_t;
 
+#define su_stream_INITIALIZER   \
+{                               \
+  NULL, /* buffer */            \
+  0,    /* size */              \
+  0,    /* ptr */               \
+  0,    /* avail */             \
+  0     /* post */              \
+}
+
 struct sigutils_block;
 
 struct sigutils_block_port {

@@ -49,6 +49,7 @@
 #define SU_POW    pow
 #define SU_ABS    fabs
 #define SU_SQRT   sqrt
+#define SU_FLOOR  floor
 #define SU_CEIL   ceil
 #define SU_COSH   cosh
 #define SU_ACOSH  acosh
@@ -59,6 +60,7 @@
 #define SU_C_REAL   creal
 #define SU_C_IMAG   cimag
 #define SU_C_EXP    cexp
+#define SU_C_CONJ   conj
 #define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
 #define SUFLOAT_MIN_REF_MAG 1e-8

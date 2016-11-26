@@ -26,7 +26,7 @@
 #include <sigutils/types.h>
 #include <sys/time.h>
 
-#define SU_TEST_SIGNAL_BUFFER_SIZE (8 * 4096)
+#define SU_TEST_SIGNAL_BUFFER_SIZE (32 * 4096)
 
 enum sigutils_test_time_units {
   SU_TIME_UNITS_UNDEFINED,

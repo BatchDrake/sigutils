@@ -7,9 +7,10 @@ sigutils_LDFLAGS = @GLOBAL_LDFLAGS@
 
 sigutils_LDADD = ../sigutils/libsigutils.la ../util/libutil.la  @GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
 
-sigutils_SOURCES = main.c sigutils.h test.c test.h tests/test_list.h \
+sigutils_SOURCES = main.c sigutils.h test.c test.h tests/test_list.h tests/test_param.h\
 	tests/agc.c \
 	tests/block.c \
+	tests/clock.c \
 	tests/costas.c \
 	tests/filt.c \
 	tests/ncqo.c \

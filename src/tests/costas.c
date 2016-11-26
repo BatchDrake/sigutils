@@ -31,11 +31,7 @@
 #include <sigutils/sigutils.h>
 
 #include "test_list.h"
-
-#define SU_TEST_COSTAS_SYMBOL_PERIOD 0x200
-#define SU_TEST_COSTAS_SIGNAL_FREQ 1e-4
-#define SU_TEST_COSTAS_BANDWIDTH (1. / (2 * SU_TEST_COSTAS_SYMBOL_PERIOD))
-#define SU_TEST_COSTAS_BETA .35
+#include "test_param.h"
 
 SUBOOL
 su_test_costas_lock(su_test_context_t *ctx)
@@ -500,7 +496,7 @@ __su_test_costas_qpsk(
   SUFLOAT N0 = 0;
   SUCOMPLEX x = 0;
   SUCOMPLEX bbs = 1;
-  SUCOMPLEX symbols[] = { /* Out of phase BPSK signal */
+  SUCOMPLEX symbols[] = { /* QPSK constellation */
       SU_SQRT(2) + I * SU_SQRT(2),
       -SU_SQRT(2) - I * SU_SQRT(2),
       SU_SQRT(2) - I * SU_SQRT(2),

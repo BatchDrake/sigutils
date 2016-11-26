@@ -34,7 +34,9 @@ SUPRIVATE su_test_cb_t test_list[] = {
     su_test_costas_qpsk,
     su_test_costas_qpsk_noisy,
     su_test_costas_block,
-    su_test_rrc_block
+    su_test_rrc_block,
+    su_test_clock_recovery,
+    su_test_clock_recovery_noisy,
 };
 
 SUPRIVATE void

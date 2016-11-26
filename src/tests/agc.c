@@ -31,9 +31,7 @@
 #include <sigutils/sigutils.h>
 
 #include "test_list.h"
-
-#define SU_TEST_AGC_SIGNAL_FREQ 0.025
-#define SU_TEST_AGC_WINDOW (1. / SU_TEST_AGC_SIGNAL_FREQ)
+#include "test_param.h"
 
 SUPRIVATE SUBOOL
 su_test_check_peak(

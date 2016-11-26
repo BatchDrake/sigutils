@@ -31,10 +31,7 @@
 #include <sigutils/sigutils.h>
 
 #include "test_list.h"
-
-
-#define SU_TEST_PLL_SIGNAL_FREQ 0.025
-#define SU_TEST_PLL_BANDWIDTH   (1e-4)
+#include "test_param.h"
 
 SUBOOL
 su_test_pll(su_test_context_t *ctx)
