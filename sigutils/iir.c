@@ -101,13 +101,19 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
   __su_iir_filt_push_y(filt, y);
 
   filt->curr_y = y;
-  return y;
+  return filt->gain * y;
 }
 
 SUCOMPLEX
 su_iir_filt_get(const su_iir_filt_t *filt)
 {
-  return filt->curr_y;
+  return filt->gain * filt->curr_y;
+}
+
+void
+su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
+{
+  filt->gain = gain;
 }
 
 SUBOOL
@@ -125,6 +131,8 @@ __su_iir_filt_init(
   SUFLOAT *b_copy = NULL;
 
   memset(filt, 0, sizeof (su_iir_filt_t));
+
+  filt->gain = 1;
 
   if ((x = calloc(x_size, sizeof (SUCOMPLEX))) == NULL)
     goto fail;

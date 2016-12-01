@@ -41,11 +41,13 @@ struct sigutils_iir_filt {
 
   SUFLOAT *a;
   SUFLOAT *b;
+
+  SUFLOAT gain;
 };
 
 typedef struct sigutils_iir_filt su_iir_filt_t;
 
-#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, NULL, NULL, NULL, NULL }
+#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, 1}
 
 /* Get coefficients of a RRC filter */
 void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size);
@@ -72,6 +74,9 @@ SUBOOL __su_iir_filt_init(
     unsigned int x_size,
     SUFLOAT *b,
     SUBOOL copy_coef);
+
+/* Set output gain */
+void su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain);
 
 /* Initialize Butterworth low-pass filter of order N */
 SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc);

@@ -26,6 +26,7 @@
 #include "ncqo.h"
 
 #define SU_PLL_ORDER_DEFAULT 5
+#define SU_COSTAS_FIR_ORDER_THRESHOLD 20
 
 struct sigutils_pll {
   SUFLOAT   alpha;
@@ -54,6 +55,7 @@ struct sigutils_costas {
   SUCOMPLEX z; /* Arm filter output */
   SUCOMPLEX y; /* Demodulation result */
   SUCOMPLEX y_alpha; /* Result alpha */
+  SUFLOAT gain; /* Loop gain */
   su_ncqo_t ncqo;
 };
 
@@ -69,6 +71,7 @@ typedef struct sigutils_costas su_costas_t;
   0.,                           \
   0.,                           \
   0.,                           \
+  1.,                           \
   su_ncqo_INITIALIZER           \
 }
 
@@ -87,6 +90,8 @@ SUBOOL su_costas_init(
     SUFLOAT arm_bw,
     unsigned int arm_order,
     SUFLOAT loop_bw);
+
+void su_costas_set_loop_gain(su_costas_t *costas, SUFLOAT gain);
 
 void su_costas_feed(su_costas_t *costas, SUCOMPLEX x);
 

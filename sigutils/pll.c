@@ -23,6 +23,7 @@
 #include "types.h"
 #include "pll.h"
 #include "taps.h"
+#include "coef.h"
 
 void
 su_pll_finalize(su_pll_t *pll)
@@ -77,6 +78,12 @@ su_costas_finalize(su_costas_t *costas)
   su_iir_filt_finalize(&costas->af);
 }
 
+void
+su_costas_set_loop_gain(su_costas_t *costas, SUFLOAT gain)
+{
+  costas->gain = gain;
+}
+
 SUBOOL
 su_costas_init(
     su_costas_t *costas,
@@ -86,42 +93,70 @@ su_costas_init(
     unsigned int arm_order,
     SUFLOAT loop_bw)
 {
-  SUFLOAT *taps = NULL;
+  SUFLOAT *b = NULL;
+  SUFLOAT *a = NULL;
+  SUFLOAT scaling;
+  unsigned int i = 0;
 
   memset(costas, 0, sizeof(su_costas_t));
 
   /* Make LPF filter critically damped (Eric Hagemann) */
   costas->a = SU_NORM2ANG_FREQ(loop_bw);
-  costas->b = .25 * costas->a * costas->a;
+  costas->b = .5 * costas->a * costas->a;
   costas->y_alpha = 1;
   costas->kind = kind;
+  costas->gain = 1;
 
   su_ncqo_init(&costas->ncqo, fhint);
 
   /* Initialize arm filters */
   if (arm_order == 0)
     arm_order = 1;
-  taps = malloc(sizeof (SUFLOAT) * arm_order);
-  if (taps == NULL)
+
+  if (arm_order == 1 || arm_order >= SU_COSTAS_FIR_ORDER_THRESHOLD) {
+    if ((b = malloc(sizeof (SUFLOAT) * arm_order)) == NULL)
+      goto fail;
+
+    if (arm_order == 1)
+      b[0] = 1; /* No filtering */
+    else
+      su_taps_brickwall_init(b, arm_bw, arm_order);
+  } else {
+    /* If arm filter order is small, try to build a IIR filter */
+    if ((a = su_dcof_bwlp(arm_order - 1, arm_bw)) == NULL)
+      goto fail;
+
+    if ((b = su_ccof_bwlp(arm_order - 1)) == NULL)
+      goto fail;
+
+    scaling = su_sf_bwlp(arm_order - 1, arm_bw);
+
+    for (i = 0; i < arm_order; ++i)
+      b[i] *= scaling;
+  }
+
+  if (!__su_iir_filt_init(
+      &costas->af,
+      a == NULL ? 0 : arm_order,
+      a,
+      arm_order,
+      b,
+      SU_FALSE))
     goto fail;
 
-  if (arm_order > 1)
-    su_taps_brickwall_init(taps, arm_bw, arm_order);
-  else
-    taps[0] = 1;
-
-  if (!__su_iir_filt_init(&costas->af, 0, NULL, arm_order, taps, SU_FALSE))
-    goto fail;
-
-  taps = NULL;
+  b = NULL;
+  a = NULL;
 
   return SU_TRUE;
 
 fail:
   su_costas_finalize(costas);
 
-  if (taps != NULL)
-    free(taps);
+  if (b != NULL)
+    free(b);
+
+  if (a != NULL)
+    free(a);
 
   return SU_FALSE;
 }
@@ -138,7 +173,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
    * s = cos(wt) + sin(wt). Signal sQ be 90 deg delayed wrt sI, therefore
    * we must multiply by conj(s).
    */
-  costas->z = su_iir_filt_feed(&costas->af, SU_C_CONJ(s) * x);
+  costas->z = costas->gain * su_iir_filt_feed(&costas->af, SU_C_CONJ(s) * x);
 
   switch (costas->kind) {
     case SU_COSTAS_KIND_NONE:

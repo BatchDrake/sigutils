@@ -47,6 +47,8 @@ su_clock_detector_init(
   cd->algo  = SU_CLOCK_DETECTOR_ALGORITHM_GARDNER;
   cd->phi   = .25;
   cd->bnor  = bhint;
+  cd->bmin  = 0;
+  cd->bmax  = 1;
   cd->gain  = loop_gain; /* Somehow this parameter is critical */
 
   return SU_TRUE;
@@ -55,6 +57,26 @@ fail:
   su_clock_detector_finalize(cd);
 
   return SU_FALSE;
+}
+
+SUBOOL
+su_clock_detector_set_bnor_limits(
+    su_clock_detector_t *cd,
+    SUFLOAT lo,
+    SUFLOAT hi)
+{
+  if (lo > hi) {
+    SU_ERROR("Invalid baud rate limits\n");
+    return SU_FALSE;
+  }
+
+  if (cd->bnor < cd->bmin) {
+    cd->bnor = cd->bmin;
+  } else if (cd->bnor > cd->bmax) {
+    cd->bnor = cd->bmax;
+  }
+
+  return SU_TRUE;
 }
 
 void
@@ -74,7 +96,7 @@ su_clock_detector_feed(su_clock_detector_t *cd, SUCOMPLEX val)
 
   switch (cd->algo) {
     case SU_CLOCK_DETECTOR_ALGORITHM_GARDNER:
-      if (cd->phi > .5) {
+      if (cd->phi >= .5) {
         /* Toggle halfcycle flag */
         cd->halfcycle = !cd->halfcycle;
 
@@ -90,10 +112,16 @@ su_clock_detector_feed(su_clock_detector_t *cd, SUCOMPLEX val)
 
           /* Compute error signal */
           e = cd->gain * SU_C_REAL(SU_C_CONJ(cd->x[1]) * (cd->x[0] - cd->x[2]));
-
+          cd->e = e;
           /* Adjust phase and frequency */
           cd->phi  += cd->alpha * e;
           cd->bnor += cd->beta * e;
+
+          /* Check that current baudrate is within some reasonable limits */
+          if (cd->bnor > cd->bmax)
+            cd->bnor = cd->bmax;
+          if (cd->bnor < cd->bmin)
+            cd->bnor = cd->bmin;
 
           su_stream_write(&cd->sym_stream, &p, 1);
         } else {

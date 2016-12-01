@@ -63,7 +63,7 @@ __su_test_clock_recovery(
   SUCOMPLEX *phierr = NULL;
   SUCOMPLEX *rx = NULL;
   SUFLOAT *lock = NULL;
-  SUFLOAT *baud = NULL;
+  SUCOMPLEX *baud = NULL;
   SUFLOAT N0 = 0;
   SUCOMPLEX x = 0;
   SUCOMPLEX bbs = 1;
@@ -96,16 +96,16 @@ __su_test_clock_recovery(
 
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
-  filter_period = 4 * symbol_period;
+  filter_period = 6 * symbol_period; /* Span: 6 symbols */
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
   rx_size       = (SU_TEST_SIGNAL_BUFFER_SIZE - rx_delay) / symbol_period;
 
   if (noisy)
-    N0          = SU_MAG_RAW(2);
+    N0          = SU_MAG_RAW(-59) * symbol_period * 4;
   else
-    N0          = SU_MAG_RAW(-10);
+    N0          = SU_MAG_RAW(-70) * symbol_period * 4;
 
   /* Initialize buffers */
   SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
@@ -113,7 +113,7 @@ __su_test_clock_recovery(
   SU_TEST_ASSERT(phierr = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
   SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
   SU_TEST_ASSERT(rx     = su_test_complex_buffer_new(rx_size));
-  SU_TEST_ASSERT(baud   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(baud   = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
   /*
    * In noisy test we assume we are on lock, we just want to retrieve
    * phase offsets from the loop
@@ -121,21 +121,16 @@ __su_test_clock_recovery(
   SU_TEST_ASSERT(su_costas_init(
       &costas,
       SU_COSTAS_KIND_QPSK,
-      noisy ? SU_TEST_COSTAS_SIGNAL_FREQ : 0,
-      SU_TEST_COSTAS_BANDWIDTH,
-      10,
+      noisy ?
+          SU_TEST_COSTAS_SIGNAL_FREQ :
+          SU_TEST_COSTAS_SIGNAL_FREQ + .05 * SU_TEST_COSTAS_BANDWIDTH,
+      6 * SU_TEST_COSTAS_BANDWIDTH,
+      3,
       2e-1 * SU_TEST_COSTAS_BANDWIDTH));
 
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            costas.af.b,
-            costas.af.x_size,
-            "clock_af.m",
-            "af"));
-  }
-
   su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
+
+  SU_INFO("Initial frequency error: %lg\n", costas.ncqo.fnor - ncqo.fnor);
 
 #ifndef SU_TEST_COSTAS_USE_RRC
   SU_TEST_ASSERT(
@@ -143,13 +138,13 @@ __su_test_clock_recovery(
           &mf,
           filter_period,
           .5 * symbol_period,
-          0.35));
+          0.75));
 #else
   SU_TEST_ASSERT(
       su_iir_brickwall_init(
           &mf,
           filter_period,
-          1. / symbol_period));
+          SU_TEST_COSTAS_BANDWIDTH));
 #endif
 
   if (ctx->dump_results) {
@@ -164,7 +159,7 @@ __su_test_clock_recovery(
   /* Send data */
   msgbuf = message;
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
-  SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0));
+  SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0 / (symbol_period * 4)));
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
@@ -182,9 +177,9 @@ __su_test_clock_recovery(
         bbs = symbols[1];
       }
 
-    x = su_iir_filt_feed(&mf, .5 * bbs);
+    x = su_iir_filt_feed(&mf, bbs);
 
-    input[p] = x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
+    input[p] = .5 * SU_SQRT(2) * x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
   if (ctx->dump_results) {
@@ -204,25 +199,31 @@ __su_test_clock_recovery(
   SU_TEST_ASSERT(
       su_clock_detector_init(
           &cd,
-          .707,
-          1.13 / (SU_TEST_COSTAS_SYMBOL_PERIOD),
+          1,
+          1.2 / (SU_TEST_COSTAS_SYMBOL_PERIOD),
           15));
 
   SU_INFO("Symbol period hint: %lg\n", 1. / cd.bnor);
 
+  /*
+   * I give up. Filter scaling is broken. But I rather have filter
+   * scaling done than clock recovery.
+   */
+  //su_costas_set_loop_gain(&costas, 178.615);
+
   /* Feed the loop and perform demodulation */
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
     (void) su_ncqo_step(&ncqo);
-    su_costas_feed(&costas, input[p]);
+    su_costas_feed(&costas,  input[p]);
     input[p]  = su_ncqo_get(&costas.ncqo);
     phierr[p] = su_iir_filt_feed(&mf, costas.y);
     lock[p]   = costas.lock;
     omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
-    baud[p]   = cd.bnor;
+    baud[p]   = cd.e + I * cd.bnor;
 
     if (p >= rx_delay) {
       /* Send sample to clock detector */
-      su_clock_detector_feed(&cd, SU_SQRT(2) * phierr[p]);
+      su_clock_detector_feed(&cd, phierr[p]);
 
       /* Retrieve symbol */
       if (su_clock_detector_read(&cd, &symsamp, 1) == 1) {
@@ -237,14 +238,37 @@ __su_test_clock_recovery(
     }
   }
 
+  SU_INFO("Final frequency error: %lg\n", omgerr[p - 1]);
   SU_INFO("Corrected symbol period: %lg\n", rx_count / mean_baud);
 
-  SU_TEST_ASSERT(SU_ABS(symbol_period - rx_count / mean_baud) < 1);
+  SU_TEST_ASSERT(SU_ABS(symbol_period - rx_count / mean_baud) < 2);
 
   ok = SU_TRUE;
 
 done:
   SU_TEST_END(ctx);
+
+  if (costas.af.x_size > 0) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              costas.af.b,
+              costas.af.x_size,
+              "clock_b.m",
+              "b"));
+    }
+  }
+
+  if (costas.af.y_size > 0) {
+    if (ctx->dump_results) {
+      SU_TEST_ASSERT(
+          su_test_buffer_dump_matlab(
+              costas.af.a,
+              costas.af.y_size,
+              "clock_a.m",
+              "a"));
+    }
+  }
 
   su_costas_finalize(&costas);
 
@@ -313,10 +337,10 @@ done:
     free(rx);
   }
 
-  if (rx != NULL) {
+  if (baud != NULL) {
     if (ctx->dump_results) {
       SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
+          su_test_complex_buffer_dump_matlab(
               baud,
               SU_TEST_SIGNAL_BUFFER_SIZE,
               "clock_baud.m",

@@ -154,7 +154,7 @@
  */
 
 
-#define SU_PREFERED_CLOCK_ALPHA (1e-1)
+#define SU_PREFERED_CLOCK_ALPHA (2e-1)
 #define SU_PREFERED_CLOCK_BETA  (6e-4 * SU_PREFERED_CLOCK_ALPHA)
 
 enum sigutils_clock_detector_algorithm {
@@ -167,8 +167,11 @@ struct sigutils_clock_detector {
   SUFLOAT alpha;  /* Damping factor for phase */
   SUFLOAT beta;   /* Damping factor for frequency */
   SUFLOAT bnor;   /* Normalized baud rate */
+  SUFLOAT bmin;   /* Minimum baud rate */
+  SUFLOAT bmax;   /* Maximum baud rate */
   SUFLOAT phi;    /* Symbol phase [0, 1/2)  */
   SUFLOAT gain;   /* Loop gain */
+  SUFLOAT e;      /* Current error signal (debugging) */
   su_stream_t sym_stream; /* Resampled signal */
   su_off_t    sym_stream_pos; /* Read position in the symbol stream */
   SUBOOL halfcycle; /* True if setting halfcycle */
@@ -185,8 +188,11 @@ typedef struct sigutils_clock_detector su_clock_detector_t;
   SU_PREFERED_CLOCK_ALPHA, /* alpha */          \
   SU_PREFERED_CLOCK_BETA, /* beta */            \
   0.0, /* bnor */                               \
+  0.0, /* bmin */                               \
+  1.0, /* bmax */                               \
   0.0, /* phi */                                \
-  15,  /* loop gain */                          \
+  1.0, /* loop gain */                          \
+  0.0, /* error signal */                       \
   su_stream_INITIALIZER, /* sym_stream */       \
   0, /* sym_stream_pos */                       \
   SU_FALSE, /* halfcycle */                     \
@@ -203,6 +209,11 @@ SUBOOL su_clock_detector_init(
 void su_clock_detector_finalize(su_clock_detector_t *cd);
 
 void su_clock_detector_feed(su_clock_detector_t *cd, SUCOMPLEX val);
+
+SUBOOL su_clock_detector_set_bnor_limits(
+    su_clock_detector_t *cd,
+    SUFLOAT lo,
+    SUFLOAT hi);
 
 ssize_t su_clock_detector_read(
     su_clock_detector_t *cd,
