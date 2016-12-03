@@ -66,11 +66,13 @@ __su_test_clock_recovery(
   SUFLOAT *lock = NULL;
   SUCOMPLEX *baud = NULL;
   SUFLOAT N0 = 0;
-  SUCOMPLEX x = 0;
+  SUCOMPLEX *tx = NULL;
+  SUCOMPLEX *data = NULL;
   SUCOMPLEX bbs = 1;
   SUCOMPLEX symsamp = 0;
   SUFLOAT mean_baud = 0;
   SUCOMPLEX symbols[] = {1, I, -1, -I};
+  SUCOMPLEX phi0 = 1;
 
   unsigned int filter_period;
   unsigned int symbol_period;
@@ -104,9 +106,11 @@ __su_test_clock_recovery(
   rx_size       = (ctx->buffer_size - rx_delay) / symbol_period;
 
   if (noisy)
-    N0          = SU_MAG_RAW(-59) * symbol_period * 4;
+    N0          = SU_MAG_RAW(-56) * symbol_period * 4;
   else
     N0          = SU_MAG_RAW(-70) * symbol_period * 4;
+
+  phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
   /* Initialize buffers */
   SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
@@ -116,6 +120,8 @@ __su_test_clock_recovery(
   SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
   SU_TEST_ASSERT(rx      = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
   SU_TEST_ASSERT(baud    = su_test_ctx_getc(ctx, "baud"));
+  SU_TEST_ASSERT(data    = su_test_ctx_getc(ctx, "data"));
+  SU_TEST_ASSERT(tx      = su_test_ctx_getc(ctx, "tx"));
 
   /*
    * In noisy test we assume we are on lock, we just want to retrieve
@@ -140,8 +146,8 @@ __su_test_clock_recovery(
       su_iir_rrc_init(
           &mf,
           filter_period,
-          .5 * symbol_period,
-          0.75));
+          symbol_period,
+          1));
 #else
   SU_TEST_ASSERT(
       su_iir_brickwall_init(
@@ -171,9 +177,9 @@ __su_test_clock_recovery(
         bbs = symbols[1];
       }
 
-    x = su_iir_filt_feed(&mf, bbs);
-
-    input[p] = .5 * SU_SQRT(2) * x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
+    data[p] = bbs;
+    input[p] = su_iir_filt_feed(&mf, data[p]);
+    tx[p] = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
   /* Restart NCQO */
@@ -193,7 +199,7 @@ __su_test_clock_recovery(
   /* Feed the loop and perform demodulation */
   for (p = 0; p < ctx->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
-    su_costas_feed(&costas,  input[p]);
+    su_costas_feed(&costas,  tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
     output[p]  = su_iir_filt_feed(&mf, costas.y);
     lock[p]    = costas.lock;
