@@ -181,6 +181,8 @@ SUBOOL su_test_ctx_dumpc(
 
 su_sigbuf_pool_t *su_sigbuf_pool_new(const char *name);
 
+void su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool);
+
 SUFLOAT *su_sigbuf_pool_get_float(
     su_sigbuf_pool_t *pool,
     const char *name,

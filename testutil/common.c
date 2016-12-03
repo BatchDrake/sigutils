@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <time.h>
 #include "test.h"
 
 void
@@ -303,9 +304,16 @@ su_test_run(
   unsigned int i;
   unsigned int count = 0;
   unsigned int success = 0;
+  time_t now;
 
   if (range_end >= test_count)
     range_end = test_count - 1;
+
+  time(&now);
+
+  SU_INFO("Sigutils library unit test starting: %s", ctime(&now));
+  SU_INFO("  Configured buffer size: %d elements\n", buffer_size);
+  SU_INFO("  Dumping buffers: %s\n", save ? "yes" : "no");
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;
@@ -329,9 +337,13 @@ su_test_run(
       printf("[t:%3d] TEST FAILED\n", i);
     }
 
-    if (save && !su_sigbuf_pool_dump(ctx.pool)) {
-      SU_ERROR("Failed to dump allocated buffers\n");
-      goto next_test;
+    if (save) {
+      if (!su_sigbuf_pool_dump(ctx.pool)) {
+        SU_ERROR("Failed to dump allocated buffers\n");
+        goto next_test;
+      }
+
+      su_sigbuf_pool_debug(ctx.pool);
     }
 
     ++count;

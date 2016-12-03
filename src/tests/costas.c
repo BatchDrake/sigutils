@@ -133,13 +133,12 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   SUFLOAT *lock = NULL;
   SUCOMPLEX *rx = NULL;
   SUCOMPLEX *tx = NULL;
+  SUFLOAT *data = NULL;
   SUCOMPLEX *carrier;
-  SUCOMPLEX x = 0;
   SUCOMPLEX bbs = 1;
   SUFLOAT N0 = 0;
-  SUCOMPLEX symbols[] = { /* Out of phase BPSK signal */
-       SU_SQRT(.5) + I * SU_SQRT(.5),
-      -SU_SQRT(.5) - I * SU_SQRT(.5)};
+  SUCOMPLEX phi0 = 1;
+  SUCOMPLEX symbols[] = {1, -1};
   unsigned int filter_period;
   unsigned int symbol_period;
   unsigned int sync_period;
@@ -171,16 +170,18 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay) / symbol_period);
   tx_size       = SU_CEIL((SUFLOAT) ctx->buffer_size / symbol_period);
   N0            = .1; /* Noise amplitude */
+  phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
   /* Initialize buffers */
+  SU_TEST_ASSERT(data    = su_test_ctx_getf(ctx, "data"));
   SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(tx      = su_test_ctx_getc(ctx, "tx"));
   SU_TEST_ASSERT(carrier = su_test_ctx_getc(ctx, "carrier"));
   SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
   SU_TEST_ASSERT(omgerr  = su_test_ctx_getf(ctx, "oe"));
   SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
   SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
   SU_TEST_ASSERT(rx      = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
-  SU_TEST_ASSERT(tx      = su_test_ctx_getc_w_size(ctx, "tx", tx_size));
 
   SU_TEST_ASSERT(su_costas_init(
       &costas,
@@ -197,8 +198,8 @@ su_test_costas_bpsk(su_test_context_t *ctx)
       su_iir_rrc_init(
           &mf,
           filter_period,
-          .5 * symbol_period,
-          0));
+          symbol_period,
+          0.35));
 
   /* Send data */
   msgbuf = message;
@@ -209,8 +210,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
       if (p % symbol_period == 0) {
           bit = msgbuf & 1;
           msgbuf >>= 1;
-          bbs = .5 * symbol_period * symbols[bit];
-          tx[tx_count++] = bbs;
+          bbs = symbol_period * symbols[bit];
         } else {
           bbs = 0;
         }
@@ -218,10 +218,9 @@ su_test_costas_bpsk(su_test_context_t *ctx)
         bbs = symbols[1];
       }
 
-
-    x = su_iir_filt_feed(&mf, bbs);
-
-    input[p] = x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
+    data[p] = bbs;
+    input[p] = su_iir_filt_feed(&mf, data[p]);
+    tx[p] = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
   /* Restart NCQO */
@@ -232,7 +231,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   /* Feed the loop and perform demodulation */
   for (p = 0; p < ctx->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
-    su_costas_feed(&costas, input[p]);
+    su_costas_feed(&costas, tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
     output[p]  = su_iir_filt_feed(&mf, costas.y);
     lock[p]    = costas.lock;

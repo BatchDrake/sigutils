@@ -239,6 +239,33 @@ fail:
     goto fail;                                                  \
   }
 
+void
+su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
+{
+  su_sigbuf_t *this;
+  unsigned int i;
+  size_t allocation = 0;
+  size_t total = 0;
+
+  SU_INFO("Pool `%s' status:\n", pool->name);
+  SU_INFO(" ID  Buf name   Type      Size   Allocation size\n");
+  SU_INFO("------------------------------------------------\n");
+  FOR_EACH_PTR(this, i, pool->sigbuf) {
+    allocation = this->size *
+        (this->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT));
+    SU_INFO("[%2d] %-10s %-7s %8d %8d bytes\n",
+            i,
+            this->name,
+            this->is_complex ? "COMPLEX" : "FLOAT",
+            this->size,
+            allocation);
+
+    total += allocation;
+  }
+  SU_INFO("------------------------------------------------\n");
+  SU_INFO("Total: %d bytes\n", total);
+}
+
 SUBOOL
 su_sigbuf_pool_dump(su_sigbuf_pool_t *pool)
 {
