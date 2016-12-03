@@ -21,6 +21,9 @@
 #ifndef _SRC_TEST_PARAM_H
 #define _SRC_TEST_PARAM_H
 
+/* Default test buffer size */
+#define SU_TEST_SIGNAL_BUFFER_SIZE (32 * 4096)
+
 /* AGC params */
 #define SU_TEST_AGC_SIGNAL_FREQ 0.025
 #define SU_TEST_AGC_WINDOW (1. / SU_TEST_AGC_SIGNAL_FREQ)

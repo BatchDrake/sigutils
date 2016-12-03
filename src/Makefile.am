@@ -2,12 +2,16 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = sigutils
-sigutils_CFLAGS = -I. -I.. -I../util -I tests @GLOBAL_CFLAGS@
+sigutils_CFLAGS = -I. -I.. -I../util -I../testutil -I tests @GLOBAL_CFLAGS@
 sigutils_LDFLAGS = @GLOBAL_LDFLAGS@
 
-sigutils_LDADD = ../sigutils/libsigutils.la ../util/libutil.la  @GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
+sigutils_LDADD = \
+	../testutil/libtestutil.la \
+	../sigutils/libsigutils.la \
+	../util/libutil.la  \
+	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
 
-sigutils_SOURCES = main.c sigutils.h test.c test.h tests/test_list.h tests/test_param.h\
+sigutils_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
 	tests/agc.c \
 	tests/block.c \
 	tests/clock.c \

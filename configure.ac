@@ -66,4 +66,5 @@ AC_OUTPUT([
   src/Makefile
   util/Makefile
   sigutils/Makefile
+  testutil/Makefile
 ])

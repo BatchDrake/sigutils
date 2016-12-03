@@ -18,25 +18,26 @@
 #include <sigutils/sigutils.h>
 
 #include <test_list.h>
+#include <test_param.h>
 
-SUPRIVATE su_test_cb_t test_list[] = {
-    su_test_ncqo,
-    su_test_butterworth_lpf,
-    su_test_agc_transient,
-    su_test_agc_steady_rising,
-    su_test_agc_steady_falling,
-    su_test_pll,
-    su_test_block,
-    su_test_block_plugging,
-    su_test_tuner,
-    su_test_costas_lock,
-    su_test_costas_bpsk,
-    su_test_costas_qpsk,
-    su_test_costas_qpsk_noisy,
-    su_test_costas_block,
-    su_test_rrc_block,
-    su_test_clock_recovery,
-    su_test_clock_recovery_noisy,
+SUPRIVATE su_test_entry_t test_list[] = {
+    SU_TEST_ENTRY(su_test_ncqo),
+    SU_TEST_ENTRY(su_test_butterworth_lpf),
+    SU_TEST_ENTRY(su_test_agc_transient),
+    SU_TEST_ENTRY(su_test_agc_steady_rising),
+    SU_TEST_ENTRY(su_test_agc_steady_falling),
+    SU_TEST_ENTRY(su_test_pll),
+    SU_TEST_ENTRY(su_test_block),
+    SU_TEST_ENTRY(su_test_block_plugging),
+    SU_TEST_ENTRY(su_test_tuner),
+    SU_TEST_ENTRY(su_test_costas_lock),
+    SU_TEST_ENTRY(su_test_costas_bpsk),
+    SU_TEST_ENTRY(su_test_costas_qpsk),
+    SU_TEST_ENTRY(su_test_costas_qpsk_noisy),
+    SU_TEST_ENTRY(su_test_costas_block),
+    SU_TEST_ENTRY(su_test_rrc_block),
+    SU_TEST_ENTRY(su_test_clock_recovery),
+    SU_TEST_ENTRY(su_test_clock_recovery_noisy),
 };
 
 SUPRIVATE void
@@ -133,6 +134,7 @@ main (int argc, char *argv[], char *envp[])
       test_count,
       SU_MIN(test_start, test_count - 1),
       SU_MIN(test_end, test_count - 1),
+      SU_TEST_SIGNAL_BUFFER_SIZE,
       dump_results);
 
   return !result;

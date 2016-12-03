@@ -30,6 +30,7 @@
 
 #include <sigutils/sigutils.h>
 
+#include "test_param.h"
 #include "test_list.h"
 
 SUBOOL

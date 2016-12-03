@@ -73,14 +73,6 @@ su_test_context_time_units(const su_test_context_t *ctx) {
   return "??";
 }
 
-SUPRIVATE void
-su_test_context_reset(su_test_context_t *ctx)
-{
-  memset(ctx, 0, sizeof (su_test_context_t));
-
-  ctx->time_units = SU_TIME_UNITS_UNDEFINED;
-}
-
 SUFLOAT *
 su_test_buffer_new(unsigned int size)
 {
@@ -233,12 +225,78 @@ fail:
   return SU_FALSE;
 }
 
+SUFLOAT *
+su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, size_t size)
+{
+  return su_sigbuf_pool_get_float(ctx->pool, name, size);
+}
+
+SUCOMPLEX *
+su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, size_t size)
+{
+  return su_sigbuf_pool_get_complex(ctx->pool, name, size);
+}
+
+SUFLOAT *
+su_test_ctx_getf(su_test_context_t *ctx, const char *name)
+{
+  return su_test_ctx_getf_w_size(ctx, name, ctx->buffer_size);
+}
+
+SUCOMPLEX *
+su_test_ctx_getc(su_test_context_t *ctx, const char *name)
+{
+  return su_test_ctx_getc_w_size(ctx, name, ctx->buffer_size);
+}
+
+SUBOOL
+su_test_ctx_dumpf(
+    su_test_context_t *ctx,
+    const char *name,
+    const SUFLOAT *data,
+    size_t size)
+{
+  return su_sigbuf_pool_helper_dump(
+      data,
+      size,
+      SU_FALSE,
+      ctx->entry->name,
+      name);
+}
+
+SUBOOL
+su_test_ctx_dumpc(
+    su_test_context_t *ctx,
+    const char *name,
+    const SUCOMPLEX *data,
+    size_t size)
+{
+  return su_sigbuf_pool_helper_dump(
+      data,
+      size,
+      SU_TRUE,
+      ctx->entry->name,
+      name);
+}
+
+SUPRIVATE void
+su_test_context_reset(su_test_context_t *ctx)
+{
+  if (ctx->pool != NULL)
+    su_sigbuf_pool_destroy(ctx->pool);
+
+  memset(ctx, 0, sizeof (su_test_context_t));
+
+  ctx->time_units = SU_TIME_UNITS_UNDEFINED;
+}
+
 SUBOOL
 su_test_run(
-    const su_test_cb_t *test_list,
+    const su_test_entry_t *test_list,
     unsigned int test_count,
     unsigned int range_start,
     unsigned int range_end,
+    size_t buffer_size,
     SUBOOL save)
 {
   su_test_context_t ctx = su_test_context_INITIALIZER;
@@ -251,15 +309,34 @@ su_test_run(
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;
+    ctx.entry = &test_list[i];
     ctx.dump_results = save;
-    if ((test_list[i])(&ctx))
+    ctx.buffer_size = buffer_size;
+
+    if ((ctx.pool = su_sigbuf_pool_new(ctx.entry->name)) == NULL) {
+      SU_ERROR("Failed to initialize pool\n");
+      goto next_test;
+    }
+
+    if (save && !su_sigbuf_pool_helper_ensure_directory(ctx.entry->name)) {
+      SU_ERROR("Failed to ensure dump directory\n");
+      goto next_test;
+    }
+
+    if ((test_list[i].cb)(&ctx))
       ++success;
     else {
       printf("[t:%3d] TEST FAILED\n", i);
     }
 
+    if (save && !su_sigbuf_pool_dump(ctx.pool)) {
+      SU_ERROR("Failed to dump allocated buffers\n");
+      goto next_test;
+    }
+
     ++count;
 
+next_test:
     su_test_context_reset(&ctx);
   }
 

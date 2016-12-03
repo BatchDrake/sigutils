@@ -59,6 +59,7 @@ __su_test_clock_recovery(
 {
   SUBOOL ok = SU_FALSE;
   SUCOMPLEX *input = NULL;
+  SUCOMPLEX *output = NULL;
   SUFLOAT *omgerr = NULL;
   SUCOMPLEX *phierr = NULL;
   SUCOMPLEX *rx = NULL;
@@ -100,7 +101,7 @@ __su_test_clock_recovery(
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
-  rx_size       = (SU_TEST_SIGNAL_BUFFER_SIZE - rx_delay) / symbol_period;
+  rx_size       = (ctx->buffer_size - rx_delay) / symbol_period;
 
   if (noisy)
     N0          = SU_MAG_RAW(-59) * symbol_period * 4;
@@ -108,12 +109,14 @@ __su_test_clock_recovery(
     N0          = SU_MAG_RAW(-70) * symbol_period * 4;
 
   /* Initialize buffers */
-  SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(omgerr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(phierr = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(rx     = su_test_complex_buffer_new(rx_size));
-  SU_TEST_ASSERT(baud   = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(input  = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(output = su_test_ctx_getc(ctx, "y"));
+  SU_TEST_ASSERT(omgerr = su_test_ctx_getf(ctx, "oe"));
+  SU_TEST_ASSERT(phierr = su_test_ctx_getc(ctx, "pe"));
+  SU_TEST_ASSERT(lock   = su_test_ctx_getf(ctx, "lock"));
+  SU_TEST_ASSERT(rx     = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
+  SU_TEST_ASSERT(baud   = su_test_ctx_getc(ctx, "baud"));
+
   /*
    * In noisy test we assume we are on lock, we just want to retrieve
    * phase offsets from the loop
@@ -147,20 +150,11 @@ __su_test_clock_recovery(
           SU_TEST_COSTAS_BANDWIDTH));
 #endif
 
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            mf.b,
-            mf.x_size,
-            "clock_mf.m",
-            "mf"));
-  }
-
   /* Send data */
   msgbuf = message;
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
   SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0 / (symbol_period * 4)));
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->buffer_size; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
           if (n == 32)
@@ -182,15 +176,6 @@ __su_test_clock_recovery(
     input[p] = .5 * SU_SQRT(2) * x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_complex_buffer_dump_matlab(
-            input,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "clock_input.m",
-            "x"));
-  }
-
   /* Restart NCQO */
   su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
 
@@ -205,14 +190,8 @@ __su_test_clock_recovery(
 
   SU_INFO("Symbol period hint: %lg\n", 1. / cd.bnor);
 
-  /*
-   * I give up. Filter scaling is broken. But I rather have filter
-   * scaling done than clock recovery.
-   */
-  //su_costas_set_loop_gain(&costas, 178.615);
-
   /* Feed the loop and perform demodulation */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas,  input[p]);
     input[p]  = su_ncqo_get(&costas.ncqo);
@@ -248,118 +227,14 @@ __su_test_clock_recovery(
 done:
   SU_TEST_END(ctx);
 
-  if (costas.af.x_size > 0) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              costas.af.b,
-              costas.af.x_size,
-              "clock_b.m",
-              "b"));
-    }
-  }
-
-  if (costas.af.y_size > 0) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              costas.af.a,
-              costas.af.y_size,
-              "clock_a.m",
-              "a"));
-    }
+  if (ctx->dump_results) {
+    ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
+    ok = ok && su_test_ctx_dumpf(ctx, "b", costas.af.b, costas.af.x_size);
+    if (costas.af.y_size > 0)
+      ok = ok && su_test_ctx_dumpf(ctx, "a", costas.af.a, costas.af.y_size);
   }
 
   su_costas_finalize(&costas);
-
-  if (input != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              input,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "clock_output.m",
-              "y"));
-    }
-
-    free(input);
-  }
-
-  if (phierr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              phierr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "clock_phierr.m",
-              "pe"));
-    }
-
-    free(phierr);
-  }
-
-  if (omgerr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              omgerr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "clock_omgerr.m",
-              "oe"));
-    }
-
-    free(omgerr);
-  }
-
-  if (lock != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              lock,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "clock_lock.m",
-              "lock"));
-    }
-
-    free(lock);
-  }
-
-  if (rx != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              rx,
-              rx_count,
-              "clock_rx.m",
-              "rx"));
-    }
-
-    free(rx);
-  }
-
-  if (baud != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              baud,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "clock_baud.m",
-              "baud"));
-    }
-
-    free(baud);
-  }
-
-  if (mf.x_size > 0) {
-    if (ctx->dump_results) {
-      su_test_buffer_dump_matlab(
-          mf.b,
-          mf.x_size,
-          "clock_rrc.m",
-          "rrc");
-    }
-  }
-
   su_iir_filt_finalize(&mf);
   su_clock_detector_finalize(&cd);
 
