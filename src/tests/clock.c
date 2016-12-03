@@ -59,9 +59,9 @@ __su_test_clock_recovery(
 {
   SUBOOL ok = SU_FALSE;
   SUCOMPLEX *input = NULL;
-  SUCOMPLEX *output = NULL;
+  SUCOMPLEX *carrier = NULL;
   SUFLOAT *omgerr = NULL;
-  SUCOMPLEX *phierr = NULL;
+  SUCOMPLEX *output = NULL;
   SUCOMPLEX *rx = NULL;
   SUFLOAT *lock = NULL;
   SUCOMPLEX *baud = NULL;
@@ -109,13 +109,13 @@ __su_test_clock_recovery(
     N0          = SU_MAG_RAW(-70) * symbol_period * 4;
 
   /* Initialize buffers */
-  SU_TEST_ASSERT(input  = su_test_ctx_getc(ctx, "x"));
-  SU_TEST_ASSERT(output = su_test_ctx_getc(ctx, "y"));
-  SU_TEST_ASSERT(omgerr = su_test_ctx_getf(ctx, "oe"));
-  SU_TEST_ASSERT(phierr = su_test_ctx_getc(ctx, "pe"));
-  SU_TEST_ASSERT(lock   = su_test_ctx_getf(ctx, "lock"));
-  SU_TEST_ASSERT(rx     = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
-  SU_TEST_ASSERT(baud   = su_test_ctx_getc(ctx, "baud"));
+  SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(carrier = su_test_ctx_getc(ctx, "carrier"));
+  SU_TEST_ASSERT(omgerr  = su_test_ctx_getf(ctx, "oe"));
+  SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
+  SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
+  SU_TEST_ASSERT(rx      = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
+  SU_TEST_ASSERT(baud    = su_test_ctx_getc(ctx, "baud"));
 
   /*
    * In noisy test we assume we are on lock, we just want to retrieve
@@ -194,15 +194,15 @@ __su_test_clock_recovery(
   for (p = 0; p < ctx->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas,  input[p]);
-    input[p]  = su_ncqo_get(&costas.ncqo);
-    phierr[p] = su_iir_filt_feed(&mf, costas.y);
-    lock[p]   = costas.lock;
-    omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
-    baud[p]   = cd.e + I * cd.bnor;
+    carrier[p] = su_ncqo_get(&costas.ncqo);
+    output[p]  = su_iir_filt_feed(&mf, costas.y);
+    lock[p]    = costas.lock;
+    omgerr[p]  = costas.ncqo.fnor - ncqo.fnor;
+    baud[p]    = cd.e + I * cd.bnor;
 
     if (p >= rx_delay) {
       /* Send sample to clock detector */
-      su_clock_detector_feed(&cd, phierr[p]);
+      su_clock_detector_feed(&cd, output[p]);
 
       /* Retrieve symbol */
       if (su_clock_detector_read(&cd, &symsamp, 1) == 1) {
