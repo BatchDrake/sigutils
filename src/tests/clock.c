@@ -228,8 +228,10 @@ done:
   SU_TEST_END(ctx);
 
   if (ctx->dump_results) {
-    ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
-    ok = ok && su_test_ctx_dumpf(ctx, "b", costas.af.b, costas.af.x_size);
+    if (mf.x_size > 0)
+      ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
+    if (costas.af.x_size > 0)
+      ok = ok && su_test_ctx_dumpf(ctx, "b", costas.af.b, costas.af.x_size);
     if (costas.af.y_size > 0)
       ok = ok && su_test_ctx_dumpf(ctx, "a", costas.af.a, costas.af.y_size);
   }

@@ -40,7 +40,7 @@ su_test_costas_lock(su_test_context_t *ctx)
   SUCOMPLEX *input = NULL;
   SUCOMPLEX *carrier = NULL;
   SUCOMPLEX *output = NULL;
-  SUFLOAT *pherr = NULL;
+  SUFLOAT *phierr = NULL;
   SUFLOAT *omgerr = NULL;
   SUFLOAT *lock = NULL;
   SUFLOAT N0;
@@ -55,7 +55,7 @@ su_test_costas_lock(su_test_context_t *ctx)
   /* Initialize buffers */
   SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
   SU_TEST_ASSERT(carrier = su_test_ctx_getc(ctx, "carrier"));
-  SU_TEST_ASSERT(pherr   = su_test_ctx_getf(ctx, "pe"));
+  SU_TEST_ASSERT(phierr  = su_test_ctx_getf(ctx, "pe"));
   SU_TEST_ASSERT(omgerr  = su_test_ctx_getf(ctx, "oe"));
   SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
   SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
@@ -91,13 +91,13 @@ su_test_costas_lock(su_test_context_t *ctx)
     su_costas_feed(&costas, input[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
     output[p]  = costas.y;
-    pherr[p]   = su_ncqo_get_phase(&costas.ncqo) - su_ncqo_get_phase(&ncqo);
+    phierr[p]   = su_ncqo_get_phase(&costas.ncqo) - su_ncqo_get_phase(&ncqo);
     lock[p]    = costas.lock;
 
-    if (pherr[p] < 0 || pherr[p] > 2 * PI) {
-      pherr[p] -= 2 * PI * floor(pherr[p] / (2 * PI));
-      if (pherr[p] > PI)
-        pherr[p] -= 2 * PI;
+    if (phierr[p] < 0 || phierr[p] > 2 * PI) {
+      phierr[p] -= 2 * PI * floor(phierr[p] / (2 * PI));
+      if (phierr[p] > PI)
+        phierr[p] -= 2 * PI;
     }
     omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
     Ef += 1. / (.25 * ctx->buffer_size) * (costas.ncqo.fnor - Ef);
@@ -128,16 +128,18 @@ su_test_costas_bpsk(su_test_context_t *ctx)
 {
   SUBOOL ok = SU_FALSE;
   SUCOMPLEX *input = NULL;
+  SUCOMPLEX *output = NULL;
   SUFLOAT *omgerr = NULL;
-  SUCOMPLEX *phierr = NULL;
   SUFLOAT *lock = NULL;
   SUCOMPLEX *rx = NULL;
+  SUCOMPLEX *tx = NULL;
+  SUCOMPLEX *carrier;
   SUCOMPLEX x = 0;
   SUCOMPLEX bbs = 1;
   SUFLOAT N0 = 0;
   SUCOMPLEX symbols[] = { /* Out of phase BPSK signal */
-      SU_SQRT(2) + I * SU_SQRT(2),
-      -SU_SQRT(2) - I * SU_SQRT(2)};
+       SU_SQRT(.5) + I * SU_SQRT(.5),
+      -SU_SQRT(.5) - I * SU_SQRT(.5)};
   unsigned int filter_period;
   unsigned int symbol_period;
   unsigned int sync_period;
@@ -154,33 +156,39 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   unsigned int t = 0;
   unsigned int bit;
   unsigned int rx_count = 0;
+  unsigned int tx_count = 0;
   unsigned int rx_size;
+  unsigned int tx_size;
 
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
-  filter_period = 4 * symbol_period;
+  filter_period = 6 * symbol_period;
   sync_period   = 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period;
-  rx_size       = (SU_TEST_SIGNAL_BUFFER_SIZE - rx_delay) / symbol_period;
-  N0            = 1; /* Noise amplitude */
+  rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay) / symbol_period);
+  tx_size       = SU_CEIL((SUFLOAT) ctx->buffer_size / symbol_period);
+  N0            = .1; /* Noise amplitude */
 
   /* Initialize buffers */
-  SU_TEST_ASSERT(input  = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(omgerr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(phierr = su_test_complex_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(rx     = su_test_complex_buffer_new(rx_size));
+  SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(carrier = su_test_ctx_getc(ctx, "carrier"));
+  SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
+  SU_TEST_ASSERT(omgerr  = su_test_ctx_getf(ctx, "oe"));
+  SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
+  SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
+  SU_TEST_ASSERT(rx      = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
+  SU_TEST_ASSERT(tx      = su_test_ctx_getc_w_size(ctx, "tx", tx_size));
 
   SU_TEST_ASSERT(su_costas_init(
       &costas,
       SU_COSTAS_KIND_BPSK,
-      0,
-      SU_TEST_COSTAS_BANDWIDTH,
-      10,
-      2e-1 * SU_TEST_COSTAS_BANDWIDTH));
+      SU_TEST_COSTAS_SIGNAL_FREQ + .25 * SU_TEST_COSTAS_BANDWIDTH,
+      6 * SU_TEST_COSTAS_BANDWIDTH,
+      3,
+      4e-1 * SU_TEST_COSTAS_BANDWIDTH));
 
   su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
 
@@ -189,20 +197,20 @@ su_test_costas_bpsk(su_test_context_t *ctx)
       su_iir_rrc_init(
           &mf,
           filter_period,
-          symbol_period,
+          .5 * symbol_period,
           0));
 
   /* Send data */
   msgbuf = message;
   SU_INFO("Modulating 0x%x in BPSK...\n", msgbuf);
   SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0));
-
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->buffer_size; ++p) {
     if (p >= sync_period) {
-      if (p >= sync_period && p % symbol_period == 0) {
+      if (p % symbol_period == 0) {
           bit = msgbuf & 1;
           msgbuf >>= 1;
-          bbs = symbol_period * symbols[bit];
+          bbs = .5 * symbol_period * symbols[bit];
+          tx[tx_count++] = bbs;
         } else {
           bbs = 0;
         }
@@ -210,18 +218,10 @@ su_test_costas_bpsk(su_test_context_t *ctx)
         bbs = symbols[1];
       }
 
-    x = su_iir_filt_feed(&mf, .5 * bbs);
+
+    x = su_iir_filt_feed(&mf, bbs);
 
     input[p] = x * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
-  }
-
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_complex_buffer_dump_matlab(
-            input,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "bpsk_input.m",
-            "x"));
   }
 
   /* Restart NCQO */
@@ -230,32 +230,32 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   SU_TEST_TICK(ctx);
 
   /* Feed the loop and perform demodulation */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas, input[p]);
-    input[p]  = su_ncqo_get(&costas.ncqo);
-    phierr[p] = su_iir_filt_feed(&mf, costas.y);
-    lock[p]   = costas.lock;
-    omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
+    carrier[p] = su_ncqo_get(&costas.ncqo);
+    output[p]  = su_iir_filt_feed(&mf, costas.y);
+    lock[p]    = costas.lock;
+    omgerr[p]  = costas.ncqo.fnor - ncqo.fnor;
 
     if (p % symbol_period == 0) {
       if (p >= rx_delay) {
         t = (p - rx_delay) / symbol_period;
-        bit = SU_C_ARG(phierr[p]) > 0;
+        bit = SU_C_ARG(output[p]) > 0;
 
         if (t < 32)
           rx_buf |= bit << t;
 
-        rx[rx_count++] = 2 * phierr[p];
+        rx[rx_count++] = output[p];
       }
     }
   }
 
   SU_INFO(
-      "RX: 0x%x = ~0x%x in %d samples\n",
+      "RX: 0x%08x = ~0x%08x in %d samples\n",
       rx_buf,
       ~rx_buf,
-      SU_TEST_SIGNAL_BUFFER_SIZE);
+      ctx->buffer_size);
 
   SU_TEST_ASSERT(rx_buf == message || rx_buf == ~message);
 
@@ -266,80 +266,9 @@ done:
 
   su_costas_finalize(&costas);
 
-  if (input != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              input,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "bpsk_output.m",
-              "y"));
-    }
-
-    free(input);
-  }
-
-  if (phierr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              phierr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "bpsk_phierr.m",
-              "pe"));
-    }
-
-    free(phierr);
-  }
-
-  if (omgerr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              omgerr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "bpsk_omgerr.m",
-              "oe"));
-    }
-
-    free(omgerr);
-  }
-
-  if (lock != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              lock,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "bpsk_lock.m",
-              "lock"));
-    }
-
-    free(lock);
-  }
-
-  if (rx != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_complex_buffer_dump_matlab(
-              rx,
-              rx_size,
-              "bpsk_rx.m",
-              "rx"));
-    }
-
-    free(rx);
-  }
-
-  if (mf.x_size > 0) {
-    if (ctx->dump_results) {
-      su_test_buffer_dump_matlab(
-          mf.b,
-          mf.x_size,
-          "bpsk_rrc.m",
-          "rrc");
-    }
-  }
+    if (ctx->dump_results)
+      if (mf.x_size > 0)
+        ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
 
   su_iir_filt_finalize(&mf);
 
