@@ -34,10 +34,7 @@
 #include "test_param.h"
 
 SUPRIVATE SUBOOL
-__su_test_clock_recovery(
-    su_test_context_t *ctx,
-    const char *__caller,
-    SUBOOL noisy)
+__su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 {
   SUBOOL ok = SU_FALSE;
   SUCOMPLEX *input = NULL;
@@ -234,11 +231,11 @@ done:
 SUBOOL
 su_test_clock_recovery(su_test_context_t *ctx)
 {
-  __su_test_clock_recovery(ctx, __FUNCTION__, SU_FALSE);
+  __su_test_clock_recovery(ctx, SU_FALSE);
 }
 
 SUBOOL
 su_test_clock_recovery_noisy(su_test_context_t *ctx)
 {
-  __su_test_clock_recovery(ctx, __FUNCTION__, SU_TRUE);
+  __su_test_clock_recovery(ctx, SU_TRUE);
 }
