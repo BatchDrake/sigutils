@@ -54,14 +54,33 @@ help(const char *argv0)
   fprintf(stderr, "Options:\n\n");
   fprintf(stderr, "     -d, --dump            Dump tests results to file\n");
   fprintf(stderr, "     -c, --count           Print number of tests and exit\n");
+  fprintf(stderr, "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
+  fprintf(stderr, "                           tests. Default is %d samples\n", SU_TEST_SIGNAL_BUFFER_SIZE);
+  fprintf(stderr, "     -l, --list            Provides a list of available unit tests\n");
+  fprintf(stderr, "                           with their corresponding test ID and exit\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
   fprintf(stderr, "(c) 2016 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
 }
 
+SUPRIVATE void
+list(const char *argv0)
+{
+  unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
+  unsigned int i;
+
+  for (i = 0; i < test_count; ++i) {
+    printf("  %3d %s\n", i, test_list[i].name);
+  }
+
+  printf("%s: %d unit tests available\n", argv0, test_count);
+}
+
 SUPRIVATE struct option long_options[] = {
     {"dump", no_argument, NULL, 'd'},
+    {"buffer-size", required_argument, NULL, 's'},
     {"help", no_argument, NULL, 'h'},
     {"count", no_argument, NULL, 'c'},
+    {"list", no_argument, NULL, 'l'},
     {NULL, 0, NULL, 0}
 };
 
@@ -73,12 +92,13 @@ main (int argc, char *argv[], char *envp[])
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
   unsigned int test_start = 0;
   unsigned int test_end = test_count - 1;
+  unsigned int buffer_size = SU_TEST_SIGNAL_BUFFER_SIZE;
   SUBOOL dump_results = SU_FALSE;
   SUBOOL result;
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "dhc", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "dhcls:", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -91,6 +111,18 @@ main (int argc, char *argv[], char *envp[])
       case 'h':
         help(argv[0]);
         exit(EXIT_SUCCESS);
+
+      case 'l':
+        list(argv[0]);
+        exit(EXIT_SUCCESS);
+
+      case 's':
+        if (sscanf(optarg, "%u", &buffer_size) < 0) {
+          fprintf(stderr, "%s: invalid buffer size `%s'\n", optarg);
+          help(argv[0]);
+          exit(EXIT_SUCCESS);
+        }
+        break;
 
       case '?':
         help(argv[0]);
@@ -134,7 +166,7 @@ main (int argc, char *argv[], char *envp[])
       test_count,
       SU_MIN(test_start, test_count - 1),
       SU_MIN(test_end, test_count - 1),
-      SU_TEST_SIGNAL_BUFFER_SIZE,
+      buffer_size,
       dump_results);
 
   return !result;

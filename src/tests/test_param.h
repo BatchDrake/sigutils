@@ -21,6 +21,9 @@
 #ifndef _SRC_TEST_PARAM_H
 #define _SRC_TEST_PARAM_H
 
+/* Preferred matched filter span (in symbol periods) */
+#define SU_TEST_MF_SYMBOL_SPAN 6
+
 /* Default test buffer size */
 #define SU_TEST_SIGNAL_BUFFER_SIZE (32 * 4096)
 

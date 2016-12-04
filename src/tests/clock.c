@@ -33,24 +33,6 @@
 #include "test_list.h"
 #include "test_param.h"
 
-#undef __CURRFUNC__
-#define __CURRFUNC__ __caller
-
-SUPRIVATE int
-su_test_clock_qpsk_decision(SUCOMPLEX x)
-{
-  SUFLOAT a = SU_C_ARG(x);
-
-  if (a < -M_PI / 2)
-    return 0;
-  else if (a < 0)
-    return 1;
-  else if (a < M_PI / 2)
-    return 2;
-  else
-    return 3;
-}
-
 SUPRIVATE SUBOOL
 __su_test_clock_recovery(
     su_test_context_t *ctx,
@@ -99,11 +81,12 @@ __su_test_clock_recovery(
 
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
-  filter_period = 6 * symbol_period; /* Span: 6 symbols */
+  filter_period = SU_TEST_MF_SYMBOL_SPAN * symbol_period; /* Span: 6 symbols */
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
-  rx_size       = (ctx->buffer_size - rx_delay) / symbol_period;
+  rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay)
+                          / symbol_period);
 
   if (noisy)
     N0          = SU_MAG_RAW(-56) * symbol_period * 4;
@@ -212,11 +195,8 @@ __su_test_clock_recovery(
 
       /* Retrieve symbol */
       if (su_clock_detector_read(&cd, &symsamp, 1) == 1) {
-        /* t = (p - rx_delay) / symbol_period; */
-        /* sym = su_test_clock_qpsk_decision(symsamp[p]); */
-        if (p > rx_delay * 5 && rx_count < rx_size) {
+        if (p > rx_delay * 4 && rx_count < rx_size) {
           mean_baud += cd.bnor;
-
           rx[rx_count++] = symsamp;
         }
       }
