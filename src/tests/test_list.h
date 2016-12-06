@@ -43,6 +43,7 @@ SUBOOL su_test_block_plugging(su_test_context_t *ctx);
 SUBOOL su_test_tuner(su_test_context_t *ctx);
 SUBOOL su_test_costas_block(su_test_context_t *ctx);
 SUBOOL su_test_rrc_block(su_test_context_t *ctx);
+SUBOOL su_test_rrc_block_with_if(su_test_context_t *ctx);
 
 /* Costas loop related tests */
 SUBOOL su_test_costas_lock(su_test_context_t *ctx);

@@ -20,9 +20,10 @@
 
 #include "types.h"
 #include "taps.h"
+#include "sampling.h"
 
 SUPRIVATE void
-su_taps_scale(SUFLOAT *h, SUFLOAT k, unsigned int size)
+su_taps_scale(SUFLOAT *h, SUFLOAT k, SUSCOUNT size)
 {
   unsigned int i;
 
@@ -31,7 +32,7 @@ su_taps_scale(SUFLOAT *h, SUFLOAT k, unsigned int size)
 }
 
 void
-su_taps_apply_hamming(SUFLOAT *h, unsigned int size)
+su_taps_apply_hamming(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;
 
@@ -41,7 +42,7 @@ su_taps_apply_hamming(SUFLOAT *h, unsigned int size)
 }
 
 void
-su_taps_apply_hann(SUFLOAT *h, unsigned int size)
+su_taps_apply_hann(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;
 
@@ -51,7 +52,7 @@ su_taps_apply_hann(SUFLOAT *h, unsigned int size)
 }
 
 void
-su_taps_normalize_Linf(SUFLOAT *h, unsigned int size)
+su_taps_normalize_Linf(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;
   SUFLOAT max = 0;
@@ -65,7 +66,7 @@ su_taps_normalize_Linf(SUFLOAT *h, unsigned int size)
 }
 
 void
-su_taps_normalize_L2(SUFLOAT *h, unsigned int size)
+su_taps_normalize_L2(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;
   SUFLOAT energy = 0;
@@ -78,7 +79,7 @@ su_taps_normalize_L2(SUFLOAT *h, unsigned int size)
 }
 
 void
-su_taps_normalize_L1(SUFLOAT *h, unsigned int size)
+su_taps_normalize_L1(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;
   SUFLOAT amplitude = 0;
@@ -91,7 +92,7 @@ su_taps_normalize_L1(SUFLOAT *h, unsigned int size)
 }
 
 void
-su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size)
+su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size)
 {
   unsigned int i;
   SUFLOAT r_t;
@@ -123,16 +124,48 @@ su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size)
 }
 
 void
-su_taps_brickwall_init(SUFLOAT *h, SUFLOAT B, unsigned int size)
+su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size)
 {
   unsigned int i;
   SUFLOAT t = 0;
 
   for (i = 0; i < size; ++i) {
-    t = 2 * B * (i - size / 2.);
-    h[i] = 2 * B * su_sinc(t);
+    t = i - size / 2.;
+    h[i] = fc * su_sinc(fc * t);
   }
 
   su_taps_apply_hamming(h, size);
+}
+
+void
+su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size)
+{
+  unsigned int i;
+  SUFLOAT t = 0;
+  SUFLOAT omega = SU_NORM2ANG_FREQ(if_nor);
+
+  /*
+   * If intermediate frequency is lesser than or equal to half the bandwidth,
+   * the product-by-cosine trick will not work: negative and positive
+   * pass bands will overlap, creating a spurious gain of 6 dB in the
+   * intersection. There are two ways to overcome this:
+   *
+   * a) Replace SU_COS() by SU_C_EXP and use complex coefficients. This
+   *    implies changing the IIR filter implementation. Costly.
+   * b) Detect this situation, and if if_nor <= bw / 2, use a
+   *    low pass filter with fc = if_nor + bw / 2
+   */
+
+  if (if_nor <= .5 * bw) {
+    su_taps_brickwall_lp_init(h, if_nor + .5 * bw, size);
+  } else {
+
+    for (i = 0; i < size; ++i) {
+      t = i - .5 * size;
+      h[i] = bw * su_sinc(.5 * bw * t) * SU_COS(omega * t);
+    }
+
+    su_taps_apply_hamming(h, size);
+  }
 }
 

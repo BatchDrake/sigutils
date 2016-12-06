@@ -76,7 +76,7 @@ su_test_costas_lock(su_test_context_t *ctx)
   /* Build noisy signal */
   SU_INFO("Transmitting a noisy %lg hcps signal...\n", ncqo.fnor);
   SU_INFO("  AWGN amplitude: %lg dBFS\n", SU_DB_RAW(N0));
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     input[p] = su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
@@ -86,7 +86,7 @@ su_test_costas_lock(su_test_context_t *ctx)
   SU_TEST_TICK(ctx);
 
   /* Feed the PLL and save phase value */
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void) su_ncqo_read(&ncqo); /* Used to compute phase errors */
     su_costas_feed(&costas, input[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
@@ -100,7 +100,7 @@ su_test_costas_lock(su_test_context_t *ctx)
         phierr[p] -= 2 * PI;
     }
     omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
-    Ef += 1. / (.25 * ctx->buffer_size) * (costas.ncqo.fnor - Ef);
+    Ef += 1. / (.25 * ctx->params->buffer_size) * (costas.ncqo.fnor - Ef);
   }
 
   SU_INFO("  Original frequency: %lg\n", ncqo.fnor);
@@ -167,9 +167,9 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   sync_period   = 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period;
-  rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay)
+  rx_size       = SU_CEIL((SUFLOAT) (ctx->params->buffer_size - rx_delay)
                             / symbol_period);
-  tx_size       = SU_CEIL((SUFLOAT) ctx->buffer_size / symbol_period);
+  tx_size       = SU_CEIL((SUFLOAT) ctx->params->buffer_size / symbol_period);
   N0            = .1; /* Noise amplitude */
   phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
@@ -206,7 +206,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   msgbuf = message;
   SU_INFO("Modulating 0x%x in BPSK...\n", msgbuf);
   SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0));
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
           bit = msgbuf & 1;
@@ -230,7 +230,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   SU_TEST_TICK(ctx);
 
   /* Feed the loop and perform demodulation */
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas, tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
@@ -255,7 +255,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
       "RX: 0x%08x = ~0x%08x in %d samples\n",
       rx_buf,
       ~rx_buf,
-      ctx->buffer_size);
+      ctx->params->buffer_size);
 
   SU_TEST_ASSERT(rx_buf == message || rx_buf == ~message);
 
@@ -266,7 +266,7 @@ done:
 
   su_costas_finalize(&costas);
 
-    if (ctx->dump_results)
+    if (ctx->params->dump_fmt)
       if (mf.x_size > 0)
         ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
 
@@ -398,7 +398,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
-  rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay)
+  rx_size       = SU_CEIL((SUFLOAT) (ctx->params->buffer_size - rx_delay)
                             / symbol_period);
   if (noisy)
     N0          = SU_MAG_RAW(-56) * symbol_period * 4;
@@ -454,7 +454,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   msgbuf = message;
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
   SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0 / (symbol_period * 4)));
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
           if (n == 32)
@@ -482,7 +482,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   SU_TEST_TICK(ctx);
 
   /* Feed the loop and perform demodulation */
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas, tx[p]);
     carrier[p]  = su_ncqo_get(&costas.ncqo);
@@ -507,7 +507,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   SU_INFO(
       "RX: 0x%x in %d samples\n",
       rx_buf,
-      ctx->buffer_size);
+      ctx->params->buffer_size);
   SU_TEST_ASSERT(permutations != -1);
   SU_INFO(
         "RX: message decoded after %d permutations\n",
@@ -517,7 +517,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
 done:
   SU_TEST_END(ctx);
 
-  if (ctx->dump_results) {
+  if (ctx->params->dump_fmt) {
     if (mf.x_size > 0)
       ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
     if (costas.af.x_size > 0)

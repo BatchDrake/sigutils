@@ -50,10 +50,10 @@ su_test_pll(su_test_context_t *ctx)
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize */
-  SU_TEST_ASSERT(input  = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(omgerr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(phierr = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  SU_TEST_ASSERT(lock   = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(input  = su_test_ctx_getf(ctx, "x"));
+  SU_TEST_ASSERT(omgerr = su_test_ctx_getf(ctx, "oe"));
+  SU_TEST_ASSERT(phierr = su_test_ctx_getf(ctx, "pe"));
+  SU_TEST_ASSERT(lock   = su_test_ctx_getf(ctx, "lock"));
 
   SU_TEST_ASSERT(su_pll_init(&pll,
       SU_TEST_PLL_SIGNAL_FREQ * 0.5,
@@ -62,18 +62,9 @@ su_test_pll(su_test_context_t *ctx)
   su_ncqo_init(&ncqo, SU_TEST_PLL_SIGNAL_FREQ);
 
   /* Create a falling sinusoid */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     input[p] = 0 * (0.5 - rand() / (double) RAND_MAX);
     input[p] += su_ncqo_read_i(&ncqo);
-  }
-
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            input,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "input.m",
-            "input"));
   }
 
   /* Restart NCQO */
@@ -82,7 +73,7 @@ su_test_pll(su_test_context_t *ctx)
   SU_TEST_TICK(ctx);
 
   /* Feed the PLL and save phase value */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void) su_ncqo_read_i(&ncqo); /* Used to compute phase errors */
     su_pll_feed(&pll, input[p]);
     input[p]  = su_ncqo_get_i(&pll.ncqo);
@@ -103,58 +94,6 @@ done:
   SU_TEST_END(ctx);
 
   su_pll_finalize(&pll);
-
-  if (input != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              input,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "output.m",
-              "output"));
-    }
-
-    free(input);
-  }
-
-  if (phierr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              phierr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "phierr.m",
-              "phierr"));
-    }
-
-    free(phierr);
-  }
-
-  if (omgerr != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              omgerr,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "omgerr.m",
-              "omgerr"));
-    }
-
-    free(omgerr);
-  }
-
-  if (lock != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              lock,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "lock.m",
-              "lock"));
-    }
-
-    free(lock);
-  }
 
   return ok;
 }

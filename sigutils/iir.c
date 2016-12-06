@@ -119,9 +119,9 @@ su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
 SUBOOL
 __su_iir_filt_init(
     su_iir_filt_t *filt,
-    unsigned int y_size,
+    SUSCOUNT y_size,
     SUFLOAT *a,
-    unsigned int x_size,
+    SUSCOUNT x_size,
     SUFLOAT *b,
     SUBOOL copy_coef)
 {
@@ -193,9 +193,9 @@ fail:
 SUBOOL
 su_iir_filt_init(
     su_iir_filt_t *filt,
-    unsigned int y_size,
+    SUSCOUNT y_size,
     const SUFLOAT *a,
-    unsigned int x_size,
+    SUSCOUNT x_size,
     const SUFLOAT *b)
 {
   return __su_iir_filt_init(
@@ -208,7 +208,7 @@ su_iir_filt_init(
 }
 
 SUBOOL
-su_iir_bwlpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc)
+su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 {
   SUFLOAT *a = NULL;
   SUFLOAT *b = NULL;
@@ -243,7 +243,7 @@ fail:
 }
 
 SUBOOL
-su_iir_bwbpf_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT f1, SUFLOAT f2)
+su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2)
 {
   SUFLOAT *a = NULL;
   SUFLOAT *b = NULL;
@@ -279,7 +279,7 @@ fail:
 }
 
 SUBOOL
-su_iir_rrc_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT T, SUFLOAT beta)
+su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta)
 {
   SUFLOAT *b = NULL;
   unsigned int i;
@@ -305,7 +305,11 @@ fail:
 }
 
 SUBOOL
-su_iir_brickwall_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc)
+su_iir_brickwall_bp_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor)
 {
   SUFLOAT *b = NULL;
   unsigned int i;
@@ -316,7 +320,33 @@ su_iir_brickwall_init(su_iir_filt_t *filt, unsigned int n, SUFLOAT fc)
   if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
     goto fail;
 
-  su_taps_brickwall_init(b, fc, n);
+  su_taps_brickwall_bp_init(b, bw, ifnor, n);
+
+  if (!__su_iir_filt_init(filt, 0, NULL, n, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+SUBOOL
+su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
+{
+  SUFLOAT *b = NULL;
+  unsigned int i;
+
+  if (n < 1)
+    goto fail;
+
+  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+    goto fail;
+
+  su_taps_brickwall_lp_init(b, fc, n);
 
   if (!__su_iir_filt_init(filt, 0, NULL, n, b, SU_FALSE))
     goto fail;

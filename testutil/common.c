@@ -241,13 +241,13 @@ su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, size_t size)
 SUFLOAT *
 su_test_ctx_getf(su_test_context_t *ctx, const char *name)
 {
-  return su_test_ctx_getf_w_size(ctx, name, ctx->buffer_size);
+  return su_test_ctx_getf_w_size(ctx, name, ctx->params->buffer_size);
 }
 
 SUCOMPLEX *
 su_test_ctx_getc(su_test_context_t *ctx, const char *name)
 {
-  return su_test_ctx_getc_w_size(ctx, name, ctx->buffer_size);
+  return su_test_ctx_getc_w_size(ctx, name, ctx->params->buffer_size);
 }
 
 SUBOOL
@@ -257,7 +257,7 @@ su_test_ctx_dumpf(
     const SUFLOAT *data,
     size_t size)
 {
-  return su_sigbuf_pool_helper_dump(
+  return su_sigbuf_pool_helper_dump_matlab(
       data,
       size,
       SU_FALSE,
@@ -272,7 +272,7 @@ su_test_ctx_dumpc(
     const SUCOMPLEX *data,
     size_t size)
 {
-  return su_sigbuf_pool_helper_dump(
+  return su_sigbuf_pool_helper_dump_matlab(
       data,
       size,
       SU_TRUE,
@@ -291,14 +291,31 @@ su_test_context_reset(su_test_context_t *ctx)
   ctx->time_units = SU_TIME_UNITS_UNDEFINED;
 }
 
+SUPRIVATE const char *
+su_test_dump_format_to_string(enum sigutils_dump_format fmt)
+{
+  switch(fmt) {
+    case SU_DUMP_FORMAT_NONE:
+      return "none";
+
+    case SU_DUMP_FORMAT_MATLAB:
+      return "matlab";
+
+    case SU_DUMP_FORMAT_WAV:
+      return "wav";
+
+    default:
+      return "unknown";
+  }
+}
+
 SUBOOL
 su_test_run(
     const su_test_entry_t *test_list,
     unsigned int test_count,
     unsigned int range_start,
     unsigned int range_end,
-    size_t buffer_size,
-    SUBOOL save)
+    const struct su_test_run_params *params)
 {
   su_test_context_t ctx = su_test_context_INITIALIZER;
   unsigned int i;
@@ -312,21 +329,25 @@ su_test_run(
   time(&now);
 
   SU_INFO("Sigutils library unit test starting: %s", ctime(&now));
-  SU_INFO("  Configured buffer size: %d elements\n", buffer_size);
-  SU_INFO("  Dumping buffers: %s\n", save ? "yes" : "no");
+  SU_INFO("  Configured buffer size: %d elements\n", params->buffer_size);
+  SU_INFO("  Dumping buffers: %s\n", params->dump_fmt ? "yes" : "no");
+  if (params->dump_fmt)
+    SU_INFO(
+        "  Dump format: %s\n",
+        su_test_dump_format_to_string(params->dump_fmt));
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;
     ctx.entry = &test_list[i];
-    ctx.dump_results = save;
-    ctx.buffer_size = buffer_size;
+    ctx.params = params;
 
     if ((ctx.pool = su_sigbuf_pool_new(ctx.entry->name)) == NULL) {
       SU_ERROR("Failed to initialize pool\n");
       goto next_test;
     }
 
-    if (save && !su_sigbuf_pool_helper_ensure_directory(ctx.entry->name)) {
+    if (params->dump_fmt
+        && !su_sigbuf_pool_helper_ensure_directory(ctx.entry->name)) {
       SU_ERROR("Failed to ensure dump directory\n");
       goto next_test;
     }
@@ -337,8 +358,8 @@ su_test_run(
       printf("[t:%3d] TEST FAILED\n", i);
     }
 
-    if (save) {
-      if (!su_sigbuf_pool_dump(ctx.pool)) {
+    if (params->dump_fmt) {
+      if (!su_sigbuf_pool_dump(ctx.pool, params->dump_fmt)) {
         SU_ERROR("Failed to dump allocated buffers\n");
         goto next_test;
       }

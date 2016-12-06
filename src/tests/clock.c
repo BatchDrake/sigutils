@@ -82,7 +82,7 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
-  rx_size       = SU_CEIL((SUFLOAT) (ctx->buffer_size - rx_delay)
+  rx_size       = SU_CEIL((SUFLOAT) (ctx->params->buffer_size - rx_delay)
                           / symbol_period);
 
   if (noisy)
@@ -140,7 +140,7 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   msgbuf = message;
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
   SU_INFO("  SNR: %lg dBFS\n", -SU_DB_RAW(N0 / (symbol_period * 4)));
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
           if (n == 32)
@@ -177,7 +177,7 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   SU_INFO("Symbol period hint: %lg\n", 1. / cd.bnor);
 
   /* Feed the loop and perform demodulation */
-  for (p = 0; p < ctx->buffer_size; ++p) {
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void) su_ncqo_step(&ncqo);
     su_costas_feed(&costas,  tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
@@ -210,7 +210,7 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 done:
   SU_TEST_END(ctx);
 
-  if (ctx->dump_results) {
+  if (ctx->params->dump_fmt) {
     if (mf.x_size > 0)
       ok = ok && su_test_ctx_dumpf(ctx, "mf", mf.b, mf.x_size);
     if (costas.af.x_size > 0)

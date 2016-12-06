@@ -36,6 +36,7 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_costas_qpsk_noisy),
     SU_TEST_ENTRY(su_test_costas_block),
     SU_TEST_ENTRY(su_test_rrc_block),
+    SU_TEST_ENTRY(su_test_rrc_block_with_if),
     SU_TEST_ENTRY(su_test_clock_recovery),
     SU_TEST_ENTRY(su_test_clock_recovery_noisy),
 };
@@ -52,10 +53,13 @@ help(const char *argv0)
       "to run. If neither test_start nor test_end is passed, all tests will\n"
       "be executed\n\n");
   fprintf(stderr, "Options:\n\n");
-  fprintf(stderr, "     -d, --dump            Dump tests results to file\n");
+  fprintf(stderr, "     -d, --dump            Dump tests results as MATLAB files\n");
+  fprintf(stderr, "     -w, --wav             Dump tests results as WAV files\n");
   fprintf(stderr, "     -c, --count           Print number of tests and exit\n");
   fprintf(stderr, "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
   fprintf(stderr, "                           tests. Default is %d samples\n", SU_TEST_SIGNAL_BUFFER_SIZE);
+  fprintf(stderr, "     -r, --sample-rate=r   For WAV files, set the sampling frequency.\n");
+  fprintf(stderr, "                           Default is %d samples per second\n", SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
   fprintf(stderr, "     -l, --list            Provides a list of available unit tests\n");
   fprintf(stderr, "                           with their corresponding test ID and exit\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
@@ -77,7 +81,9 @@ list(const char *argv0)
 
 SUPRIVATE struct option long_options[] = {
     {"dump", no_argument, NULL, 'd'},
+    {"wav", no_argument, NULL, 'w'},
     {"buffer-size", required_argument, NULL, 's'},
+    {"sample-rate", required_argument, NULL, 'r'},
     {"help", no_argument, NULL, 'h'},
     {"count", no_argument, NULL, 'c'},
     {"list", no_argument, NULL, 'l'},
@@ -92,20 +98,23 @@ main (int argc, char *argv[], char *envp[])
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
   unsigned int test_start = 0;
   unsigned int test_end = test_count - 1;
-  unsigned int buffer_size = SU_TEST_SIGNAL_BUFFER_SIZE;
-  SUBOOL dump_results = SU_FALSE;
+  struct su_test_run_params params = su_test_run_params_INITIALIZER;
   SUBOOL result;
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "dhcls:", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "dhclws:r:", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
         exit(EXIT_FAILURE);
 
       case 'd':
-        dump_results = SU_TRUE;
+        params.dump_fmt = SU_DUMP_FORMAT_MATLAB;
+        break;
+
+      case 'w':
+        params.dump_fmt = SU_DUMP_FORMAT_WAV;
         break;
 
       case 'h':
@@ -117,8 +126,16 @@ main (int argc, char *argv[], char *envp[])
         exit(EXIT_SUCCESS);
 
       case 's':
-        if (sscanf(optarg, "%u", &buffer_size) < 0) {
+        if (sscanf(optarg, "%u", &params.buffer_size) < 0) {
           fprintf(stderr, "%s: invalid buffer size `%s'\n", optarg);
+          help(argv[0]);
+          exit(EXIT_SUCCESS);
+        }
+        break;
+
+      case 'r':
+        if (sscanf(optarg, "%lu", &params.fs) < 0) {
+          fprintf(stderr, "%s: invalid sampling rate `%s'\n", optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
         }
@@ -166,8 +183,7 @@ main (int argc, char *argv[], char *envp[])
       test_count,
       SU_MIN(test_start, test_count - 1),
       SU_MIN(test_end, test_count - 1),
-      buffer_size,
-      dump_results);
+      &params);
 
   return !result;
 }

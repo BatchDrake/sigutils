@@ -27,8 +27,11 @@
 #define SU_HANN_ALPHA 0.5
 #define SU_HANN_BETA (1 - SU_HANN_ALPHA)
 
-void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, unsigned int size);
+/* Get coefficients of a RRC filter */
+void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);
 
-void su_taps_brickwall_init(SUFLOAT *h, SUFLOAT B, unsigned int size);
+void su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size);
+
+void su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size);
 
 #endif /* _SIGUTILS_TAPS_H */

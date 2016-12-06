@@ -120,7 +120,7 @@ su_costas_init(
     if (arm_order == 1)
       b[0] = 1; /* No filtering */
     else
-      su_taps_brickwall_init(b, arm_bw, arm_order);
+      su_taps_brickwall_lp_init(b, arm_bw, arm_order);
   } else {
     /* If arm filter order is small, try to build a IIR filter */
     if ((a = su_dcof_bwlp(arm_order - 1, arm_bw)) == NULL)

@@ -37,14 +37,16 @@ SUBOOL
 su_test_butterworth_lpf(su_test_context_t *ctx)
 {
   SUBOOL ok = SU_FALSE;
-  SUFLOAT *buffer = NULL;
+  SUFLOAT *hi = NULL;
+  SUFLOAT *lo = NULL;
   unsigned int p = 0;
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   su_iir_filt_t lpf = su_iir_filt_INITIALIZER;
 
   SU_TEST_START_TICKLESS(ctx);
 
-  SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(hi = su_test_ctx_getf(ctx, "hi"));
+  SU_TEST_ASSERT(lo = su_test_ctx_getf(ctx, "lo"));
 
   SU_TEST_ASSERT(su_iir_bwlpf_init(&lpf, 5, 0.25));
 
@@ -53,50 +55,33 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
   su_ncqo_init(&ncqo, 1);
 
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
-    buffer[p] = su_iir_filt_feed(
+    hi[p] = SU_C_REAL(su_iir_filt_feed(
         &lpf,
-        su_ncqo_read_i(&ncqo));
+        su_ncqo_read(&ncqo)));
 
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            buffer,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "hi.m",
-            "hi"));
-
-    printf(" hi pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" hi mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" hi std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+  if (ctx->params->dump_fmt) {
+    printf(" hi pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi std: " SUFLOAT_FMT "\n", su_test_buffer_std(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
   }
 
   su_ncqo_set_freq(&ncqo, .125);
 
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
-    buffer[p] = su_iir_filt_feed(
+    lo[p] = SU_C_REAL(su_iir_filt_feed(
         &lpf,
-        su_ncqo_read_i(&ncqo));
+        su_ncqo_read(&ncqo)));
 
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            buffer,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "lo.m",
-            "lo"));
-
-    printf(" lo pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" lo mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" lo std: " SUFLOAT_FMT "\n", su_test_buffer_std(buffer, SU_TEST_SIGNAL_BUFFER_SIZE));
+  if (ctx->params->dump_fmt) {
+    printf(" lo pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo std: " SUFLOAT_FMT "\n", su_test_buffer_std(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
   }
 
   ok = SU_TRUE;
 
 done:
   SU_TEST_END(ctx);
-
-  if (buffer != NULL)
-    free(buffer);
 
   su_iir_filt_finalize(&lpf);
 

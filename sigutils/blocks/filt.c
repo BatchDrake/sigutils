@@ -33,7 +33,7 @@ su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
   SUFLOAT beta = 0;
 
   if ((filt = calloc(1, sizeof (su_iir_filt_t))) == NULL) {
-    SU_ERROR("Cannot allocate AGC state");
+    SU_ERROR("Cannot allocate RRC filter state\n");
     goto done;
   }
 
@@ -42,11 +42,15 @@ su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
   beta = va_arg(ap, SUFLOAT);
 
   if (!su_iir_rrc_init(filt, order, T, beta)) {
-    SU_ERROR("Failed to initialize RRC filter");
+    SU_ERROR("Failed to initialize RRC filter\n");
     goto done;
   }
 
-  ok = SU_TRUE;
+  ok = su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      "gain",
+      &filt->gain);
 
 done:
   if (!ok) {

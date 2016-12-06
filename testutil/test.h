@@ -26,6 +26,14 @@
 #include <sigutils/types.h>
 #include <sys/time.h>
 
+#define SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT 8000
+
+enum sigutils_dump_format {
+  SU_DUMP_FORMAT_NONE,
+  SU_DUMP_FORMAT_MATLAB,
+  SU_DUMP_FORMAT_WAV
+};
+
 enum sigutils_test_time_units {
   SU_TIME_UNITS_UNDEFINED,
   SU_TIME_UNITS_USEC,
@@ -36,9 +44,10 @@ enum sigutils_test_time_units {
 };
 
 struct sigutils_sigbuf {
-  char *name;
-  size_t size;
-  SUBOOL is_complex;
+  char    *name;       /* Buffer name */
+  SUSCOUNT fs;         /* Sampling frequency */
+  size_t   size;       /* Buffer size */
+  SUBOOL   is_complex; /* Buffer type */
 
   union {
     void *buffer;
@@ -51,6 +60,7 @@ typedef struct sigutils_sigbuf su_sigbuf_t;
 
 struct sigutils_sigbuf_pool {
   char *name;
+  SUSCOUNT fs; /* Default sampling frequency */
   PTR_LIST(su_sigbuf_t, sigbuf);
 };
 
@@ -58,11 +68,16 @@ typedef struct sigutils_sigbuf_pool su_sigbuf_pool_t;
 
 struct sigutils_test_entry;
 
+struct su_test_run_params {
+  SUSCOUNT buffer_size;
+  SUSCOUNT fs;
+  enum sigutils_dump_format dump_fmt;
+};
+
 struct sigutils_test_context {
-  SUBOOL dump_results;
+  const struct su_test_run_params *params;
   const struct sigutils_test_entry *entry;
   su_sigbuf_pool_t *pool;
-  size_t buffer_size;
   unsigned int testno;
   struct timeval start;
   struct timeval end;
@@ -81,10 +96,25 @@ struct sigutils_test_entry {
 
 typedef struct sigutils_test_entry su_test_entry_t;
 
+#define su_test_run_params_INITIALIZER \
+{ \
+  SU_TEST_SIGNAL_BUFFER_SIZE, /* buffer_size */ \
+  SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT, /* fs */ \
+  SU_DUMP_FORMAT_NONE /* dump_fmt */ \
+}
+
 #define SU_TEST_ENTRY(name) { STRINGIFY(name), name }
 
 #define su_test_context_INITIALIZER            \
   {SU_FALSE, NULL, NULL, 0, 0, {0, 0}, {0, 0}, 0, SU_TIME_UNITS_UNDEFINED}
+
+#define SU_SYSCALL_ASSERT(expr)                                 \
+  if ((expr) < 0) {                                             \
+    SU_ERROR(                                                   \
+          "Operation `%s' failed (negative value returned)\n",  \
+          STRINGIFY(expr));                                     \
+    goto fail;                                                  \
+  }
 
 #define SU_TEST_START(ctx)                     \
   printf("[t:%3d] %s: start\n",                \
@@ -140,8 +170,7 @@ SUBOOL su_test_run(
     unsigned int test_count,
     unsigned int range_start,
     unsigned int range_end,
-    size_t buffer_size,
-    SUBOOL save);
+    const struct su_test_run_params *params);
 
 SUFLOAT *su_test_buffer_new(unsigned int size);
 
@@ -179,6 +208,10 @@ SUBOOL su_test_ctx_dumpc(
     const SUCOMPLEX *data,
     size_t size);
 
+void su_sigbuf_set_fs(su_sigbuf_t *sbuf, SUSCOUNT fs);
+
+SUSCOUNT su_sigbuf_get_fs(const su_sigbuf_t *sbuf);
+
 su_sigbuf_pool_t *su_sigbuf_pool_new(const char *name);
 
 void su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool);
@@ -195,14 +228,32 @@ SUCOMPLEX *su_sigbuf_pool_get_complex(
 
 SUBOOL su_sigbuf_pool_helper_ensure_directory(const char *name);
 
-SUBOOL su_sigbuf_pool_helper_dump(
+SUBOOL su_sigbuf_pool_helper_dump_matlab(
     const void *data,
     size_t size,
     SUBOOL is_complex,
     const char *directory,
     const char *name);
 
-SUBOOL su_sigbuf_pool_dump(su_sigbuf_pool_t *pool);
+SUBOOL su_sigbuf_pool_helper_dump_wav(
+    const void *data,
+    size_t size,
+    SUSCOUNT fs,
+    SUBOOL is_complex,
+    const char *directory,
+    const char *name);
+
+SUBOOL su_sigbuf_pool_dump(
+    const su_sigbuf_pool_t *pool,
+    enum sigutils_dump_format f);
+
+SUBOOL su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool);
+
+SUBOOL su_sigbuf_pool_dump_wav(const su_sigbuf_pool_t *pool);
+
+void su_sigbuf_pool_set_fs(su_sigbuf_pool_t *pool, SUSCOUNT fs);
+
+SUSCOUNT su_sigbuf_pool_get_fs(const su_sigbuf_pool_t *pool);
 
 void su_sigbuf_pool_destroy(su_sigbuf_pool_t *pool);
 

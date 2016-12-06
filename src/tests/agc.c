@@ -102,7 +102,7 @@ su_test_agc_transient(su_test_context_t *ctx)
     buffer[p] += SU_EXP(-t * t);
   }
 
-  if (ctx->dump_results) {
+  if (ctx->params->dump_fmt) {
     SU_TEST_ASSERT(
         su_test_buffer_dump_matlab(
             buffer,
@@ -126,7 +126,7 @@ done:
   su_agc_finalize(&agc);
 
   if (buffer != NULL) {
-    if (ctx->dump_results) {
+    if (ctx->params->dump_fmt) {
       SU_TEST_ASSERT(
           su_test_buffer_dump_matlab(
               buffer,
@@ -181,7 +181,7 @@ su_test_agc_steady_rising(su_test_context_t *ctx)
     buffer[p] += 0.2 * floor(1 + 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE) * su_ncqo_read_i(&ncqo);
   }
 
-  if (ctx->dump_results) {
+  if (ctx->params->dump_fmt) {
     SU_TEST_ASSERT(
         su_test_buffer_dump_matlab(
             buffer,
@@ -215,7 +215,7 @@ done:
   su_agc_finalize(&agc);
 
   if (buffer != NULL) {
-    if (ctx->dump_results) {
+    if (ctx->params->dump_fmt) {
       SU_TEST_ASSERT(
           su_test_buffer_dump_matlab(
               buffer,
@@ -234,7 +234,8 @@ SUBOOL
 su_test_agc_steady_falling(su_test_context_t *ctx)
 {
   SUBOOL ok = SU_FALSE;
-  SUFLOAT *buffer = NULL;
+  SUFLOAT *input = NULL;
+  SUFLOAT *output = NULL;
   SUFLOAT t;
   su_agc_t agc = su_agc_INITIALIZER;
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
@@ -244,7 +245,8 @@ su_test_agc_steady_falling(su_test_context_t *ctx)
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize */
-  SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
+  SU_TEST_ASSERT(input = su_test_ctx_getf(ctx, "x"));
+  SU_TEST_ASSERT(output = su_test_ctx_getf(ctx, "y"));
   agc_params.delay_line_size  = 10;
   agc_params.mag_history_size = 10;
   agc_params.fast_rise_t      = 2;
@@ -263,35 +265,26 @@ su_test_agc_steady_falling(su_test_context_t *ctx)
   su_ncqo_init(&ncqo, SU_TEST_AGC_SIGNAL_FREQ);
 
   /* Create a falling sinusoid */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
-    t = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
-    buffer[p] = 1e-2 * rand() / (double) RAND_MAX;
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
+    t = p - ctx->params->buffer_size / 2;
+    input[p] = 1e-2 * rand() / (double) RAND_MAX;
 
-    buffer[p] += 0.2 * floor(5 - 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE) * su_ncqo_read_i(&ncqo);
-  }
-
-  if (ctx->dump_results) {
-    SU_TEST_ASSERT(
-        su_test_buffer_dump_matlab(
-            buffer,
-            SU_TEST_SIGNAL_BUFFER_SIZE,
-            "steady.m",
-            "steady"));
+    input[p] += 0.2 * floor(5 - 5 * p / ctx->params->buffer_size) * su_ncqo_read_i(&ncqo);
   }
 
   SU_TEST_TICK(ctx);
 
   /* Feed the AGC and put samples back in buffer */
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
-    buffer[p] = SU_C_REAL(su_agc_feed(&agc, buffer[p]));
+  for (p = 0; p < ctx->params->buffer_size; ++p) {
+    output[p] = SU_C_REAL(su_agc_feed(&agc, input[p]));
   }
 
   /* TODO: Improve levels */
   SU_TEST_ASSERT(
       su_test_check_peak(
           ctx,
-          buffer,
-          SU_TEST_SIGNAL_BUFFER_SIZE,
+          input,
+          ctx->params->buffer_size,
           2 * SU_TEST_AGC_WINDOW,
           SU_AGC_RESCALE * 0.9 ,
           SU_AGC_RESCALE * 1.1));
@@ -302,19 +295,6 @@ done:
   SU_TEST_END(ctx);
 
   su_agc_finalize(&agc);
-
-  if (buffer != NULL) {
-    if (ctx->dump_results) {
-      SU_TEST_ASSERT(
-          su_test_buffer_dump_matlab(
-              buffer,
-              SU_TEST_SIGNAL_BUFFER_SIZE,
-              "corrected.m",
-              "corrected"));
-    }
-
-    free(buffer);
-  }
 
   return ok;
 }
