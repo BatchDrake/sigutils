@@ -399,14 +399,14 @@ su_test_rrc_block(su_test_context_t *ctx)
 
   /* Signal properties */
   const SUFLOAT baud = 468;
-  const SUFLOAT arm_bw = .5 * baud;
-  const unsigned int arm_order = 10;
+  const SUFLOAT arm_bw = 2 * baud;
+  const unsigned int arm_order = 3;
   const SUFLOAT loop_bw = 1e-1 * baud;
   const unsigned int sample_count = 8000 * 59;
   /* Block properties */
   int *samp_rate;
   SUFLOAT *f;
-
+  SUFLOAT *gain;
   unsigned int *size;
 
   SU_TEST_START(ctx);
@@ -446,7 +446,7 @@ su_test_rrc_block(su_test_context_t *ctx)
       "rrc",
       (unsigned int) (4. * 8000. / (SUFLOAT) baud),
       SU_T2N_FLOAT(8000, 1. / 468),
-      0.35);
+      0.75);
   SU_TEST_ASSERT(rrc_block != NULL);
 
   costas_block = su_block_new(
@@ -463,9 +463,18 @@ su_test_rrc_block(su_test_context_t *ctx)
       SU_BLOCK_PROPERTY_TYPE_FLOAT,
       "f");
   SU_TEST_ASSERT(f != NULL);
+
+  gain = su_block_get_property_ref(
+      rrc_block,
+      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      "gain");
+  SU_TEST_ASSERT(gain != NULL);
+
   SU_INFO(
       "Costas loop created, initial frequency: %lg Hz\n",
       SU_NORM2ABS_FREQ(*samp_rate, *f));
+
+  SU_INFO("RRC filter gain: %lg\n", *gain);
 
   /* Plug wav file directly to AGC (there should be a tuner before this) */
   SU_TEST_ASSERT(su_block_plug(wav_block, 0, 0, agc_block));
@@ -547,8 +556,8 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   const unsigned int arm_order = 3;
   const SUFLOAT loop_bw = 1e-1 * baud;
   const unsigned int sample_count = 8000 * 59;
-  const SUFLOAT if_off = 2000; /* IF: 2000 KHz */
-
+  const SUFLOAT if_off = 4000; /* IF: 1000 Hz */
+  const SUFLOAT fc = 912; /* FC: 912 Hz */
   /* Block properties */
   int *samp_rate;
   SUFLOAT *f;
@@ -561,8 +570,9 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
+
   agc_params.delay_line_size  = 10;
-  agc_params.mag_history_size = 10;
+  agc_params.mag_history_size = 1000;
   agc_params.fast_rise_t      = 2;
   agc_params.fast_fall_t      = 4;
 
@@ -588,10 +598,10 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
 
   tuner_block = su_block_new(
       "tuner",
-      SU_ABS2NORM_FREQ(*samp_rate, 912),    /* Center frequency (910 Hz) */
+      SU_ABS2NORM_FREQ(*samp_rate, fc),     /* Center frequency */
       SU_ABS2NORM_FREQ(*samp_rate, baud),   /* Signal is 468 baud */
       SU_ABS2NORM_FREQ(*samp_rate, if_off), /* Move signal to 2 KHz */
-      500);                                 /* 500 coefficients */
+      (unsigned int) (6 * SU_T2N_FLOAT(*samp_rate, 1. / baud)));
   SU_TEST_ASSERT(tuner_block != NULL);
 
   size = su_block_get_property_ref(
