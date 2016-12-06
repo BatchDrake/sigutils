@@ -25,6 +25,7 @@ extern struct sigutils_block_class su_block_class_TUNER;
 extern struct sigutils_block_class su_block_class_WAVFILE;
 extern struct sigutils_block_class su_block_class_COSTAS;
 extern struct sigutils_block_class su_block_class_RRC;
+extern struct sigutils_block_class su_block_class_CDR;
 
 SUBOOL
 su_lib_init(void)
@@ -38,6 +39,7 @@ su_lib_init(void)
           &su_block_class_WAVFILE,
           &su_block_class_COSTAS,
           &su_block_class_RRC,
+          &su_block_class_CDR,
       };
 
   for (i = 0; i < sizeof (classes) / sizeof (classes[0]); ++i)

@@ -27,7 +27,7 @@
 SUBOOL
 su_sigbuf_pool_helper_dump_matlab(
     const void *data,
-    size_t size,
+    SUSCOUNT size,
     SUBOOL is_complex,
     const char *directory,
     const char *name)

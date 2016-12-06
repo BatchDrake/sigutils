@@ -39,6 +39,7 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_rrc_block_with_if),
     SU_TEST_ENTRY(su_test_clock_recovery),
     SU_TEST_ENTRY(su_test_clock_recovery_noisy),
+    SU_TEST_ENTRY(su_test_cdr_block)
 };
 
 SUPRIVATE void

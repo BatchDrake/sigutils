@@ -33,7 +33,7 @@ su_clock_detector_init(
     su_clock_detector_t *cd,
     SUFLOAT loop_gain,
     SUFLOAT bhint,
-    unsigned int bufsiz)
+    SUSCOUNT bufsiz)
 {
   memset(cd, 0, sizeof(su_clock_detector_t));
 

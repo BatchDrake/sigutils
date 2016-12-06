@@ -105,8 +105,17 @@ typedef struct sigutils_test_entry su_test_entry_t;
 
 #define SU_TEST_ENTRY(name) { STRINGIFY(name), name }
 
-#define su_test_context_INITIALIZER            \
-  {SU_FALSE, NULL, NULL, 0, 0, {0, 0}, {0, 0}, 0, SU_TIME_UNITS_UNDEFINED}
+#define su_test_context_INITIALIZER \
+{ \
+  NULL, /* params */ \
+  NULL, /* entry */ \
+  NULL, /* pool */ \
+  0, /* testno */ \
+  {0, 0}, /* start */ \
+  {0, 0}, /* end */ \
+  0, /* elapsed_time */ \
+  SU_TIME_UNITS_UNDEFINED /* time units */ \
+}
 
 #define SU_SYSCALL_ASSERT(expr)                                 \
   if ((expr) < 0) {                                             \
@@ -157,9 +166,9 @@ void su_test_context_update_times(su_test_context_t *ctx);
 
 const char *su_test_context_time_units(const su_test_context_t *ctx);
 
-SUFLOAT *su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, size_t size);
+SUFLOAT *su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size);
 
-SUCOMPLEX *su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, size_t size);
+SUCOMPLEX *su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size);
 
 SUFLOAT *su_test_ctx_getf(su_test_context_t *ctx, const char *name);
 
@@ -200,17 +209,26 @@ SUBOOL su_test_ctx_dumpf(
     su_test_context_t *ctx,
     const char *name,
     const SUFLOAT *data,
-    size_t size);
+    SUSCOUNT size);
 
 SUBOOL su_test_ctx_dumpc(
     su_test_context_t *ctx,
     const char *name,
     const SUCOMPLEX *data,
-    size_t size);
+    SUSCOUNT size);
+
+SUBOOL su_test_ctx_resize_buf(
+    su_test_context_t *ctx,
+    const char *name,
+    SUSCOUNT size);
 
 void su_sigbuf_set_fs(su_sigbuf_t *sbuf, SUSCOUNT fs);
 
 SUSCOUNT su_sigbuf_get_fs(const su_sigbuf_t *sbuf);
+
+su_sigbuf_t *su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name);
+
+SUBOOL su_sigbuf_resize(su_sigbuf_t *sbuf, SUSCOUNT size);
 
 su_sigbuf_pool_t *su_sigbuf_pool_new(const char *name);
 
@@ -219,25 +237,25 @@ void su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool);
 SUFLOAT *su_sigbuf_pool_get_float(
     su_sigbuf_pool_t *pool,
     const char *name,
-    size_t size);
+    SUSCOUNT size);
 
 SUCOMPLEX *su_sigbuf_pool_get_complex(
     su_sigbuf_pool_t *pool,
     const char *name,
-    size_t size);
+    SUSCOUNT size);
 
 SUBOOL su_sigbuf_pool_helper_ensure_directory(const char *name);
 
 SUBOOL su_sigbuf_pool_helper_dump_matlab(
     const void *data,
-    size_t size,
+    SUSCOUNT size,
     SUBOOL is_complex,
     const char *directory,
     const char *name);
 
 SUBOOL su_sigbuf_pool_helper_dump_wav(
     const void *data,
-    size_t size,
+    SUSCOUNT size,
     SUSCOUNT fs,
     SUBOOL is_complex,
     const char *directory,

@@ -28,7 +28,7 @@
 SUBOOL
 su_sigbuf_pool_helper_dump_wav(
     const void *data,
-    size_t size,
+    SUSCOUNT size,
     SUSCOUNT fs,
     SUBOOL is_complex,
     const char *directory,

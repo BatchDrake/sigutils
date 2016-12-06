@@ -227,13 +227,13 @@ fail:
 }
 
 SUFLOAT *
-su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, size_t size)
+su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 {
   return su_sigbuf_pool_get_float(ctx->pool, name, size);
 }
 
 SUCOMPLEX *
-su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, size_t size)
+su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 {
   return su_sigbuf_pool_get_complex(ctx->pool, name, size);
 }
@@ -251,11 +251,22 @@ su_test_ctx_getc(su_test_context_t *ctx, const char *name)
 }
 
 SUBOOL
+su_test_ctx_resize_buf(su_test_context_t *ctx, const char *name, SUSCOUNT size)
+{
+  su_sigbuf_t *sbuf = NULL;
+
+  if ((sbuf = su_sigbuf_pool_lookup(ctx->pool, name)) == NULL)
+    return SU_FALSE;
+
+  return su_sigbuf_resize(sbuf, size);
+}
+
+SUBOOL
 su_test_ctx_dumpf(
     su_test_context_t *ctx,
     const char *name,
     const SUFLOAT *data,
-    size_t size)
+    SUSCOUNT size)
 {
   return su_sigbuf_pool_helper_dump_matlab(
       data,
@@ -270,7 +281,7 @@ su_test_ctx_dumpc(
     su_test_context_t *ctx,
     const char *name,
     const SUCOMPLEX *data,
-    size_t size)
+    SUSCOUNT size)
 {
   return su_sigbuf_pool_helper_dump_matlab(
       data,

@@ -40,7 +40,7 @@ su_sigbuf_destroy(su_sigbuf_t *sbuf)
 }
 
 SUPRIVATE su_sigbuf_t *
-su_sigbuf_new(const char *name, size_t size, SUBOOL is_complex)
+su_sigbuf_new(const char *name, SUSCOUNT size, SUBOOL is_complex)
 {
   su_sigbuf_t *new = NULL;
 
@@ -77,6 +77,25 @@ SUSCOUNT
 su_sigbuf_get_fs(const su_sigbuf_t *sbuf)
 {
   return sbuf->fs;
+}
+
+SUBOOL
+su_sigbuf_resize(su_sigbuf_t *sbuf, SUSCOUNT size)
+{
+  void *new_buffer = NULL;
+
+  if (size > 0) {
+    if ((new_buffer = realloc(
+        sbuf->buffer,
+        size
+          * (sbuf->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT)))) == NULL)
+      return SU_FALSE;
+
+    sbuf->buffer = new_buffer;
+    sbuf->size = size;
+  }
+
+  return SU_TRUE;
 }
 
 void
@@ -119,7 +138,7 @@ fail:
   return NULL;
 }
 
-SUPRIVATE su_sigbuf_t *
+su_sigbuf_t *
 su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name)
 {
   unsigned int i;
@@ -136,7 +155,7 @@ SUPRIVATE void *
 su_sigbuf_pool_get(
     su_sigbuf_pool_t *pool,
     const char *name,
-    size_t size,
+    SUSCOUNT size,
     SUBOOL is_complex)
 {
   su_sigbuf_t *this;
@@ -188,13 +207,13 @@ su_sigbuf_pool_get_fs(const su_sigbuf_pool_t *pool)
 }
 
 SUFLOAT *
-su_sigbuf_pool_get_float(su_sigbuf_pool_t *pool, const char *name, size_t size)
+su_sigbuf_pool_get_float(su_sigbuf_pool_t *pool, const char *name, SUSCOUNT size)
 {
   return (SUFLOAT *) su_sigbuf_pool_get(pool, name, size, SU_FALSE);
 }
 
 SUCOMPLEX *
-su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool, const char *name, size_t size)
+su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool, const char *name, SUSCOUNT size)
 {
   return (SUCOMPLEX *) su_sigbuf_pool_get(pool, name, size, SU_TRUE);
 }

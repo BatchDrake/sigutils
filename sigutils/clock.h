@@ -204,7 +204,7 @@ SUBOOL su_clock_detector_init(
     su_clock_detector_t *cd,
     SUFLOAT loop_gain,
     SUFLOAT bhint,
-    unsigned int Tmax);
+    SUSCOUNT bufsiz);
 
 void su_clock_detector_finalize(su_clock_detector_t *cd);
 
