@@ -719,6 +719,20 @@ done:
   return ok;
 }
 
+SUPRIVATE SUFLOAT
+su_test_cdr_block_symbol_uncertainty(SUCOMPLEX symbol)
+{
+  SUCOMPLEX symbols[] = {1 + I, 1 - I, -1 + I, -1 - I};
+  unsigned int i = 0;
+  SUFLOAT dist = INFINITY;
+
+  for (i = 0; i < sizeof (symbols) / sizeof (SUCOMPLEX); ++i)
+    if (SU_C_ABS(symbol - symbols[i]) < dist)
+      dist = SU_C_ABS(symbol - symbols[i]);
+
+  return dist;
+}
+
 SUBOOL
 su_test_cdr_block(su_test_context_t *ctx)
 {
@@ -733,17 +747,21 @@ su_test_cdr_block(su_test_context_t *ctx)
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
   SUCOMPLEX *rx = NULL;
   SUFLOAT *freq = NULL;
+  SUFLOAT *unc = NULL;
   SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
+  SUSCOUNT uncp = 0;
   ssize_t got;
 
   /* Signal properties */
   const SUFLOAT baud = 468;
   const SUFLOAT arm_bw = 2 * baud;
-  const unsigned int arm_order = 3;
-  const SUFLOAT loop_bw = .5e-1 * baud;
-  const unsigned int sample_count = 8000 * 59;
+  const SUSCOUNT arm_order = 3;
+  const SUFLOAT loop_bw = 1e-1 * baud;
+  const SUSCOUNT sample_count = 8000 * 59;
+  const SUSCOUNT unc_measure_size = 100;
+
   /* Block properties */
   int *samp_rate;
   SUFLOAT *f;
@@ -754,6 +772,10 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_TEST_START(ctx);
 
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
+  SU_TEST_ASSERT(unc = su_test_ctx_getf_w_size(
+      ctx,
+      "unc",
+      SU_CEIL(sample_count / (SUFLOAT) unc_measure_size)));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
   agc_params.delay_line_size  = 10;
@@ -788,13 +810,13 @@ su_test_cdr_block(su_test_context_t *ctx)
       "rrc",
       (unsigned int) (4. * 8000. / (SUFLOAT) baud),
       SU_T2N_FLOAT(8000, 1. / baud),
-      0.75);
+      0.25);
   SU_TEST_ASSERT(rrc_block != NULL);
 
   costas_block = su_block_new(
       "costas",
       SU_COSTAS_KIND_QPSK,
-      SU_ABS2NORM_FREQ(*samp_rate, 900),
+      SU_ABS2NORM_FREQ(*samp_rate, 910),
       SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
       arm_order,
       SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
@@ -803,7 +825,7 @@ su_test_cdr_block(su_test_context_t *ctx)
   cdr_block = su_block_new(
       "cdr",
       (SUFLOAT) 1.,
-      SU_ABS2NORM_FREQ(*samp_rate, .5 * baud),
+      SU_ABS2NORM_BAUD(*samp_rate, baud),
       (SUSCOUNT) 15);
   SU_TEST_ASSERT(costas_block != NULL);
 
@@ -853,8 +875,8 @@ su_test_cdr_block(su_test_context_t *ctx)
   *beta = 0;
   *alpha *= .75;
 
-  *bmin = SU_ABS2NORM_FREQ(*samp_rate, .5 * baud - 10);
-  *bmax = SU_ABS2NORM_FREQ(*samp_rate, .5 * baud + 10);
+  *bmin = SU_ABS2NORM_BAUD(*samp_rate, baud - 10);
+  *bmax = SU_ABS2NORM_BAUD(*samp_rate, baud + 10);
 
   SU_INFO(
       "Costas loop created, initial frequency: %lg Hz\n",
@@ -878,6 +900,8 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_block_port_plug(&port, cdr_block, 0));
 
   /* Try to read (this must work) */
+  unc[uncp] = 0;
+
   while (j < sample_count && (j == 0 || got > 0)) {
     got = su_block_port_read(&port, buffer, 1);
     SU_TEST_ASSERT(got >= 0);
@@ -886,6 +910,10 @@ su_test_cdr_block(su_test_context_t *ctx)
       for (i = 0; i < got; ++i) {
         freq[i + j] = *f;
         rx[i + j] = buffer[i];
+        unc[uncp] +=
+            su_test_cdr_block_symbol_uncertainty(buffer[i]) / unc_measure_size;
+        if (((i + j + 1) % unc_measure_size) == 0)
+          unc[++uncp] = 0;
       }
 
     if ((j % (17 * 25)) == 0)
@@ -899,6 +927,7 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_INFO("\n");
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "rx", j));
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "freq", j));
+  SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "unc", uncp + 1));
 
   SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909 &&
                  SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);

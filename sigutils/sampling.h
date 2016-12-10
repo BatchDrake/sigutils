@@ -53,6 +53,18 @@
 #define SU_ABS2NORM_FREQ(fs, freq) (2 * (SUFLOAT) (freq) / (SUFLOAT) (fs))
 #define SU_NORM2ABS_FREQ(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor) / 2.)
 
+/*
+ * Normalized and absolute baud rates are transformed using a different
+ * rule: since CDR block works with the symbol period, it's convenient
+ * to define the baud rate as the inverse of the symbol period in samples.
+ *
+ * As a consequence of this, a normalized baudrate of 1 means 1 symbol per
+ * sample.
+ */
+
+#define SU_ABS2NORM_BAUD(fs, freq) ((SUFLOAT) (freq) / (SUFLOAT) (fs))
+#define SU_NORM2ABS_BAUD(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor))
+
 #define SU_NORM2ANG_FREQ(freq) (PI * (freq))
 #define SU_ANG2NORM_FREQ(omrel) ((omrel) / (PI))
 
