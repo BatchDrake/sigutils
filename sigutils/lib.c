@@ -20,6 +20,7 @@
 
 #include "sigutils.h"
 
+/* Block classes */
 extern struct sigutils_block_class su_block_class_AGC;
 extern struct sigutils_block_class su_block_class_TUNER;
 extern struct sigutils_block_class su_block_class_WAVFILE;
@@ -27,12 +28,15 @@ extern struct sigutils_block_class su_block_class_COSTAS;
 extern struct sigutils_block_class su_block_class_RRC;
 extern struct sigutils_block_class su_block_class_CDR;
 
+/* Modem classes */
+extern struct sigutils_modem_class su_modem_class_QPSK;
+
 SUBOOL
 su_lib_init(void)
 {
   unsigned int i = 0;
 
-  struct sigutils_block_class *classes[] =
+  struct sigutils_block_class *blocks[] =
       {
           &su_block_class_AGC,
           &su_block_class_TUNER,
@@ -42,10 +46,22 @@ su_lib_init(void)
           &su_block_class_CDR,
       };
 
-  for (i = 0; i < sizeof (classes) / sizeof (classes[0]); ++i)
-    if (!su_block_class_register(classes[i])) {
-      if (classes[i]->name != NULL)
-        SU_ERROR("Failed to register class `%s'\n", classes[i]->name);
+  struct sigutils_modem_class *modems[] =
+      {
+          &su_modem_class_QPSK
+      };
+
+  for (i = 0; i < sizeof (blocks) / sizeof (blocks[0]); ++i)
+    if (!su_block_class_register(blocks[i])) {
+      if (blocks[i]->name != NULL)
+        SU_ERROR("Failed to register block class `%s'\n", blocks[i]->name);
+      return SU_FALSE;
+    }
+
+  for (i = 0; i < sizeof (modems) / sizeof (modems[0]); ++i)
+    if (!su_modem_class_register(modems[i])) {
+      if (modems[i]->name != NULL)
+        SU_ERROR("Failed to register modem class `%s'\n", blocks[i]->name);
       return SU_FALSE;
     }
 

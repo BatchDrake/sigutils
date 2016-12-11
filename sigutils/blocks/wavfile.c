@@ -26,7 +26,7 @@
 struct su_wavfile {
   SF_INFO info;
   SNDFILE *sf;
-
+  uint64_t samp_rate;
   SUFLOAT *buffer;
   size_t size; /* Number of samples PER CHANNEL, buffer size is size * chans */
 };
@@ -100,11 +100,13 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   *private = (void *) wav;
 
+  wav->samp_rate = wav->info.samplerate;
+
   if (!su_block_set_property_ref(
       block,
       SU_BLOCK_PROPERTY_TYPE_INTEGER,
       "samp_rate",
-      &wav->info.samplerate) ||
+      &wav->samp_rate) ||
       !su_block_set_property_ref(
       block,
       SU_BLOCK_PROPERTY_TYPE_INTEGER,

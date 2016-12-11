@@ -32,9 +32,10 @@
 #define SUSCOUNT   unsigned long
 #define SUBOOL     int
 #define SUCOMPLEX  complex SUFLOAT
-#define SUSYMBOL   unsigned char
+#define SUSYMBOL   int
 
 #define SU_NOSYMBOL '\0'
+#define SU_EOS      -1
 
 #define SUFLOAT_FMT "%lg"
 #define SUFLOAT_PRECISION_FMT "%.15lf"

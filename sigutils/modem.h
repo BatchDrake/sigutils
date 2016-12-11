@@ -65,10 +65,11 @@ struct sigutils_modem;
 struct sigutils_modem_class {
   const char *name;
 
-  SUBOOL   (*ctor) (struct sigutils_modem *, void **);
-  SUSYMBOL (*read) (struct sigutils_modem *, void *);
-  SUBOOL   (*onpropertychanged) (void *, const struct sigutils_modem_property *);
-  void     (*dtor) (void *);
+  SUBOOL    (*ctor) (struct sigutils_modem *, void **);
+  SUSYMBOL  (*read_sym) (struct sigutils_modem *, void *);
+  SUCOMPLEX (*read_sample) (struct sigutils_modem *, void *);
+  SUBOOL    (*onpropertychanged) (void *, const su_modem_property_t *);
+  void      (*dtor) (void *);
 };
 
 struct sigutils_modem {
@@ -127,11 +128,23 @@ SUBOOL su_modem_set_wav_source(su_modem_t *modem, const char *path);
 
 SUBOOL su_modem_register_block(su_modem_t *modem, su_block_t *block);
 
+SUBOOL su_modem_plug_to_source(su_modem_t *modem, su_block_t *first);
+
 SUBOOL su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val);
 SUBOOL su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val);
 SUBOOL su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val);
 SUBOOL su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val);
 SUBOOL su_modem_set_ptr(su_modem_t *modem, const char *name, void *);
+
+const su_modem_property_t *su_modem_property_lookup(
+    const su_modem_t *modem,
+    const char *name);
+
+const su_modem_property_t *
+su_modem_property_lookup_typed(
+    const su_modem_t *modem,
+    const char *name,
+    su_modem_property_type_t type);
 
 SUBOOL su_modem_set_properties(
     su_modem_t *modem,
@@ -143,10 +156,11 @@ SUBOOL su_modem_get_properties(
 
 SUBOOL su_modem_start(su_modem_t *modem);
 
-SUSYMBOL su_modem_read(su_modem_t *modem);    /* Returns a stream of symbols */
-SUFLOAT  su_modem_get_fec(su_modem_t *modem); /* Returns FEC quality */
-SUFLOAT  su_modem_get_snr(su_modem_t *modem); /* Returns SNR magnitude */
-SUFLOAT  su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
+SUSYMBOL  su_modem_read(su_modem_t *modem);    /* Returns a stream of symbols */
+SUCOMPLEX su_modem_read_sample(su_modem_t *modem);
+SUFLOAT   su_modem_get_fec(su_modem_t *modem); /* Returns FEC quality */
+SUFLOAT   su_modem_get_snr(su_modem_t *modem); /* Returns SNR magnitude */
+SUFLOAT   su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
 
 /* This functions are to be used by modem implementations */
 void su_modem_set_fec(su_modem_t *modem, SUFLOAT fec);

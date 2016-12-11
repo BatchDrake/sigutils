@@ -64,6 +64,12 @@ su_block_costas_ctor(struct sigutils_block *block, void **private, va_list ap)
       "lock",
       &costas->lock);
 
+  ok = ok && su_block_set_property_ref(
+      block,
+      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      "beta",
+      &costas->b);
+
 done:
   if (!ok) {
     if (costas != NULL) {

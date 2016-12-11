@@ -569,9 +569,23 @@ SUBOOL
 su_modem_set_wav_source(su_modem_t *modem, const char *path)
 {
   su_block_t *wav_block = NULL;
+  const uint64_t *samp_rate = NULL;
 
   if ((wav_block = su_block_new("wavfile", path)) == NULL)
     goto fail;
+
+  if ((samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      "samp_rate")) == NULL) {
+    SU_ERROR("failed to acquire wav file sample rate\n");
+    goto fail;
+  }
+
+  if (!su_modem_set_int(modem, "samp_rate", *samp_rate)) {
+    SU_ERROR("failed to set modem sample rate\n");
+    goto fail;
+  }
 
   if (!su_modem_set_source(modem, wav_block))
     goto fail;
@@ -720,6 +734,34 @@ su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
   return SU_TRUE;
 }
 
+const su_modem_property_t *
+su_modem_property_lookup(const su_modem_t *modem, const char *name)
+{
+  return su_modem_property_set_lookup(&modem->properties, name);
+}
+
+const su_modem_property_t *
+su_modem_property_lookup_typed(
+    const su_modem_t *modem,
+    const char *name,
+    su_modem_property_type_t type)
+{
+  const su_modem_property_t *prop = NULL;
+
+  if ((prop = su_modem_property_lookup(modem, name)) == NULL)
+    return NULL;
+  else if (prop->type != type) {
+    SU_ERROR(
+        "Property `%s' is of type `%s', but `%s' was expected\n",
+        name,
+        su_modem_property_type_to_string(prop->type),
+        su_modem_property_type_to_string(type));
+    return NULL;
+  }
+
+  return prop;
+}
+
 SUBOOL
 su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
 {
@@ -752,6 +794,17 @@ su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
 }
 
 SUBOOL
+su_modem_plug_to_source(su_modem_t *modem, su_block_t *first)
+{
+  if (modem->source == NULL) {
+    SU_ERROR("source not defined\n");
+    return SU_FALSE;
+  }
+
+  return su_block_plug(modem->source, 0, 0, first);
+}
+
+SUBOOL
 su_modem_get_properties(const su_modem_t *modem, su_modem_property_set_t *set)
 {
   return su_modem_property_set_copy(set, &modem->properties);
@@ -778,24 +831,55 @@ su_modem_start(su_modem_t *modem)
 SUSYMBOL
 su_modem_read(su_modem_t *modem)
 {
-  return (modem->class->read)(modem, modem->private);
+  if (modem->private == NULL) {
+    SU_ERROR("modem not started\n");
+    return SU_EOS;
+  }
+
+  return (modem->class->read_sym)(modem, modem->private);
+}
+
+SUCOMPLEX
+su_modem_read_sample(su_modem_t *modem)
+{
+  if (modem->private == NULL) {
+    SU_ERROR("modem not started\n");
+    return SU_EOS;
+  }
+
+  return (modem->class->read_sample)(modem, modem->private);
 }
 
 SUFLOAT
 su_modem_get_fec(su_modem_t *modem)
 {
+  if (modem->private == NULL) {
+    SU_ERROR("modem not started\n");
+    return 0;
+  }
+
   return modem->fec;
 }
 
 SUFLOAT
 su_modem_get_snr(su_modem_t *modem)
 {
+  if (modem->private == NULL) {
+    SU_ERROR("modem not started\n");
+    return 0;
+  }
+
   return modem->snr;
 }
 
 SUFLOAT
 su_modem_get_signal(su_modem_t *modem)
 {
+  if (modem->private == NULL) {
+    SU_ERROR("modem not started\n");
+    return 0;
+  }
+
   return modem->signal;
 }
 

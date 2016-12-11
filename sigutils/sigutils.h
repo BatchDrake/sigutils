@@ -23,6 +23,7 @@
 
 #include "types.h"
 #include "block.h"
+#include "modem.h"
 
 SUBOOL su_lib_init(void);
 
