@@ -22,12 +22,7 @@
 #include <stdlib.h>
 #include "modem.h"
 
-void
-su_modem_property_set_init(su_modem_property_set_t *set)
-{
-  memset(set, 0, sizeof (su_modem_property_set_t));
-}
-
+/**************** Modem property API *******************/
 void
 su_modem_property_destroy(su_modem_property_t *prop)
 {
@@ -61,7 +56,7 @@ fail:
 }
 
 su_modem_property_t *
-su_modem_property_lookup(const su_modem_property_set_t *set, const char *name)
+su_modem_property_set_lookup(const su_modem_property_set_t *set, const char *name)
 {
   unsigned int i;
   su_modem_property_t *this = NULL;
@@ -100,41 +95,6 @@ su_modem_property_type_to_string(su_modem_property_type_t type)
   }
 }
 
-su_modem_property_t *
-su_modem_property_assert(
-    su_modem_property_set_t *set,
-    const char *name,
-    su_modem_property_type_t type)
-{
-  su_modem_property_t *prop = NULL;
-
-  if ((prop = su_modem_property_lookup(set, name)) == NULL) {
-    if ((prop = su_modem_property_new(name, type)) == NULL) {
-      SU_ERROR(
-          "failed to create new %s property",
-          su_modem_property_type_to_string(type));
-      return NULL;
-    }
-
-    if (PTR_LIST_APPEND_CHECK(set->property, prop) == -1) {
-      SU_ERROR(
-          "failed to append new %s property",
-          su_modem_property_type_to_string(type));
-      su_modem_property_destroy(prop);
-      return NULL;
-    }
-  } else if (prop->type != type) {
-    SU_ERROR(
-        "property `%s' found, mismatching type (req: %s, found: %s)\n",
-        name,
-        su_modem_property_type_to_string(type),
-        su_modem_property_type_to_string(prop->type));
-    return NULL;
-  }
-
-  return prop;
-}
-
 SUPRIVATE ssize_t
 su_modem_property_get_value_marshalled_size(su_modem_property_type_t type)
 {
@@ -161,6 +121,30 @@ su_modem_property_get_value_marshalled_size(su_modem_property_type_t type)
     default:
       return -1;
   }
+}
+
+SUBOOL
+su_modem_property_copy(
+    su_modem_property_t *dst,
+    const su_modem_property_t *src)
+{
+  ssize_t size;
+
+  if (dst->type != src->type) {
+    SU_ERROR("cannot overwrite property of mismatching type\n");
+    return SU_FALSE;
+  }
+
+  if ((size = su_modem_property_get_value_marshalled_size(src->type)) == -1) {
+    SU_ERROR(
+        "objects of type %s cannot be copied\n",
+        su_modem_property_type_to_string(src->type));
+    return SU_FALSE;
+  }
+
+  memcpy(&dst->as_bytes, src->as_bytes, size);
+
+  return SU_TRUE;
 }
 
 SUPRIVATE ssize_t
@@ -289,6 +273,48 @@ corrupted:
   return -1;
 }
 
+/****************** Property Set API *******************/
+void
+su_modem_property_set_init(su_modem_property_set_t *set)
+{
+  memset(set, 0, sizeof (su_modem_property_set_t));
+}
+
+su_modem_property_t *
+su_modem_property_set_assert_property(
+    su_modem_property_set_t *set,
+    const char *name,
+    su_modem_property_type_t type)
+{
+  su_modem_property_t *prop = NULL;
+
+  if ((prop = su_modem_property_set_lookup(set, name)) == NULL) {
+    if ((prop = su_modem_property_new(name, type)) == NULL) {
+      SU_ERROR(
+          "failed to create new %s property",
+          su_modem_property_type_to_string(type));
+      return NULL;
+    }
+
+    if (PTR_LIST_APPEND_CHECK(set->property, prop) == -1) {
+      SU_ERROR(
+          "failed to append new %s property",
+          su_modem_property_type_to_string(type));
+      su_modem_property_destroy(prop);
+      return NULL;
+    }
+  } else if (prop->type != type) {
+    SU_ERROR(
+        "property `%s' found, mismatching type (req: %s, found: %s)\n",
+        name,
+        su_modem_property_type_to_string(type),
+        su_modem_property_type_to_string(prop->type));
+    return NULL;
+  }
+
+  return prop;
+}
+
 SUPRIVATE size_t
 su_modem_property_set_get_marshalled_size(const su_modem_property_set_t *set)
 {
@@ -412,3 +438,44 @@ corrupted:
 
   return -1;
 }
+
+SUBOOL
+su_modem_property_set_copy(
+    su_modem_property_set_t *dest,
+    const su_modem_property_set_t *src)
+{
+  unsigned int i = 0;
+  su_modem_property_t *this = NULL;
+  su_modem_property_t *dst_prop = NULL;
+
+  FOR_EACH_PTR(this, i, src->property) {
+    if ((dst_prop = su_modem_property_set_assert_property(dest, this->name, this->type))
+        == NULL) {
+      SU_ERROR("failed to assert property `%s'\n", this->name);
+      return SU_FALSE;
+    }
+
+    if (!su_modem_property_copy(dst_prop, this)) {
+      SU_ERROR("failed to copy property `%s'\n", this->name);
+      return SU_FALSE;
+    }
+  }
+
+  return SU_TRUE;
+}
+
+void
+su_modem_property_set_finalize(su_modem_property_set_t *set)
+{
+  unsigned int i = 0;
+  su_modem_property_t *this = NULL;
+
+  FOR_EACH_PTR(this, i, set->property)
+    su_modem_property_destroy(this);
+
+  if (set->property_list != NULL)
+    free(set->property_list);
+}
+
+/****************** Modem API *******************/
+

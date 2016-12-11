@@ -84,14 +84,14 @@ struct sigutils_modem {
 
 typedef struct sigutils_modem_t su_modem_t;
 
-/**************** Modem property API *******************/
+/**************** Modem property set API *******************/
 void su_modem_property_set_init(su_modem_property_set_t *set);
 
-su_modem_property_t *su_modem_property_lookup(
+su_modem_property_t *su_modem_property_set_lookup(
     const su_modem_property_set_t *set,
     const char *name);
 
-su_modem_property_t *su_modem_property_assert(
+su_modem_property_t *su_modem_property_set_assert_property(
     su_modem_property_set_t *set,
     const char *name,
     su_modem_property_type_t type);
