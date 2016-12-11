@@ -522,6 +522,9 @@ su_modem_destroy(su_modem_t *modem)
   FOR_EACH_PTR(this, i, modem->block)
     su_block_destroy(this);
 
+  if (modem->block_list != NULL)
+    free(modem->block_list);
+
   su_modem_property_set_finalize(&modem->properties);
 
   free(modem);
@@ -582,6 +585,11 @@ su_modem_set_wav_source(su_modem_t *modem, const char *path)
     goto fail;
   }
 
+  if (!su_modem_register_block(modem, wav_block)) {
+    SU_ERROR("failed to register wav source\n");
+    su_block_destroy(wav_block);
+    goto fail;
+  }
   if (!su_modem_set_int(modem, "samp_rate", *samp_rate)) {
     SU_ERROR("failed to set modem sample rate\n");
     goto fail;
