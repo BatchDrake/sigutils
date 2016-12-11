@@ -50,7 +50,7 @@ typedef enum sigutils_modem_property_type su_modem_property_type_t;
 
 struct sigutils_modem_property {
   su_modem_property_type_t type;
-  const char *name;
+  char *name;
 
   union {
     uint64_t  as_int;
@@ -58,6 +58,7 @@ struct sigutils_modem_property {
     SUCOMPLEX as_complex;
     SUBOOL    as_bool;
     void     *as_ptr;
+    uint8_t   as_bytes[0];
   };
 };
 
@@ -84,10 +85,10 @@ struct sigutils_modem {
 typedef struct sigutils_modem_t su_modem_t;
 
 /**************** Modem property API *******************/
-SUBOOL su_modem_property_set_init(su_modem_property_set_t *set);
+void su_modem_property_set_init(su_modem_property_set_t *set);
 
 su_modem_property_t *su_modem_property_lookup(
-    su_modem_property_set_t *set,
+    const su_modem_property_set_t *set,
     const char *name);
 
 su_modem_property_t *su_modem_property_assert(
@@ -100,18 +101,10 @@ ssize_t su_modem_property_set_marshall(
     void *buffer,
     size_t buffer_size);
 
-SUBOOL su_modem_property_set_unmarshall(
+ssize_t su_modem_property_set_unmarshall(
     su_modem_property_set_t *dest,
     const void *buffer,
     size_t buffer_size);
-
-SUBOOL su_modem_property_set_load(
-    su_modem_property_set_t *set,
-    const char *path);
-
-SUBOOL su_modem_property_set_save(
-    const su_modem_property_set_t *set,
-    const char *path);
 
 SUBOOL su_modem_property_set_copy(
     su_modem_property_set_t *dest,
@@ -140,12 +133,12 @@ SUBOOL su_modem_get_properties(
     su_modem_t *modem,
     su_modem_property_set_t *set);
 
-SUBOOL su_modem_run(su_modem_t *modem);
+SUBOOL su_modem_start(su_modem_t *modem);
 
-SUSYMBOL su_modem_read(su_modem_t *modem);
-SUFLOAT  su_modem_get_fec(su_modem_t *modem);
-SUFLOAT  su_modem_get_snr(su_modem_t *modem);
-SUFLOAT  su_modem_get_signal(su_modem_t *modem);
+SUSYMBOL su_modem_read(su_modem_t *modem);    /* Returns a stream of symbols */
+SUFLOAT  su_modem_get_fec(su_modem_t *modem); /* Returns FEC quality */
+SUFLOAT  su_modem_get_snr(su_modem_t *modem); /* Returns SNR magnitude */
+SUFLOAT  su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
 
 void su_modem_destroy(su_modem_t *modem);
 
