@@ -25,17 +25,7 @@
 #include "types.h"
 #include "block.h"
 
-struct sigutils_modem;
-struct sigutils_modem_property;
-
-struct sigutils_modem_class {
-  const char *name;
-
-  SUBOOL   (*ctor) (struct sigutils_modem *, void **);
-  SUSYMBOL (*read) (void *);
-  SUBOOL   (*onpropertychanged) (void *, const struct sigutils_modem_property);
-  void     (*dtor) (void *);
-};
+typedef struct sigutils_modem_class su_modem_class_t;
 
 enum sigutils_modem_property_type {
   SU_MODEM_PROPERTY_TYPE_ANY,
@@ -70,6 +60,17 @@ struct sigutils_modem_property_set {
 
 typedef struct sigutils_modem_property_set su_modem_property_set_t;
 
+struct sigutils_modem;
+
+struct sigutils_modem_class {
+  const char *name;
+
+  SUBOOL   (*ctor) (struct sigutils_modem *, void **);
+  SUSYMBOL (*read) (struct sigutils_modem *, void *);
+  SUBOOL   (*onpropertychanged) (void *, const struct sigutils_modem_property *);
+  void     (*dtor) (void *);
+};
+
 struct sigutils_modem {
   struct sigutils_modem_class *class;
   void *private;
@@ -82,7 +83,12 @@ struct sigutils_modem {
   su_modem_property_set_t properties;
 };
 
-typedef struct sigutils_modem_t su_modem_t;
+typedef struct sigutils_modem su_modem_t;
+
+/**************** Modem class API **************************/
+su_modem_class_t *su_modem_class_lookup(const char *name);
+
+SUBOOL su_modem_class_register(su_modem_class_t *modem);
 
 /**************** Modem property set API *******************/
 void su_modem_property_set_init(su_modem_property_set_t *set);
@@ -119,6 +125,8 @@ SUBOOL su_modem_set_source(su_modem_t *modem, su_block_t *src);
 
 SUBOOL su_modem_set_wav_source(su_modem_t *modem, const char *path);
 
+SUBOOL su_modem_register_block(su_modem_t *modem, su_block_t *block);
+
 SUBOOL su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val);
 SUBOOL su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val);
 SUBOOL su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val);
@@ -130,7 +138,7 @@ SUBOOL su_modem_set_properties(
     const su_modem_property_set_t *set);
 
 SUBOOL su_modem_get_properties(
-    su_modem_t *modem,
+    const su_modem_t *modem,
     su_modem_property_set_t *set);
 
 SUBOOL su_modem_start(su_modem_t *modem);
@@ -139,6 +147,11 @@ SUSYMBOL su_modem_read(su_modem_t *modem);    /* Returns a stream of symbols */
 SUFLOAT  su_modem_get_fec(su_modem_t *modem); /* Returns FEC quality */
 SUFLOAT  su_modem_get_snr(su_modem_t *modem); /* Returns SNR magnitude */
 SUFLOAT  su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
+
+/* This functions are to be used by modem implementations */
+void su_modem_set_fec(su_modem_t *modem, SUFLOAT fec);
+void su_modem_set_snr(su_modem_t *modem, SUFLOAT snr);
+void su_modem_set_signal(su_modem_t *modem, SUFLOAT signal);
 
 void su_modem_destroy(su_modem_t *modem);
 

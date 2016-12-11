@@ -22,6 +22,38 @@
 #include <stdlib.h>
 #include "modem.h"
 
+PTR_LIST(SUPRIVATE su_modem_class_t, modem_class);
+
+/**************** Modem class API **********************/
+su_modem_class_t *
+su_modem_class_lookup(const char *name)
+{
+  unsigned int i = 0;
+  su_modem_class_t *this = NULL;
+
+  FOR_EACH_PTR(this, i, modem_class)
+    if (strcmp(this->name, name) == 0)
+      return this;
+
+  return NULL;
+}
+
+SUBOOL
+su_modem_class_register(su_modem_class_t *modem)
+{
+  if (su_modem_class_lookup(modem->name) != NULL) {
+    SU_ERROR("cannot register modem class: %s already exists\n", modem->name);
+    return SU_FALSE;
+  }
+
+  if (PTR_LIST_APPEND_CHECK(modem_class, modem) == -1) {
+    SU_ERROR("cannot apend modem to modem list\n");
+    return SU_FALSE;
+  }
+
+  return SU_TRUE;
+}
+
 /**************** Modem property API *******************/
 void
 su_modem_property_destroy(su_modem_property_t *prop)
@@ -434,7 +466,7 @@ su_modem_property_set_unmarshall(
   return ptr;
 
 corrupted:
-  SU_ERROR("corrupted marshalled properties\n");
+  SU_ERROR("corrupted marshalled properties\n(su_modem_t *modem,");
 
   return -1;
 }
@@ -478,4 +510,310 @@ su_modem_property_set_finalize(su_modem_property_set_t *set)
 }
 
 /****************** Modem API *******************/
+void
+su_modem_destroy(su_modem_t *modem)
+{
+  unsigned int i = 0;
+  su_block_t *this = NULL;
+
+  if (modem->private != NULL)
+    (modem->class->dtor) (modem->private);
+
+  FOR_EACH_PTR(this, i, modem->block)
+    su_block_destroy(this);
+
+  su_modem_property_set_finalize(&modem->properties);
+
+  free(modem);
+}
+
+su_modem_t *
+su_modem_new(const char *class_name)
+{
+  su_modem_t *new = NULL;
+  su_modem_class_t *class = NULL;
+
+  if ((class = su_modem_class_lookup(class_name)) == NULL) {
+    SU_ERROR("modem class `%s' not registered\n", class_name);
+    goto fail;
+  }
+
+  if ((new = calloc(1, sizeof(su_modem_t))) == NULL)
+    goto fail;
+
+  new->class = class;
+
+  return new;
+
+fail:
+  if (new != NULL)
+    su_modem_destroy(new);
+
+  return NULL;
+}
+
+SUBOOL
+su_modem_set_source(su_modem_t *modem, su_block_t *src)
+{
+  if (modem->private != NULL) {
+    SU_ERROR("cannot set source while modem has started\n");
+    return SU_FALSE;
+  }
+
+  modem->source = src;
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_set_wav_source(su_modem_t *modem, const char *path)
+{
+  su_block_t *wav_block = NULL;
+
+  if ((wav_block = su_block_new("wavfile", path)) == NULL)
+    goto fail;
+
+  if (!su_modem_set_source(modem, wav_block))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (wav_block != NULL)
+    su_block_destroy(wav_block);
+
+  return SU_FALSE;
+}
+
+SUBOOL
+su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
+{
+  su_modem_property_t *prop = NULL;
+  uint64_t old;
+
+  if ((prop = su_modem_property_set_assert_property(
+      &modem->properties,
+      name,
+      SU_MODEM_PROPERTY_TYPE_INTEGER)) == NULL)
+    return SU_FALSE;
+
+  old = prop->as_int;
+  prop->as_int = val;
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected\n", name);
+    prop->as_int = old;
+
+    return SU_FALSE;
+  }
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_register_block(su_modem_t *modem, su_block_t *block)
+{
+  return PTR_LIST_APPEND_CHECK(modem->block, block) != -1;
+}
+
+SUBOOL
+su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val)
+{
+  su_modem_property_t *prop = NULL;
+  SUFLOAT old;
+
+  if ((prop = su_modem_property_set_assert_property(
+      &modem->properties,
+      name,
+      SU_MODEM_PROPERTY_TYPE_FLOAT)) == NULL)
+    return SU_FALSE;
+
+  old = prop->as_float;
+  prop->as_float = val;
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected\n", name);
+    prop->as_float = old;
+
+    return SU_FALSE;
+  }
+
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val)
+{
+  su_modem_property_t *prop = NULL;
+  SUCOMPLEX old;
+
+  if ((prop = su_modem_property_set_assert_property(
+      &modem->properties,
+      name,
+      SU_MODEM_PROPERTY_TYPE_COMPLEX)) == NULL)
+    return SU_FALSE;
+
+  old = prop->as_complex;
+  prop->as_complex = val;
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected\n", name);
+    prop->as_complex = old;
+
+    return SU_FALSE;
+  }
+
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val)
+{
+  su_modem_property_t *prop = NULL;
+  SUBOOL old;
+
+  if ((prop = su_modem_property_set_assert_property(
+      &modem->properties,
+      name,
+      SU_MODEM_PROPERTY_TYPE_BOOL)) == NULL)
+    return SU_FALSE;
+
+  old = prop->as_bool;
+  prop->as_bool = val;
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected\n", name);
+    prop->as_bool = old;
+
+    return SU_FALSE;
+  }
+
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
+{
+  su_modem_property_t *prop = NULL;
+  void *old;
+
+  if ((prop = su_modem_property_set_assert_property(
+      &modem->properties,
+      name,
+      SU_MODEM_PROPERTY_TYPE_OBJECT)) == NULL)
+    return SU_FALSE;
+
+  old = prop->as_ptr;
+  prop->as_ptr = val;
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected\n", name);
+    prop->as_ptr = old;
+
+    return SU_FALSE;
+  }
+
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
+{
+  unsigned int i = 0;
+  su_modem_property_t *this = NULL;
+  su_modem_property_t *dst_prop = NULL;
+
+  FOR_EACH_PTR(this, i, set->property) {
+    if ((dst_prop = su_modem_property_set_assert_property(
+        &modem->properties,
+        this->name,
+        this->type)) == NULL) {
+      SU_ERROR("failed to assert property `%s'\n", this->name);
+      return SU_FALSE;
+    }
+
+    /* This is not necessarily an error */
+    if (!(modem->class->onpropertychanged)(modem->private, this)) {
+      SU_WARNING("property `%s' cannot be changed\n", this->name);
+      continue;
+    }
+
+    if (!su_modem_property_copy(dst_prop, this)) {
+      SU_ERROR("failed to copy property `%s'\n", this->name);
+      return SU_FALSE;
+    }
+  }
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_get_properties(const su_modem_t *modem, su_modem_property_set_t *set)
+{
+  return su_modem_property_set_copy(set, &modem->properties);
+}
+
+SUBOOL
+su_modem_start(su_modem_t *modem)
+{
+  if (modem->source == NULL) {
+    SU_ERROR("cannot start modem: source not defined\n");
+    return SU_FALSE;
+  }
+
+  if (!(modem->class->ctor)(modem, &modem->private)) {
+    SU_ERROR("failed to start modem\n");
+    modem->private = NULL;
+
+    return SU_FALSE;
+  }
+
+  return SU_TRUE;
+}
+
+SUSYMBOL
+su_modem_read(su_modem_t *modem)
+{
+  return (modem->class->read)(modem, modem->private);
+}
+
+SUFLOAT
+su_modem_get_fec(su_modem_t *modem)
+{
+  return modem->fec;
+}
+
+SUFLOAT
+su_modem_get_snr(su_modem_t *modem)
+{
+  return modem->snr;
+}
+
+SUFLOAT
+su_modem_get_signal(su_modem_t *modem)
+{
+  return modem->signal;
+}
+
+void
+su_modem_set_fec(su_modem_t *modem, SUFLOAT fec)
+{
+  modem->fec = fec;
+}
+
+void
+su_modem_set_snr(su_modem_t *modem, SUFLOAT snr)
+{
+  modem->snr = snr;
+}
+
+void
+su_modem_set_signal(su_modem_t *modem, SUFLOAT signal)
+{
+  modem->signal = signal;
+}
 
