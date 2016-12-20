@@ -54,7 +54,7 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
 
   su_ncqo_init(&ncqo, 1);
 
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
+  for (p = 0; p < ctx->params->buffer_size; ++p)
     hi[p] = SU_C_REAL(su_iir_filt_feed(
         &lpf,
         su_ncqo_read(&ncqo)));
@@ -67,7 +67,7 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
 
   su_ncqo_set_freq(&ncqo, .125);
 
-  for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
+  for (p = 0; p < ctx->params->buffer_size; ++p)
     lo[p] = SU_C_REAL(su_iir_filt_feed(
         &lpf,
         su_ncqo_read(&ncqo)));
