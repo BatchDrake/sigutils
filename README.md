@@ -17,14 +17,16 @@ Just clone it from the GitHub repository:
 
 ## Building sigutils
 First, you must generate the configure script:
+
 ```
 % autoreconf -fvi
 ```
 
 After that, you just need to run the standard ./configure and make:
+
 ```
-% ./configure
-% make
+% ./configure  
+% make  
 ```
 
 ## Running all unit tests
@@ -36,4 +38,25 @@ In order to run all unit tests, you must download [this ZIP file](http://www.sig
 ```
 % src/sigutils
 ```
+
+---
+#sigutils API overview
+There are three API levels in sigutils, with every high-level API relying on lower-level APIs:
+
+1. Modem API (which allows to retrieve a stream of symbols from a given signal source)
+2. Block API (enables complex stream manipulation using functional blocks in a GNURadio-like fashion)
+3. DSP API (low-level API to manipulate samples individually, with things like PLLs, oscillators, etc)
+
+## sigutils type foundation
+All API levels share the following set of data types, used to exchange data in a coherent way:
+
+`SUFLOAT`: Default real-valued sample type. Currently maps to `double`.  
+`SUSCOUNT`: Used to enumerate samples. Maps to `unsigned long`.  
+`SUBOOL`: Boolean type (defined as `int`). Can be either `SU_TRUE` (1) or `SU_FALSE` (0).  
+`SUCOMPLEX`: Complex type, composed of a real and an imaginary party, mostly used to store I/Q data. Currently defined to `complex SUFLOAT`.  
+`SUSYMBOL`: Data type used for the decision device output. Special values are:
+* `SU_NOSYMBOL`: decision device output queue is currently empty, the symbol reader is faster than the demodulator.
+* `SU_EOS`: End of stream, the signal source cannot provide any more samples (this happens when the actual underlying device has been disconnected, or when the end of a recorded signal has been reached).
+Any other value is considered a valid symbol identifier.
+
 
