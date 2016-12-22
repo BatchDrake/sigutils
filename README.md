@@ -57,6 +57,7 @@ All API levels share the following set of data types, used to exchange data in a
 `SUSYMBOL`: Data type used for the decision device output. Special values are:
 * `SU_NOSYMBOL`: decision device output queue is currently empty, the symbol reader is faster than the demodulator.
 * `SU_EOS`: End of stream, the signal source cannot provide any more samples (this happens when the actual underlying device has been disconnected, or when the end of a recorded signal has been reached).
+
 Any other value is considered a valid symbol identifier.
 
 
