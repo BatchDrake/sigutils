@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/sigutils
+
+Name: sigutils
+Description: Digital signal processing utility library
+URL: http://github.org/BatchDrake/sigutils
+Version: @PACKAGE_VERSION@ 
+Cflags: -I${includedir}
+Libs: -L${libdir} -lsigutils

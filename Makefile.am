@@ -6,3 +6,19 @@ ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = AUTHORS ChangeLog NEWS README
 
+pkgconfig_DATA = sigutils.pc
+
+nobase_pkginclude_HEADERS = 	\
+	sigutils/agc.h		\
+	sigutils/block.h	\
+	sigutils/clock.h	\
+	sigutils/coef.h		\
+	sigutils/iir.h		\
+	sigutils/modem.h	\
+	sigutils/ncqo.h		\
+	sigutils/pll.h		\
+	sigutils/sampling.h	\
+	sigutils/sigutils.h	\
+	sigutils/taps.h		\
+	sigutils/types.h	\
+	util/util.h			

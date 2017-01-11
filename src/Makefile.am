@@ -8,7 +8,6 @@ sigutils_LDFLAGS = @GLOBAL_LDFLAGS@
 sigutils_LDADD = \
 	../testutil/libtestutil.la \
 	../sigutils/libsigutils.la \
-	../util/libutil.la  \
 	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@
 
 sigutils_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
