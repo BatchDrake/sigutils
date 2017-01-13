@@ -186,7 +186,7 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
   /* Tweak some properties */
   if ((rrc_gain = su_block_get_property_ref(
       new->rrc_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "gain")) == NULL) {
     SU_ERROR("Cannot find gain property in RRC block\n");
     goto fail;
@@ -194,7 +194,7 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 
   if ((cdr_alpha = su_block_get_property_ref(
       new->cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "alpha")) == NULL) {
     SU_ERROR("Cannot find alpha property in CDR block\n");
     goto fail;
@@ -202,7 +202,7 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 
   if ((cdr_beta = su_block_get_property_ref(
       new->cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "beta")) == NULL) {
     SU_ERROR("Cannot find beta property in CDR block\n");
     goto fail;
@@ -210,7 +210,7 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 
   if ((costas_beta = su_block_get_property_ref(
       new->costas_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "beta")) == NULL) {
     SU_ERROR("Cannot find beta property in Costas block\n");
     goto fail;

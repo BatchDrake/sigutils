@@ -104,12 +104,12 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   if (!su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate",
       &wav->samp_rate) ||
       !su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "channels",
       &wav->info.channels)) {
     return SU_FALSE;

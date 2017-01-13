@@ -579,7 +579,7 @@ su_modem_set_wav_source(su_modem_t *modem, const char *path)
 
   if ((samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate")) == NULL) {
     SU_ERROR("failed to acquire wav file sample rate\n");
     goto fail;

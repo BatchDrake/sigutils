@@ -50,37 +50,37 @@ su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bnor",
       &clock_detector->bnor);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bmax",
       &clock_detector->bmax);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bmin",
       &clock_detector->bmin);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "alpha",
       &clock_detector->alpha);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "beta",
       &clock_detector->beta);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "gain",
       &clock_detector->gain);
 

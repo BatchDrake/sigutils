@@ -45,13 +45,13 @@ su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "peak",
       &agc->peak);
 
   ok = ok && su_block_set_property_ref(
       block,
-      SU_BLOCK_PROPERTY_TYPE_BOOL,
+      SU_PROPERTY_TYPE_BOOL,
       "enabled",
       &agc->enabled);
 

@@ -191,7 +191,7 @@ su_test_tuner(su_test_context_t *ctx)
 
   samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
@@ -302,7 +302,7 @@ su_test_costas_block(su_test_context_t *ctx)
 
   samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
@@ -323,7 +323,7 @@ su_test_costas_block(su_test_context_t *ctx)
 
   f = su_block_get_property_ref(
       costas_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "f");
   SU_TEST_ASSERT(f != NULL);
   SU_INFO(
@@ -432,7 +432,7 @@ su_test_rrc_block(su_test_context_t *ctx)
 
   samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
@@ -460,13 +460,13 @@ su_test_rrc_block(su_test_context_t *ctx)
 
   f = su_block_get_property_ref(
       costas_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "f");
   SU_TEST_ASSERT(f != NULL);
 
   gain = su_block_get_property_ref(
       rrc_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "gain");
   SU_TEST_ASSERT(gain != NULL);
 
@@ -589,7 +589,7 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
 
   samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
@@ -606,13 +606,13 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
 
   size = su_block_get_property_ref(
       tuner_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "size");
   SU_TEST_ASSERT(size != NULL);
 
   taps = su_block_get_property_ref(
       tuner_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "taps");
   SU_TEST_ASSERT(taps != NULL);
 
@@ -630,7 +630,7 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
 
   f = su_block_get_property_ref(
       costas_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "f");
   SU_TEST_ASSERT(f != NULL);
 
@@ -643,7 +643,7 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
 
   gain = su_block_get_property_ref(
       rrc_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "gain");
   SU_TEST_ASSERT(gain != NULL);
 
@@ -796,7 +796,7 @@ su_test_cdr_block(su_test_context_t *ctx)
 
   samp_rate = su_block_get_property_ref(
       wav_block,
-      SU_BLOCK_PROPERTY_TYPE_INTEGER,
+      SU_PROPERTY_TYPE_INTEGER,
       "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
@@ -831,43 +831,43 @@ su_test_cdr_block(su_test_context_t *ctx)
 
   beta = su_block_get_property_ref(
       cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "beta");
   SU_TEST_ASSERT(beta != NULL);
 
   alpha = su_block_get_property_ref(
       cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "alpha");
   SU_TEST_ASSERT(alpha != NULL);
 
   bnor = su_block_get_property_ref(
       cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bnor");
   SU_TEST_ASSERT(bnor != NULL);
 
   bmax = su_block_get_property_ref(
       cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bmax");
   SU_TEST_ASSERT(bmax != NULL);
 
   bmin = su_block_get_property_ref(
       cdr_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "bmin");
   SU_TEST_ASSERT(bmin != NULL);
 
   f = su_block_get_property_ref(
       costas_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "f");
   SU_TEST_ASSERT(f != NULL);
 
   gain = su_block_get_property_ref(
       rrc_block,
-      SU_BLOCK_PROPERTY_TYPE_FLOAT,
+      SU_PROPERTY_TYPE_FLOAT,
       "gain");
   SU_TEST_ASSERT(gain != NULL);
 

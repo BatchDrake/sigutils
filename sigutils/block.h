@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <util.h>
 #include "types.h"
+#include "property.h"
 
 #define SU_BLOCK_STREAM_BUFFER_SIZE 4096
 
@@ -82,32 +83,6 @@ struct sigutils_block_class {
 
 typedef struct sigutils_block_class su_block_class_t;
 
-enum sigutils_block_property_type {
-  SU_BLOCK_PROPERTY_TYPE_ANY,
-  SU_BLOCK_PROPERTY_TYPE_BOOL,
-  SU_BLOCK_PROPERTY_TYPE_INTEGER,
-  SU_BLOCK_PROPERTY_TYPE_FLOAT,
-  SU_BLOCK_PROPERTY_TYPE_COMPLEX,
-  SU_BLOCK_PROPERTY_TYPE_OBJECT
-};
-
-typedef enum sigutils_block_property_type su_block_property_type_t;
-
-struct sigutils_block_property {
-  su_block_property_type_t type;
-  char *name;
-
-  union {
-    uint64_t *int_ptr;
-    SUFLOAT *float_ptr;
-    SUCOMPLEX *complex_ptr;
-    SUBOOL *bool_ptr;
-    void *generic_ptr;
-  };
-};
-
-typedef struct sigutils_block_property su_block_property_t;
-
 struct sigutils_block {
   su_block_class_t *class;
   void *private;
@@ -115,9 +90,7 @@ struct sigutils_block {
   su_block_port_t *in; /* Input ports */
   su_stream_t *out; /* Output streams */
   unsigned int decimation; /* Block decimation */
-
-  /* Property list */
-  PTR_LIST(su_block_property_t, property);
+  su_property_set_t properties; /* Property list */
 };
 
 typedef struct sigutils_block su_block_t;
@@ -157,18 +130,18 @@ SUBOOL su_block_plug(
     unsigned int in_id,
     su_block_t *sink);
 
-su_block_property_t *su_block_lookup_property(
+su_property_t *su_block_lookup_property(
     const su_block_t *block,
     const char *name);
 
 void *su_block_get_property_ref(
     const su_block_t *block,
-    su_block_property_type_t type,
+    su_property_type_t type,
     const char *name);
 
 SUBOOL su_block_set_property_ref(
     su_block_t *block,
-    su_block_property_type_t type,
+    su_property_type_t type,
     const char *name,
     void *ptr);
 
