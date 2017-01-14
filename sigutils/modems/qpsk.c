@@ -73,44 +73,44 @@ su_qpsk_modem_dtor(void *private)
     goto fail;                                           \
   }
 
-#define SU_QPSK_MODEM_LOAD_FROM_INT_PROPERTY(dest, name)                \
-  if ((prop = su_modem_property_lookup_typed(                           \
+#define SU_QPSK_MODEM_INT_PROPERTY(dest, name)                          \
+  if (!su_modem_expose_state_property(                                  \
       modem,                                                            \
       name,                                                             \
-      SU_PROPERTY_TYPE_INTEGER)) == NULL) {                             \
+      SU_PROPERTY_TYPE_INTEGER,                                         \
+      SU_TRUE,                                                          \
+      &dest)) {                                                         \
     SU_ERROR(                                                           \
-        "cannot initialize modem: integer property `%s' not defined\n", \
+        "cannot initialize modem: can't expose `%s' property\n",        \
         name);                                                          \
-    goto fail;                                                          \
-  }                                                                     \
-                                                                        \
-  dest = prop->as_int;
+        goto fail;                                                      \
+  }
 
-#define SU_QPSK_MODEM_LOAD_FROM_FLOAT_PROPERTY(dest, name)              \
-  if ((prop = su_modem_property_lookup_typed(                           \
+#define SU_QPSK_MODEM_FLOAT_PROPERTY(dest, name)                        \
+  if (!su_modem_expose_state_property(                                  \
       modem,                                                            \
       name,                                                             \
-      SU_PROPERTY_TYPE_FLOAT)) == NULL) {                               \
+      SU_PROPERTY_TYPE_FLOAT,                                           \
+      SU_TRUE,                                                          \
+      &dest)) {                                                         \
     SU_ERROR(                                                           \
-        "cannot initialize modem: float property `%s' not defined\n",   \
+        "cannot initialize modem: can't expose `%s' property\n",        \
         name);                                                          \
-    goto fail;                                                          \
-  }                                                                     \
-                                                                        \
-  dest = prop->as_float;
+        goto fail;                                                      \
+  }
 
-#define SU_QPSK_MODEM_LOAD_FROM_BOOL_PROPERTY(dest, name)               \
-  if ((prop = su_modem_property_lookup_typed(                           \
+#define SU_QPSK_MODEM_BOOL_PROPERTY(dest, name)                         \
+  if (!su_modem_expose_state_property(                                  \
       modem,                                                            \
       name,                                                             \
-      SU_PROPERTY_TYPE_BOOL)) == NULL) {                                \
+      SU_PROPERTY_TYPE_BOOL,                                            \
+      SU_TRUE,                                                          \
+      &dest)) {                                                         \
     SU_ERROR(                                                           \
-        "cannot initialize modem: boolean property `%s' not defined\n", \
+        "cannot initialize modem: can't expose `%s' property\n",        \
         name);                                                          \
-    goto fail;                                                          \
-  }                                                                     \
-                                                                        \
-  dest = prop->as_bool;
+        goto fail;                                                      \
+  }
 
 SUBOOL
 su_qpsk_modem_ctor(su_modem_t *modem, void **private)
@@ -126,14 +126,19 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
   if ((new = calloc(1, sizeof(struct qpsk_modem))) == NULL)
     goto fail;
 
-  SU_QPSK_MODEM_LOAD_FROM_INT_PROPERTY(new->fs, "samp_rate");
-  SU_QPSK_MODEM_LOAD_FROM_INT_PROPERTY(new->mf_span, "mf_span");
-  SU_QPSK_MODEM_LOAD_FROM_BOOL_PROPERTY(new->abc, "abc");
-  SU_QPSK_MODEM_LOAD_FROM_BOOL_PROPERTY(new->afc, "afc");
+  SU_QPSK_MODEM_INT_PROPERTY(new->fs, "samp_rate");
+  SU_QPSK_MODEM_INT_PROPERTY(new->mf_span, "mf_span");
+  SU_QPSK_MODEM_BOOL_PROPERTY(new->abc, "abc");
+  SU_QPSK_MODEM_BOOL_PROPERTY(new->afc, "afc");
 
-  SU_QPSK_MODEM_LOAD_FROM_FLOAT_PROPERTY(new->baud, "baud");
-  SU_QPSK_MODEM_LOAD_FROM_FLOAT_PROPERTY(new->rolloff, "rolloff");
-  SU_QPSK_MODEM_LOAD_FROM_FLOAT_PROPERTY(new->fc, "fc");
+  SU_QPSK_MODEM_FLOAT_PROPERTY(new->baud, "baud");
+  SU_QPSK_MODEM_FLOAT_PROPERTY(new->rolloff, "rolloff");
+  SU_QPSK_MODEM_FLOAT_PROPERTY(new->fc, "fc");
+
+  if (!su_modem_load_all_state_properties(modem)) {
+    SU_ERROR("cannot initialize modem: failed to load mandatory properties\n");
+    goto fail;
+  }
 
   new->arm_bw  = SU_QPSK_MODEM_ARM_BANDWIDTH_FACTOR * new->baud;
   new->loop_bw = SU_QPSK_MODEM_LOOP_BANDWIDTH_FACTOR * new->baud;

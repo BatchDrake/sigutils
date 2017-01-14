@@ -26,7 +26,7 @@
 
 /************************** su_block_property API ****************************/
 su_property_t *
-su_property_new(const char *name, su_property_type_t type, void *p)
+su_property_new(const char *name, su_property_type_t type, SUBOOL m, void *p)
 {
   su_property_t *new = NULL;
   char *namedup = NULL;
@@ -37,6 +37,7 @@ su_property_new(const char *name, su_property_type_t type, void *p)
   if ((namedup = strdup(name)) == NULL)
     goto fail;
 
+  new->mandatory = m;
   new->name = namedup;
   new->type = type;
   new->generic_ptr = p;
@@ -110,15 +111,16 @@ su_property_type_to_string(su_property_type_t type)
 }
 
 su_property_t *
-su_property_set_assert_property(
+__su_property_set_assert_property(
     su_property_set_t *set,
     const char *name,
-    su_property_type_t type)
+    su_property_type_t type,
+    SUBOOL mandatory)
 {
   su_property_t *prop = NULL;
 
   if ((prop = su_property_set_lookup(set, name)) == NULL) {
-    if ((prop = su_property_new(name, type, NULL)) == NULL) {
+    if ((prop = su_property_new(name, type, mandatory, NULL)) == NULL) {
       SU_ERROR(
           "failed to create new %s property",
           su_property_type_to_string(type));
@@ -142,6 +144,24 @@ su_property_set_assert_property(
   }
 
   return prop;
+}
+
+su_property_t *
+su_property_set_assert_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type)
+{
+  return __su_property_set_assert_property(set, name, type, SU_FALSE);
+}
+
+su_property_t *
+su_property_set_assert_mandatory_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type)
+{
+  return __su_property_set_assert_property(set, name, type, SU_TRUE);
 }
 
 void

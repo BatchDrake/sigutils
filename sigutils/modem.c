@@ -152,6 +152,108 @@ su_modem_property_copy(
   return SU_TRUE;
 }
 
+SUPRIVATE SUBOOL
+__su_modem_set_state_property_from_modem_property(
+    su_modem_t *modem,
+    su_property_t *state_prop,
+    const su_modem_property_t *prop)
+{
+  if (prop->type == SU_PROPERTY_TYPE_ANY
+      || prop->type == SU_PROPERTY_TYPE_OBJECT) {
+    SU_ERROR(
+        "cannot set properties of type %s\n",
+        su_property_type_to_string(prop->type));
+    return SU_FALSE;
+  } else if (state_prop->type != prop->type) {
+    SU_ERROR(
+        "change of property `%s' rejected: type mismatch (%s != %s)\n",
+        prop->name,
+        su_property_type_to_string(state_prop->type),
+        su_property_type_to_string(prop->type));
+    return SU_FALSE;
+  }
+
+  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+    SU_ERROR("change of property `%s' rejected by modem\n", prop->name);
+    return SU_FALSE;
+  }
+
+  switch (prop->type) {
+  case SU_PROPERTY_TYPE_BOOL:
+    *state_prop->bool_ptr = prop->as_bool;
+    break;
+
+  case SU_PROPERTY_TYPE_COMPLEX:
+    *state_prop->complex_ptr = prop->as_complex;
+    break;
+
+  case SU_PROPERTY_TYPE_FLOAT:
+    *state_prop->float_ptr = prop->as_float;
+    break;
+
+  case SU_PROPERTY_TYPE_INTEGER:
+    *state_prop->int_ptr = prop->as_int;
+    break;
+  }
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_load_state_property(su_modem_t *modem, const su_modem_property_t *prop)
+{
+  su_property_t *state_prop;
+
+  if ((state_prop = su_property_set_lookup(
+      &modem->state_properties,
+      prop->name)) != NULL) {
+    return __su_modem_set_state_property_from_modem_property(
+        modem,
+        state_prop,
+        prop);
+  }
+
+  /*
+   * Attempting to set a state property that is not exposed by a modem is not
+   * an error. The property may be set from a default configuration that
+   * contains properties that may make sense for other modems. We just ignore
+   * it in this case.
+   */
+  return SU_TRUE;
+}
+
+SUBOOL
+su_modem_load_all_state_properties(su_modem_t *modem)
+{
+  su_property_t *state_prop;
+  const su_modem_property_t *prop;
+  unsigned int i;
+
+  FOR_EACH_PTR(state_prop, i, modem->state_properties.property) {
+    if ((prop =
+        su_modem_property_lookup_typed(
+            modem,
+            state_prop->name,
+            state_prop->type)) != NULL) {
+      if (!__su_modem_set_state_property_from_modem_property(
+          modem,
+          state_prop,
+          prop)) {
+        SU_ERROR("Failed to set state property `%s'\n", prop->name);
+        return SU_FALSE;
+      }
+    } else if (state_prop->mandatory) {
+      SU_ERROR(
+          "Mandatory %s property `%s' undefined\n",
+          su_property_type_to_string(state_prop->type),
+          state_prop->name);
+      return SU_FALSE;
+    }
+  }
+
+  return SU_TRUE;
+}
+
 SUPRIVATE ssize_t
 su_modem_property_get_marshalled_size(const su_modem_property_t *prop)
 {
@@ -499,6 +601,7 @@ su_modem_destroy(su_modem_t *modem)
     free(modem->block_list);
 
   su_modem_property_set_finalize(&modem->properties);
+  su_property_set_finalize(&modem->state_properties);
 
   free(modem);
 }
@@ -581,6 +684,35 @@ fail:
 }
 
 SUBOOL
+su_modem_register_block(su_modem_t *modem, su_block_t *block)
+{
+  return PTR_LIST_APPEND_CHECK(modem->block, block) != -1;
+}
+
+SUBOOL
+su_modem_expose_state_property(
+    su_modem_t *modem,
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory,
+    void *ptr)
+{
+  su_property_t *state = NULL;
+  uint64_t old;
+
+  if ((state = __su_property_set_assert_property(
+      &modem->state_properties,
+      name,
+      type,
+      mandatory)) == NULL)
+    return SU_FALSE;
+
+  state->generic_ptr = ptr;
+
+  return SU_TRUE;
+}
+
+SUBOOL
 su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
 {
   su_modem_property_t *prop = NULL;
@@ -595,10 +727,9 @@ su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
   old = prop->as_int;
   prop->as_int = val;
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_int = old;
-
     return SU_FALSE;
   }
 
@@ -606,15 +737,10 @@ su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
 }
 
 SUBOOL
-su_modem_register_block(su_modem_t *modem, su_block_t *block)
-{
-  return PTR_LIST_APPEND_CHECK(modem->block, block) != -1;
-}
-
-SUBOOL
 su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val)
 {
   su_modem_property_t *prop = NULL;
+
   SUFLOAT old;
 
   if ((prop = su_modem_property_set_assert_property(
@@ -626,7 +752,7 @@ su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val)
   old = prop->as_float;
   prop->as_float = val;
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_float = old;
 
@@ -652,10 +778,9 @@ su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val)
   old = prop->as_complex;
   prop->as_complex = val;
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_complex = old;
-
     return SU_FALSE;
   }
 
@@ -678,13 +803,11 @@ su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val)
   old = prop->as_bool;
   prop->as_bool = val;
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_bool = old;
-
     return SU_FALSE;
   }
-
 
   return SU_TRUE;
 }
@@ -704,7 +827,7 @@ su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
   old = prop->as_ptr;
   prop->as_ptr = val;
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem->private, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_ptr = old;
 

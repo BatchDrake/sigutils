@@ -71,6 +71,7 @@ struct sigutils_modem {
   su_block_t *source; /* Loaned */
   PTR_LIST(su_block_t, block); /* Owned */
   su_modem_property_set_t properties;
+  su_property_set_t state_properties;
 };
 
 typedef struct sigutils_modem su_modem_t;
@@ -119,6 +120,18 @@ SUBOOL su_modem_register_block(su_modem_t *modem, su_block_t *block);
 
 SUBOOL su_modem_plug_to_source(su_modem_t *modem, su_block_t *first);
 
+SUBOOL
+su_modem_expose_state_property(
+    su_modem_t *modem,
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory,
+    void *ptr);
+
+SUBOOL su_modem_load_state_property(
+    su_modem_t *modem,
+    const su_modem_property_t *prop);
+SUBOOL su_modem_load_all_state_properties(su_modem_t *modem);
 SUBOOL su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val);
 SUBOOL su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val);
 SUBOOL su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val);
