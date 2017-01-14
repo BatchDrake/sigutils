@@ -697,19 +697,42 @@ su_modem_expose_state_property(
     SUBOOL mandatory,
     void *ptr)
 {
-  su_property_t *state = NULL;
+  su_property_t *state_property = NULL;
   uint64_t old;
 
-  if ((state = __su_property_set_assert_property(
+  if ((state_property = __su_property_set_assert_property(
       &modem->state_properties,
       name,
       type,
       mandatory)) == NULL)
     return SU_FALSE;
 
-  state->generic_ptr = ptr;
+  state_property->generic_ptr = ptr;
 
   return SU_TRUE;
+}
+
+void *
+su_modem_get_state_property_ref(
+    const su_modem_t *modem,
+    const char *name,
+    su_property_type_t type)
+{
+  su_property_t *state_property;
+
+  if ((state_property = su_property_set_lookup(&modem->state_properties, name))
+      == NULL)
+    return NULL;
+
+  if (state_property->type != type) {
+    SU_WARNING(
+        "Property found, wrong type (`%s' is %s)\n",
+        name,
+        su_property_type_to_string(state_property->type));
+    return NULL;
+  }
+
+  return state_property->generic_ptr;
 }
 
 SUBOOL

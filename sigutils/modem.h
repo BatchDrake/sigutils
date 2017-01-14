@@ -120,13 +120,17 @@ SUBOOL su_modem_register_block(su_modem_t *modem, su_block_t *block);
 
 SUBOOL su_modem_plug_to_source(su_modem_t *modem, su_block_t *first);
 
-SUBOOL
-su_modem_expose_state_property(
+SUBOOL su_modem_expose_state_property(
     su_modem_t *modem,
     const char *name,
     su_property_type_t type,
     SUBOOL mandatory,
     void *ptr);
+
+void *su_modem_get_state_property_ref(
+    const su_modem_t *modem,
+    const char *name,
+    su_property_type_t type);
 
 SUBOOL su_modem_load_state_property(
     su_modem_t *modem,

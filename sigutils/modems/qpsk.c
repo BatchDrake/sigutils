@@ -47,6 +47,10 @@ struct qpsk_modem {
   SUBOOL   abc;       /* Enable Automatic Baudrate Control */
   SUBOOL   afc;       /* Enable Automatic Frequency Control */
 
+  /* Property references */
+  SUFLOAT  *fc_ref;
+
+  /* Blocks */
   su_block_t *cdr_block;
   su_block_t *costas_block;
   su_block_t *agc_block;
@@ -171,7 +175,6 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
           SU_QPSK_MODEM_COSTAS_LOOP_ARM_FILTER_ORDER,
           SU_ABS2NORM_FREQ(new->fs, new->loop_bw)));
 
-
   SU_QPSK_MODEM_CREATE_BLOCK(
       new->rrc_block,
       su_block_new(
@@ -188,7 +191,16 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
           SU_ABS2NORM_BAUD(new->fs, new->baud),
           SU_QPSK_MODEM_SYMBOL_QUEUE_SIZE));
 
-  /* Tweak some properties */
+  /* Expose some properties */
+  if ((new->fc_ref = su_block_get_property_ref(
+      new->costas_block,
+      SU_PROPERTY_TYPE_FLOAT,
+      "f")) == NULL) {
+    SU_ERROR("Cannot find f property in Costas block\n");
+    goto fail;
+  }
+
+  /* Tweak others properties */
   if ((rrc_gain = su_block_get_property_ref(
       new->rrc_block,
       SU_PROPERTY_TYPE_FLOAT,
@@ -264,6 +276,12 @@ su_qpsk_modem_onpropertychanged(void *private, const su_modem_property_t *prop)
   return SU_TRUE;
 }
 
+SUPRIVATE void
+su_qpsk_modem_update_state(struct qpsk_modem *modem)
+{
+  modem->fc = SU_NORM2ABS_FREQ(modem->fs, *modem->fc_ref);
+}
+
 SUCOMPLEX
 su_qpsk_modem_read_sample(su_modem_t *modem, void *private)
 {
@@ -276,6 +294,8 @@ su_qpsk_modem_read_sample(su_modem_t *modem, void *private)
     return nan("nosym");
   else if (got < 0)
     return nan("eos");
+
+  su_qpsk_modem_update_state(qpsk_modem);
 
   return sample;
 }
@@ -294,6 +314,8 @@ su_qpsk_modem_read_sym(su_modem_t *modem, void *private)
     return SU_EOS;
 
   sym = ((SU_C_REAL(sample) > 0) << 1) | (SU_C_IMAG(sample) > 0);
+
+  su_qpsk_modem_update_state(qpsk_modem);
 
   return sym + 1;
 }
