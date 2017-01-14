@@ -27,19 +27,8 @@
 
 typedef struct sigutils_modem_class su_modem_class_t;
 
-enum sigutils_modem_property_type {
-  SU_MODEM_PROPERTY_TYPE_ANY,
-  SU_MODEM_PROPERTY_TYPE_BOOL,
-  SU_MODEM_PROPERTY_TYPE_INTEGER,
-  SU_MODEM_PROPERTY_TYPE_FLOAT,
-  SU_MODEM_PROPERTY_TYPE_COMPLEX,
-  SU_MODEM_PROPERTY_TYPE_OBJECT
-};
-
-typedef enum sigutils_modem_property_type su_modem_property_type_t;
-
 struct sigutils_modem_property {
-  su_modem_property_type_t type;
+  su_property_type_t type;
   char *name;
 
   union {
@@ -101,7 +90,7 @@ su_modem_property_t *su_modem_property_set_lookup(
 su_modem_property_t *su_modem_property_set_assert_property(
     su_modem_property_set_t *set,
     const char *name,
-    su_modem_property_type_t type);
+    su_property_type_t type);
 
 ssize_t su_modem_property_set_marshall(
     const su_modem_property_set_t *set,
@@ -144,7 +133,7 @@ const su_modem_property_t *
 su_modem_property_lookup_typed(
     const su_modem_t *modem,
     const char *name,
-    su_modem_property_type_t type);
+    su_property_type_t type);
 
 SUBOOL su_modem_set_properties(
     su_modem_t *modem,

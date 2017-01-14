@@ -57,6 +57,8 @@ struct sigutils_property_set {
 
 typedef struct sigutils_property_set su_property_set_t;
 
+const char *su_property_type_to_string(su_property_type_t type);
+
 /* Property API */
 su_property_t *su_property_new(const char *name, su_property_type_t type, void *p);
 void su_property_destroy(su_property_t *prop);

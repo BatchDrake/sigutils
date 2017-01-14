@@ -77,7 +77,7 @@ su_qpsk_modem_dtor(void *private)
   if ((prop = su_modem_property_lookup_typed(                           \
       modem,                                                            \
       name,                                                             \
-      SU_MODEM_PROPERTY_TYPE_INTEGER)) == NULL) {                       \
+      SU_PROPERTY_TYPE_INTEGER)) == NULL) {                             \
     SU_ERROR(                                                           \
         "cannot initialize modem: integer property `%s' not defined\n", \
         name);                                                          \
@@ -90,7 +90,7 @@ su_qpsk_modem_dtor(void *private)
   if ((prop = su_modem_property_lookup_typed(                           \
       modem,                                                            \
       name,                                                             \
-      SU_MODEM_PROPERTY_TYPE_FLOAT)) == NULL) {                         \
+      SU_PROPERTY_TYPE_FLOAT)) == NULL) {                               \
     SU_ERROR(                                                           \
         "cannot initialize modem: float property `%s' not defined\n",   \
         name);                                                          \
@@ -103,7 +103,7 @@ su_qpsk_modem_dtor(void *private)
   if ((prop = su_modem_property_lookup_typed(                           \
       modem,                                                            \
       name,                                                             \
-      SU_MODEM_PROPERTY_TYPE_BOOL)) == NULL) {                          \
+      SU_PROPERTY_TYPE_BOOL)) == NULL) {                                \
     SU_ERROR(                                                           \
         "cannot initialize modem: boolean property `%s' not defined\n", \
         name);                                                          \

@@ -65,7 +65,7 @@ su_modem_property_destroy(su_modem_property_t *prop)
 }
 
 su_modem_property_t *
-su_modem_property_new(const char *name, su_modem_property_type_t type)
+su_modem_property_new(const char *name, su_property_type_t type)
 {
   su_modem_property_t *new = NULL;
 
@@ -100,53 +100,26 @@ su_modem_property_set_lookup(const su_modem_property_set_t *set, const char *nam
   return NULL;
 }
 
-SUPRIVATE const char *
-su_modem_property_type_to_string(su_modem_property_type_t type)
-{
-  switch(type) {
-    case SU_MODEM_PROPERTY_TYPE_ANY:
-      return "(any)";
-
-    case SU_MODEM_PROPERTY_TYPE_BOOL:
-      return "bool";
-
-    case SU_MODEM_PROPERTY_TYPE_INTEGER:
-      return "int";
-
-    case SU_MODEM_PROPERTY_TYPE_FLOAT:
-      return "float";
-
-    case SU_MODEM_PROPERTY_TYPE_COMPLEX:
-      return "complex";
-
-    case SU_MODEM_PROPERTY_TYPE_OBJECT:
-      return "object";
-
-    default:
-      return "unknown";
-  }
-}
-
-SUPRIVATE ssize_t
-su_modem_property_get_value_marshalled_size(su_modem_property_type_t type)
+ssize_t
+su_modem_property_get_value_marshalled_size(su_property_type_t type)
 {
   switch (type) {
-    case SU_MODEM_PROPERTY_TYPE_ANY:
+    case SU_PROPERTY_TYPE_ANY:
       return 0;
 
-    case SU_MODEM_PROPERTY_TYPE_BOOL:
+    case SU_PROPERTY_TYPE_BOOL:
       return 1;
 
-    case SU_MODEM_PROPERTY_TYPE_INTEGER:
+    case SU_PROPERTY_TYPE_INTEGER:
       return sizeof(uint64_t);
 
-    case SU_MODEM_PROPERTY_TYPE_FLOAT:
+    case SU_PROPERTY_TYPE_FLOAT:
       return sizeof(SUFLOAT);
 
-    case SU_MODEM_PROPERTY_TYPE_COMPLEX:
+    case SU_PROPERTY_TYPE_COMPLEX:
       return sizeof(SUCOMPLEX);
 
-    case SU_MODEM_PROPERTY_TYPE_OBJECT:
+    case SU_PROPERTY_TYPE_OBJECT:
       SU_ERROR("object properties cannot be marshalled\n");
       return -1;
 
@@ -170,7 +143,7 @@ su_modem_property_copy(
   if ((size = su_modem_property_get_value_marshalled_size(src->type)) == -1) {
     SU_ERROR(
         "objects of type %s cannot be copied\n",
-        su_modem_property_type_to_string(src->type));
+        su_property_type_to_string(src->type));
     return SU_FALSE;
   }
 
@@ -199,7 +172,7 @@ su_modem_property_get_marshalled_size(const su_modem_property_t *prop)
       == -1) {
     SU_ERROR(
         "cannot marshall properties of type `%s'\n",
-        su_modem_property_type_to_string(prop->type));
+        su_property_type_to_string(prop->type));
     return -1;
   }
 
@@ -255,7 +228,7 @@ su_modem_property_unmarshall(
     const void *buffer,
     size_t buffer_size)
 {
-  su_modem_property_type_t type;
+  su_property_type_t type;
   const uint8_t *as_bytes = NULL;
   size_t name_size = 0;
   size_t value_size = 0;
@@ -316,7 +289,7 @@ su_modem_property_t *
 su_modem_property_set_assert_property(
     su_modem_property_set_t *set,
     const char *name,
-    su_modem_property_type_t type)
+    su_property_type_t type)
 {
   su_modem_property_t *prop = NULL;
 
@@ -324,14 +297,14 @@ su_modem_property_set_assert_property(
     if ((prop = su_modem_property_new(name, type)) == NULL) {
       SU_ERROR(
           "failed to create new %s property",
-          su_modem_property_type_to_string(type));
+          su_property_type_to_string(type));
       return NULL;
     }
 
     if (PTR_LIST_APPEND_CHECK(set->property, prop) == -1) {
       SU_ERROR(
           "failed to append new %s property",
-          su_modem_property_type_to_string(type));
+          su_property_type_to_string(type));
       su_modem_property_destroy(prop);
       return NULL;
     }
@@ -339,8 +312,8 @@ su_modem_property_set_assert_property(
     SU_ERROR(
         "property `%s' found, mismatching type (req: %s, found: %s)\n",
         name,
-        su_modem_property_type_to_string(type),
-        su_modem_property_type_to_string(prop->type));
+        su_property_type_to_string(type),
+        su_property_type_to_string(prop->type));
     return NULL;
   }
 
@@ -616,7 +589,7 @@ su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
   if ((prop = su_modem_property_set_assert_property(
       &modem->properties,
       name,
-      SU_MODEM_PROPERTY_TYPE_INTEGER)) == NULL)
+      SU_PROPERTY_TYPE_INTEGER)) == NULL)
     return SU_FALSE;
 
   old = prop->as_int;
@@ -647,7 +620,7 @@ su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val)
   if ((prop = su_modem_property_set_assert_property(
       &modem->properties,
       name,
-      SU_MODEM_PROPERTY_TYPE_FLOAT)) == NULL)
+      SU_PROPERTY_TYPE_FLOAT)) == NULL)
     return SU_FALSE;
 
   old = prop->as_float;
@@ -673,7 +646,7 @@ su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val)
   if ((prop = su_modem_property_set_assert_property(
       &modem->properties,
       name,
-      SU_MODEM_PROPERTY_TYPE_COMPLEX)) == NULL)
+      SU_PROPERTY_TYPE_COMPLEX)) == NULL)
     return SU_FALSE;
 
   old = prop->as_complex;
@@ -699,7 +672,7 @@ su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val)
   if ((prop = su_modem_property_set_assert_property(
       &modem->properties,
       name,
-      SU_MODEM_PROPERTY_TYPE_BOOL)) == NULL)
+      SU_PROPERTY_TYPE_BOOL)) == NULL)
     return SU_FALSE;
 
   old = prop->as_bool;
@@ -725,7 +698,7 @@ su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
   if ((prop = su_modem_property_set_assert_property(
       &modem->properties,
       name,
-      SU_MODEM_PROPERTY_TYPE_OBJECT)) == NULL)
+      SU_PROPERTY_TYPE_OBJECT)) == NULL)
     return SU_FALSE;
 
   old = prop->as_ptr;
@@ -752,7 +725,7 @@ const su_modem_property_t *
 su_modem_property_lookup_typed(
     const su_modem_t *modem,
     const char *name,
-    su_modem_property_type_t type)
+    su_property_type_t type)
 {
   const su_modem_property_t *prop = NULL;
 
@@ -762,8 +735,8 @@ su_modem_property_lookup_typed(
     SU_ERROR(
         "Property `%s' is of type `%s', but `%s' was expected\n",
         name,
-        su_modem_property_type_to_string(prop->type),
-        su_modem_property_type_to_string(type));
+        su_property_type_to_string(prop->type),
+        su_property_type_to_string(type));
     return NULL;
   }
 

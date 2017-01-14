@@ -17,6 +17,7 @@ nobase_pkginclude_HEADERS = 	\
 	sigutils/modem.h	\
 	sigutils/ncqo.h		\
 	sigutils/pll.h		\
+	sigutils/property.h	\
 	sigutils/sampling.h	\
 	sigutils/sigutils.h	\
 	sigutils/taps.h		\

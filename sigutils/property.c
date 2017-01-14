@@ -82,7 +82,7 @@ su_property_set_lookup(const su_property_set_t *set, const char *name)
   return NULL;
 }
 
-SUPRIVATE const char *
+const char *
 su_property_type_to_string(su_property_type_t type)
 {
   switch(type) {
