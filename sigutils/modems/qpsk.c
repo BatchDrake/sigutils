@@ -268,7 +268,7 @@ SUCOMPLEX
 su_qpsk_modem_read_sample(su_modem_t *modem, void *private)
 {
   struct qpsk_modem *qpsk_modem = (struct qpsk_modem *) private;
-  ssize_t got = 0;
+  SUSDIFF got = 0;
   SUCOMPLEX sample;
   SUSYMBOL sym = 0;
 
@@ -284,7 +284,7 @@ SUSYMBOL
 su_qpsk_modem_read_sym(su_modem_t *modem, void *private)
 {
   struct qpsk_modem *qpsk_modem = (struct qpsk_modem *) private;
-  ssize_t got = 0;
+  SUSDIFF got = 0;
   SUCOMPLEX sample;
   SUSYMBOL sym = 0;
 

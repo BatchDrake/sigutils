@@ -28,7 +28,7 @@ struct su_wavfile {
   SNDFILE *sf;
   uint64_t samp_rate;
   SUFLOAT *buffer;
-  size_t size; /* Number of samples PER CHANNEL, buffer size is size * chans */
+  SUSCOUNT size; /* Number of samples PER CHANNEL, buffer size is size * chans */
 };
 
 SUPRIVATE void
@@ -128,12 +128,12 @@ su_block_wavfile_dtor(void *private)
  * We process wav files as I/Q data. Left channel contains I data and
  * right channel contains Q data.
  */
-SUPRIVATE ssize_t
+SUPRIVATE SUSDIFF
 su_block_wavfile_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
 {
   struct su_wavfile *wav = (struct su_wavfile *) priv;
-  ssize_t size;
-  ssize_t got;
+  SUSDIFF size;
+  SUSDIFF got;
   unsigned int i;
   SUCOMPLEX *start;
   SUCOMPLEX samp;

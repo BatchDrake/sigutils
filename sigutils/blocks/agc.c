@@ -81,12 +81,12 @@ su_block_agc_dtor(void *private)
   }
 }
 
-SUPRIVATE ssize_t
+SUPRIVATE SUSDIFF
 su_block_agc_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
 {
   su_agc_t *agc;
-  ssize_t size;
-  ssize_t got;
+  SUSDIFF size;
+  SUSDIFF got;
   int i = 0;
 
   SUCOMPLEX *start;

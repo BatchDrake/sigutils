@@ -215,7 +215,7 @@ SUBOOL su_clock_detector_set_bnor_limits(
     SUFLOAT lo,
     SUFLOAT hi);
 
-ssize_t su_clock_detector_read(
+SUSDIFF su_clock_detector_read(
     su_clock_detector_t *cd,
     SUCOMPLEX *buf,
     size_t size);

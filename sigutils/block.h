@@ -78,7 +78,7 @@ struct sigutils_block_class {
   void (*dtor) (void *private);
 
   /* This function gets called when more data is required */
-  ssize_t (*acquire) (void *, su_stream_t *, su_block_port_t *);
+  SUSDIFF (*acquire) (void *, su_stream_t *, su_block_port_t *);
 };
 
 typedef struct sigutils_block_class su_block_class_t;
@@ -96,26 +96,26 @@ struct sigutils_block {
 typedef struct sigutils_block su_block_t;
 
 /* su_stream operations */
-SUBOOL su_stream_init(su_stream_t *stream, size_t size);
+SUBOOL su_stream_init(su_stream_t *stream, SUSCOUNT size);
 
 void su_stream_finalize(su_stream_t *stream);
 
-void su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, size_t size);
+void su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, SUSCOUNT size);
 
-size_t su_stream_get_contiguous(
+SUSCOUNT su_stream_get_contiguous(
     const su_stream_t *stream,
     SUCOMPLEX **start,
-    size_t size);
+    SUSCOUNT size);
 
-size_t su_stream_advance_contiguous(su_stream_t *stream, size_t size);
+SUSCOUNT su_stream_advance_contiguous(su_stream_t *stream, SUSCOUNT size);
 
 su_off_t su_stream_tell(const su_stream_t *);
 
-ssize_t su_stream_read(
+SUSDIFF su_stream_read(
     su_stream_t *stream,
     su_off_t off,
     SUCOMPLEX *data,
-    size_t size);
+    SUSCOUNT size);
 
 /* su_block operations */
 su_block_t *su_block_new(const char *, ...);
@@ -153,7 +153,7 @@ SUBOOL su_block_port_plug(
     struct sigutils_block *block,
     unsigned int portid); /* Position initialized with current stream pos */
 
-ssize_t su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size);
+SUSDIFF su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size);
 
 /* Sometimes, a port connection may go out of sync. This fixes it */
 SUBOOL su_block_port_resync(su_block_port_t *port);

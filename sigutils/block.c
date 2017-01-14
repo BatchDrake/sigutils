@@ -28,14 +28,19 @@ static unsigned int      class_count;
 
 /****************************** su_stream API ********************************/
 SUBOOL
-su_stream_init(su_stream_t *stream, size_t size)
+su_stream_init(su_stream_t *stream, SUSCOUNT size)
 {
   SUCOMPLEX *buffer = NULL;
+  int i = 0;
 
   if ((buffer = malloc(size * sizeof (SUCOMPLEX))) == NULL) {
     SU_ERROR("buffer allocation failed\n");
     return SU_FALSE;
   }
+
+  /* Populate uninitialized buffer with NaNs */
+  for (i = 0; i < size; ++i)
+    buffer[i] = nan("uninitialized");
 
   stream->buffer = buffer;
   stream->size  = size;
@@ -54,10 +59,10 @@ su_stream_finalize(su_stream_t *stream)
 }
 
 void
-su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, size_t size)
+su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, SUSCOUNT size)
 {
-  size_t skip = 0;
-  size_t chunksz;
+  SUSCOUNT skip = 0;
+  SUSCOUNT chunksz;
 
   /*
    * We increment this always. Current reading position is
@@ -105,13 +110,13 @@ su_stream_tell(const su_stream_t *stream)
 }
 
 
-size_t
+SUSCOUNT
 su_stream_get_contiguous(
     const su_stream_t *stream,
     SUCOMPLEX **start,
-    size_t size)
+    SUSCOUNT size)
 {
-  size_t avail = stream->size - stream->ptr;
+  SUSCOUNT avail = stream->size - stream->ptr;
 
   if (size > avail) {
     size = avail;
@@ -122,12 +127,12 @@ su_stream_get_contiguous(
   return size;
 }
 
-size_t
+SUSCOUNT
 su_stream_advance_contiguous(
     su_stream_t *stream,
-    size_t size)
+    SUSCOUNT size)
 {
-  size_t avail = stream->size - stream->ptr;
+  SUSCOUNT avail = stream->size - stream->ptr;
 
   if (size > avail) {
     size = avail;
@@ -147,14 +152,14 @@ su_stream_advance_contiguous(
   return size;
 }
 
-ssize_t
-su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
+SUSDIFF
+su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUNT size)
 {
-  size_t avail;
+  SUSCOUNT avail;
   su_off_t readpos = su_stream_tell(stream);
-  size_t reloff;
-  size_t chunksz;
-  size_t ptr;
+  SUSCOUNT reloff;
+  SUSCOUNT chunksz;
+  SUSDIFF ptr;
 
   /* Slow reader */
   if (off < readpos)
@@ -173,7 +178,8 @@ su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
   }
 
   /* Compute position in the stream buffer to read from */
-  ptr = stream->ptr + reloff;
+  if ((ptr = stream->ptr - avail) < 0)
+    ptr += stream->size;
 
   /* Adjust in case reloff causes ptr to rollover */
   if (ptr > stream->size)
@@ -188,11 +194,8 @@ su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, size_t size)
   size -= chunksz;
 
   /* Is there anything left to read? */
-  if (size > 0) {
-    data += chunksz;
-
-    memcpy(data, stream->buffer, size * sizeof (SUCOMPLEX));
-  }
+  if (size > 0)
+    memcpy(data + chunksz, stream->buffer, size * sizeof (SUCOMPLEX));
 
   return chunksz + size;
 }
@@ -454,11 +457,11 @@ su_block_port_plug(su_block_port_t *port,
   return SU_TRUE;
 }
 
-ssize_t
-su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, size_t size)
+SUSDIFF
+su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
 {
-  ssize_t got = 0;
-  ssize_t acquired = 0;
+  SUSDIFF got = 0;
+  SUSDIFF acquired = 0;
 
   if (!su_block_port_is_plugged(port)) {
     SU_ERROR("Port not plugged\n");

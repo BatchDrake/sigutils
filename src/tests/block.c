@@ -91,7 +91,7 @@ su_test_block_plugging(su_test_context_t *ctx)
   SUFLOAT real = 0;
   int i;
   unsigned int j = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   SU_TEST_START(ctx);
 
@@ -165,7 +165,7 @@ su_test_tuner(su_test_context_t *ctx)
   SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   /* Block properties */
   int *samp_rate;
@@ -265,7 +265,7 @@ su_test_costas_block(su_test_context_t *ctx)
   SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   /* Signal properties */
   const SUFLOAT baud = 468;
@@ -395,7 +395,7 @@ su_test_rrc_block(su_test_context_t *ctx)
   SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   /* Signal properties */
   const SUFLOAT baud = 468;
@@ -548,7 +548,7 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   SUCOMPLEX *rx = NULL;
   int i;
   unsigned int j = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   /* Signal properties */
   const SUFLOAT baud = 468;
@@ -752,7 +752,7 @@ su_test_cdr_block(su_test_context_t *ctx)
   int i;
   unsigned int j = 0;
   SUSCOUNT uncp = 0;
-  ssize_t got;
+  SUSDIFF got;
 
   /* Signal properties */
   const SUFLOAT baud = 468;

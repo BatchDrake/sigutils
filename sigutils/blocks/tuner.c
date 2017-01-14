@@ -214,12 +214,12 @@ su_block_tuner_dtor(void *private)
 }
 
 /* Acquire */
-SUPRIVATE ssize_t
+SUPRIVATE SUSDIFF
 su_block_tuner_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
 {
   su_tuner_t *tu;
-  ssize_t size;
-  ssize_t got;
+  SUSDIFF size;
+  SUSDIFF got;
   int i = 0;
 
   SUCOMPLEX *start;

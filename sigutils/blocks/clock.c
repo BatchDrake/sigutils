@@ -110,12 +110,12 @@ su_block_cdr_dtor(void *private)
   }
 }
 
-SUPRIVATE ssize_t
+SUPRIVATE SUSDIFF
 su_block_cdr_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
 {
   su_clock_detector_t *clock_detector;
-  ssize_t size;
-  ssize_t got;
+  SUSDIFF size;
+  SUSDIFF got;
   int i = 0;
   int p = 0;
   SUCOMPLEX *start;

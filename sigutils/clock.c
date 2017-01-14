@@ -137,10 +137,10 @@ su_clock_detector_feed(su_clock_detector_t *cd, SUCOMPLEX val)
   cd->prev = val;
 }
 
-ssize_t
+SUSDIFF
 su_clock_detector_read(su_clock_detector_t *cd, SUCOMPLEX *buf, size_t size)
 {
-  ssize_t result = 0;
+  SUSDIFF result = 0;
 
   result = su_stream_read(&cd->sym_stream, cd->sym_stream_pos, buf, size);
 

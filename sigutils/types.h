@@ -30,6 +30,7 @@
 #define SUINLINE   static inline
 #define SUFLOAT    double
 #define SUSCOUNT   unsigned long
+#define SUSDIFF    long
 #define SUBOOL     int
 #define SUCOMPLEX  complex SUFLOAT
 #define SUSYMBOL   int
