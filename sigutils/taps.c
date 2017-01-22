@@ -52,6 +52,26 @@ su_taps_apply_hann(SUFLOAT *h, SUSCOUNT size)
 }
 
 void
+su_taps_apply_hamming_complex(SUCOMPLEX *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    h[i] *=
+        SU_HAMMING_ALPHA - SU_MAMMING_BETA * SU_COS(2 * M_PI * i / (size - 1));
+}
+
+void
+su_taps_apply_hann_complex(SUCOMPLEX *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    h[i] *=
+        SU_HANN_ALPHA - SU_HANN_BETA * SU_COS(2 * M_PI * i / (size - 1));
+}
+
+void
 su_taps_normalize_Linf(SUFLOAT *h, SUSCOUNT size)
 {
   unsigned int i;

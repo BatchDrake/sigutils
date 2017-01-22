@@ -27,6 +27,13 @@
 #define SU_HANN_ALPHA 0.5
 #define SU_HANN_BETA (1 - SU_HANN_ALPHA)
 
+/* Window functions */
+void su_taps_apply_hamming(SUFLOAT *h, SUSCOUNT size);
+void su_taps_apply_hann(SUFLOAT *h, SUSCOUNT size);
+
+void su_taps_apply_hamming_complex(SUCOMPLEX *h, SUSCOUNT size);
+void su_taps_apply_hann_complex(SUCOMPLEX *h, SUSCOUNT size);
+
 /* Get coefficients of a RRC filter */
 void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);
 
