@@ -80,7 +80,7 @@ struct sigutils_channel_detector_params {
   SUFLOAT th_alpha;         /* Threshold level averaging ratio */
 };
 
-#define su_channel_detector_params_INITIALIZER \
+#define sigutils_channel_detector_params_INITIALIZER \
 {                         \
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */ \
   8000, /* samp_rate */   \
