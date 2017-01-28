@@ -58,6 +58,10 @@ AC_SUBST(ASOUNDLIB_LIBS)
 AC_SUBST(SNDFILE_CFLAGS)
 AC_SUBST(SNDFILE_LIBS)
 
+PKG_CHECK_MODULES(fftw3, [fftw3 >= 3.0])
+AC_SUBST(fftw3_CFLAGS)
+AC_SUBST(fftw3_LIBS)
+
 GLOBAL_LDFLAGS="-lm -lpthread -ldl -export-dynamic -rdynamic"
 
 AC_CONFIG_FILES([sigutils.pc])

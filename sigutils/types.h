@@ -25,10 +25,20 @@
 #include <stdlib.h>
 #include <math.h>
 #include <complex.h>
+#include <fftw3.h>
+
+#include <util.h>
+
+#ifdef _SU_SINGLE_PRECISION
+#define SUFLOAT    float
+#define SU_SOURCE_FFTW_PREFIX fftwf
+#else
+#define SUFLOAT    double
+#define SU_SOURCE_FFTW_PREFIX fftw
+#endif
 
 #define SUPRIVATE  static
 #define SUINLINE   static inline
-#define SUFLOAT    double
 #define SUSCOUNT   unsigned long
 #define SUSDIFF    long
 #define SUBOOL     int
@@ -83,6 +93,9 @@
 
 #define SU_MAG_RAW(d) SU_POW(10.0, (d) / 20.)
 #define SU_MAG(d) (SU_MAG_RAW(d) - SUFLOAT_MIN_REF_MAG)
+
+/* Required for the map from sigutils types to FFTW3 types */
+#define SU_FFTW(method) JOIN(SU_SOURCE_FFTW_PREFIX, method)
 
 #define SU_ERROR(fmt, arg...) \
   fprintf(stderr, "(e) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
