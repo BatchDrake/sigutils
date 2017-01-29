@@ -27,6 +27,7 @@ extern struct sigutils_block_class su_block_class_WAVFILE;
 extern struct sigutils_block_class su_block_class_COSTAS;
 extern struct sigutils_block_class su_block_class_RRC;
 extern struct sigutils_block_class su_block_class_CDR;
+extern struct sigutils_block_class su_block_class_SIGGEN;
 
 /* Modem classes */
 extern struct sigutils_modem_class su_modem_class_QPSK;
@@ -44,6 +45,7 @@ su_lib_init(void)
           &su_block_class_COSTAS,
           &su_block_class_RRC,
           &su_block_class_CDR,
+          &su_block_class_SIGGEN,
       };
 
   struct sigutils_modem_class *modems[] =
