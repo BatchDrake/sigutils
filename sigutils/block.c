@@ -319,12 +319,6 @@ su_flow_controller_set_kind(
   return SU_TRUE;
 }
 
-SUPRIVATE enum sigutils_flow_controller_kind
-su_flow_controller_get_kind(const su_flow_controller_t *fc)
-{
-  return fc->kind;
-}
-
 SUPRIVATE SUSDIFF
 su_flow_controller_read_unsafe(
     su_flow_controller_t *fc,

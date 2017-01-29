@@ -219,6 +219,11 @@ SUBOOL su_block_port_is_plugged(const su_block_port_t *port);
 
 void su_block_port_unplug(su_block_port_t *port);
 
+SUBOOL su_block_set_flow_controller(
+    su_block_t *block,
+    unsigned int port_id,
+    enum sigutils_flow_controller_kind kind);
+
 /* su_block_class operations */
 SUBOOL su_block_class_register(struct sigutils_block_class *class);
 
