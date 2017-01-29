@@ -111,7 +111,11 @@ su_block_cdr_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_cdr_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
+su_block_cdr_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_clock_detector_t *clock_detector;
   SUSDIFF size;

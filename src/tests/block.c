@@ -940,6 +940,9 @@ done:
   if (su_block_port_is_plugged(&port))
     su_block_port_unplug(&port);
 
+  if (cdr_block != NULL)
+    su_block_destroy(cdr_block);
+
   if (rrc_block != NULL)
     su_block_destroy(rrc_block);
 

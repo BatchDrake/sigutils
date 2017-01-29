@@ -215,7 +215,11 @@ su_block_tuner_dtor(void *private)
 
 /* Acquire */
 SUPRIVATE SUSDIFF
-su_block_tuner_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
+su_block_tuner_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_tuner_t *tu;
   SUSDIFF size;

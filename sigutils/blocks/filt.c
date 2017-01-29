@@ -79,7 +79,11 @@ su_block_rrc_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_rrc_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
+su_block_rrc_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_iir_filt_t *filt;
   SUSDIFF size;

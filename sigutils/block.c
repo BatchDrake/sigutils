@@ -153,7 +153,7 @@ su_stream_advance_contiguous(
 }
 
 SUSDIFF
-su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUNT size)
+su_stream_read(const su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUNT size)
 {
   SUSCOUNT avail;
   su_off_t readpos = su_stream_tell(stream);
@@ -198,6 +198,181 @@ su_stream_read(su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUNT size
     memcpy(data + chunksz, stream->buffer, size * sizeof (SUCOMPLEX));
 
   return chunksz + size;
+}
+
+/************************* su_flow_controller API ****************************/
+void
+su_flow_controller_finalize(su_flow_controller_t *fc)
+{
+  su_stream_finalize(&fc->output);
+  pthread_mutex_destroy(&fc->acquire_lock);
+  pthread_cond_destroy(&fc->acquire_cond);
+}
+
+SUBOOL
+su_flow_controller_init(
+    su_flow_controller_t *fc,
+    enum sigutils_flow_controller_kind kind,
+    SUSCOUNT size)
+{
+  SUBOOL result = SU_FALSE;
+
+  memset(fc, 0, sizeof (su_flow_controller_t));
+
+  if (pthread_mutex_init(&fc->acquire_lock, NULL) == -1)
+    goto done;
+
+  if (pthread_cond_init(&fc->acquire_cond, NULL) == -1)
+    goto done;
+
+  if (!su_stream_init(&fc->output, size))
+    goto done;
+
+  fc->kind = kind;
+  fc->consumers = 0;
+  fc->pending = 0;
+
+  result = SU_TRUE;
+
+done:
+  if (!result)
+    su_flow_controller_finalize(fc);
+
+  return result;
+}
+
+SUPRIVATE void
+su_flow_controller_enter(su_flow_controller_t *fc)
+{
+  if (fc->consumers > 1)
+    pthread_mutex_lock(&fc->acquire_lock);
+}
+
+SUPRIVATE void
+su_flow_controller_leave(su_flow_controller_t *fc)
+{
+  if (fc->consumers > 1)
+    pthread_mutex_unlock(&fc->acquire_lock);
+}
+
+SUPRIVATE void
+su_flow_controller_notify_force(su_flow_controller_t *fc)
+{
+  pthread_cond_broadcast(&fc->acquire_cond);
+}
+
+SUPRIVATE void
+su_flow_controller_notify(su_flow_controller_t *fc)
+{
+  if (fc->consumers > 1)
+    su_flow_controller_notify_force(fc);
+}
+
+SUPRIVATE su_off_t
+su_flow_controller_tell(const su_flow_controller_t *fc)
+{
+  return su_stream_tell(&fc->output);
+}
+
+SUPRIVATE su_stream_t *
+su_flow_controller_get_stream(su_flow_controller_t *fc)
+{
+  return &fc->output;
+}
+
+/* TODO: make these functions thread safe */
+SUPRIVATE void
+su_flow_controller_add_consumer(su_flow_controller_t *fc)
+{
+  ++fc->consumers;
+}
+
+SUPRIVATE void
+su_flow_controller_remove_consumer(su_flow_controller_t *fc, SUBOOL pend)
+{
+  --fc->consumers;
+
+  if (fc->kind == SU_FLOW_CONTROL_KIND_BARRIER) {
+    if (pend)
+      --fc->pending;
+    else if (fc->consumers > 0 && fc->consumers == fc->pending) {
+      /* Wake up all pending threads and try to read again */
+      fc->pending = 0;
+      su_flow_controller_notify_force(fc);
+    }
+  } else if (fc->kind == SU_FLOW_CONTROL_KIND_MASTER_SLAVE) {
+    /* TODO: mark flow control as EOF if master is being unplugged */
+  }
+}
+
+SUPRIVATE SUBOOL
+su_flow_controller_set_kind(
+    su_flow_controller_t *fc,
+    enum sigutils_flow_controller_kind kind)
+{
+  /* Cannot set flow control twice */
+  if (fc->kind != SU_FLOW_CONTROL_KIND_NONE)
+    return SU_FALSE;
+
+  fc->kind = kind;
+
+  return SU_TRUE;
+}
+
+SUPRIVATE enum sigutils_flow_controller_kind
+su_flow_controller_get_kind(const su_flow_controller_t *fc)
+{
+  return fc->kind;
+}
+
+SUPRIVATE SUSDIFF
+su_flow_controller_read_unsafe(
+    su_flow_controller_t *fc,
+    struct sigutils_block_port *reader,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size)
+{
+  SUSDIFF result;
+
+  while ((result = su_stream_read(&fc->output, off, data, size)) == 0
+      && fc->consumers > 1) {
+    /*
+     * We have reached the end of the stream. In the concurrent case,
+     * we may need to wait to repeat the read operation on the stream
+     */
+
+    switch (fc->kind) {
+      case SU_FLOW_CONTROL_KIND_NONE:
+        return SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED;
+
+      case SU_FLOW_CONTROL_KIND_BARRIER:
+        if (++fc->pending < fc->consumers)
+          /* Greedy reader. Wait for the last one */
+          pthread_cond_wait(&fc->acquire_cond, &fc->acquire_lock);
+        else {
+          /* Slow reader. Let caller perform acquire() */
+          fc->pending = 0; /* Reset pending counter */
+          return SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED;
+        }
+
+        break;
+
+      case SU_FLOW_CONTROL_KIND_MASTER_SLAVE:
+        if (fc->master != reader)
+          /* Slave must wait for master to read */
+          pthread_cond_wait(&fc->acquire_cond, &fc->acquire_lock);
+        else
+          return SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED;
+        break;
+
+      default:
+        SU_ERROR("Invalid flow controller kind\n");
+        return -1;
+    }
+  }
+
+  return result;
 }
 
 /*************************** su_block_class API ******************************/
@@ -262,7 +437,7 @@ su_block_destroy(su_block_t *block)
 
   if (block->out != NULL) {
     for (i = 0; i < block->class->out_size; ++i) {
-      su_stream_finalize(block->out + i);
+      su_flow_controller_finalize(block->out + i);
     }
 
     free(block->out);
@@ -346,7 +521,8 @@ su_block_new(const char *class_name, ...)
   }
 
   if (class->out_size > 0) {
-    if ((new->out = calloc(class->out_size, sizeof(su_stream_t))) == NULL) {
+    if ((new->out = calloc(class->out_size, sizeof(su_flow_controller_t)))
+        == NULL) {
       SU_ERROR("Cannot allocate output streams\n");
       goto done;
     }
@@ -368,13 +544,15 @@ su_block_new(const char *class_name, ...)
 
   /* Initialize all outputs */
   for (i = 0; i < class->out_size; ++i)
-    if (!su_stream_init(
+    if (!su_flow_controller_init(
         new->out,
+        SU_FLOW_CONTROL_KIND_NONE,
         SU_BLOCK_STREAM_BUFFER_SIZE / new->decimation)) {
       SU_ERROR("Cannot allocate memory for block output #%d\n", i + 1);
       goto done;
     }
 
+  /* Initialize flow control */
   result = new;
 
 done:
@@ -396,14 +574,28 @@ su_block_get_port(const su_block_t *block, unsigned int id)
   return block->in + id;
 }
 
-su_stream_t *
-su_block_get_stream(const su_block_t *block, unsigned int id)
+su_flow_controller_t *
+su_block_get_flow_controller(const su_block_t *block, unsigned int id)
 {
   if (id >= block->class->out_size) {
     return NULL;
   }
 
   return block->out + id;
+}
+
+SUBOOL
+su_block_set_flow_controller(
+    su_block_t *block,
+    unsigned int port_id,
+    enum sigutils_flow_controller_kind kind)
+{
+  su_flow_controller_t *fc;
+
+  if ((fc = su_block_get_flow_controller(block, port_id)) == NULL)
+    return SU_FALSE;
+
+  return su_flow_controller_set_kind(fc, kind);
 }
 
 SUBOOL
@@ -450,9 +642,12 @@ su_block_port_plug(su_block_port_t *port,
     return SU_FALSE;
   }
 
-  port->stream = block->out + portid;
-  port->block  = block;
-  port->pos    = su_stream_tell(port->stream);
+  port->port_id = portid;
+  port->fc      = block->out + portid;
+  port->block   = block;
+  port->pos     = su_flow_controller_tell(port->fc);
+
+  su_flow_controller_add_consumer(port->fc);
 
   return SU_TRUE;
 }
@@ -469,23 +664,48 @@ su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
   }
 
   do {
-    if ((got = su_stream_read(port->stream, port->pos, obuf, size)) == -1) {
-      SU_ERROR("Port read failed (port desync)\n");
+    su_flow_controller_enter(port->fc);
+
+    /* ------8<----- ENTER CONCURRENT FLOW CONTROLLER ACCESS -----8<------ */
+    port->reading = SU_TRUE;
+    got = su_flow_controller_read_unsafe(port->fc, port, port->pos, obuf, size);
+    port->reading = SU_FALSE;
+
+    if (got == -1) {
+      SU_WARNING("Port read failed (port desync)\n");
+
+      su_flow_controller_leave(port->fc);
       return SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC;
-    } else if (got == 0) {
-      /* Stream exhausted, acquire more data */
+    } else if (got == SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED) {
+      /*
+       * Stream exhausted, and flow controller allowed this thread
+       * to call acquire. Since this call is protected, the block
+       * implementation doesn't have to worry about threads.
+       */
       if ((acquired = port->block->class->acquire(
           port->block->private,
-          port->block->out,
+          su_flow_controller_get_stream(port->block->out),
+          port->port_id,
           port->block->in)) == -1) {
         /* Acquire error */
         SU_ERROR("%s: acquire failed\n", port->block->class->name);
+        /* TODO: set error condition in flow control */
+        su_flow_controller_leave(port->fc);
         return SU_BLOCK_PORT_READ_ERROR_ACQUIRE;
       } else if (acquired == 0) {
         /* Stream closed */
+        /* TODO: set error condition in flow control */
+        su_flow_controller_leave(port->fc);
         return SU_BLOCK_PORT_READ_END_OF_STREAM;
+      } else {
+        /* Acquire succeeded, wake up all threads */
+        su_flow_controller_notify(port->fc);
       }
     }
+    /* ------>8----- LEAVE CONCURRENT FLOW CONTROLLER ACCESS ----->8------ */
+
+    su_flow_controller_leave(port->fc);
+
   } while (got == 0);
 
   port->pos += got;
@@ -501,14 +721,21 @@ su_block_port_resync(su_block_port_t *port)
     return SU_FALSE;
   }
 
-  port->pos = su_stream_tell(port->stream);
+  port->pos = su_flow_controller_tell(port->fc);
+
+  return SU_TRUE;
 }
 
 void
 su_block_port_unplug(su_block_port_t *port)
 {
-  port->block = NULL;
-  port->stream = NULL;
-  port->pos = 0;
+  if (su_block_port_is_plugged(port)) {
+    su_flow_controller_remove_consumer(port->fc, port->reading);
+    port->block = NULL;
+    port->fc = NULL;
+    port->pos = 0;
+    port->port_id = 0;
+    port->reading = SU_FALSE;
+  }
 }
 

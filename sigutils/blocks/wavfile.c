@@ -129,7 +129,11 @@ su_block_wavfile_dtor(void *private)
  * right channel contains Q data.
  */
 SUPRIVATE SUSDIFF
-su_block_wavfile_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
+su_block_wavfile_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   struct su_wavfile *wav = (struct su_wavfile *) priv;
   SUSDIFF size;

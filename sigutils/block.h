@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <util.h>
+#include <pthread.h>
 #include "types.h"
 #include "property.h"
 
@@ -33,6 +34,8 @@
 #define SU_BLOCK_PORT_READ_ERROR_NOT_INITIALIZED -1
 #define SU_BLOCK_PORT_READ_ERROR_ACQUIRE         -2
 #define SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC     -3
+
+#define SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED        0
 
 typedef uint64_t su_off_t;
 
@@ -58,15 +61,67 @@ typedef struct sigutils_stream su_stream_t;
 
 struct sigutils_block;
 
+enum sigutils_flow_controller_kind {
+  /*
+   * Default flow control: this is like having no flow control whatsoever.
+   * If a port reader is faster than some other, the slower one may lose
+   * samples as the fastest will call acquire() earlier.
+   */
+  SU_FLOW_CONTROL_KIND_NONE = 0,
+
+  /*
+   * Barrier flow control: all port users must consume their stream buffers
+   * before calling acquire()
+   */
+  SU_FLOW_CONTROL_KIND_BARRIER,
+
+  /*
+   * Master-slave flow control: only one port (the master) can trigger a call
+   * to acquire(). This is useful if the master is the slowest port, or if
+   * it's not critical that the slaves lose samples.
+   */
+  SU_FLOW_CONTROL_KIND_MASTER_SLAVE,
+};
+
+struct sigutils_block_port;
+
+/*
+ * Flow controllers ensure safe concurrent access to block output streams.
+ * However, this model imposes a restriction: if non-null flow controller is
+ * being used, read operation on the flow controller must be performed from
+ * one and one thread, otherwise deadlocks will occur. This happens because
+ * after the end of the output stream is reached, the read operation from
+ * the first port will sleep until the next port completes. However, since
+ * the next port is in the same thread, the next read operation will never
+ * take place.
+ */
+struct sigutils_flow_controller {
+  enum sigutils_flow_controller_kind kind;
+  pthread_mutex_t acquire_lock;
+  pthread_cond_t  acquire_cond;
+  su_stream_t output; /* Output stream */
+  unsigned int consumers; /* Number of ports plugged to this flow controller */
+  unsigned int pending;   /* Number of ports waiting for new data */
+  struct sigutils_block_port *master; /* Master port */
+};
+
+typedef struct sigutils_flow_controller su_flow_controller_t;
+
+/*
+ * Even though flow controllers are thread-safe by definition, block ports
+ * are not. Don't attempt to use the same block port in different threads.
+ */
 struct sigutils_block_port {
   su_off_t pos; /* Current reading position in this port */
-  su_stream_t *stream; /* Stream position */
+  su_flow_controller_t *fc; /* Flow controller */
   struct sigutils_block *block; /* Input block */
+  unsigned int port_id;
+  SUBOOL reading;
 };
 
 typedef struct sigutils_block_port su_block_port_t;
 
-#define su_block_port_INITIALIZER {0, NULL, NULL}
+#define su_block_port_INITIALIZER {0, NULL, NULL, SU_FALSE}
 
 struct sigutils_block_class {
   const char *name;
@@ -78,19 +133,21 @@ struct sigutils_block_class {
   void (*dtor) (void *private);
 
   /* This function gets called when more data is required */
-  SUSDIFF (*acquire) (void *, su_stream_t *, su_block_port_t *);
+  SUSDIFF (*acquire) (void *, su_stream_t *, unsigned int, su_block_port_t *);
 };
 
 typedef struct sigutils_block_class su_block_class_t;
 
 struct sigutils_block {
+  /* Block overall configuration */
   su_block_class_t *class;
-  void *private;
+  su_property_set_t properties;
+  void             *private;
 
-  su_block_port_t *in; /* Input ports */
-  su_stream_t *out; /* Output streams */
-  unsigned int decimation; /* Block decimation */
-  su_property_set_t properties; /* Property list */
+  /* Architectural properties */
+  su_block_port_t      *in; /* Input ports */
+  su_flow_controller_t *out; /* Output streams */
+  SUSCOUNT              decimation; /* Block decimation */
 };
 
 typedef struct sigutils_block su_block_t;
@@ -112,7 +169,7 @@ SUSCOUNT su_stream_advance_contiguous(su_stream_t *stream, SUSCOUNT size);
 su_off_t su_stream_tell(const su_stream_t *);
 
 SUSDIFF su_stream_read(
-    su_stream_t *stream,
+    const su_stream_t *stream,
     su_off_t off,
     SUCOMPLEX *data,
     SUSCOUNT size);

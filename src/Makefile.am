@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = sutest radio
-sutest_CFLAGS = -I. -I.. -I../util -I../testutil -I tests \
+sutest_CFLAGS = -I. -I.. -I../util -I../testutil -I tests -static \
 	@GLOBAL_CFLAGS@ @SNDFILE_CFLAGS@ @fftw3_CFLAGS@ 
 sutest_LDFLAGS = @GLOBAL_LDFLAGS@
 

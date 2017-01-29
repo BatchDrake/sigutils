@@ -82,7 +82,11 @@ su_block_agc_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_agc_acquire(void *priv, su_stream_t *out, su_block_port_t *in)
+su_block_agc_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_agc_t *agc;
   SUSDIFF size;
