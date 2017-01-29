@@ -21,7 +21,6 @@
 #include <sndfile.h>
 
 #include "block.h"
-#include "agc.h"
 
 struct su_wavfile {
   SF_INFO info;
