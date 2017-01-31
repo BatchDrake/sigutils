@@ -31,6 +31,7 @@
 #include <sigutils/sigutils.h>
 
 #include "test_list.h"
+#include "test_param.h"
 
 SUBOOL
 su_test_block(su_test_context_t *ctx)
@@ -150,6 +151,172 @@ done:
 
   return ok;
 }
+
+struct su_test_block_flow_control_params {
+  su_block_port_t *port;
+  su_test_context_t *ctx;
+  SUCOMPLEX *readbuf;
+  SUSCOUNT buffer_size;
+  SUBOOL oddity;
+  SUBOOL ok;
+};
+
+SUPRIVATE void *
+su_test_block_flow_control_reader_thread(void *private)
+{
+  struct timespec wait_period;
+  struct su_test_block_flow_control_params *params =
+      (struct su_test_block_flow_control_params *) private;
+  SUSCOUNT p;
+  SUSCOUNT rem;
+  SUSDIFF got;
+  su_test_context_t *ctx = params->ctx;
+  SUBOOL ok = SU_FALSE;
+
+  /* Read sleep period */
+  wait_period.tv_sec = SU_TEST_BLOCK_READ_WAIT_MS / 1000;
+  wait_period.tv_nsec = (SU_TEST_BLOCK_READ_WAIT_MS * 1000000) % 1000000000;
+
+  /* Populate buffer */
+  p = 0;
+  while (p < params->buffer_size) {
+    rem = params->buffer_size - p;
+
+    got = su_block_port_read(params->port, params->readbuf + p, rem);
+    SU_TEST_ASSERT(got >= 0);
+    p += got;
+
+    if (params->oddity)
+      nanosleep(&wait_period, NULL);
+
+    params->oddity = !params->oddity;
+  }
+
+  ok = SU_TRUE;
+
+done:
+  params->ok = ok;
+
+  return NULL;
+}
+
+SUBOOL
+su_test_block_flow_control(su_test_context_t *ctx)
+{
+  SUBOOL ok = SU_FALSE;
+  su_block_t *siggen_block = NULL;
+  su_block_port_t port_1 = su_block_port_INITIALIZER;
+  su_block_port_t port_2 = su_block_port_INITIALIZER;
+  SUCOMPLEX *readbuf_1 = NULL;
+  SUCOMPLEX *readbuf_2 = NULL;
+  pthread_t thread_1;
+  pthread_t thread_2;
+  SUBOOL thread_1_running = SU_FALSE;
+  SUBOOL thread_2_running = SU_FALSE;
+  struct su_test_block_flow_control_params thread_1_params;
+  struct su_test_block_flow_control_params thread_2_params;
+  SUSCOUNT i;
+
+  SU_TEST_START(ctx);
+
+  /* Create reading buffers */
+  SU_TEST_ASSERT(readbuf_1  = su_test_ctx_getc(ctx, "thread1_buf"));
+  SU_TEST_ASSERT(readbuf_2  = su_test_ctx_getc(ctx, "thread2_buf"));
+
+  /* Casts are mandatory here */
+  siggen_block = su_block_new(
+      "siggen",
+      "sawtooth",
+      (SUFLOAT)  SU_TEST_BLOCK_SAWTOOTH_WIDTH,
+      (SUSCOUNT) SU_TEST_BLOCK_SAWTOOTH_WIDTH,
+      (SUSCOUNT) 0,
+      "null",
+      (SUFLOAT)  0,
+      (SUSCOUNT) 0,
+      (SUSCOUNT) 0);
+
+  SU_TEST_ASSERT(siggen_block != NULL);
+
+  /* Set barrier flow controller in its only port */
+  SU_TEST_ASSERT(
+      su_block_set_flow_controller(
+          siggen_block,
+          0,
+          SU_FLOW_CONTROL_KIND_BARRIER));
+
+  /* Plug ports to siggen */
+  SU_TEST_ASSERT(su_block_port_plug(&port_1, siggen_block, 0));
+  SU_TEST_ASSERT(su_block_port_plug(&port_2, siggen_block, 0));
+
+  /* Create thread params */
+  thread_1_params.ctx = ctx;
+  thread_1_params.port = &port_1;
+  thread_1_params.readbuf = readbuf_1;
+  thread_1_params.buffer_size = ctx->params->buffer_size;
+  thread_1_params.oddity = SU_FALSE;
+
+  thread_2_params.ctx = ctx;
+  thread_2_params.port = &port_2;
+  thread_2_params.readbuf = readbuf_2;
+  thread_2_params.buffer_size = ctx->params->buffer_size;
+  thread_2_params.oddity = SU_TRUE;
+
+
+  /* Spawn both threads */
+  SU_TEST_ASSERT(
+      pthread_create(
+          &thread_1,
+          NULL,
+          su_test_block_flow_control_reader_thread,
+          &thread_1_params) != -1);
+  thread_1_running = SU_TRUE;
+
+  SU_TEST_ASSERT(
+      pthread_create(
+          &thread_2,
+          NULL,
+          su_test_block_flow_control_reader_thread,
+          &thread_2_params) != -1);
+  thread_2_running = SU_TRUE;
+
+  pthread_join(thread_1, NULL);
+  thread_1_running = SU_FALSE;
+
+  pthread_join(thread_2, NULL);
+  thread_2_running = SU_FALSE;
+
+  /* Check that everything went fine */
+  SU_TEST_ASSERT(thread_1_params.ok);
+  SU_TEST_ASSERT(thread_2_params.ok);
+
+  /* Both buffers must hold exactly the same contents */
+  for (i = 0; i < ctx->params->buffer_size; ++i)
+    SU_TEST_ASSERT(thread_1_params.readbuf[i] == thread_2_params.readbuf[i]);
+
+  ok = SU_TRUE;
+
+done:
+  SU_TEST_END(ctx);
+
+  /*
+   * To prevent segmentation faults, we free memory if both threads
+   * are halted.
+   */
+  if (!thread_1_running && !thread_2_running) {
+
+    if (su_block_port_is_plugged(&port_1))
+      su_block_port_unplug(&port_1);
+
+    if (su_block_port_is_plugged(&port_2))
+      su_block_port_unplug(&port_2);
+
+    if (siggen_block != NULL)
+      su_block_destroy(siggen_block);
+  }
+
+  return ok;
+}
+
 
 SUBOOL
 su_test_tuner(su_test_context_t *ctx)

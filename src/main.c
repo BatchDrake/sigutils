@@ -29,6 +29,7 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_pll),
     SU_TEST_ENTRY(su_test_block),
     SU_TEST_ENTRY(su_test_block_plugging),
+    SU_TEST_ENTRY(su_test_block_flow_control),
     SU_TEST_ENTRY(su_test_tuner),
     SU_TEST_ENTRY(su_test_costas_lock),
     SU_TEST_ENTRY(su_test_costas_bpsk),

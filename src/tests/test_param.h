@@ -21,6 +21,10 @@
 #ifndef _SRC_TEST_PARAM_H
 #define _SRC_TEST_PARAM_H
 
+/* Block-related params */
+#define SU_TEST_BLOCK_SAWTOOTH_WIDTH 119
+#define SU_TEST_BLOCK_READ_WAIT_MS   25
+
 /* Preferred matched filter span (in symbol periods) */
 #define SU_TEST_MF_SYMBOL_SPAN 6
 

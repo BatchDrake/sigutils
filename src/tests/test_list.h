@@ -40,6 +40,7 @@ SUBOOL su_test_pll(su_test_context_t *ctx);
 /* Block tests */
 SUBOOL su_test_block(su_test_context_t *ctx);
 SUBOOL su_test_block_plugging(su_test_context_t *ctx);
+SUBOOL su_test_block_flow_control(su_test_context_t *ctx);
 SUBOOL su_test_tuner(su_test_context_t *ctx);
 SUBOOL su_test_costas_block(su_test_context_t *ctx);
 SUBOOL su_test_rrc_block(su_test_context_t *ctx);
