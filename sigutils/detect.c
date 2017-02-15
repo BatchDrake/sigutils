@@ -354,14 +354,14 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
    * this way we avoid hitting the DC component (if any)
    */
   for (
-      i = detector->params.window_size / 2;
+      i = detector->params.window_size / 4;
       i < 3 * detector->params.window_size / 4;
       ++i)
     if (SU_ABS(detector->averaged_fft[i]) < N0)
       N0 = SU_ABS(detector->averaged_fft[i]);
 
   for (
-        i = detector->params.window_size / 2;
+        i = detector->params.window_size / 4;
         i < 3 * detector->params.window_size / 4;
         ++i)
     if (SU_ABS(detector->averaged_fft[i]) > S0)
