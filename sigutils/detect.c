@@ -192,7 +192,8 @@ su_channel_detector_assert_channel(
     su_channel_detector_t *detector,
     SUFLOAT fc,
     SUFLOAT bw,
-    SUFLOAT snr)
+    SUFLOAT S0,
+    SUFLOAT N0)
 {
   struct sigutils_channel *chan = NULL;
   SUFLOAT k = .5;
@@ -203,7 +204,9 @@ su_channel_detector_assert_channel(
 
     chan->bw      = bw;
     chan->fc      = fc;
-    chan->snr     = snr;
+    chan->S0      = S0;
+    chan->N0      = N0;
+    chan->snr     = S0 - N0;
     chan->age     = 0;
     chan->present = 0;
 
@@ -332,10 +335,9 @@ fail:
 }
 
 SUPRIVATE SUBOOL
-su_channel_perform_discovery(su_channel_detector_t *detector)
+su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
 {
-  unsigned int i;
-  unsigned int f0;
+  int i, j;
 
   SUFLOAT N0 = INFINITY; /* Noise level */
   SUFLOAT S0 = 0; /* Signal level */
@@ -344,60 +346,77 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
   SUFLOAT chan_start;
   SUFLOAT chan_end;
 
-  for (i = 0; i < detector->params.window_size / 4; ++i)
+  SUFLOAT psd; /* Power spectral density in this FFT bin */
+  SUFLOAT bin_freq;   /* Frequency of this FFT bin */
+
+  /*
+   * Search start from highest frequencies to lowest frequencies,
+   * this way we avoid hitting the DC component (if any)
+   */
+  for (
+      i = detector->params.window_size / 2;
+      i < 3 * detector->params.window_size / 4;
+      ++i)
     if (SU_ABS(detector->averaged_fft[i]) < N0)
       N0 = SU_ABS(detector->averaged_fft[i]);
 
-
-  for (i = 0; i < detector->params.window_size / 4; ++i)
+  for (
+        i = detector->params.window_size / 2;
+        i < 3 * detector->params.window_size / 4;
+        ++i)
     if (SU_ABS(detector->averaged_fft[i]) > S0)
       S0 = SU_ABS(detector->averaged_fft[i]);
 
   if (++detector->iters > .1 / detector->params.alpha) {
-    /* Skip negative frequencies */
     for (i = 0; i < detector->params.window_size; ++i) {
-      detector->threshold[i] +=
-          detector->params.th_alpha *
-          (detector->params.rel_squelch * S0
-              + (1 - detector->params.rel_squelch) * N0
-                - detector->threshold[i]);
+      j = ((i -  detector->params.window_size / 2)
+          + detector->params.window_size) % detector->params.window_size;
+      bin_freq = SU_CHANNEL_DETECTOR_IDX2ABS_FREQ(
+          detector,
+          (i - .5 - (int) detector->params.window_size / 2));
+      psd = SU_ABS(detector->averaged_fft[j]);
 
-      if (!c) {
-        /* Not in channel, update noise level */
-        N0 +=
-            detector->params.alpha * (SU_ABS(detector->averaged_fft[i]) - N0);
+      /* Skip DC component, if any */
+      if (!skipdc || SU_ABS(bin_freq) > detector->dc->bw) {
+        detector->threshold[j] +=
+            detector->params.th_alpha *
+            (detector->params.rel_squelch * S0
+                + (1 - detector->params.rel_squelch) * N0
+                  - detector->threshold[j]);
 
-        if (SU_ABS(detector->averaged_fft[i]) > detector->threshold[i]) {
-          c = SU_TRUE;
-          chan_start = SU_NORM2ABS_FREQ(
-              detector->params.samp_rate * detector->params.decimation,
-              2 * (SUFLOAT) i / (SUFLOAT) detector->params.window_size);
-        }
-      } else {
-        /* In channel, update signal level */
-        S0 +=
-            detector->params.alpha * (SU_ABS(detector->averaged_fft[i]) - S0);
-        /*
-         * Tip: Don't leave the channel immediately. Assume guard bands,
-         * require xxx Hz of continuous low SNR to assume that the channel
-         * is over. Add these xxx Hz to the beginning of the channel.
-         */
-        if (SU_ABS(detector->averaged_fft[i]) <= detector->threshold[i]) {
-          c = SU_FALSE;
-          chan_end = SU_NORM2ABS_FREQ(
-              detector->params.samp_rate * detector->params.decimation,
-              2 * (SUFLOAT) i / (SUFLOAT) detector->params.window_size);
-          if (!su_channel_detector_assert_channel(
-              detector,
-              .5 * (chan_end + chan_start),
-              chan_end - chan_start,
-              SU_DB(S0) - SU_DB(N0))) {
-            SU_ERROR("Failed to register a channel\n");
-            return SU_FALSE;
+        if (!c) {
+          /* Not in channel, update noise level */
+          N0 += detector->params.alpha * (psd - N0);
+
+          if (psd > detector->threshold[j]) {
+            c = SU_TRUE;
+            chan_start = bin_freq;
+          }
+        } else {
+          /* In channel, update signal level */
+          S0 += detector->params.alpha * (psd - S0);
+          /*
+           * Tip: Don't leave the channel immediately. Assume guard bands,
+           * require xxx Hz of continuous low SNR to assume that the channel
+           * is over. Add these xxx Hz to the beginning of the channel.
+           */
+          if (psd <= detector->threshold[j]) {
+            c = SU_FALSE;
+            chan_end = bin_freq;
+            if (!su_channel_detector_assert_channel(
+                detector,
+                .5 * (chan_end + chan_start),
+                chan_end - chan_start,
+                SU_DB(S0),
+                SU_DB(N0))) {
+              SU_ERROR("Failed to register a channel\n");
+              return SU_FALSE;
+            }
           }
         }
       }
     }
+
     su_channel_detector_channel_collect(detector);
   }
 
@@ -454,7 +473,25 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX samp)
 
     switch (detector->params.mode) {
       case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
-        return su_channel_perform_discovery(detector);
+        if (detector->params.dc_remove) {
+          /*
+           * Perform a preliminary spectrum analysis to look for a spurious
+           * channel at 0 Hz. This is usually caused by the DC offset, and its
+           * (usually) big amplitude can mask real channels. If no DC
+           * components are found, we just return true: all non-DC channels
+           * (if any) would have been found.
+           */
+          if (!su_channel_perform_discovery(detector, SU_FALSE))
+            return SU_FALSE;
+
+          if ((detector->dc = su_channel_detector_lookup_channel(detector, 0))
+              == NULL)
+            return SU_TRUE;
+        }
+
+        return su_channel_perform_discovery(
+            detector,
+            detector->params.dc_remove);
 
       default:
         SU_WARNING("Mode not implemented\n");

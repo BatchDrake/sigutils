@@ -34,6 +34,12 @@
       && (cp)->snr > SU_CHANNEL_DETECTOR_MIN_SNR              \
       && (cp)->bw  > SU_CHANNEL_DETECTOR_MIN_BW)
 
+#define SU_CHANNEL_DETECTOR_IDX2ABS_FREQ(detector, i)                       \
+    SU_NORM2ABS_FREQ(                                                       \
+              (detector)->params.samp_rate * (detector)->params.decimation, \
+              2 * (SUFLOAT) (i) / (SUFLOAT) (detector)->params.window_size)
+
+
 struct sigutils_peak_detector {
   unsigned int size;
   SUFLOAT thr2; /* In sigmas */
@@ -72,6 +78,7 @@ struct sigutils_channel_detector_params {
   SUFLOAT fc;               /* Center frequency */
   unsigned int decimation;
   unsigned int max_order;   /* Max constellation order */
+  SUBOOL  dc_remove;        /* Remove spurious channel from DC components */
 
   /* Detector parameters */
   SUFLOAT alpha;            /* FFT averaging ratio */
@@ -83,15 +90,16 @@ struct sigutils_channel_detector_params {
 #define sigutils_channel_detector_params_INITIALIZER \
 {                         \
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */ \
-  8000, /* samp_rate */   \
-  512,  /* window_size */ \
-  0.0,  /* fc */          \
-  1,    /* decimation */  \
-  8,    /* max_order */   \
-  0.25, /* alpha */       \
-  0.25, /* beta */        \
-  0.3,  /* rel_squelch */ \
-  .5,   /* th_alpha */    \
+  8000,     /* samp_rate */   \
+  512,      /* window_size */ \
+  0.0,      /* fc */          \
+  1,        /* decimation */  \
+  8,        /* max_order */   \
+  SU_TRUE,   /* DC remove */   \
+  0.25,     /* alpha */       \
+  0.25,     /* beta */        \
+  0.3,      /* rel_squelch */ \
+  .5,       /* th_alpha */    \
 }
 
 
@@ -99,6 +107,8 @@ struct sigutils_channel {
   SUFLOAT fc;
   SUFLOAT bw;
   SUFLOAT snr;
+  SUFLOAT S0;
+  SUFLOAT N0;
   unsigned int age;
   unsigned int present;
 };
@@ -116,6 +126,7 @@ struct sigutils_channel_detector {
   unsigned int ptr; /* Sample in window */
   unsigned int iters;
   PTR_LIST(struct sigutils_channel, channel);
+  const struct sigutils_channel *dc; /* Spurious DC channel */
 };
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
