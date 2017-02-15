@@ -431,7 +431,7 @@ su_block_destroy(su_block_t *block)
 
   if (block->out != NULL) {
     for (i = 0; i < block->class->out_size; ++i) {
-      su_flow_controller_finalize(block->out + i);
+      su_flow_controller_finalize(&block->out[i]);
     }
 
     free(block->out);
@@ -539,7 +539,7 @@ su_block_new(const char *class_name, ...)
   /* Initialize all outputs */
   for (i = 0; i < class->out_size; ++i)
     if (!su_flow_controller_init(
-        new->out,
+        &new->out[i],
         SU_FLOW_CONTROL_KIND_NONE,
         SU_BLOCK_STREAM_BUFFER_SIZE / new->decimation)) {
       SU_ERROR("Cannot allocate memory for block output #%d\n", i + 1);
