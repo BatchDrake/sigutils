@@ -156,6 +156,9 @@ void su_channel_detector_get_channel_list(
     struct sigutils_channel ***channel_list,
     unsigned int *channel_count);
 
+struct sigutils_channel *su_channel_dup(const struct sigutils_channel *channel);
+void su_channel_destroy(struct sigutils_channel *channel);
+
 struct sigutils_channel *su_channel_detector_lookup_channel(
     const su_channel_detector_t *detector,
     SUFLOAT fc);

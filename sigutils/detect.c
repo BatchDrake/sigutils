@@ -18,6 +18,8 @@
 
 */
 
+#include <string.h>
+
 #include "detect.h"
 
 #include "sampling.h"
@@ -141,6 +143,25 @@ su_peak_detector_finalize(su_peak_detector_t *pd)
  *    be reset and start again.
  */
 
+struct sigutils_channel *
+su_channel_dup(const struct sigutils_channel *channel)
+{
+  struct sigutils_channel *new = NULL;
+
+  if ((new = malloc(sizeof(struct sigutils_channel))) == NULL)
+    return NULL;
+
+  memcpy(new, channel, sizeof(struct sigutils_channel));
+
+  return new;
+}
+
+void
+su_channel_destroy(struct sigutils_channel *channel)
+{
+  free(channel);
+}
+
 SUPRIVATE void
 su_channel_detector_channel_list_clear(su_channel_detector_t *detector)
 {
@@ -148,7 +169,7 @@ su_channel_detector_channel_list_clear(su_channel_detector_t *detector)
   unsigned int i;
 
   FOR_EACH_PTR(chan, i, detector->channel)
-    free(chan);
+    su_channel_destroy(chan);
 
   if (detector->channel_list != NULL)
     free(detector->channel_list);
@@ -166,7 +187,7 @@ su_channel_detector_channel_collect(su_channel_detector_t *detector)
     if (detector->channel_list[i] != NULL)
       if (detector->channel_list[i]->age++
           > 2 * detector->channel_list[i]->present) {
-        free(detector->channel_list[i]);
+        su_channel_destroy(detector->channel_list[i]);
         detector->channel_list[i] = NULL;
       }
 }
@@ -211,7 +232,7 @@ su_channel_detector_assert_channel(
     chan->present = 0;
 
     if (PTR_LIST_APPEND_CHECK(detector->channel, chan) == -1) {
-      free(chan);
+      su_channel_destroy(chan);
       return SU_FALSE;
     }
 
