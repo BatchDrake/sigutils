@@ -535,12 +535,12 @@ done:
 SUBOOL
 su_test_costas_qpsk(su_test_context_t *ctx)
 {
-  __su_test_costas_qpsk(ctx, SU_FALSE);
+  return __su_test_costas_qpsk(ctx, SU_FALSE);
 }
 
 SUBOOL
 su_test_costas_qpsk_noisy(su_test_context_t *ctx)
 {
-  __su_test_costas_qpsk(ctx, SU_TRUE);
+  return __su_test_costas_qpsk(ctx, SU_TRUE);
 }
 

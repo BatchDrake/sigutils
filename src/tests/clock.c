@@ -231,11 +231,11 @@ done:
 SUBOOL
 su_test_clock_recovery(su_test_context_t *ctx)
 {
-  __su_test_clock_recovery(ctx, SU_FALSE);
+  return __su_test_clock_recovery(ctx, SU_FALSE);
 }
 
 SUBOOL
 su_test_clock_recovery_noisy(su_test_context_t *ctx)
 {
-  __su_test_clock_recovery(ctx, SU_TRUE);
+  return __su_test_clock_recovery(ctx, SU_TRUE);
 }
