@@ -22,6 +22,7 @@
 #include "taps.h"
 #include "sampling.h"
 
+/************************* Real window functions *****************************/
 SUPRIVATE void
 su_taps_scale(SUFLOAT *h, SUFLOAT k, SUSCOUNT size)
 {
@@ -52,6 +53,35 @@ su_taps_apply_hann(SUFLOAT *h, SUSCOUNT size)
 }
 
 void
+su_taps_apply_flat_top(SUFLOAT *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    h[i] *=
+          SU_FLAT_TOP_A0
+        - SU_FLAT_TOP_A1 * SU_COS(2 * M_PI * i / (size - 1))
+        + SU_FLAT_TOP_A2 * SU_COS(4 * M_PI * i / (size - 1))
+        - SU_FLAT_TOP_A3 * SU_COS(6 * M_PI * i / (size - 1))
+        + SU_FLAT_TOP_A1 * SU_COS(8 * M_PI * i / (size - 1));
+}
+
+void
+su_taps_apply_blackmann_harris(SUFLOAT *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    h[i] *=
+          SU_BLACKMANN_HARRIS_A0
+        - SU_BLACKMANN_HARRIS_A1 * SU_COS(2 * M_PI * i / (size - 1))
+        + SU_BLACKMANN_HARRIS_A2 * SU_COS(4 * M_PI * i / (size - 1))
+        - SU_BLACKMANN_HARRIS_A3 * SU_COS(6 * M_PI * i / (size - 1));
+}
+
+
+/********************** Complex window functions ****************************/
+void
 su_taps_apply_hamming_complex(SUCOMPLEX *h, SUSCOUNT size)
 {
   unsigned int i;
@@ -67,8 +97,34 @@ su_taps_apply_hann_complex(SUCOMPLEX *h, SUSCOUNT size)
   unsigned int i;
 
   for (i = 0; i < size; ++i)
+    h[i] *= SU_HANN_ALPHA - SU_HANN_BETA * SU_COS(2 * M_PI * i / (size - 1));
+}
+
+void
+su_taps_apply_flat_top_complex(SUCOMPLEX *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
     h[i] *=
-        SU_HANN_ALPHA - SU_HANN_BETA * SU_COS(2 * M_PI * i / (size - 1));
+          SU_FLAT_TOP_A0
+        - SU_FLAT_TOP_A1 * SU_COS(2 * M_PI * i / (size - 1))
+        + SU_FLAT_TOP_A2 * SU_COS(4 * M_PI * i / (size - 1))
+        - SU_FLAT_TOP_A3 * SU_COS(6 * M_PI * i / (size - 1))
+        + SU_FLAT_TOP_A1 * SU_COS(8 * M_PI * i / (size - 1));
+}
+
+void
+su_taps_apply_blackmann_harris_complex(SUCOMPLEX *h, SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    h[i] *=
+          SU_BLACKMANN_HARRIS_A0
+        - SU_BLACKMANN_HARRIS_A1 * SU_COS(2 * M_PI * i / (size - 1))
+        + SU_BLACKMANN_HARRIS_A2 * SU_COS(4 * M_PI * i / (size - 1))
+        - SU_BLACKMANN_HARRIS_A3 * SU_COS(6 * M_PI * i / (size - 1));
 }
 
 void

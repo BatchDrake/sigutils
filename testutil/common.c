@@ -145,6 +145,69 @@ su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
 }
 
 SUBOOL
+su_test_complex_buffer_dump_raw(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file)
+{
+  FILE *fp = NULL;
+  float val;
+  unsigned int i;
+
+  if ((fp = fopen(file, "wb")) == NULL)
+    goto fail;
+
+  for (i = 0; i < size; ++i) {
+    val = SU_C_REAL(buffer[i]);
+    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+      goto fail;
+    val = SU_C_IMAG(buffer[i]);
+    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+      goto fail;
+  }
+
+  fclose(fp);
+
+  return SU_TRUE;
+
+fail:
+  if (fp != NULL)
+    fclose(fp);
+
+  return SU_FALSE;
+}
+
+SUBOOL
+su_test_buffer_dump_raw(
+    const SUFLOAT *buffer,
+    unsigned int size,
+    const char *file)
+{
+  FILE *fp = NULL;
+  float val;
+  unsigned int i;
+
+  if ((fp = fopen(file, "wb")) == NULL)
+    goto fail;
+
+  for (i = 0; i < size; ++i) {
+    val = buffer[i];
+    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+      goto fail;
+  }
+
+  fclose(fp);
+
+  return SU_TRUE;
+
+fail:
+  if (fp != NULL)
+    fclose(fp);
+
+  return SU_FALSE;
+}
+
+SUBOOL
 su_test_complex_buffer_dump_matlab(
     const SUCOMPLEX *buffer,
     unsigned int size,
@@ -314,6 +377,9 @@ su_test_dump_format_to_string(enum sigutils_dump_format fmt)
 
     case SU_DUMP_FORMAT_WAV:
       return "wav";
+
+    case SU_DUMP_FORMAT_RAW:
+      return "raw";
 
     default:
       return "unknown";

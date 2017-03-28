@@ -40,7 +40,9 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_rrc_block_with_if),
     SU_TEST_ENTRY(su_test_clock_recovery),
     SU_TEST_ENTRY(su_test_clock_recovery_noisy),
-    SU_TEST_ENTRY(su_test_cdr_block)
+    SU_TEST_ENTRY(su_test_cdr_block),
+    SU_TEST_ENTRY(su_test_channel_detector_qpsk),
+    SU_TEST_ENTRY(su_test_channel_detector_qpsk_noisy),
 };
 
 SUPRIVATE void
@@ -57,6 +59,7 @@ help(const char *argv0)
   fprintf(stderr, "Options:\n\n");
   fprintf(stderr, "     -d, --dump            Dump tests results as MATLAB files\n");
   fprintf(stderr, "     -w, --wav             Dump tests results as WAV files\n");
+  fprintf(stderr, "     -R, --raw             Dump tests results as raw (I/Q) files\n");
   fprintf(stderr, "     -c, --count           Print number of tests and exit\n");
   fprintf(stderr, "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
   fprintf(stderr, "                           tests. Default is %d samples\n", SU_TEST_SIGNAL_BUFFER_SIZE);
@@ -84,6 +87,7 @@ list(const char *argv0)
 SUPRIVATE struct option long_options[] = {
     {"dump", no_argument, NULL, 'd'},
     {"wav", no_argument, NULL, 'w'},
+    {"raw", no_argument, NULL, 'R'},
     {"buffer-size", required_argument, NULL, 's'},
     {"sample-rate", required_argument, NULL, 'r'},
     {"help", no_argument, NULL, 'h'},
@@ -105,7 +109,7 @@ main (int argc, char *argv[], char *envp[])
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "dhclws:r:", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "Rdhclws:r:", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -113,6 +117,10 @@ main (int argc, char *argv[], char *envp[])
 
       case 'd':
         params.dump_fmt = SU_DUMP_FORMAT_MATLAB;
+        break;
+
+      case 'R':
+        params.dump_fmt = SU_DUMP_FORMAT_RAW;
         break;
 
       case 'w':

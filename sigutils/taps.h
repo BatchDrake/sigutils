@@ -27,12 +27,30 @@
 #define SU_HANN_ALPHA 0.5
 #define SU_HANN_BETA (1 - SU_HANN_ALPHA)
 
+#define SU_FLAT_TOP_A0 1
+#define SU_FLAT_TOP_A1 1.93
+#define SU_FLAT_TOP_A2 1.29
+#define SU_FLAT_TOP_A3 0.388
+#define SU_FLAT_TOP_A4 0.028
+
+#define SU_BLACKMANN_HARRIS_A0 0.35875
+#define SU_BLACKMANN_HARRIS_A1 0.48829
+#define SU_BLACKMANN_HARRIS_A2 0.14128
+#define SU_BLACKMANN_HARRIS_A3 0.01168
+
+
 /* Window functions */
 void su_taps_apply_hamming(SUFLOAT *h, SUSCOUNT size);
 void su_taps_apply_hann(SUFLOAT *h, SUSCOUNT size);
 
 void su_taps_apply_hamming_complex(SUCOMPLEX *h, SUSCOUNT size);
 void su_taps_apply_hann_complex(SUCOMPLEX *h, SUSCOUNT size);
+
+void su_taps_apply_flat_top(SUFLOAT *h, SUSCOUNT size);
+void su_taps_apply_flat_top_complex(SUCOMPLEX *h, SUSCOUNT size);
+
+void su_taps_apply_blackmann_harris(SUFLOAT *h, SUSCOUNT size);
+void su_taps_apply_blackmann_harris_complex(SUCOMPLEX *h, SUSCOUNT size);
 
 /* Get coefficients of a RRC filter */
 void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);

@@ -16,6 +16,7 @@ sutest_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
 	tests/block.c \
 	tests/clock.c \
 	tests/costas.c \
+	tests/detect.c \
 	tests/filt.c \
 	tests/ncqo.c \
 	tests/pll.c

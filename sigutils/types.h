@@ -91,8 +91,14 @@
 #define SU_DB_RAW(p) (20 * SU_LOG(p))
 #define SU_DB(p) SU_DB_RAW((p) + SUFLOAT_MIN_REF_MAG)
 
+#define SU_POWER_DB_RAW(p) (10 * SU_LOG(p))
+#define SU_POWER_DB(p) SU_POWER_DB_RAW((p) + SUFLOAT_MIN_REF_MAG)
+
 #define SU_MAG_RAW(d) SU_POW(10.0, (d) / 20.)
 #define SU_MAG(d) (SU_MAG_RAW(d) - SUFLOAT_MIN_REF_MAG)
+
+#define SU_POWER_MAG_RAW(d) SU_POW(10.0, (d) / 10.)
+#define SU_POWER_MAG(d) (SU_POWER_MAG_RAW(d) - SUFLOAT_MIN_REF_MAG)
 
 /* Required for the map from sigutils types to FFTW3 types */
 #define SU_FFTW(method) JOIN(SU_SOURCE_FFTW_PREFIX, method)
@@ -123,7 +129,7 @@ su_c_awgn(void)
 {
   SUFLOAT U1 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
   SUFLOAT U2 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
-  SUFLOAT SQ = SU_SQRT(-2 * SU_LN(U1));
+  SUFLOAT SQ = SU_SQRT(-SU_LN(U1));
   SUFLOAT PH = 2 * M_PI * U2;
 
   return  SQ * (SU_COS(PH) + I * SU_SIN(PH));

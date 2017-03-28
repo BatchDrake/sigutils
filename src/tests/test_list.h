@@ -57,4 +57,8 @@ SUBOOL su_test_costas_qpsk_noisy(su_test_context_t *ctx);
 SUBOOL su_test_clock_recovery(su_test_context_t *ctx);
 SUBOOL su_test_clock_recovery_noisy(su_test_context_t *ctx);
 
+/* Channel detection tests */
+SUBOOL su_test_channel_detector_qpsk(su_test_context_t *ctx);
+SUBOOL su_test_channel_detector_qpsk_noisy(su_test_context_t *ctx);
+
 #endif /* _SRC_TESTS_TEST_LIST_H */

@@ -279,7 +279,11 @@ su_sigbuf_pool_dump(const su_sigbuf_pool_t *pool, enum sigutils_dump_format f)
 
     case SU_DUMP_FORMAT_WAV:
       return su_sigbuf_pool_dump_wav(pool);
+
+    case SU_DUMP_FORMAT_RAW:
+      return su_sigbuf_pool_dump_raw(pool);
   }
 
   return SU_TRUE;
 }
+

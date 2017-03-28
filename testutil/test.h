@@ -31,6 +31,7 @@
 enum sigutils_dump_format {
   SU_DUMP_FORMAT_NONE,
   SU_DUMP_FORMAT_MATLAB,
+  SU_DUMP_FORMAT_RAW,
   SU_DUMP_FORMAT_WAV
 };
 
@@ -193,6 +194,16 @@ SUFLOAT su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size);
 
 SUFLOAT su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size);
 
+SUBOOL su_test_complex_buffer_dump_raw(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file);
+
+SUBOOL su_test_buffer_dump_raw(
+    const SUFLOAT *buffer,
+    unsigned int size,
+    const char *file);
+
 SUBOOL su_test_complex_buffer_dump_matlab(
     const SUCOMPLEX *buffer,
     unsigned int size,
@@ -264,6 +275,8 @@ SUBOOL su_sigbuf_pool_helper_dump_wav(
 SUBOOL su_sigbuf_pool_dump(
     const su_sigbuf_pool_t *pool,
     enum sigutils_dump_format f);
+
+SUBOOL su_sigbuf_pool_dump_raw(const su_sigbuf_pool_t *pool);
 
 SUBOOL su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool);
 

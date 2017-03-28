@@ -28,6 +28,8 @@
 #define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 20 /* in FFT runs */
 #define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
 #define SU_CHANNEL_DETECTOR_MIN_BW           10 /* in Hz */
+#define SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA  1e-3
+#define SU_CHANNEL_DETECTOR_N0_ALPHA         .5
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
         ((cp)->age > SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE     \
@@ -83,7 +85,7 @@ struct sigutils_channel_detector_params {
   /* Detector parameters */
   SUFLOAT alpha;            /* FFT averaging ratio */
   SUFLOAT beta;             /* Signal & Noise level update ratio */
-  SUFLOAT rel_squelch;      /* Relative squelch level */
+  SUFLOAT squelch;          /* Squelch above noise floor (mag) */
   SUFLOAT th_alpha;         /* Threshold level averaging ratio */
 };
 
@@ -95,10 +97,10 @@ struct sigutils_channel_detector_params {
   0.0,      /* fc */          \
   1,        /* decimation */  \
   8,        /* max_order */   \
-  SU_TRUE,   /* DC remove */   \
+  SU_TRUE,  /* DC remove */   \
   0.25,     /* alpha */       \
   0.25,     /* beta */        \
-  0.3,      /* rel_squelch */ \
+  1.5,      /* rel_squelch */ \
   .5,       /* th_alpha */    \
 }
 
@@ -117,11 +119,14 @@ struct sigutils_channel_detector {
   struct sigutils_channel_detector_params params;
   su_ncqo_t lo; /* Local oscillator */
   su_iir_filt_t antialias; /* Antialiasing filter */
+  SUCOMPLEX prev_samp; /* Previous sample */
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
   SU_FFTW(_complex) *fft;
-  SUFLOAT *averaged_fft;
-  SUFLOAT *threshold;
+  SUFLOAT *spectrogram;
+  SUFLOAT *max;
+  SUFLOAT *min;
+  SUFLOAT N0; /* Detected noise floor */
   unsigned int decim_ptr;
   unsigned int ptr; /* Sample in window */
   unsigned int iters;
@@ -160,6 +165,10 @@ struct sigutils_channel *su_channel_dup(const struct sigutils_channel *channel);
 void su_channel_destroy(struct sigutils_channel *channel);
 
 struct sigutils_channel *su_channel_detector_lookup_channel(
+    const su_channel_detector_t *detector,
+    SUFLOAT fc);
+
+struct sigutils_channel *su_channel_detector_lookup_valid_channel(
     const su_channel_detector_t *detector,
     SUFLOAT fc);
 
