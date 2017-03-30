@@ -43,6 +43,7 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_cdr_block),
     SU_TEST_ENTRY(su_test_channel_detector_qpsk),
     SU_TEST_ENTRY(su_test_channel_detector_qpsk_noisy),
+    SU_TEST_ENTRY(su_test_channel_detector_real_capture)
 };
 
 SUPRIVATE void

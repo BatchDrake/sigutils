@@ -398,7 +398,7 @@ su_channel_detector_find_channels(
   SUCOMPLEX acc; /* Accumulator */
   SUFLOAT squelch;
 
-  squelch = 4 * detector->N0;
+  squelch = 2 * detector->N0;
 
 #ifdef SU_DETECTOR_DEBUG
   SU_INFO("Squelch: %lg\n", SU_POWER_DB(squelch));
@@ -517,14 +517,15 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
     if (psd < detector->min[i] || first_run)
       detector->min[i] = psd;
     else
-      detector->min[i] = SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
+      detector->min[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
         * (psd - detector->min[i]);
+
     /* Update maximum */
     if (psd > detector->max[i] || first_run)
       detector->max[i] = psd;
     else
-      detector->max[i] = SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
-        * (psd - detector->min[i]);
+      detector->max[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
+        * (psd - detector->max[i]);
   }
 
   if (++detector->iters > 1 / detector->params.alpha) {
@@ -534,7 +535,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
     /* Update estimation of the noise floor */
     for (i = 0; i < detector->params.window_size; ++i) {
       if (detector->N0 > detector->min[i]
-          && detector->N0 > detector->max[i]) {
+          && detector->N0 < detector->max[i]) {
         N0 += detector->spectrogram[i];
         ++n;
       }

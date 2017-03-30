@@ -45,4 +45,8 @@
 #define SU_TEST_PLL_SIGNAL_FREQ 0.025
 #define SU_TEST_PLL_BANDWIDTH   (1e-4)
 
+/* Channel detector params */
+#define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
+  "gqrx_20170219_185002_1545346100_250000_fc.raw"
+
 #endif /* _SRC_TEST_PARAM */
