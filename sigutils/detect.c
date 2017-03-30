@@ -503,6 +503,8 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
   SUFLOAT dc_bw = 0;
   SUFLOAT peak_S0 = 0;
 
+  unsigned int min_iters;
+
   first_run = detector->N0 == 0.0;
 
   for (i = 0; i < detector->params.window_size; ++i) {
@@ -528,7 +530,11 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
         * (psd - detector->max[i]);
   }
 
-  if (++detector->iters > 1 / detector->params.alpha) {
+  min_iters = MAX(
+      1. / SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA,
+      2. / detector->params.alpha);
+
+  if (++detector->iters > min_iters) {
     N0 = 0;
     n = 0;
 
