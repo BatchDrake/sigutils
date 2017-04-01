@@ -239,6 +239,8 @@ su_channel_detector_assert_channel(
 
     chan->bw      = new->bw;
     chan->fc      = new->fc;
+    chan->f_lo    = new->f_lo;
+    chan->f_hi    = new->f_hi;
     chan->age     = 0;
     chan->present = 0;
 
@@ -252,8 +254,10 @@ su_channel_detector_assert_channel(
       k /=  (chan->age - 20);
 
     /* The older the channel is, the harder it must be to change its params */
-    chan->bw += 1. / (chan->age + 1) * (new->bw - chan->bw);
-    chan->fc += 1. / (chan->age + 1) * (new->fc - chan->fc);
+    chan->bw   += 1. / (chan->age + 1) * (new->bw   - chan->bw);
+    chan->f_lo += 1. / (chan->age + 1) * (new->f_lo - chan->f_lo);
+    chan->f_hi += 1. / (chan->age + 1) * (new->f_hi - chan->f_hi);
+    chan->fc   += 1. / (chan->age + 1) * (new->fc   - chan->fc);
   }
 
   /* Signal levels are instantaneous values. Cannot average */
@@ -395,7 +399,7 @@ su_channel_detector_find_channels(
   SUBOOL  c = SU_FALSE;  /* Channel flag */
   SUBOOL ok = SU_FALSE;
 
-  squelch = 2 * detector->N0;
+  squelch = detector->params.snr * detector->N0;
 
   N = detector->params.window_size;
   fs = detector->params.samp_rate;
@@ -427,7 +431,7 @@ su_channel_detector_find_channels(
         power += psd;
 
         if (psd > peak_S0)
-          peak_S0 += SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA * (psd - peak_S0);
+          peak_S0 += detector->params.gamma * (psd - peak_S0);
       } else {
         /* End of channel? */
         c = SU_FALSE;
@@ -457,19 +461,21 @@ done:
 }
 
 SUPRIVATE SUBOOL
-su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
+su_channel_perform_discovery(su_channel_detector_t *detector)
 {
   unsigned int i;
   unsigned int N; /* FFT size */
   unsigned int valid; /* valid FFT bins */
   unsigned int min_iters; /* minimum number of iters */
   unsigned int min_pwr_bin; /* bin of the stpectrogram where the min power is */
+  SUFLOAT alpha;
+  SUFLOAT beta;
+  SUFLOAT gamma;
   SUFLOAT min_pwr; /* minimum power density */
   SUFLOAT psd; /* current power density */
   SUFLOAT N0; /* Noise level */
 
   SUBOOL  detector_enabled; /* whether we can detect channels */
-
 
   N = detector->params.window_size;
 
@@ -487,8 +493,13 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
     detector->N0 = N0;
   } else {
     /* Next runs */
+
+    alpha = detector->params.alpha;
+    beta  = detector->params.beta;
+    gamma = detector->params.gamma;
+
     min_iters = MAX(
-        2. / SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA,
+        2. / detector->params.beta,
         2. / detector->params.alpha);
 
     detector_enabled = detector->iters > min_iters;
@@ -504,15 +515,13 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
       if (psd < detector->spmin[i])
         detector->spmin[i] = psd;
       else
-        detector->spmin[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
-          * (psd - detector->spmin[i]);
+        detector->spmin[i] += beta * (psd - detector->spmin[i]);
 
       /* Update maximum */
       if (psd > detector->spmax[i])
         detector->spmax[i] = psd;
       else
-        detector->spmax[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
-          * (psd - detector->spmax[i]);
+        detector->spmax[i] += beta * (psd - detector->spmax[i]);
 
       if (detector_enabled) {
         /* Use previous N0 estimation to detect outliers */
@@ -534,7 +543,8 @@ su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
       if (valid == 0)
         detector->N0 = N0 / valid;
       else
-        detector->N0 = .5 * (detector->spmin[min_pwr_bin] + detector->spmax[min_pwr_bin]);
+        detector->N0 = .5
+          * (detector->spmin[min_pwr_bin] + detector->spmax[min_pwr_bin]);
     }
 
     /* New threshold calculated, find channels */
@@ -609,25 +619,7 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX samp)
 
     switch (detector->params.mode) {
       case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
-        if (detector->params.dc_remove) {
-          /*
-           * Perform a preliminary spectrum analysis to look for a spurious
-           * channel at 0 Hz. This is usually caused by the DC offset, and its
-           * (usually) big amplitude can mask real channels. If no DC
-           * components are found, we just return true: all non-DC channels
-           * (if any) would have been found.
-           */
-          if (!su_channel_perform_discovery(detector, SU_FALSE))
-            return SU_FALSE;
-
-          if ((detector->dc = su_channel_detector_lookup_channel(detector, 0))
-              == NULL)
-            return SU_TRUE;
-        }
-
-        return su_channel_perform_discovery(
-            detector,
-            detector->params.dc_remove);
+        return su_channel_perform_discovery(detector);
 
       case SU_CHANNEL_DETECTOR_MODE_CYCLOSTATIONARY:
         /*

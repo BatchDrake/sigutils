@@ -28,9 +28,13 @@
 #define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 20 /* in FFT runs */
 #define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
 #define SU_CHANNEL_DETECTOR_MIN_BW           10 /* in Hz */
-#define SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA  1e-3
+
+#define SU_CHANNEL_DETECTOR_ALPHA            1e-2
+#define SU_CHANNEL_DETECTOR_BETA             1e-3
+#define SU_CHANNEL_DETECTOR_GAMMA            .5
+
 #define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
-#define SU_CHANNEL_DETECTOR_N0_ALPHA         .5
+
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
         ((cp)->age > SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE     \
@@ -81,13 +85,12 @@ struct sigutils_channel_detector_params {
   SUFLOAT fc;               /* Center frequency */
   unsigned int decimation;
   unsigned int max_order;   /* Max constellation order */
-  SUBOOL  dc_remove;        /* Remove spurious channel from DC components */
 
   /* Detector parameters */
-  SUFLOAT alpha;            /* FFT averaging ratio */
-  SUFLOAT beta;             /* Signal & Noise level update ratio */
-  SUFLOAT squelch;          /* Squelch above noise floor (mag) */
-  SUFLOAT th_alpha;         /* Threshold level averaging ratio */
+  SUFLOAT alpha;            /* PSD averaging ratio */
+  SUFLOAT beta;             /* PSD upper and lower levels averaging ratio  */
+  SUFLOAT gamma;            /* Noise level update ratio */
+  SUFLOAT snr;              /* Minimum SNR to detect channels (linear) */
 };
 
 #define sigutils_channel_detector_params_INITIALIZER \
@@ -98,24 +101,23 @@ struct sigutils_channel_detector_params {
   0.0,      /* fc */          \
   1,        /* decimation */  \
   8,        /* max_order */   \
-  SU_TRUE,  /* DC remove */   \
-  0.25,     /* alpha */       \
-  0.25,     /* beta */        \
-  1.5,      /* rel_squelch */ \
-  .5,       /* th_alpha */    \
+  SU_CHANNEL_DETECTOR_ALPHA, /* alpha */  \
+  SU_CHANNEL_DETECTOR_BETA,  /* beta */   \
+  SU_CHANNEL_DETECTOR_GAMMA, /* gamma */  \
+  2,        /* snr */         \
 }
 
 
 struct sigutils_channel {
-  SUFLOAT fc;
-  SUFLOAT f_lo;
-  SUFLOAT f_hi;
-  SUFLOAT bw;
-  SUFLOAT snr;
-  SUFLOAT S0;
-  SUFLOAT N0;
-  unsigned int age;
-  unsigned int present;
+  SUFLOAT fc;    /* Channel central frequency */
+  SUFLOAT f_lo;  /* Lower frequency belonging to the channel */
+  SUFLOAT f_hi;  /* Upper frequency belonging to the channel */
+  SUFLOAT bw;    /* Equivalent bandwidth */
+  SUFLOAT snr;   /* Signal-to-noise ratio */
+  SUFLOAT S0;    /* Peak signal power */
+  SUFLOAT N0;    /* Noise level */
+  unsigned int age;     /* Channel age */
+  unsigned int present; /* Is channel present? */
 };
 
 #define sigutils_channel_INITIALIZER    \

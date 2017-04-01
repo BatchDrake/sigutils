@@ -300,10 +300,11 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       if (SU_CHANNEL_IS_VALID(channel_list[i])) {
         ++n;
         SU_INFO(
-            "%2d. | %+8.1lf Hz | %+7.1lf Hz | %5.1lf dB\n",
+            "%2d. | %+8.1lf Hz | %7.1lf (%7.1lf) Hz | %5.1lf dB\n",
             n,
             channel_list[i]->fc,
             channel_list[i]->bw,
+            channel_list[i]->f_hi - channel_list[i]->f_lo,
             channel_list[i]->snr);
       }
 
