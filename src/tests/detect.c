@@ -201,6 +201,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT *n0est;
+  SUSCOUNT req;
 
   struct sigutils_channel_detector_params params =
       sigutils_channel_detector_params_INITIALIZER;
@@ -273,6 +274,12 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       "Capture is %02d:%02d long\n",
       samples / (params.samp_rate * 60),
       (samples / (params.samp_rate)) % 60);
+
+  req = su_channel_detector_get_req_samples(detector);
+  SU_INFO(
+      "Channels available after %02d:%02d\n",
+      req / (params.samp_rate * 60),
+      (req / (params.samp_rate)) % 60);
 
   SU_TEST_TICK(ctx);
 

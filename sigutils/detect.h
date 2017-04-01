@@ -145,6 +145,7 @@ struct sigutils_channel_detector {
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT N0; /* Detected noise floor */
+  SUSCOUNT req_samples; /* Number of required samples for detection */
   unsigned int decim_ptr;
   unsigned int ptr; /* Sample in window */
   unsigned int iters;
@@ -168,6 +169,9 @@ void su_peak_detector_finalize(su_peak_detector_t *pd);
 su_channel_detector_t *su_channel_detector_new(
     const struct sigutils_channel_detector_params *params);
 
+SUSCOUNT su_channel_detector_get_req_samples(
+    const su_channel_detector_t *detector);
+
 void su_channel_detector_destroy(su_channel_detector_t *detector);
 
 SUBOOL su_channel_detector_feed(
@@ -180,6 +184,7 @@ void su_channel_detector_get_channel_list(
     unsigned int *channel_count);
 
 struct sigutils_channel *su_channel_dup(const struct sigutils_channel *channel);
+
 void su_channel_destroy(struct sigutils_channel *channel);
 
 struct sigutils_channel *su_channel_detector_lookup_channel(

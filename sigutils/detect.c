@@ -374,6 +374,12 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     su_iir_bwlpf_init(&new->antialias, 5, .5 / params->decimation);
   }
 
+  /* Calculate the required number of samples to perform detection */
+  new->req_samples =
+        params->window_size
+      * (params->decimation > 1 ? params->decimation : 1)
+      * MAX(2. / params->alpha, 1. / params->beta);
+
   return new;
 
 fail:
@@ -381,6 +387,12 @@ fail:
     su_channel_detector_destroy(new);
 
   return NULL;
+}
+
+SUSCOUNT
+su_channel_detector_get_req_samples(const su_channel_detector_t *detector)
+{
+  return detector->req_samples;
 }
 
 SUPRIVATE SUBOOL
@@ -498,11 +510,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
     beta  = detector->params.beta;
     gamma = detector->params.gamma;
 
-    min_iters = MAX(
-        2. / detector->params.beta,
-        2. / detector->params.alpha);
-
-    detector_enabled = detector->iters > min_iters;
+    detector_enabled = detector->req_samples == 0;
     N0 = 0;
     valid = 0;
     min_pwr = INFINITY;
@@ -563,6 +571,9 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX samp)
   unsigned int i;
   SUCOMPLEX x;
   SUFLOAT psd;
+
+  if (detector->req_samples > 0)
+    --detector->req_samples;
 
   /* Carrier centering. Must happen *before* decimation */
   if (detector->params.mode != SU_CHANNEL_DETECTOR_MODE_DISCOVERY)
