@@ -228,20 +228,17 @@ su_channel_detector_lookup_valid_channel(
 SUPRIVATE SUBOOL
 su_channel_detector_assert_channel(
     su_channel_detector_t *detector,
-    SUFLOAT fc,
-    SUFLOAT bw,
-    SUFLOAT S0,
-    SUFLOAT N0)
+    const struct sigutils_channel *new)
 {
   struct sigutils_channel *chan = NULL;
   SUFLOAT k = .5;
 
-  if ((chan = su_channel_detector_lookup_channel(detector, fc)) == NULL) {
+  if ((chan = su_channel_detector_lookup_channel(detector, new->fc)) == NULL) {
     if ((chan = malloc(sizeof (struct sigutils_channel))) == NULL)
       return SU_FALSE;
 
-    chan->bw      = bw;
-    chan->fc      = fc;
+    chan->bw      = new->bw;
+    chan->fc      = new->fc;
     chan->age     = 0;
     chan->present = 0;
 
@@ -255,14 +252,14 @@ su_channel_detector_assert_channel(
       k /=  (chan->age - 20);
 
     /* The older the channel is, the harder it must be to change its params */
-    chan->bw += 1. / (chan->age + 1) * (bw - chan->bw);
-    chan->fc += 1. / (chan->age + 1) * (fc - chan->fc);
+    chan->bw += 1. / (chan->age + 1) * (new->bw - chan->bw);
+    chan->fc += 1. / (chan->age + 1) * (new->fc - chan->fc);
   }
 
   /* Signal levels are instantaneous values. Cannot average */
-  chan->S0        = S0;
-  chan->N0        = N0;
-  chan->snr       = S0 - N0;
+  chan->S0        = new->S0;
+  chan->N0        = new->N0;
+  chan->snr       = new->S0 - new->N0;
 
   return SU_TRUE;
 }
@@ -279,14 +276,14 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
   if (detector->fft != NULL)
     fftw_free(detector->fft);
 
-  if (detector->spectrogram != NULL)
-    free(detector->spectrogram);
+  if (detector->spect != NULL)
+    free(detector->spect);
 
-  if (detector->max != NULL)
-    free(detector->max);
+  if (detector->spmax != NULL)
+    free(detector->spmax);
 
-  if (detector->min != NULL)
-    free(detector->min);
+  if (detector->spmin != NULL)
+    free(detector->spmin);
 
   su_channel_detector_channel_list_clear(detector);
 
@@ -337,19 +334,19 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     goto fail;
   }
 
-  if ((new->spectrogram
+  if ((new->spect
       = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
     SU_ERROR("cannot allocate memory for averaged FFT\n");
     goto fail;
   }
 
-  if ((new->max
+  if ((new->spmax
       = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
     SU_ERROR("cannot allocate memory for max\n");
     goto fail;
   }
 
-  if ((new->min
+  if ((new->spmin
       = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
     SU_ERROR("cannot allocate memory for min\n");
     goto fail;
@@ -386,53 +383,39 @@ SUPRIVATE SUBOOL
 su_channel_detector_find_channels(
     su_channel_detector_t *detector) {
   unsigned int i;
-  unsigned int n;
+  unsigned int N;
+  unsigned int fs;
+  SUCOMPLEX acc; /* Accumulator for the autocorrelation technique */
   SUFLOAT psd;   /* Power spectral density in this FFT bin */
   SUFLOAT nfreq; /* Normalized frequency of this FFT bin */
-  SUBOOL  c = SU_FALSE;  /* Channel flag */
-  SUFLOAT chan_start;
-  SUFLOAT chan_end;
   SUFLOAT peak_S0;
   SUFLOAT power;
-  SUBOOL ok = SU_FALSE;
-  SUCOMPLEX acc; /* Accumulator */
   SUFLOAT squelch;
+  struct sigutils_channel new_channel = sigutils_channel_INITIALIZER;
+  SUBOOL  c = SU_FALSE;  /* Channel flag */
+  SUBOOL ok = SU_FALSE;
 
   squelch = 2 * detector->N0;
 
-#ifdef SU_DETECTOR_DEBUG
-  SU_INFO("Squelch: %lg\n", SU_POWER_DB(squelch));
-#endif
+  N = detector->params.window_size;
+  fs = detector->params.samp_rate;
 
-  for (i = 0; i < detector->params.window_size; ++i) {
-    psd = detector->spectrogram[i];
-    nfreq = 2 * i / (SUFLOAT) detector->params.window_size;
+  for (i = 0; i < N; ++i) {
+    psd = detector->spect[i];
+    nfreq = 2 * i / (SUFLOAT) N;
 
+    /* Below threshold */
     if (!c) {
-      /* Below threshold */
-
+      /* Channel found? */
       if (psd > squelch) {
-        /* Channel found? */
         c = SU_TRUE;
-        chan_start = nfreq;
         acc = psd * SU_C_EXP(I * M_PI * nfreq);
-        n = 1;
         peak_S0 = psd;
         power = psd;
+        new_channel.f_lo = SU_NORM2ABS_FREQ(fs, nfreq);
       }
-    } else {
-      /* Above threshold */
-
+    } else { /* Above threshold */
       if (psd > squelch) {
-#ifdef SU_DETECTOR_DEBUG
-        SU_INFO(
-            "CH: %+8lg / %+8lg (%lg Hz)\n",
-            SU_POWER_DB(psd),
-            SU_POWER_DB(squelch),
-            SU_NORM2ABS_FREQ(
-                detector->params.samp_rate,
-                nfreq));
-#endif
         /*
          * We use the autocorrelation technique to estimate the center
          * frequency. It is based in the fact that the lag-one autocorrelation
@@ -440,34 +423,26 @@ su_channel_detector_find_channels(
          * frequency bin. What we actually compute here is the centroid of
          * a cluster of points in the I/Q plane.
          */
-        ++n;
         acc += psd * SU_C_EXP(I * M_PI * nfreq);
         power += psd;
+
         if (psd > peak_S0)
-          peak_S0 = psd;
+          peak_S0 += SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA * (psd - peak_S0);
       } else {
         /* End of channel? */
         c = SU_FALSE;
-        chan_end = nfreq;
-        acc /= n; /* Divide channel by number of points in the cluster */
 
-#ifdef SU_DETECTOR_DEBUG
-        SU_INFO("END!\n")
-#endif
-        /* Append new channel */
-        if (!su_channel_detector_assert_channel(
-            detector,
-            SU_NORM2ABS_FREQ(
-                detector->params.samp_rate,
-                SU_ANG2NORM_FREQ(SU_C_ARG(acc))),
-                SU_NORM2ABS_FREQ(
-                    detector->params.samp_rate,
-                    2 * power / (peak_S0 * (SUFLOAT) detector->params.window_size)),
-            /*SU_NORM2ABS_FREQ(
-                detector->params.samp_rate,
-                chan_end - chan_start),*/
-            SU_POWER_DB(peak_S0),
-            SU_POWER_DB(detector->N0))) {
+        /* Populate channel information */
+        new_channel.f_hi = SU_NORM2ABS_FREQ(fs, nfreq);
+        new_channel.S0   = SU_POWER_DB(peak_S0);
+        new_channel.N0   = SU_POWER_DB(detector->N0);
+        new_channel.bw   = SU_NORM2ABS_FREQ(fs, 2. * power / (peak_S0 * N));
+        new_channel.fc   = SU_NORM2ABS_FREQ(
+            fs,
+            SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
+
+        /* Assert it */
+        if (!su_channel_detector_assert_channel(detector, &new_channel)) {
           SU_ERROR("Failed to register a channel\n");
           return SU_FALSE;
         }
@@ -484,83 +459,85 @@ done:
 SUPRIVATE SUBOOL
 su_channel_perform_discovery(su_channel_detector_t *detector, SUBOOL skipdc)
 {
-  int i;
-  unsigned int floor_bin;
-  unsigned int n = 0;
+  unsigned int i;
+  unsigned int N; /* FFT size */
+  unsigned int valid; /* valid FFT bins */
+  unsigned int min_iters; /* minimum number of iters */
+  unsigned int min_pwr_bin; /* bin of the stpectrogram where the min power is */
+  SUFLOAT min_pwr; /* minimum power density */
+  SUFLOAT psd; /* current power density */
+  SUFLOAT N0; /* Noise level */
 
-  SUBOOL  first_run;
+  SUBOOL  detector_enabled; /* whether we can detect channels */
 
-  SUFLOAT N0 = INFINITY; /* Noise level */
-  SUFLOAT S0 = 0; /* Signal level */
-  SUBOOL  c = SU_FALSE;  /* Channel flag */
 
-  SUFLOAT chan_start;
-  SUFLOAT chan_end;
+  N = detector->params.window_size;
 
-  SUFLOAT psd;   /* Power spectral density in this FFT bin */
-  SUFLOAT nfreq; /* Normalized frequency of this FFT bin */
+  if (detector->iters++ == 0) {
+    /* First run */
+    memcpy(detector->spmax, detector->spect, N * sizeof(SUFLOAT));
+    memcpy(detector->spmin, detector->spect, N * sizeof(SUFLOAT));
 
-  SUFLOAT dc_bw = 0;
-  SUFLOAT peak_S0 = 0;
+    /* First estimation of the noise floor */
+    N0 = INFINITY;
+    for (i = 0; i < N; ++i)
+      if (detector->spect[i] < N0)
+        N0 = detector->spect[i];
 
-  unsigned int min_iters;
+    detector->N0 = N0;
+  } else {
+    /* Next runs */
+    min_iters = MAX(
+        2. / SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA,
+        2. / detector->params.alpha);
 
-  first_run = detector->N0 == 0.0;
-
-  for (i = 0; i < detector->params.window_size; ++i) {
-    psd = detector->spectrogram[i];
-
-    if (psd < N0) {
-      floor_bin = i;
-      N0 = psd;
-    }
-
-    /* Update minimum */
-    if (psd < detector->min[i] || first_run)
-      detector->min[i] = psd;
-    else
-      detector->min[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
-        * (psd - detector->min[i]);
-
-    /* Update maximum */
-    if (psd > detector->max[i] || first_run)
-      detector->max[i] = psd;
-    else
-      detector->max[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
-        * (psd - detector->max[i]);
-  }
-
-  min_iters = MAX(
-      1. / SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA,
-      2. / detector->params.alpha);
-
-  if (++detector->iters > min_iters) {
+    detector_enabled = detector->iters > min_iters;
     N0 = 0;
-    n = 0;
+    valid = 0;
+    min_pwr = INFINITY;
+    min_pwr_bin = -1;
 
-    /* Update estimation of the noise floor */
-    for (i = 0; i < detector->params.window_size; ++i) {
-      if (detector->N0 > detector->min[i]
-          && detector->N0 < detector->max[i]) {
-        N0 += detector->spectrogram[i];
-        ++n;
+    for (i = 0; i < N; ++i) {
+      psd = detector->spect[i];
+
+      /* Update minimum */
+      if (psd < detector->spmin[i])
+        detector->spmin[i] = psd;
+      else
+        detector->spmin[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
+          * (psd - detector->spmin[i]);
+
+      /* Update maximum */
+      if (psd > detector->spmax[i])
+        detector->spmax[i] = psd;
+      else
+        detector->spmax[i] += SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA
+          * (psd - detector->spmax[i]);
+
+      if (detector_enabled) {
+        /* Use previous N0 estimation to detect outliers */
+        if (detector->spmin[i] < detector->N0
+            || detector->N0 < detector->spmax[i]) {
+          N0 += psd;
+          ++valid;
+        }
+
+        /* Update minimum power */
+        if (psd < min_pwr) {
+          min_pwr_bin = i;
+          min_pwr = psd;
+        }
       }
     }
 
-    if (n > 0)
-      N0 /= n;
-    else
-      N0 = .5 * (detector->min[floor_bin] + detector->max[floor_bin]);
+    if (detector_enabled) {
+      if (valid == 0)
+        detector->N0 = N0 / valid;
+      else
+        detector->N0 = .5 * (detector->spmin[min_pwr_bin] + detector->spmax[min_pwr_bin]);
+    }
 
-    if (first_run)
-      detector->N0 = N0;
-    else
-      detector->N0 += SU_CHANNEL_DETECTOR_N0_ALPHA * (N0 - detector->N0);
-
-#ifdef SU_DETECTOR_DEBUG
-    SU_INFO("N0: %lg dB (%d bins)\n", SU_POWER_DB(detector->N0), n);
-#endif
-
+    /* New threshold calculated, find channels */
     if (!su_channel_detector_find_channels(detector))
       return SU_FALSE;
 
@@ -622,12 +599,12 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX samp)
     /* Window is full, perform FFT */
     SU_FFTW(_execute(detector->fft_plan));
 
-    /* Compute smooth spectrogram */
+    /* Compute smooth spect */
     for (i = 0; i < detector->params.window_size; ++i) {
       psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
       psd /= detector->params.window_size;
-      detector->spectrogram[i] +=
-          detector->params.alpha * (psd - detector->spectrogram[i]);
+      detector->spect[i] +=
+          detector->params.alpha * (psd - detector->spect[i]);
     }
 
     switch (detector->params.mode) {

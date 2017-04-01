@@ -29,6 +29,7 @@
 #define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
 #define SU_CHANNEL_DETECTOR_MIN_BW           10 /* in Hz */
 #define SU_CHANNEL_DETECTOR_PEAK_HOLD_ALPHA  1e-3
+#define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
 #define SU_CHANNEL_DETECTOR_N0_ALPHA         .5
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
@@ -107,6 +108,8 @@ struct sigutils_channel_detector_params {
 
 struct sigutils_channel {
   SUFLOAT fc;
+  SUFLOAT f_lo;
+  SUFLOAT f_hi;
   SUFLOAT bw;
   SUFLOAT snr;
   SUFLOAT S0;
@@ -114,6 +117,19 @@ struct sigutils_channel {
   unsigned int age;
   unsigned int present;
 };
+
+#define sigutils_channel_INITIALIZER    \
+{                                       \
+  0,    /* fc */                        \
+  0,    /* f_lo */                      \
+  0,    /* f_li */                      \
+  0,    /* bw */                        \
+  0,    /* snr */                       \
+  0,    /* S0 */                        \
+  0,    /* N0 */                        \
+  0,    /* age */                       \
+  0,    /* present */                   \
+}
 
 struct sigutils_channel_detector {
   struct sigutils_channel_detector_params params;
@@ -123,9 +139,9 @@ struct sigutils_channel_detector {
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
   SU_FFTW(_complex) *fft;
-  SUFLOAT *spectrogram;
-  SUFLOAT *max;
-  SUFLOAT *min;
+  SUFLOAT *spect;
+  SUFLOAT *spmax;
+  SUFLOAT *spmin;
   SUFLOAT N0; /* Detected noise floor */
   unsigned int decim_ptr;
   unsigned int ptr; /* Sample in window */
