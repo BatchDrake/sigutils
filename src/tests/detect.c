@@ -142,13 +142,16 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
 
   SU_TEST_TICK(ctx);
 
+  SU_INFO(
+        "Frequency step: %lg Hz\n",
+        (double) params.samp_rate / (double) params.window_size);
+  SU_INFO(
+      "  Will need %d samples before performing a detection\n",
+      su_channel_detector_get_req_samples(detector));
+
   /* Feed detector */
   for (p = 0; p < ctx->params->buffer_size; ++p)
     su_channel_detector_feed(detector, tx[p]);
-
-  SU_INFO(
-      "Frequency step: %lg Hz\n",
-      (double) params.samp_rate / (double) params.window_size);
 
   SU_TEST_ASSERT(
       channel = su_channel_detector_lookup_valid_channel(
@@ -197,21 +200,27 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 {
   SUBOOL ok = SU_FALSE;
   complex float *input = (complex float *) -1; /* Required by mmap */
+  SUCOMPLEX *fft;
   SUFLOAT *spect;
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT *n0est;
+  SUFLOAT *acorr;
+  SUFLOAT *decim;
+  SUFLOAT *fc;
   SUSCOUNT req;
 
   struct sigutils_channel_detector_params params =
       sigutils_channel_detector_params_INITIALIZER;
   su_channel_detector_t *detector = NULL;
+  su_channel_detector_t *baud_det = NULL;
   struct stat sbuf;
   unsigned int i;
   unsigned int n = 0;
   unsigned int j = 0;
   SUSCOUNT samples;
   int fd = -1;
+  const struct sigutils_channel *center_channel = NULL;
   struct sigutils_channel **channel_list;
   unsigned int channel_count;
 
@@ -259,6 +268,10 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       spmax = su_test_ctx_getf_w_size(ctx, "spmax", params.window_size));
   SU_TEST_ASSERT(
       spmin = su_test_ctx_getf_w_size(ctx, "spmin", params.window_size));
+  SU_TEST_ASSERT(
+      decim = su_test_ctx_getf_w_size(ctx, "decim", 1));
+  SU_TEST_ASSERT(
+      fc    = su_test_ctx_getf_w_size(ctx, "fc", 1));
   SU_TEST_ASSERT(
       n0est = su_test_ctx_getf_w_size(
           ctx,
@@ -313,21 +326,75 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
             channel_list[i]->bw,
             channel_list[i]->f_hi - channel_list[i]->f_lo,
             channel_list[i]->snr);
+
+        if (n <= 7)
+          center_channel = channel_list[i];
       }
 
   /* Copy spectrums */
-
   for (i = 0; i < params.window_size; ++i) {
     spect[i] = detector->spect[i];
     spmax[i] = detector->spmax[i];
     spmin[i] = detector->spmin[i];
   }
 
+  /* We need this channel to center the spectrum */
+  SU_TEST_ASSERT(center_channel != NULL);
+
+  su_channel_params_adjust_to_channel(&params, center_channel);
+
+  params.mode = SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION;
+  params.window_size = 4096;
+  params.alpha = 1e-3;
+
+  /*
+   * Lowering the decimation, we can increase the precision of
+   * our detection of the baudrate
+   */
+  params.decimation /= 8;
+
+  *decim = params.decimation;
+  *fc = params.fc;
+
+  SU_TEST_ASSERT(
+      acorr = su_test_ctx_getf_w_size(ctx, "acorr", params.window_size));
+  SU_TEST_ASSERT(
+      fft   = su_test_ctx_getc_w_size(ctx, "fft",   params.window_size));
+
+  SU_TEST_ASSERT(baud_det = su_channel_detector_new(&params));
+
+  SU_INFO("Inspecting channel 4...\n");
+  SU_INFO("  Center frequency: %lg Hz\n", params.fc);
+  SU_INFO("  Decimation: %d\n", params.decimation);
+
+  req = su_channel_detector_get_req_samples(detector);
+  SU_INFO(
+      "  Info available after %02d:%02d\n",
+      req / (params.samp_rate * 60),
+      (req / (params.samp_rate)) % 60);
+
+  for (i = 0; i < samples; ++i)
+    SU_TEST_ASSERT(
+        su_channel_detector_feed(
+            baud_det,
+            SU_C_CONJ((SUCOMPLEX) input[i % samples]))); /* Gqrx inverts the Q channel */
+
+  *decim = baud_det->params.decimation;
+  for (i = 0; i < params.window_size; ++i) {
+    acorr[i] = baud_det->acorr[i];
+    fft[i] = baud_det->fft[i];
+  }
+
+  SU_INFO("Detected baudrate: %lg\n", baud_det->baud);
+
   ok = SU_TRUE;
 
 done:
   if (detector != NULL)
     su_channel_detector_destroy(detector);
+
+  if (baud_det != NULL)
+    su_channel_detector_destroy(baud_det);
 
   if (fd != -1)
     close(fd);

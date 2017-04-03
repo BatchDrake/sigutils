@@ -274,14 +274,20 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
   if (detector->fft_plan != NULL)
     SU_FFTW(_destroy_plan)(detector->fft_plan);
 
+  if (detector->fft_plan_rev != NULL)
+    SU_FFTW(_destroy_plan)(detector->fft_plan_rev);
+
   if (detector->window != NULL)
     fftw_free(detector->window);
 
   if (detector->fft != NULL)
     fftw_free(detector->fft);
 
-  if (detector->spect != NULL)
-    free(detector->spect);
+  if (detector->ifft != NULL)
+    fftw_free(detector->ifft);
+
+  if (detector->_r_alloc != NULL)
+    free(detector->_r_alloc);
 
   if (detector->spmax != NULL)
     free(detector->spmax);
@@ -290,6 +296,8 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
     free(detector->spmin);
 
   su_channel_detector_channel_list_clear(detector);
+
+  su_iir_filt_finalize(&detector->antialias);
 
   free(detector);
 }
@@ -314,11 +322,6 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   assert(params->window_size > 0);
   assert(params->decimation > 0);
 
-  if (params->mode != SU_CHANNEL_DETECTOR_MODE_DISCOVERY) {
-    SU_ERROR("unsupported mode\n");
-    goto fail;
-  }
-
   if ((new = calloc(1, sizeof (su_channel_detector_t))) == NULL)
     goto fail;
 
@@ -338,24 +341,17 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     goto fail;
   }
 
-  if ((new->spect
+  /*
+   * Generic result allocation: the same buffer is used differently depending
+   * on the detector mode
+   */
+  if ((new->_r_alloc
       = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
     SU_ERROR("cannot allocate memory for averaged FFT\n");
     goto fail;
   }
 
-  if ((new->spmax
-      = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
-    SU_ERROR("cannot allocate memory for max\n");
-    goto fail;
-  }
-
-  if ((new->spmin
-      = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
-    SU_ERROR("cannot allocate memory for min\n");
-    goto fail;
-  }
-
+  /* Direct FFT plan */
   if ((new->fft_plan = SU_FFTW(_plan_dft_1d)(
       params->window_size,
       new->window,
@@ -366,18 +362,60 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     goto fail;
   }
 
+  /* Mode-specific allocations */
+  switch (params->mode) {
+    case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
+      /* Discovery mode requires these max/min levels */
+      if ((new->spmax
+          = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
+        SU_ERROR("cannot allocate memory for max\n");
+        goto fail;
+      }
+
+      if ((new->spmin
+          = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
+        SU_ERROR("cannot allocate memory for min\n");
+        goto fail;
+      }
+      break;
+
+    case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
+      /* For inverse FFT */
+      if ((new->ifft
+          = fftw_malloc(
+              params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+        SU_ERROR("cannot allocate memory for IFFT\n");
+        goto fail;
+      }
+
+      if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(
+          params->window_size,
+          new->fft,
+          new->ifft,
+          FFTW_BACKWARD,
+          FFTW_ESTIMATE)) == NULL) {
+        SU_ERROR("failed to create FFT plan\n");
+        goto fail;
+      }
+      break;
+  }
+
+  /* Initialize local oscillator */
   su_ncqo_init(
       &new->lo,
-      SU_ABS2NORM_FREQ(params->samp_rate, params->fc * params->decimation));
+      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
 
-  if (params->decimation > 1) {
-    su_iir_bwlpf_init(&new->antialias, 5, .5 / params->decimation);
-  }
+  /* Apply antialias filter */
+  if (params->bw > 0.0)
+    su_iir_bwlpf_init(
+        &new->antialias,
+        5,
+        SU_ABS2NORM_FREQ(params->samp_rate, params->bw));
 
   /* Calculate the required number of samples to perform detection */
   new->req_samples =
         params->window_size
-      * (params->decimation > 1 ? params->decimation : 1)
+      * params->decimation
       * MAX(2. / params->alpha, 1. / params->beta);
 
   return new;
@@ -470,6 +508,20 @@ su_channel_detector_find_channels(
 
 done:
   return ok;
+}
+
+void
+su_channel_params_adjust_to_channel(
+    struct sigutils_channel_detector_params *params,
+    const struct sigutils_channel *channel)
+{
+  SUFLOAT width;
+
+  width = MAX(channel->f_hi - channel->f_lo, channel->bw);
+
+  params->decimation = .5 * SU_CEIL(params->samp_rate / width);
+  params->bw = width;
+  params->fc = channel->fc;
 }
 
 SUPRIVATE SUBOOL
@@ -565,79 +617,129 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
   return SU_TRUE;
 }
 
+SUPRIVATE SUBOOL
+su_channel_perform_baudrate_estimation(su_channel_detector_t *detector)
+{
+  int i;
+  int N;
+  SUFLOAT prev, this, next;
+  SUFLOAT norm;
+  SUFLOAT dtau;
+  SUFLOAT tau;
+
+  N = detector->params.window_size;
+  dtau = (SUFLOAT) detector->params.decimation
+       / (SUFLOAT) detector->params.samp_rate;
+
+  prev = detector->acorr[0];
+
+  /* Find first valley */
+  for (i = 1; i < N - 1; ++i) {
+    next = detector->acorr[i + 1];
+    this = detector->acorr[i];
+    prev = detector->acorr[i - 1];
+
+    if (this < next && this < prev)
+      break; /* Valley found */
+  }
+
+  /* No valley found */
+  if (i == N - 1) {
+    SU_ERROR("Cannot estimate baudrate: first valley in acorr not found\n");
+    return SU_FALSE;
+  }
+
+  /* If prev < next, the null is between (prev, this] */
+  if (prev < next) {
+    norm = 1. / (prev + this);
+    tau = norm * dtau * (prev * i + this * (i - 1));
+  } else { /* Otherwise, it's between [this, next) */
+    norm = 1. / (next + this);
+    tau = norm * dtau * (next * i + this * (i + 1));
+  }
+
+  detector->baud = 1. / tau;
+
+  return SU_TRUE;
+}
+
 SUBOOL
-su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX samp)
+su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
 {
   unsigned int i;
-  SUCOMPLEX x;
   SUFLOAT psd;
+  SUCOMPLEX cac;
+  SUFLOAT ac;
 
   if (detector->req_samples > 0)
     --detector->req_samples;
 
   /* Carrier centering. Must happen *before* decimation */
-  if (detector->params.mode != SU_CHANNEL_DETECTOR_MODE_DISCOVERY)
-    samp *= SU_C_CONJ(su_ncqo_get(&detector->lo));
+  x *= SU_C_CONJ(su_ncqo_read(&detector->lo));
 
+  /* If a filter is present, pass sample to filter */
+  if (detector->params.bw > 0.0)
+    x = su_iir_filt_feed(&detector->antialias, x);
+
+  /* Decimate if necessary */
   if (detector->params.decimation > 1) {
-    /* If we are decimating, we take samples from the antialias filter */
-    samp = su_iir_filt_feed(&detector->antialias, samp);
-
-    /* Decimation takes place here */
     if (++detector->decim_ptr < detector->params.decimation)
       return SU_TRUE;
 
     detector->decim_ptr = 0; /* Reset decimation pointer */
   }
 
-  switch (detector->params.mode) {
-    case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
-      /* Channel discovery is performed on the current sample only */
-      x = samp;
-      break;
-
-    case SU_CHANNEL_DETECTOR_MODE_CYCLOSTATIONARY:
-      /* Baudrate estimation through cyclostationary analysis */
-      x = samp * detector->prev_samp;
-      detector->prev_samp = x;
-      break;
-
-    default:
-      SU_WARNING("Mode not implemented\n");
-      return SU_FALSE;
-  }
-
   detector->window[detector->ptr++] = x;
 
   if (detector->ptr == detector->params.window_size) {
+    /* Window is full, perform FFT */
     detector->ptr = 0;
 
-    /* Apply window function. TODO: precalculate */
-    su_taps_apply_blackmann_harris_complex(
-        detector->window,
-        detector->params.window_size);
-
-    /* Window is full, perform FFT */
-    SU_FFTW(_execute(detector->fft_plan));
-
-    /* Compute smooth spect */
-    for (i = 0; i < detector->params.window_size; ++i) {
-      psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
-      psd /= detector->params.window_size;
-      detector->spect[i] +=
-          detector->params.alpha * (psd - detector->spect[i]);
-    }
-
+    /* ^^^^^^^^^^^^^^^^^^ end of common part ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
     switch (detector->params.mode) {
       case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
+        /*
+         * Channel detection is based on the analysis of the power spectrum
+         */
+
+        /* Apply window function. TODO: precalculate */
+        su_taps_apply_blackmann_harris_complex(
+            detector->window,
+            detector->params.window_size);
+
+
+        SU_FFTW(_execute(detector->fft_plan));
+
+        for (i = 0; i < detector->params.window_size; ++i) {
+          psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+          psd /= detector->params.window_size;
+          detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
+        }
+
         return su_channel_perform_discovery(detector);
 
-      case SU_CHANNEL_DETECTOR_MODE_CYCLOSTATIONARY:
+      case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
         /*
-         * Order estimation is based on peak detection: first peak
-         * is related to baudrate
+         * Find repetitive patterns in received signal. We find them
+         * using the Fast Auto-Correlation Technique, which is relies on
+         * two FFTs - O(2nlog(n)) - rather than its definition - O(n^2)
          */
-        break;
+
+        /* Don't apply *any* window function */
+        SU_FFTW(_execute(detector->fft_plan));
+        for (i = 0; i < detector->params.window_size; ++i)
+          detector->fft[i] *= SU_C_CONJ(detector->fft[i]);
+        SU_FFTW(_execute(detector->fft_plan_rev));
+
+        /* Average result */
+        for (i = 0; i < detector->params.window_size; ++i) {
+          ac = SU_C_REAL(detector->ifft[i] * SU_C_CONJ(detector->ifft[i]));
+          detector->acorr[i] +=
+              detector->params.alpha * (ac - detector->acorr[i]);
+        }
+
+        /* Update baudrate estimation */
+        return su_channel_perform_baudrate_estimation(detector);
 
       default:
         SU_WARNING("Mode not implemented\n");

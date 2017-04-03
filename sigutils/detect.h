@@ -74,17 +74,18 @@ typedef struct sigutils_peak_detector su_peak_detector_t;
 
 enum sigutils_channel_detector_mode {
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY,       /* Discover channels */
-  SU_CHANNEL_DETECTOR_MODE_CYCLOSTATIONARY, /* To find baudrate */
+  SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION, /* To find baudrate */
   SU_CHANNEL_DETECTOR_MODE_ORDER_ESTIMATION /* To find constellation size */
 };
 
 struct sigutils_channel_detector_params {
   enum sigutils_channel_detector_mode mode;
-  unsigned int samp_rate;   /* Sample rate */
-  unsigned int window_size; /* Window size == FFT bins */
-  SUFLOAT fc;               /* Center frequency */
-  unsigned int decimation;
-  unsigned int max_order;   /* Max constellation order */
+  SUSCOUNT samp_rate;   /* Sample rate */
+  SUSCOUNT window_size; /* Window size == FFT bins */
+  SUFLOAT  fc;          /* Center frequency */
+  SUSCOUNT decimation;  /* Decimation */
+  SUFLOAT  bw;          /* Low-pass filter bandwidth (in Hz) */
+  SUSCOUNT max_order;   /* Max constellation order */
 
   /* Detector parameters */
   SUFLOAT alpha;            /* PSD averaging ratio */
@@ -93,18 +94,19 @@ struct sigutils_channel_detector_params {
   SUFLOAT snr;              /* Minimum SNR to detect channels (linear) */
 };
 
-#define sigutils_channel_detector_params_INITIALIZER \
-{                         \
-  SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */ \
-  8000,     /* samp_rate */   \
-  512,      /* window_size */ \
-  0.0,      /* fc */          \
-  1,        /* decimation */  \
-  8,        /* max_order */   \
-  SU_CHANNEL_DETECTOR_ALPHA, /* alpha */  \
-  SU_CHANNEL_DETECTOR_BETA,  /* beta */   \
-  SU_CHANNEL_DETECTOR_GAMMA, /* gamma */  \
-  2,        /* snr */         \
+#define sigutils_channel_detector_params_INITIALIZER    \
+{                                                       \
+  SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */        \
+  8000,     /* samp_rate */                             \
+  512,      /* window_size */                           \
+  0.0,      /* fc */                                    \
+  1,        /* decimation */                            \
+  0.0,      /* bw */                                    \
+  8,        /* max_order */                             \
+  SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                \
+  SU_CHANNEL_DETECTOR_BETA,  /* beta */                 \
+  SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                \
+  2,        /* snr */                                   \
 }
 
 
@@ -137,14 +139,22 @@ struct sigutils_channel_detector {
   struct sigutils_channel_detector_params params;
   su_ncqo_t lo; /* Local oscillator */
   su_iir_filt_t antialias; /* Antialiasing filter */
-  SUCOMPLEX prev_samp; /* Previous sample */
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
+  SU_FFTW(_plan) fft_plan_rev;
   SU_FFTW(_complex) *fft;
-  SUFLOAT *spect;
+  SU_FFTW(_complex) *ifft;
+
+  union {
+    SUFLOAT *spect; /* Used only if mode == DISCOVERY */
+    SUFLOAT *acorr; /* Used only if mode == CYCLOSTATIONARY */
+    void *_r_alloc; /* Generic allocation */
+  };
+
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT N0; /* Detected noise floor */
+  SUFLOAT baud; /* Detected baudrate */
   SUSCOUNT req_samples; /* Number of required samples for detection */
   unsigned int decim_ptr;
   unsigned int ptr; /* Sample in window */
@@ -182,6 +192,10 @@ void su_channel_detector_get_channel_list(
     const su_channel_detector_t *detector,
     struct sigutils_channel ***channel_list,
     unsigned int *channel_count);
+
+void su_channel_params_adjust_to_channel(
+    struct sigutils_channel_detector_params *params,
+    const struct sigutils_channel *channel);
 
 struct sigutils_channel *su_channel_dup(const struct sigutils_channel *channel);
 
