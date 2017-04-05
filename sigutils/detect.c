@@ -299,6 +299,8 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
 
   su_iir_filt_finalize(&detector->antialias);
 
+  su_peak_detector_finalize(&detector->pd);
+
   free(detector);
 }
 
@@ -397,6 +399,15 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
         SU_ERROR("failed to create FFT plan\n");
         goto fail;
       }
+      break;
+
+    case SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF:
+      /* We only need a peak detector here */
+      if (!su_peak_detector_init(&new->pd, params->pd_size, params->pd_thres)) {
+        SU_ERROR("failed to initialize peak detector\n");
+        goto fail;
+      }
+
       break;
   }
 
@@ -519,7 +530,9 @@ su_channel_params_adjust_to_channel(
 
   width = MAX(channel->f_hi - channel->f_lo, channel->bw);
 
-  params->decimation = .5 * SU_CEIL(params->samp_rate / width);
+  if ((params->decimation = .5 * SU_CEIL(params->samp_rate / width)) < 1)
+    params->decimation = 1;
+
   params->bw = width;
   params->fc = channel->fc;
 }
@@ -618,7 +631,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
 }
 
 SUPRIVATE SUBOOL
-su_channel_perform_baudrate_estimation(su_channel_detector_t *detector)
+su_channel_detect_baudrate_from_acorr(su_channel_detector_t *detector)
 {
   int i;
   int N;
@@ -663,12 +676,93 @@ su_channel_perform_baudrate_estimation(su_channel_detector_t *detector)
   return SU_TRUE;
 }
 
+SUPRIVATE SUBOOL
+su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
+{
+  int i, j;
+  int N;
+  int hi, lo;
+
+  SUSCOUNT startbin;
+  SUFLOAT dbaud;
+  SUFLOAT floor;
+  SUCOMPLEX acc;
+  SUFLOAT equiv_fs;
+
+  N = detector->params.window_size;
+  equiv_fs =
+      (SUFLOAT) detector->params.samp_rate
+      / (SUFLOAT) detector->params.decimation;
+  dbaud = equiv_fs / N;
+
+  /*
+   * We always reset the baudrate. We prefer to fail here instead of
+   * giving a not accurate estimation.
+   */
+  detector->baud = 0;
+
+  /* The spectrogram of the square of the derivative is symmetric */
+  if (detector->params.bw != 0.0) {
+    startbin = SU_CEIL(detector->params.bw / dbaud) + detector->params.pd_size;
+    if ((i = N - startbin - 1) < 0) {
+      SU_ERROR("Bandwidth inconsistent with decimation\n");
+      return SU_FALSE;
+    }
+  } else {
+    i = N / 2;
+  }
+
+  while (i < N) {
+    if (su_peak_detector_feed(&detector->pd, SU_DB(detector->spect[i])) > 0) {
+      /* Measure significance w.r.t the surrounding floor */
+      hi = lo = -1;
+
+      /* Find channel limits */
+      for (j = i + 1; j < N; ++j)
+        if (detector->spect[j] > detector->spect[j - 1]) {
+          hi = j;
+          break;
+        }
+
+      for (j = i - 1; j >= 0; --j)
+        if (detector->spect[j] > detector->spect[j + 1]) {
+          lo = j;
+          break;
+        }
+
+      if (hi != -1 && lo != -1) {
+        floor = .5 * (detector->spect[hi] + detector->spect[hi]);
+
+        /* Is significance high enough? */
+        if (SU_DB(detector->spect[i] / floor) > detector->params.pd_signif) {
+          acc = 0;
+
+          /*
+           * Perform an accurate estimation of the baudrate using the
+           * autocorrelation technique
+           */
+          for (j = lo + 1; j < hi; ++j)
+            acc +=
+                SU_C_EXP(-2 * I * M_PI * j / (SUFLOAT) N)
+                * detector->spect[j];
+          detector->baud =
+              SU_NORM2ABS_FREQ(equiv_fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
+          break;
+        }
+      }
+    }
+    ++i;
+  }
+
+  return SU_TRUE;
+}
+
 SUBOOL
 su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
 {
   unsigned int i;
   SUFLOAT psd;
-  SUCOMPLEX cac;
+  SUCOMPLEX diff;
   SUFLOAT ac;
 
   if (detector->req_samples > 0)
@@ -687,6 +781,13 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
       return SU_TRUE;
 
     detector->decim_ptr = 0; /* Reset decimation pointer */
+  }
+
+  /* In nonlinear diff mode, we store something else in the window */
+  if (detector->params.mode == SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF) {
+     diff = (x - detector->prev) * detector->params.samp_rate;
+     detector->prev = x;
+     x = diff * SU_C_CONJ(diff);
   }
 
   detector->window[detector->ptr++] = x;
@@ -739,9 +840,33 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
         }
 
         /* Update baudrate estimation */
-        return su_channel_perform_baudrate_estimation(detector);
+        return su_channel_detect_baudrate_from_acorr(detector);
+
+      case SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF:
+        /*
+         * Compute FFT of the square of the absolute value of the derivative
+         * of the signal. This will introduce a train of pulses on every
+         * non-equal symbol transition.
+         */
+        su_taps_apply_blackmann_harris_complex(
+            detector->window,
+            detector->params.window_size);
+
+        SU_FFTW(_execute(detector->fft_plan));
+
+        for (i = 0; i < detector->params.window_size; ++i) {
+          psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+          psd /= detector->params.window_size;
+          detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
+        }
+
+        /* Update baudrate estimation */
+        return su_channel_detect_baudrate_from_nonlinear_diff(detector);
+
+        break;
 
       default:
+
         SU_WARNING("Mode not implemented\n");
         return SU_FALSE;
     }

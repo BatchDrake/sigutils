@@ -201,12 +201,15 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   SUBOOL ok = SU_FALSE;
   complex float *input = (complex float *) -1; /* Required by mmap */
   SUCOMPLEX *fft;
+  SUCOMPLEX *win;
   SUFLOAT *spect;
   SUFLOAT *spmax;
   SUFLOAT *spmin;
+  SUFLOAT *spnln;
   SUFLOAT *n0est;
   SUFLOAT *acorr;
   SUFLOAT *decim;
+
   SUFLOAT *fc;
   SUSCOUNT req;
 
@@ -214,6 +217,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       sigutils_channel_detector_params_INITIALIZER;
   su_channel_detector_t *detector = NULL;
   su_channel_detector_t *baud_det = NULL;
+  su_channel_detector_t *nonlinear_baud_det = NULL;
   struct stat sbuf;
   unsigned int i;
   unsigned int n = 0;
@@ -327,7 +331,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
             channel_list[i]->f_hi - channel_list[i]->f_lo,
             channel_list[i]->snr);
 
-        if (n <= 7)
+        if (n <= 6)
           center_channel = channel_list[i];
       }
 
@@ -346,7 +350,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   params.mode = SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION;
   params.window_size = 4096;
   params.alpha = 1e-3;
-
+  /* params.bw *= 2; */
   /*
    * Lowering the decimation, we can increase the precision of
    * our detection of the baudrate
@@ -360,6 +364,8 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       acorr = su_test_ctx_getf_w_size(ctx, "acorr", params.window_size));
   SU_TEST_ASSERT(
       fft   = su_test_ctx_getc_w_size(ctx, "fft",   params.window_size));
+  SU_TEST_ASSERT(
+      win   = su_test_ctx_getc_w_size(ctx, "win",   params.window_size));
 
   SU_TEST_ASSERT(baud_det = su_channel_detector_new(&params));
 
@@ -387,6 +393,31 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   SU_INFO("Detected baudrate: %lg\n", baud_det->baud);
 
+  SU_INFO("Performing non-linear baudrate detection...\n");
+
+  params.mode = SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF;
+
+  SU_TEST_ASSERT(
+      spnln = su_test_ctx_getf_w_size(ctx, "spnln", params.window_size));
+
+  SU_TEST_ASSERT(nonlinear_baud_det = su_channel_detector_new(&params));
+
+  for (i = 0; i < samples; ++i)
+    SU_TEST_ASSERT(
+        su_channel_detector_feed(
+            nonlinear_baud_det,
+            SU_C_CONJ((SUCOMPLEX) input[i % samples]))); /* Gqrx inverts the Q channel */
+
+  if (nonlinear_baud_det->baud == 0)
+    SU_INFO("  Not enough certainty to estimate baudrate\n");
+  else
+    SU_INFO("  Baudrate estimation: %lg\n", nonlinear_baud_det->baud);
+
+  for (i = 0; i < params.window_size; ++i) {
+    spnln[i] = nonlinear_baud_det->spect[i];
+    win[i] = nonlinear_baud_det->window[i];
+  }
+
   ok = SU_TRUE;
 
 done:
@@ -395,6 +426,9 @@ done:
 
   if (baud_det != NULL)
     su_channel_detector_destroy(baud_det);
+
+  if (nonlinear_baud_det != NULL)
+    su_channel_detector_destroy(nonlinear_baud_det);
 
   if (fd != -1)
     close(fd);

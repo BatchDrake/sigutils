@@ -75,6 +75,7 @@ typedef struct sigutils_peak_detector su_peak_detector_t;
 enum sigutils_channel_detector_mode {
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY,       /* Discover channels */
   SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION, /* To find baudrate */
+  SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF,  /* To find baudrate (alt.) */
   SU_CHANNEL_DETECTOR_MODE_ORDER_ESTIMATION /* To find constellation size */
 };
 
@@ -88,10 +89,15 @@ struct sigutils_channel_detector_params {
   SUSCOUNT max_order;   /* Max constellation order */
 
   /* Detector parameters */
-  SUFLOAT alpha;            /* PSD averaging ratio */
-  SUFLOAT beta;             /* PSD upper and lower levels averaging ratio  */
-  SUFLOAT gamma;            /* Noise level update ratio */
-  SUFLOAT snr;              /* Minimum SNR to detect channels (linear) */
+  SUFLOAT alpha;        /* PSD averaging ratio */
+  SUFLOAT beta;         /* PSD upper and lower levels averaging ratio  */
+  SUFLOAT gamma;        /* Noise level update ratio */
+  SUFLOAT snr;          /* Minimum SNR to detect channels (linear) */
+
+  /* Peak detector parameters */
+  SUSCOUNT pd_size;   /* PD samples */
+  SUFLOAT  pd_thres;  /* PD threshold, in sigmas */
+  SUFLOAT  pd_signif; /* Minimum significance, in dB */
 };
 
 #define sigutils_channel_detector_params_INITIALIZER    \
@@ -107,6 +113,9 @@ struct sigutils_channel_detector_params {
   SU_CHANNEL_DETECTOR_BETA,  /* beta */                 \
   SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                \
   2,        /* snr */                                   \
+  10,       /* pd_samples */                            \
+  2.,       /* pd_thres */                              \
+  10        /* pd_signif */                             \
 }
 
 
@@ -136,31 +145,36 @@ struct sigutils_channel {
 }
 
 struct sigutils_channel_detector {
+  /* Common members */
   struct sigutils_channel_detector_params params;
   su_ncqo_t lo; /* Local oscillator */
   su_iir_filt_t antialias; /* Antialiasing filter */
+  SUSCOUNT decim_ptr;
+  SUSCOUNT ptr; /* Sample in window */
+  unsigned int iters;
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
-  SU_FFTW(_plan) fft_plan_rev;
   SU_FFTW(_complex) *fft;
-  SU_FFTW(_complex) *ifft;
+  SUSCOUNT req_samples; /* Number of required samples for detection */
 
   union {
-    SUFLOAT *spect; /* Used only if mode == DISCOVERY */
-    SUFLOAT *acorr; /* Used only if mode == CYCLOSTATIONARY */
+    SUFLOAT *spect; /* Used only if mode == DISCOVERY, NONLINEAR_DIFF */
+    SUFLOAT *acorr; /* Used only if mode == AUTOCORRELATION */
     void *_r_alloc; /* Generic allocation */
   };
 
+  /* Channel detector members */
+  SU_FFTW(_plan) fft_plan_rev;
+  SU_FFTW(_complex) *ifft;
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT N0; /* Detected noise floor */
-  SUFLOAT baud; /* Detected baudrate */
-  SUSCOUNT req_samples; /* Number of required samples for detection */
-  unsigned int decim_ptr;
-  unsigned int ptr; /* Sample in window */
-  unsigned int iters;
   PTR_LIST(struct sigutils_channel, channel);
-  const struct sigutils_channel *dc; /* Spurious DC channel */
+
+  /* Baudrate estimator members */
+  SUFLOAT baud; /* Detected baudrate */
+  SUCOMPLEX prev; /* Used by nonlinear diff */
+  su_peak_detector_t pd; /* Peak detector used by nonlinear diff */
 };
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
