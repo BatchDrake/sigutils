@@ -89,9 +89,9 @@ struct sigutils_block_port;
  * Flow controllers ensure safe concurrent access to block output streams.
  * However, this model imposes a restriction: if non-null flow controller is
  * being used, read operation on the flow controller must be performed from
- * one and one thread, otherwise deadlocks will occur. This happens because
- * after the end of the output stream is reached, the read operation from
- * the first port will sleep until the next port completes. However, since
+ * one and only one thread, otherwise deadlocks will occur. This happens
+ * because after the end of the output stream is reached, the read operation
+ * from the first port will sleep until the next port completes. However, since
  * the next port is in the same thread, the next read operation will never
  * take place.
  */
@@ -102,7 +102,7 @@ struct sigutils_flow_controller {
   su_stream_t output; /* Output stream */
   unsigned int consumers; /* Number of ports plugged to this flow controller */
   unsigned int pending;   /* Number of ports waiting for new data */
-  struct sigutils_block_port *master; /* Master port */
+  const struct sigutils_block_port *master; /* Master port */
 };
 
 typedef struct sigutils_flow_controller su_flow_controller_t;
@@ -223,6 +223,11 @@ SUBOOL su_block_set_flow_controller(
     su_block_t *block,
     unsigned int port_id,
     enum sigutils_flow_controller_kind kind);
+
+SUBOOL su_block_set_master_port(
+    su_block_t *block,
+    unsigned int port_id,
+    const su_block_port_t *port);
 
 /* su_block_class operations */
 SUBOOL su_block_class_register(struct sigutils_block_class *class);

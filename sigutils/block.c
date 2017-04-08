@@ -593,6 +593,25 @@ su_block_set_flow_controller(
 }
 
 SUBOOL
+su_block_set_master_port(
+    su_block_t *block,
+    unsigned int port_id,
+    const su_block_port_t *port)
+{
+  su_flow_controller_t *fc;
+
+  if ((fc = su_block_get_flow_controller(block, port_id)) == NULL)
+    return SU_FALSE;
+
+  if (fc->kind != SU_FLOW_CONTROL_KIND_MASTER_SLAVE)
+    return SU_FALSE;
+
+  fc->master = port;
+
+  return SU_TRUE;
+}
+
+SUBOOL
 su_block_plug(
     su_block_t *source,
     unsigned int out_id,
