@@ -262,7 +262,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   /* Initialize channel detector */
   params.samp_rate = 250000;
-  params.alpha = 1e-2;
+  params.alpha = 1e-3;
   params.window_size = 4096;
 
   /* Create debug buffers */
@@ -355,7 +355,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
    * Lowering the decimation, we can increase the precision of
    * our detection of the baudrate
    */
-  params.decimation /= 8;
+  params.decimation /= 2;
 
   *decim = params.decimation;
   *fc = params.fc;

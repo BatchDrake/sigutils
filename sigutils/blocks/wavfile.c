@@ -97,8 +97,6 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
     return SU_FALSE;
   }
 
-  *private = (void *) wav;
-
   wav->samp_rate = wav->info.samplerate;
 
   if (!su_block_set_property_ref(
@@ -111,8 +109,11 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
       SU_PROPERTY_TYPE_INTEGER,
       "channels",
       &wav->info.channels)) {
+    su_wavfile_close(wav);
     return SU_FALSE;
   }
+
+  *private = (void *) wav;
 
   return SU_TRUE;
 }

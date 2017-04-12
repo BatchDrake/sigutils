@@ -734,7 +734,11 @@ su_block_port_resync(su_block_port_t *port)
     return SU_FALSE;
   }
 
+  su_flow_controller_enter(port->fc);
+
   port->pos = su_flow_controller_tell(port->fc);
+
+  su_flow_controller_leave(port->fc);
 
   return SU_TRUE;
 }
