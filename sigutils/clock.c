@@ -20,6 +20,9 @@
 
 #include <string.h>
 
+#define SU_LOG_LEVEL "clock"
+
+#include "log.h"
 #include "clock.h"
 
 void

@@ -103,13 +103,6 @@
 /* Required for the map from sigutils types to FFTW3 types */
 #define SU_FFTW(method) JOIN(SU_SOURCE_FFTW_PREFIX, method)
 
-#define SU_ERROR(fmt, arg...) \
-  fprintf(stderr, "(e) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
-#define SU_WARNING(fmt, arg...) \
-  fprintf(stderr, "(!) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
-#define SU_INFO(fmt, arg...) \
-  fprintf(stderr, "(i) %s:%d: " fmt, __FUNCTION__, __LINE__, ##arg)
-
 /* Inline functions */
 
 /* Normalized sinc */

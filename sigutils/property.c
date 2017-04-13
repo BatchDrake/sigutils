@@ -21,7 +21,9 @@
 #include <util.h>
 #include <string.h>
 #include <stdlib.h>
+#define SU_LOG_LEVEL "property"
 
+#include "log.h"
 #include "property.h"
 
 /************************** su_block_property API ****************************/

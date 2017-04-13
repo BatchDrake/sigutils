@@ -19,6 +19,10 @@
 */
 #include <stdlib.h>
 #include <string.h>
+
+#define SU_LOG_LEVEL "tuner-block"
+
+#include "log.h"
 #include "block.h"
 #include "ncqo.h"
 #include "iir.h"

@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <sndfile.h>
 
+#define SU_LOG_LEVEL "wavfile-block"
+
+#include "log.h"
 #include "block.h"
 
 struct su_wavfile {

@@ -19,6 +19,10 @@
 */
 #include <stdlib.h>
 
+#define SU_LOG_DOMAIN "clock-block"
+
+#include "log.h"
+
 #include "block.h"
 #include "clock.h"
 

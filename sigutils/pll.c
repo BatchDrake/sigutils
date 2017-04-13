@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include "sampling.h"
+#include "log.h"
 #include "types.h"
 #include "pll.h"
 #include "taps.h"

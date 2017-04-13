@@ -19,6 +19,9 @@
 */
 #include <stdlib.h>
 
+#define SU_LOG_LEVEL "agc-block"
+
+#include "log.h"
 #include "block.h"
 #include "agc.h"
 

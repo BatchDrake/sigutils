@@ -19,6 +19,9 @@
 */
 #include <stdlib.h>
 
+#define SU_LOG_LEVEL "pll-block"
+
+#include "log.h"
 #include "block.h"
 #include "pll.h"
 

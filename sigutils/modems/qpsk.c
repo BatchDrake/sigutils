@@ -21,6 +21,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define SU_LOG_LEVEL "qpsk-modem"
+
+#include "log.h"
 #include "sampling.h"
 #include "modem.h"
 #include "agc.h"

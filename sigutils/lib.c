@@ -18,6 +18,10 @@
 
 */
 
+#include <string.h>
+
+#define SU_LOG_LEVEL "lib"
+
 #include "sigutils.h"
 
 /* Block classes */
@@ -32,8 +36,50 @@ extern struct sigutils_block_class su_block_class_SIGGEN;
 /* Modem classes */
 extern struct sigutils_modem_class su_modem_class_QPSK;
 
+SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
+
+SUPRIVATE char
+su_log_severity_to_char(enum sigutils_log_severity sev)
+{
+  const char *sevstr = "di!ex";
+
+  if (sev < 0 || sev > SU_LOG_SEVERITY_CRITICAL)
+    return '?';
+
+  return sevstr[sev];
+}
+
+SUPRIVATE void
+su_log_func_default(void *private, const struct sigutils_log_message *msg)
+{
+  SUBOOL *cr = (SUBOOL *) private;
+  size_t msglen;
+
+  if (*cr)
+    fprintf(
+        stderr,
+        "[%c] %s:%d:",
+        su_log_severity_to_char(msg->severity),
+        msg->function,
+        msg->line);
+
+  msglen = strlen(msg->message);
+
+  *cr = msg->message[msglen - 1] == '\n' || msg->message[msglen - 1] == '\r';
+
+  fputs(msg->message, stderr);
+}
+
+/* Log config */
+SUPRIVATE struct sigutils_log_config su_lib_log_config =
+{
+  &su_log_cr, /* private */
+  SU_TRUE, /* exclusive */
+  su_log_func_default, /* log_func */
+};
+
 SUBOOL
-su_lib_init(void)
+su_lib_init_ex(const struct sigutils_log_config *logconfig)
 {
   unsigned int i = 0;
 
@@ -53,6 +99,11 @@ su_lib_init(void)
           &su_modem_class_QPSK
       };
 
+  if (logconfig == NULL)
+    logconfig = &su_lib_log_config;
+
+  su_log_init(logconfig);
+
   for (i = 0; i < sizeof (blocks) / sizeof (blocks[0]); ++i)
     if (!su_block_class_register(blocks[i])) {
       if (blocks[i]->name != NULL)
@@ -70,3 +121,8 @@ su_lib_init(void)
   return SU_TRUE;
 }
 
+SUBOOL
+su_lib_init(void)
+{
+  return su_lib_init_ex(NULL);
+}

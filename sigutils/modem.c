@@ -20,6 +20,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#define SU_LOG_LEVEL "modem"
+
+#include "log.h"
 #include "modem.h"
 
 PTR_LIST(SUPRIVATE su_modem_class_t, modem_class);

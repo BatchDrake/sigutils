@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SU_LOG_LEVEL "siggen-block"
+
+#include "log.h"
 #include "block.h"
 
 enum su_sig_type {

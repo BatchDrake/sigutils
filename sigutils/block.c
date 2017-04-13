@@ -20,6 +20,10 @@
 
 #include <util.h>
 #include <string.h>
+
+#define SU_LOG_LEVEL "block"
+
+#include "log.h"
 #include "block.h"
 
 static su_block_class_t *class_list;
