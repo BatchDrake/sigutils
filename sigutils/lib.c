@@ -58,7 +58,7 @@ su_log_func_default(void *private, const struct sigutils_log_message *msg)
   if (*cr)
     fprintf(
         stderr,
-        "[%c] %s:%d:",
+        "[%c] %s:%d: ",
         su_log_severity_to_char(msg->severity),
         msg->function,
         msg->line);
