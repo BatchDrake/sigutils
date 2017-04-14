@@ -424,10 +424,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
         SU_ABS2NORM_FREQ(params->samp_rate, params->bw));
 
   /* Calculate the required number of samples to perform detection */
-  new->req_samples =
-        params->window_size
-      * params->decimation
-      * MAX(2. / params->alpha, 1. / params->beta);
+  new->req_samples = 0; /* We can perform detection immediately */
 
   return new;
 
@@ -543,7 +540,6 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
   unsigned int i;
   unsigned int N; /* FFT size */
   unsigned int valid; /* valid FFT bins */
-  unsigned int min_iters; /* minimum number of iters */
   unsigned int min_pwr_bin; /* bin of the stpectrogram where the min power is */
   SUFLOAT alpha;
   SUFLOAT beta;
@@ -618,6 +614,12 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
       else
         detector->N0 = .5
           * (detector->spmin[min_pwr_bin] + detector->spmax[min_pwr_bin]);
+    }
+
+    /* Check whether max age has been reached and clear channel list */
+    if (detector->iters == detector->params.max_age) {
+      detector->iters = 0;
+      su_channel_detector_channel_list_clear(detector);
     }
 
     /* New threshold calculated, find channels */

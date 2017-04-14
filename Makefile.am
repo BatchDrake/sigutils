@@ -15,6 +15,7 @@ nobase_pkginclude_HEADERS = 	\
 	sigutils/coef.h		\
 	sigutils/detect.h \
 	sigutils/iir.h		\
+	sigutils/log.h		\
 	sigutils/modem.h	\
 	sigutils/ncqo.h		\
 	sigutils/pll.h		\

@@ -25,14 +25,14 @@
 #include "ncqo.h"
 #include "iir.h"
 
-#define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 20 /* in FFT runs */
+#define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 0  /* in FFT runs */
 #define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
 #define SU_CHANNEL_DETECTOR_MIN_BW           10 /* in Hz */
 
 #define SU_CHANNEL_DETECTOR_ALPHA            1e-2
 #define SU_CHANNEL_DETECTOR_BETA             1e-3
 #define SU_CHANNEL_DETECTOR_GAMMA            .5
-
+#define SU_CHANNEL_MAX_AGE                   40 /* In FFT runs */
 #define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
 
 
@@ -89,10 +89,11 @@ struct sigutils_channel_detector_params {
   SUSCOUNT max_order;   /* Max constellation order */
 
   /* Detector parameters */
-  SUFLOAT alpha;        /* PSD averaging ratio */
-  SUFLOAT beta;         /* PSD upper and lower levels averaging ratio  */
-  SUFLOAT gamma;        /* Noise level update ratio */
-  SUFLOAT snr;          /* Minimum SNR to detect channels (linear) */
+  SUFLOAT  alpha;        /* PSD averaging ratio */
+  SUFLOAT  beta;         /* PSD upper and lower levels averaging ratio  */
+  SUFLOAT  gamma;        /* Noise level update ratio */
+  SUFLOAT  snr;          /* Minimum SNR to detect channels (linear) */
+  SUSCOUNT max_age;      /* Max channel age */
 
   /* Peak detector parameters */
   SUSCOUNT pd_size;   /* PD samples */
@@ -113,6 +114,7 @@ struct sigutils_channel_detector_params {
   SU_CHANNEL_DETECTOR_BETA,  /* beta */                 \
   SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                \
   2,        /* snr */                                   \
+  SU_CHANNEL_MAX_AGE,        /* max_age */              \
   10,       /* pd_samples */                            \
   2.,       /* pd_thres */                              \
   10        /* pd_signif */                             \
@@ -152,6 +154,7 @@ struct sigutils_channel_detector {
   SUSCOUNT decim_ptr;
   SUSCOUNT ptr; /* Sample in window */
   unsigned int iters;
+  unsigned int chan_age;
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
   SU_FFTW(_complex) *fft;
