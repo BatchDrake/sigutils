@@ -617,7 +617,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
     }
 
     /* Check whether max age has been reached and clear channel list */
-    if (detector->iters == detector->params.max_age) {
+    if (detector->iters >= detector->params.max_age) {
       detector->iters = 0;
       su_channel_detector_channel_list_clear(detector);
     }
