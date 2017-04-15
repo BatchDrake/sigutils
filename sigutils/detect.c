@@ -759,8 +759,8 @@ su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
   return SU_TRUE;
 }
 
-SUBOOL
-su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
+SUINLINE SUBOOL
+su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 {
   unsigned int i;
   SUFLOAT psd;
@@ -875,4 +875,25 @@ su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
   }
 
   return SU_TRUE;
+}
+
+SUBOOL
+su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
+{
+  return su_channel_detector_feed_internal(detector, x);
+}
+
+SUSCOUNT
+su_channel_detector_feed_bulk(
+    su_channel_detector_t *detector,
+    const SUCOMPLEX *signal,
+    SUSCOUNT size)
+{
+  unsigned int i;
+
+  for (i = 0; i < size; ++i)
+    if (!su_channel_detector_feed_internal(detector, signal[i]))
+      break;
+
+  return i;
 }

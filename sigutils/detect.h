@@ -203,7 +203,12 @@ void su_channel_detector_destroy(su_channel_detector_t *detector);
 
 SUBOOL su_channel_detector_feed(
     su_channel_detector_t *detector,
-    SUCOMPLEX samp);
+    SUCOMPLEX x);
+
+SUSCOUNT su_channel_detector_feed_bulk(
+    su_channel_detector_t *detector,
+    const SUCOMPLEX *signal,
+    SUSCOUNT size);
 
 void su_channel_detector_get_channel_list(
     const su_channel_detector_t *detector,
