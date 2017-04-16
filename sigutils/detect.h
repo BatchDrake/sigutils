@@ -129,6 +129,7 @@ struct sigutils_channel {
   SUFLOAT snr;   /* Signal-to-noise ratio */
   SUFLOAT S0;    /* Peak signal power */
   SUFLOAT N0;    /* Noise level */
+  SUFLOAT ft;    /* Tuner frequency */
   unsigned int age;     /* Channel age */
   unsigned int present; /* Is channel present? */
 };
@@ -142,6 +143,7 @@ struct sigutils_channel {
   0,    /* snr */                       \
   0,    /* S0 */                        \
   0,    /* N0 */                        \
+  0,    /* ft */                        \
   0,    /* age */                       \
   0,    /* present */                   \
 }
