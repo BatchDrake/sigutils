@@ -527,11 +527,11 @@ su_channel_params_adjust_to_channel(
 
   width = MAX(channel->f_hi - channel->f_lo, channel->bw);
 
-  if ((params->decimation = .5 * SU_CEIL(params->samp_rate / width)) < 1)
+  if ((params->decimation = SU_CEIL(params->samp_rate / width)) < 1)
     params->decimation = 1;
 
   params->bw = width;
-  params->fc = channel->fc;
+  params->fc = channel->fc - channel->ft;
 }
 
 SUPRIVATE SUBOOL
@@ -660,20 +660,19 @@ su_channel_detect_baudrate_from_acorr(su_channel_detector_t *detector)
 
   /* No valley found */
   if (i == N - 1) {
-    SU_ERROR("Cannot estimate baudrate: first valley in acorr not found\n");
-    return SU_FALSE;
-  }
+    detector->baud = 0;
+  } else {
+    /* If prev < next, the null is between (prev, this] */
+    if (prev < next) {
+      norm = 1. / (prev + this);
+      tau = norm * dtau * (prev * i + this * (i - 1));
+    } else { /* Otherwise, it's between [this, next) */
+      norm = 1. / (next + this);
+      tau = norm * dtau * (next * i + this * (i + 1));
+    }
 
-  /* If prev < next, the null is between (prev, this] */
-  if (prev < next) {
-    norm = 1. / (prev + this);
-    tau = norm * dtau * (prev * i + this * (i - 1));
-  } else { /* Otherwise, it's between [this, next) */
-    norm = 1. / (next + this);
-    tau = norm * dtau * (next * i + this * (i + 1));
+    detector->baud = 1. / tau;
   }
-
-  detector->baud = 1. / tau;
 
   return SU_TRUE;
 }
