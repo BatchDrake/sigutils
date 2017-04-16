@@ -272,6 +272,14 @@ su_flow_controller_notify(su_flow_controller_t *fc)
     su_flow_controller_notify_force(fc);
 }
 
+SUPRIVATE void
+su_flow_controller_force_eos(su_flow_controller_t *fc)
+{
+  fc->eos = SU_TRUE;
+
+  su_flow_controller_notify(fc);
+}
+
 SUPRIVATE su_off_t
 su_flow_controller_tell(const su_flow_controller_t *fc)
 {
@@ -366,8 +374,12 @@ su_flow_controller_read_unsafe(
 
       default:
         SU_ERROR("Invalid flow controller kind\n");
-        return -1;
+        return SU_FLOW_CONTROLLER_INTERNAL_ERROR;
     }
+
+    /* Wakeups may be triggered by a forced EOS condition */
+    if (fc->eos)
+      return SU_FLOW_CONTROLLER_END_OF_STREAM;
   }
 
   return result;
@@ -583,6 +595,19 @@ su_block_get_flow_controller(const su_block_t *block, unsigned int id)
 }
 
 SUBOOL
+su_block_force_eos(const su_block_t *block, unsigned int id)
+{
+  su_flow_controller_t *fc;
+
+  if ((fc = su_block_get_flow_controller(block, id)) == NULL)
+    return SU_FALSE;
+
+  su_flow_controller_force_eos(fc);
+
+  return SU_TRUE;
+}
+
+SUBOOL
 su_block_set_flow_controller(
     su_block_t *block,
     unsigned int port_id,
@@ -662,9 +687,9 @@ su_block_port_plug(su_block_port_t *port,
   port->port_id = portid;
   port->fc      = block->out + portid;
   port->block   = block;
-  port->pos     = su_flow_controller_tell(port->fc);
 
   su_flow_controller_add_consumer(port->fc);
+  port->pos     = su_flow_controller_tell(port->fc);
 
   return SU_TRUE;
 }
@@ -683,41 +708,60 @@ su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
   do {
     su_flow_controller_enter(port->fc);
 
+    if (port->fc->eos) {
+      /* EOS forced somewhere */
+      su_flow_controller_leave(port->fc);
+      return SU_BLOCK_PORT_READ_END_OF_STREAM;
+    }
+
     /* ------8<----- ENTER CONCURRENT FLOW CONTROLLER ACCESS -----8<------ */
     port->reading = SU_TRUE;
     got = su_flow_controller_read_unsafe(port->fc, port, port->pos, obuf, size);
     port->reading = SU_FALSE;
 
-    if (got == -1) {
-      SU_WARNING("Port read failed (port desync)\n");
-
-      su_flow_controller_leave(port->fc);
-      return SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC;
-    } else if (got == SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED) {
-      /*
-       * Stream exhausted, and flow controller allowed this thread
-       * to call acquire. Since this call is protected, the block
-       * implementation doesn't have to worry about threads.
-       */
-      if ((acquired = port->block->class->acquire(
-          port->block->private,
-          su_flow_controller_get_stream(port->block->out),
-          port->port_id,
-          port->block->in)) == -1) {
-        /* Acquire error */
-        SU_ERROR("%s: acquire failed\n", port->block->class->name);
-        /* TODO: set error condition in flow control */
+    switch (got) {
+      case SU_FLOW_CONTROLLER_DESYNC:
         su_flow_controller_leave(port->fc);
-        return SU_BLOCK_PORT_READ_ERROR_ACQUIRE;
-      } else if (acquired == 0) {
-        /* Stream closed */
-        /* TODO: set error condition in flow control */
+        return SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC;
+
+      case SU_FLOW_CONTROLLER_INTERNAL_ERROR:
+      case SU_FLOW_CONTROLLER_END_OF_STREAM:
         su_flow_controller_leave(port->fc);
         return SU_BLOCK_PORT_READ_END_OF_STREAM;
-      } else {
-        /* Acquire succeeded, wake up all threads */
-        su_flow_controller_notify(port->fc);
-      }
+
+      case SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED:
+        /*
+         * Stream exhausted, and flow controller allowed this thread
+         * to call acquire. Since this call is protected, the block
+         * implementation doesn't have to worry about threads.
+         */
+        if ((acquired = port->block->class->acquire(
+            port->block->private,
+            su_flow_controller_get_stream(port->block->out),
+            port->port_id,
+            port->block->in)) == -1) {
+          /* Acquire error */
+          SU_ERROR("%s: acquire failed\n", port->block->class->name);
+          /* TODO: set error condition in flow control */
+          su_flow_controller_leave(port->fc);
+          return SU_BLOCK_PORT_READ_ERROR_ACQUIRE;
+        } else if (acquired == 0) {
+          /* Stream closed */
+          /* TODO: set error condition in flow control */
+          su_flow_controller_leave(port->fc);
+          return SU_BLOCK_PORT_READ_END_OF_STREAM;
+        } else {
+          /* Acquire succeeded, wake up all threads */
+          su_flow_controller_notify(port->fc);
+        }
+        break;
+
+      default:
+        if (got < 0) {
+          SU_ERROR("Unexpected return value %d\n", got);
+          su_flow_controller_leave(port->fc);
+          return SU_BLOCK_PORT_READ_END_OF_STREAM;
+        }
     }
     /* ------>8----- LEAVE CONCURRENT FLOW CONTROLLER ACCESS ----->8------ */
 

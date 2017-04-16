@@ -36,6 +36,9 @@
 #define SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC     -3
 
 #define SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED        0
+#define SU_FLOW_CONTROLLER_DESYNC                -1
+#define SU_FLOW_CONTROLLER_END_OF_STREAM         -2
+#define SU_FLOW_CONTROLLER_INTERNAL_ERROR        -3
 
 typedef uint64_t su_off_t;
 
@@ -97,6 +100,7 @@ struct sigutils_block_port;
  */
 struct sigutils_flow_controller {
   enum sigutils_flow_controller_kind kind;
+  SUBOOL eos;
   pthread_mutex_t acquire_lock;
   pthread_cond_t  acquire_cond;
   su_stream_t output; /* Output stream */
@@ -218,6 +222,8 @@ SUBOOL su_block_port_resync(su_block_port_t *port);
 SUBOOL su_block_port_is_plugged(const su_block_port_t *port);
 
 void su_block_port_unplug(su_block_port_t *port);
+
+SUBOOL su_block_force_eos(const su_block_t *block, unsigned int id);
 
 SUBOOL su_block_set_flow_controller(
     su_block_t *block,
