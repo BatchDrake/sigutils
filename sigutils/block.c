@@ -721,6 +721,7 @@ su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
 
     switch (got) {
       case SU_FLOW_CONTROLLER_DESYNC:
+        port->pos = su_flow_controller_tell(port->fc);
         su_flow_controller_leave(port->fc);
         return SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC;
 
