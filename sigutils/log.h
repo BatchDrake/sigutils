@@ -97,6 +97,15 @@ struct sigutils_log_config {
         fmt,                          \
         ##arg)
 
+/* Other useful macros */
+#define SU_TRYCATCH(expr, action)       \
+  if (!(expr)) {                        \
+    SU_ERROR(                           \
+      "exception in \"%s\"\n",          \
+      STRINGIFY(expr));                 \
+      action;                           \
+  }
+
 void su_log_mask_severity(enum sigutils_log_severity sev);
 
 void su_log_unmask_severity(enum sigutils_log_severity sev);
