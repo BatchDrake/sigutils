@@ -776,6 +776,12 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
   if (detector->params.bw > 0.0)
     x = su_iir_filt_feed(&detector->antialias, x);
 
+  /*
+   * The previous steps acted as a tuner. User code can reuse this
+   * result to skip manual channel tuning.
+   */
+  detector->last_window_sample = x;
+
   /* Decimate if necessary */
   if (detector->params.decimation > 1) {
     if (++detector->decim_ptr < detector->params.decimation)
