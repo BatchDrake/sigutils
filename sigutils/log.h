@@ -101,8 +101,10 @@ struct sigutils_log_config {
 #define SU_TRYCATCH(expr, action)       \
   if (!(expr)) {                        \
     SU_ERROR(                           \
-      "exception in \"%s\"\n",          \
-      STRINGIFY(expr));                 \
+      "exception in \"%s\" (%s:%d)\n",  \
+      STRINGIFY(expr),                  \
+      __FILE__,                         \
+      __LINE__);                        \
       action;                           \
   }
 
@@ -115,6 +117,11 @@ uint32_t su_log_get_mask(void);
 void su_log_set_mask(uint32_t mask);
 
 SUBOOL su_log_is_masked(enum sigutils_log_severity sev);
+
+void sigutils_log_message_destroy(struct sigutils_log_message *msg);
+
+struct sigutils_log_message *sigutils_log_message_dup(
+    const struct sigutils_log_message *msg);
 
 void su_log(
     enum sigutils_log_severity sev,

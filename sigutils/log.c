@@ -62,6 +62,50 @@ su_log_is_masked(enum sigutils_log_severity sev)
 }
 
 void
+sigutils_log_message_destroy(struct sigutils_log_message *msg)
+{
+  if (msg->domain != NULL)
+    free((void *) msg->domain);
+
+  if (msg->function != NULL)
+    free((void *) msg->function);
+
+  if (msg->message != NULL)
+    free((void *) msg->message);
+
+  free(msg);
+}
+
+struct sigutils_log_message *
+sigutils_log_message_dup(const struct sigutils_log_message *msg)
+{
+  struct sigutils_log_message *dup = NULL;
+
+  if ((dup = calloc(1, sizeof (struct sigutils_log_message))) == NULL)
+    goto fail;
+
+  if ((dup->domain = strdup(msg->domain)) == NULL)
+    goto fail;
+
+  if ((dup->function = strdup(msg->domain)) == NULL)
+    goto fail;
+
+  if ((dup->message = strdup(msg->message)) == NULL)
+    goto fail;
+
+  dup->line = msg->line;
+  dup->severity = msg->severity;
+  dup->time = msg->time;
+
+  return dup;
+
+fail:
+  sigutils_log_message_destroy(dup);
+
+  return NULL;
+}
+
+void
 su_log(
     enum sigutils_log_severity sev,
     const char *domain,
