@@ -784,11 +784,15 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 
   /* Decimate if necessary */
   if (detector->params.decimation > 1) {
-    if (++detector->decim_ptr < detector->params.decimation)
+    if (++detector->decim_ptr < detector->params.decimation) {
+      detector->consumed = SU_FALSE;
       return SU_TRUE;
+    }
 
     detector->decim_ptr = 0; /* Reset decimation pointer */
   }
+
+  detector->consumed = SU_TRUE;
 
   /* In nonlinear diff mode, we store something else in the window */
   if (detector->params.mode == SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF) {

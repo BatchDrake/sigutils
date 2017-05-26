@@ -157,6 +157,7 @@ struct sigutils_channel_detector {
   SUSCOUNT ptr; /* Sample in window */
   unsigned int iters;
   unsigned int chan_age;
+  SUBOOL consumed; /* Decimator signal */
   SUCOMPLEX last_window_sample; /* Last window sample */
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
@@ -184,6 +185,24 @@ struct sigutils_channel_detector {
 };
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
+
+SUINLINE SUSCOUNT
+su_channel_detector_get_fs(const su_channel_detector_t *cd)
+{
+  return cd->params.samp_rate;
+}
+
+SUINLINE SUCOMPLEX
+su_channel_detector_get_last_sample(const su_channel_detector_t *cd)
+{
+  return cd->last_window_sample;
+}
+
+SUINLINE SUBOOL
+su_channel_detector_sample_was_consumed(const su_channel_detector_t *cd)
+{
+  return cd->consumed;
+}
 
 /**************************** Peak detector API *****************************/
 SUBOOL su_peak_detector_init(
