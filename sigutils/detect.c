@@ -706,8 +706,11 @@ su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
   if (detector->params.bw != 0.0) {
     startbin = SU_CEIL(detector->params.bw / dbaud) + detector->params.pd_size;
     if ((i = N - startbin - 1) < 0) {
-      SU_ERROR("Bandwidth inconsistent with decimation\n");
-      return SU_FALSE;
+      /*
+       * Fail silently here. The current configuration of the
+       * channel detector just makes nonlinear detection impossible
+       */
+      return SU_TRUE;
     }
   } else {
     i = N / 2;
