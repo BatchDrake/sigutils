@@ -168,7 +168,6 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   SUCOMPLEX s;
   SUCOMPLEX L;
   SUFLOAT e = 0;
-  SUFOAT re, im;
 
   s = su_ncqo_read(&costas->ncqo);
   /*
