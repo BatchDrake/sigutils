@@ -168,6 +168,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   SUCOMPLEX s;
   SUCOMPLEX L;
   SUFLOAT e = 0;
+  SUFOAT re, im;
 
   s = su_ncqo_read(&costas->ncqo);
   /*
@@ -196,6 +197,38 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
        */
       e =  SU_C_REAL(L) * SU_C_IMAG(costas->z)
           -SU_C_IMAG(L) * SU_C_REAL(costas->z);
+      break;
+
+    case SU_COSTAS_KIND_8PSK:
+      /*
+       * The following phase detector was shamelessly borrowed from
+       * GNU Radio's Costas Loop implementation. I'm keeping the
+       * original comment for referece:
+       *
+       * -----------8<--------------------------------------------------
+       * This technique splits the 8PSK constellation into 2 squashed
+       * QPSK constellations, one when I is larger than Q and one
+       * where Q is larger than I. The error is then calculated
+       * proportionally to these squashed constellations by the const
+       * K = sqrt(2)-1.
+       *
+       * The signal magnitude must be > 1 or K will incorrectly bias
+       * the error value.
+       *
+       * Ref: Z. Huang, Z. Yi, M. Zhang, K. Wang, "8PSK demodulation for
+       * new generation DVB-S2", IEEE Proc. Int. Conf. Communications,
+       * Circuits and Systems, Vol. 2, pp. 1447 - 1450, 2004.
+       * -----------8<--------------------------------------------------
+       */
+
+      L = SU_C_SGN(costas->z);
+
+      if (SU_ABS(SU_C_REAL(costas->z)) >= SU_ABS(SU_C_IMAG(costas->z)))
+        e =  SU_C_REAL(L) * SU_C_IMAG(costas->z)
+            -SU_C_IMAG(L) * SU_C_REAL(costas->z) * (SU_SQRT2 - 1);
+      else
+        e =  SU_C_REAL(L) * SU_C_IMAG(costas->z) * (SU_SQRT2 - 1)
+            -SU_C_IMAG(L) * SU_C_REAL(costas->z);
       break;
 
     default:

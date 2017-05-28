@@ -43,7 +43,8 @@ typedef struct sigutils_pll su_pll_t;
 enum sigutils_costas_kind {
   SU_COSTAS_KIND_NONE,
   SU_COSTAS_KIND_BPSK,
-  SU_COSTAS_KIND_QPSK
+  SU_COSTAS_KIND_QPSK,
+  SU_COSTAS_KIND_8PSK
 };
 
 struct sigutils_costas {

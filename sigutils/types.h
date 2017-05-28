@@ -54,6 +54,7 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
+#define SU_SQRT2  1.41421356237
 #define SU_COS    cos
 #define SU_ACOS   acos
 #define SU_SIN    sin
