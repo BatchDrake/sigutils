@@ -206,7 +206,7 @@ SUBOOL su_clock_detector_init(
     SUFLOAT bhint,
     SUSCOUNT bufsiz);
 
-SUBOOL su_clock_detector_set_baud(su_clock_detector_t *cd, SUFLOAT bnor);
+void su_clock_detector_set_baud(su_clock_detector_t *cd, SUFLOAT bnor);
 
 void su_clock_detector_finalize(su_clock_detector_t *cd);
 

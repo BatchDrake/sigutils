@@ -62,7 +62,7 @@ fail:
   return SU_FALSE;
 }
 
-SUBOOL
+void
 su_clock_detector_set_baud(su_clock_detector_t *cd, SUFLOAT bnor)
 {
   cd->bnor = bnor;
