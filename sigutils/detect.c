@@ -524,14 +524,49 @@ su_channel_params_adjust_to_channel(
     const struct sigutils_channel *channel)
 {
   SUFLOAT width;
+  SUFLOAT equiv_fs;
+  SUFLOAT alpha;
 
   width = MAX(channel->f_hi - channel->f_lo, channel->bw);
 
-  if ((params->decimation = SU_CEIL(params->samp_rate / width)) < 1)
+  if ((params->decimation = .25 * SU_CEIL(params->samp_rate / width)) < 1)
     params->decimation = 1;
 
   params->bw = width;
   params->fc = channel->fc - channel->ft;
+
+  /*
+   * We can link alpha to a ponderation factor used to average the PSD
+   * along a given time window. If we asume this time span to be 1 second:
+   *
+   * With fs =  4096: we have 1 update of the FFT per second.
+   * With fs =  8192: we have 2 updates of the FFT per second
+   * With fs = 65536: we have 16 updates of the FFT per second
+   *
+   * Therefore, in the first case, 1 FFT is all the spectral information
+   * we have along 1 second, in the second case, 1 FFT is *half* the
+   * spectral information we have along 1 second and so on. So the
+   * alpha value could be proportional to the inverse of the number of
+   * FFT calculations per time window. This number depends on the sample
+   * rate, of course:
+   *
+   *             F
+   * alpha = ---------
+   *          fs * T
+   *
+   * Where:
+   *   fs := Equivalent sample rate (after decimation)
+   *   F  := Number of FFT bins
+   *   T  := Time window
+   *
+   * With this formula, for some degenerate cases, alpha may be 1. We just
+   * detect that case and set alpha to 1.
+   */
+
+  equiv_fs = (SUFLOAT) params->samp_rate / params->decimation;
+  alpha = (SUFLOAT) params->window_size /
+      (equiv_fs * SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW);
+  params->alpha = MIN(alpha, 1.);
 }
 
 SUPRIVATE SUBOOL

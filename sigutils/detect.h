@@ -35,6 +35,7 @@
 #define SU_CHANNEL_MAX_AGE                   40 /* In FFT runs */
 #define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
 
+#define SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW  10. /* In seconds */
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
         ((cp)->age > SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE     \
