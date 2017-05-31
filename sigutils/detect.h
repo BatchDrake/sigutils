@@ -238,6 +238,8 @@ void su_channel_detector_get_channel_list(
     struct sigutils_channel ***channel_list,
     unsigned int *channel_count);
 
+void su_channel_params_adjust(struct sigutils_channel_detector_params *params);
+
 void su_channel_params_adjust_to_channel(
     struct sigutils_channel_detector_params *params,
     const struct sigutils_channel *channel);

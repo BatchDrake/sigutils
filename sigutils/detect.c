@@ -519,21 +519,13 @@ done:
 }
 
 void
-su_channel_params_adjust_to_channel(
-    struct sigutils_channel_detector_params *params,
-    const struct sigutils_channel *channel)
+su_channel_params_adjust(struct sigutils_channel_detector_params *params)
 {
-  SUFLOAT width;
   SUFLOAT equiv_fs;
   SUFLOAT alpha;
 
-  width = MAX(channel->f_hi - channel->f_lo, channel->bw);
-
-  if ((params->decimation = .25 * SU_CEIL(params->samp_rate / width)) < 1)
+  if (params->decimation < 1)
     params->decimation = 1;
-
-  params->bw = width;
-  params->fc = channel->fc - channel->ft;
 
   /*
    * We can link alpha to a ponderation factor used to average the PSD
@@ -567,6 +559,24 @@ su_channel_params_adjust_to_channel(
   alpha = (SUFLOAT) params->window_size /
       (equiv_fs * SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW);
   params->alpha = MIN(alpha, 1.);
+}
+
+void
+su_channel_params_adjust_to_channel(
+    struct sigutils_channel_detector_params *params,
+    const struct sigutils_channel *channel)
+{
+  SUFLOAT width;
+
+  width = MAX(channel->f_hi - channel->f_lo, channel->bw);
+
+  if ((params->decimation = .25 * SU_CEIL(params->samp_rate / width)) < 1)
+    params->decimation = 1;
+
+  params->bw = width;
+  params->fc = channel->fc - channel->ft;
+
+  su_channel_params_adjust(params);
 }
 
 SUPRIVATE SUBOOL
