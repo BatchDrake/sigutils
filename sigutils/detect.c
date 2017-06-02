@@ -724,16 +724,67 @@ su_channel_detect_baudrate_from_acorr(su_channel_detector_t *detector)
 }
 
 SUPRIVATE SUBOOL
+su_channel_detector_guess_baudrate(
+    su_channel_detector_t *detector,
+    SUFLOAT equiv_fs,
+    int bin,
+    SUFLOAT signif)
+{
+  int N;
+  int j;
+  int hi, lo;
+  SUCOMPLEX acc = 0;
+  SUFLOAT floor = 0;
+
+  N = detector->params.window_size;
+
+  /* Measure significance w.r.t the surrounding noise floor */
+  hi = lo = -1;
+
+  /* Find channel limits */
+  for (j = bin + 1; j < N; ++j)
+    if (detector->spect[j] > detector->spect[j - 1]) {
+      hi = j;
+      break;
+    }
+
+  for (j = bin - 1; j >= 0; --j)
+    if (detector->spect[j] > detector->spect[j + 1]) {
+      lo = j;
+      break;
+    }
+
+  if (hi != -1 && lo != -1) {
+    floor = .5 * (detector->spect[hi] + detector->spect[lo]);
+
+    /* Is significance high enough? */
+    if (SU_DB(detector->spect[bin] / floor) > signif) {
+      acc = 0;
+
+      /*
+       * Perform an accurate estimation of the baudrate using the
+       * autocorrelation technique
+       */
+      for (j = lo + 1; j < hi; ++j)
+        acc += SU_C_EXP(2 * I * M_PI * j / (SUFLOAT) N) * detector->spect[j];
+      detector->baud =
+          SU_NORM2ABS_FREQ(equiv_fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
+      return SU_TRUE;
+    }
+  }
+
+  return SU_FALSE;
+}
+
+SUPRIVATE SUBOOL
 su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
 {
-  int i, j;
-  int N;
-  int hi, lo;
+  int i, N;
+  int max_idx;
 
   SUSCOUNT startbin;
   SUFLOAT dbaud;
-  SUFLOAT floor;
-  SUCOMPLEX acc;
+  SUFLOAT max;
   SUFLOAT equiv_fs;
 
   N = detector->params.window_size;
@@ -744,63 +795,66 @@ su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
 
   /*
    * We always reset the baudrate. We prefer to fail here instead of
-   * giving a not accurate estimation.
+   * giving a non-accurate estimation.
    */
   detector->baud = 0;
 
-  /* The spectrogram of the square of the derivative is symmetric */
+  /*
+   * We implement two ways to get the baudrate. We look first for the
+   * second biggest peak in the spectrum (the first is the DC). If
+   * the significante is not big enough w.r.t the surrounding floor,
+   * we fall back to the old way.
+   */
+
+  /*
+   * First step: find where the DC ends */
+  for (i = 1; i < N / 2 && (detector->spect[i] < detector->spect[i - 1]); ++i);
+
+  /* Second step: look for the second largest peak */
+  max_idx = -1;
+  max = .0;
+
+  while (i < N / 2) {
+    if (detector->spect[i] > max) {
+      max_idx = i;
+      max = detector->spect[i];
+    }
+    ++i;
+  }
+
+  /* Peak found. Verify if its significance is big enough */
+  if (max_idx != -1)
+    if (su_channel_detector_guess_baudrate(
+        detector,
+        equiv_fs,
+        max_idx,
+        detector->params.pd_signif))
+      return SU_TRUE;
+
+  /* Previous method failed. Fall back to the old way */
   if (detector->params.bw != 0.0) {
-    startbin = SU_CEIL(detector->params.bw / dbaud) + detector->params.pd_size;
-    if ((i = N - startbin - 1) < 0) {
+    startbin =
+        SU_CEIL(.5 * detector->params.bw / dbaud) - detector->params.pd_size;
+    if (startbin < 0) {
       /*
        * Fail silently here. The current configuration of the
        * channel detector just makes nonlinear detection impossible
        */
       return SU_TRUE;
     }
+    i = startbin;
   } else {
-    i = N / 2;
+    i = 1;
   }
 
-  while (i < N) {
-    if (su_peak_detector_feed(&detector->pd, SU_DB(detector->spect[i])) > 0) {
-      /* Measure significance w.r.t the surrounding floor */
-      hi = lo = -1;
-
-      /* Find channel limits */
-      for (j = i + 1; j < N; ++j)
-        if (detector->spect[j] > detector->spect[j - 1]) {
-          hi = j;
-          break;
-        }
-
-      for (j = i - 1; j >= 0; --j)
-        if (detector->spect[j] > detector->spect[j + 1]) {
-          lo = j;
-          break;
-        }
-
-      if (hi != -1 && lo != -1) {
-        floor = .5 * (detector->spect[hi] + detector->spect[hi]);
-
-        /* Is significance high enough? */
-        if (SU_DB(detector->spect[i] / floor) > detector->params.pd_signif) {
-          acc = 0;
-
-          /*
-           * Perform an accurate estimation of the baudrate using the
-           * autocorrelation technique
-           */
-          for (j = lo + 1; j < hi; ++j)
-            acc +=
-                SU_C_EXP(-2 * I * M_PI * j / (SUFLOAT) N)
-                * detector->spect[j];
-          detector->baud =
-              SU_NORM2ABS_FREQ(equiv_fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
-          break;
-        }
-      }
-    }
+  while (i < N / 2) {
+    if (su_peak_detector_feed(&detector->pd, SU_DB(detector->spect[i])) > 0)
+      if (su_channel_detector_guess_baudrate(
+          detector,
+          equiv_fs,
+          i,
+          detector->params.pd_signif))
+        break;
     ++i;
   }
 
