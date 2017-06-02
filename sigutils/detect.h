@@ -47,6 +47,9 @@
               (detector)->params.samp_rate * (detector)->params.decimation, \
               2 * (SUFLOAT) (i) / (SUFLOAT) (detector)->params.window_size)
 
+/* Extra bandwidth given to antialias filter */
+#define SU_CHANNEL_DETECTOR_ANTIALIAS_EXTRA_BW 2
+#define SU_CHANNEL_DETECTOR_ANTIALIAS_ORDER    8
 
 struct sigutils_peak_detector {
   unsigned int size;
@@ -203,6 +206,12 @@ SUINLINE SUBOOL
 su_channel_detector_sample_was_consumed(const su_channel_detector_t *cd)
 {
   return cd->consumed;
+}
+
+SUINLINE SUBOOL
+su_channel_detector_get_window_ptr(const su_channel_detector_t *cd)
+{
+  return cd->ptr;
 }
 
 /**************************** Peak detector API *****************************/

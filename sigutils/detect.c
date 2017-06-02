@@ -420,8 +420,9 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   if (params->bw > 0.0)
     su_iir_bwlpf_init(
         &new->antialias,
-        5,
-        SU_ABS2NORM_FREQ(params->samp_rate, params->bw));
+        SU_CHANNEL_DETECTOR_ANTIALIAS_ORDER,
+        .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
+           * SU_CHANNEL_DETECTOR_ANTIALIAS_EXTRA_BW);
 
   /* Calculate the required number of samples to perform detection */
   new->req_samples = 0; /* We can perform detection immediately */
