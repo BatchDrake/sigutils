@@ -861,6 +861,48 @@ su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
   return SU_TRUE;
 }
 
+/* Apply window function. TODO: precalculate */
+SUINLINE void
+su_channel_detector_apply_window(su_channel_detector_t *detector)
+{
+  switch (detector->params.window) {
+    case SU_CHANNEL_DETECTOR_WINDOW_NONE:
+      /* Do nothing. */
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_HAMMING:
+      su_taps_apply_hamming_complex(
+          detector->window,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_HANN:
+      su_taps_apply_hann_complex(
+          detector->window,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
+      su_taps_apply_flat_top_complex(
+          detector->window,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS:
+      su_taps_apply_blackmann_harris_complex(
+          detector->window,
+          detector->params.window_size);
+      break;
+
+    default:
+      /*
+       * This surely will generate thousands of messages, but it should
+       * never happen either
+       */
+      SU_WARNING("Unsupported window function %d\n", detector->params.window);
+  }
+}
+
 SUINLINE SUBOOL
 su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 {
@@ -916,12 +958,7 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
         /*
          * Channel detection is based on the analysis of the power spectrum
          */
-
-        /* Apply window function. TODO: precalculate */
-        su_taps_apply_blackmann_harris_complex(
-            detector->window,
-            detector->params.window_size);
-
+        su_channel_detector_apply_window(detector);
 
         SU_FFTW(_execute(detector->fft_plan));
 

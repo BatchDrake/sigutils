@@ -83,6 +83,14 @@ enum sigutils_channel_detector_mode {
   SU_CHANNEL_DETECTOR_MODE_ORDER_ESTIMATION /* To find constellation size */
 };
 
+enum sigutils_channel_detector_window {
+  SU_CHANNEL_DETECTOR_WINDOW_NONE,             /* Rectangular window */
+  SU_CHANNEL_DETECTOR_WINDOW_HAMMING,          /* Hamming window */
+  SU_CHANNEL_DETECTOR_WINDOW_HANN,             /* Hann window */
+  SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP,         /* Flat-top window */
+  SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS, /* Blackmann-Harris window */
+};
+
 struct sigutils_channel_detector_params {
   enum sigutils_channel_detector_mode mode;
   SUSCOUNT samp_rate;   /* Sample rate */
@@ -93,6 +101,7 @@ struct sigutils_channel_detector_params {
   SUSCOUNT max_order;   /* Max constellation order */
 
   /* Detector parameters */
+  enum sigutils_channel_detector_window window; /* Window function */
   SUFLOAT  alpha;        /* PSD averaging ratio */
   SUFLOAT  beta;         /* PSD upper and lower levels averaging ratio  */
   SUFLOAT  gamma;        /* Noise level update ratio */
@@ -105,23 +114,24 @@ struct sigutils_channel_detector_params {
   SUFLOAT  pd_signif; /* Minimum significance, in dB */
 };
 
-#define sigutils_channel_detector_params_INITIALIZER    \
-{                                                       \
-  SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */        \
-  8000,     /* samp_rate */                             \
-  512,      /* window_size */                           \
-  0.0,      /* fc */                                    \
-  1,        /* decimation */                            \
-  0.0,      /* bw */                                    \
-  8,        /* max_order */                             \
-  SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                \
-  SU_CHANNEL_DETECTOR_BETA,  /* beta */                 \
-  SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                \
-  2,        /* snr */                                   \
-  SU_CHANNEL_MAX_AGE,        /* max_age */              \
-  10,       /* pd_samples */                            \
-  2.,       /* pd_thres */                              \
-  10        /* pd_signif */                             \
+#define sigutils_channel_detector_params_INITIALIZER            \
+{                                                               \
+  SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */                \
+  8000,     /* samp_rate */                                     \
+  512,      /* window_size */                                   \
+  0.0,      /* fc */                                            \
+  1,        /* decimation */                                    \
+  0.0,      /* bw */                                            \
+  8,        /* max_order */                                     \
+  SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS, /* window */     \
+  SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                        \
+  SU_CHANNEL_DETECTOR_BETA,  /* beta */                         \
+  SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                        \
+  2,        /* snr */                                           \
+  SU_CHANNEL_MAX_AGE,        /* max_age */                      \
+  10,       /* pd_samples */                                    \
+  2.,       /* pd_thres */                                      \
+  10        /* pd_signif */                                     \
 }
 
 
