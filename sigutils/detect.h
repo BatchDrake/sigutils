@@ -238,6 +238,10 @@ void su_peak_detector_finalize(su_peak_detector_t *pd);
 su_channel_detector_t *su_channel_detector_new(
     const struct sigutils_channel_detector_params *params);
 
+SUBOOL su_channel_detector_set_params(
+    su_channel_detector_t *detector,
+    const struct sigutils_channel_detector_params *params);
+
 SUSCOUNT su_channel_detector_get_req_samples(
     const su_channel_detector_t *detector);
 

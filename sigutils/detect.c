@@ -314,6 +314,44 @@ su_channel_detector_get_channel_list(
   *channel_count = detector->channel_count;
 }
 
+SUBOOL
+su_channel_detector_set_params(
+    su_channel_detector_t *detector,
+    const struct sigutils_channel_detector_params *params)
+{
+  SU_TRYCATCH(params->alpha > .0, return SU_FALSE);
+  SU_TRYCATCH(params->samp_rate > 0, return SU_FALSE);
+  SU_TRYCATCH(params->decimation > 0, return SU_FALSE);
+
+  /*
+   * New window_size settings requires re-allocating all FFTW objects. It's
+   * better if we just create a new detector object
+   */
+  if (params->window_size != detector->params.window_size)
+    return SU_FALSE;
+
+  /* Changing the detector bandwidth implies recreating the antialias filter */
+  if (params->bw != detector->params.bw)
+    return SU_FALSE;
+
+  /*
+   * Changing the sample rate if an antialias filter has been set also
+   * requires re-allocation.
+   */
+  if (params->bw > 0.0 && params->samp_rate != detector->params.samp_rate)
+    return SU_FALSE;
+
+  /* It's okay to change the parameters now */
+  detector->params = *params;
+
+  /* Initialize local oscillator */
+  su_ncqo_init(
+      &detector->lo,
+      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
+
+  return SU_TRUE;
+}
+
 su_channel_detector_t *
 su_channel_detector_new(const struct sigutils_channel_detector_params *params)
 {
