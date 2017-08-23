@@ -9,19 +9,20 @@ EXTRA_DIST = AUTHORS ChangeLog NEWS README
 pkgconfig_DATA = sigutils.pc
 
 nobase_pkginclude_HEADERS = 	\
-	sigutils/agc.h		\
-	sigutils/block.h	\
-	sigutils/clock.h	\
-	sigutils/coef.h		\
-	sigutils/detect.h \
-	sigutils/iir.h		\
-	sigutils/log.h		\
-	sigutils/modem.h	\
-	sigutils/ncqo.h		\
-	sigutils/pll.h		\
-	sigutils/property.h	\
-	sigutils/sampling.h	\
-	sigutils/sigutils.h	\
-	sigutils/taps.h		\
-	sigutils/types.h	\
+	sigutils/agc.h		   \
+	sigutils/block.h	   \
+	sigutils/clock.h	   \
+	sigutils/coef.h			 \
+	sigutils/detect.h 	 \
+	sigutils/equalizer.h \
+	sigutils/iir.h		   \
+	sigutils/log.h	     \
+	sigutils/modem.h   	 \
+	sigutils/ncqo.h		   \
+	sigutils/pll.h		   \
+	sigutils/property.h	 \
+	sigutils/sampling.h	 \
+	sigutils/sigutils.h	 \
+	sigutils/taps.h		   \
+	sigutils/types.h	   \
 	util/util.h			
