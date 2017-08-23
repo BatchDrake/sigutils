@@ -248,15 +248,13 @@ done:
 SUPRIVATE void
 su_flow_controller_enter(su_flow_controller_t *fc)
 {
-  if (fc->consumers > 1)
-    pthread_mutex_lock(&fc->acquire_lock);
+  pthread_mutex_lock(&fc->acquire_lock);
 }
 
 SUPRIVATE void
 su_flow_controller_leave(su_flow_controller_t *fc)
 {
-  if (fc->consumers > 1)
-    pthread_mutex_unlock(&fc->acquire_lock);
+  pthread_mutex_unlock(&fc->acquire_lock);
 }
 
 SUPRIVATE void
@@ -268,8 +266,7 @@ su_flow_controller_notify_force(su_flow_controller_t *fc)
 SUPRIVATE void
 su_flow_controller_notify(su_flow_controller_t *fc)
 {
-  if (fc->consumers > 1)
-    su_flow_controller_notify_force(fc);
+  su_flow_controller_notify_force(fc);
 }
 
 SUPRIVATE void
