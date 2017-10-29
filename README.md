@@ -1,4 +1,4 @@
-#The sigutils library - Getting started
+# The sigutils library - Getting started
 
 The sigutils library is a digital signal processing library written in C, designed for blind signal analysis and automatic demodulation in GNU/Linux.
 
@@ -40,7 +40,7 @@ In order to run all unit tests, you must download [this ZIP file](http://www.sig
 ```
 
 ---
-#sigutils API overview
+# sigutils API overview
 There are three API levels in sigutils, with every high-level API relying on lower-level APIs:
 
 1. Modem API (which allows to retrieve a stream of symbols from a given signal source)
@@ -64,7 +64,7 @@ Any other value is considered a valid symbol identifier.
 ## The modem API
 The core of the modem API is the `su_modem_t` object, which can be configured to retrieve discrete symbols from a variety of sources and modulations. Currently, only the QPSK modem, WAV file source and generic block source are implemented.
 
-###Creating a QPSK modem
+### Creating a QPSK modem
 Modems are created using the modem constructor `su_modem_new`, which accepts the class name of the specific modem to instantiate:
 
 ```
@@ -76,7 +76,7 @@ if ((modem = su_modem_new("qpsk")) == NULL) {
 }
 ```
 
-###Configuring the modem
+### Configuring the modem
 Once an appropriate modem type has been initialized, it must be configured before reading samples from it. Two actions are required to configure a modem: setting the signal source and setting modem parameters. If the signal source is a WAV file, this can be configured by calling `su_modem_set_wav_source`:
 
 ```
@@ -125,7 +125,7 @@ if (!su_modem_start(modem)) {
 
 This tells the modem to preallocate any parameter-dependent temporary data to start demodulation. Note that this method itself will not start demodulation. Demodulation happens in an *on demand* basis when a symbol read operation is requested. 
 
-###Reading symbols
+### Reading symbols
 After starting the modem, symbols can be read by looping over `su_modem_read`:
 
 ```
@@ -142,7 +142,7 @@ while((sym = su_modem_read(modem)) != SU_EOS) {
 
 Symbols are retrieved as an integer value, starting from 1. If the modem considers there is too much noise to make a good decision, it will return `SU_NOSYMBOL`. If the source cannot provide any more samples, `su_modem_read` will return `SU_EOS`.
 
-###Deleting the modem
+### Deleting the modem
 Once we are done using the modem object, it must be released using the `su_modem_destroy` method:
 
 ```
