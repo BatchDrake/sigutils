@@ -4,7 +4,7 @@ SUBDIRS = util sigutils testutil  src
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = AUTHORS ChangeLog NEWS README
+EXTRA_DIST = AUTHORS ChangeLog NEWS README.md
 
 pkgconfig_DATA = sigutils.pc
 

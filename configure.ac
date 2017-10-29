@@ -8,7 +8,7 @@ AC_INIT(sigutils, 0.1)
 AC_CONFIG_HEADERS(src/config.h)
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.11.1])
+AM_INIT_AUTOMAKE([foreign])
 
 cflags_were_set=false
 if test "${CFLAGS+set}" = set; then
