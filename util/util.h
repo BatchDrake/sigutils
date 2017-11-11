@@ -106,6 +106,10 @@
   type       **name ## _list;                        \
   unsigned int name ## _count;
 
+#define PTR_LIST_CONST(type, name)                   \
+  type *const *name ## _list;                        \
+  unsigned int name ## _count;
+
 #define PTR_LIST_LOCAL(type, name)                   \
   type       **name ## _list = NULL;                 \
   unsigned int name ## _count = 0;
