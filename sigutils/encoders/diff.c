@@ -82,15 +82,15 @@ su_diff_encoder_encode(su_encoder_t *encoder, void *private, SUSYMBOL x)
                 state, /* Encode == Ambiguously integrate */
                 SU_FROMSYM(state->prev),
                 SU_FROMSYM(x)));
-    } else {
-      y = SU_NOSYMBOL;
-    }
 
+    } else {
+      y = x;
+    }
     state->prev = y;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
+    y = x;
     state->prev = SU_NOSYMBOL;
-    y = SU_NOSYMBOL;
   }
 
   return y;
@@ -117,8 +117,8 @@ su_diff_encoder_decode(su_encoder_t *encoder, void *private, SUSYMBOL x)
     state->prev = x;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
+    y = x;
     state->prev = SU_NOSYMBOL;
-    y = SU_NOSYMBOL;
   }
 
   return y;

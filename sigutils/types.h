@@ -108,7 +108,7 @@
 /* Symbol manipulation */
 #define SU_FROMSYM(x) ((x) - '0')
 #define SU_TOSYM(x)   ((x) + '0')
-#define SU_ISSYM(x)   ((x) > '0')
+#define SU_ISSYM(x)   ((x) >= '0')
 
 /* Inline functions */
 

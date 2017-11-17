@@ -108,6 +108,8 @@ su_encoder_new(const char *classname, unsigned int bits, ...)
 
   va_end(ap);
 
+  return new;
+
 fail:
   if (new != NULL)
     su_encoder_destroy(new);
