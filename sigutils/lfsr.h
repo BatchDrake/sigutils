@@ -29,12 +29,12 @@ enum su_lfsr_mode {
 };
 
 struct sigutils_lfsr {
-  SUBIT *coef;   /* LFSR coefficients */
-  SUBIT *buffer; /* State buffer */
+  SUBITS *coef;   /* LFSR coefficients */
+  SUBITS *buffer; /* State buffer */
   SUSCOUNT order;   /* Polynomial degree */
   enum su_lfsr_mode mode; /* LFSR mode */
 
-  SUBIT F_prev;
+  SUBITS F_prev;
   SUSCOUNT zeroes;
   SUSCOUNT p; /* Buffer pointer */
 };
@@ -43,12 +43,12 @@ typedef struct sigutils_lfsr su_lfsr_t;
 
 #define su_lfsr_INITIALIZER {NULL, NULL, 0}
 
-SUBOOL su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBIT *coef, SUSCOUNT order);
+SUBOOL su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order);
 void   su_lfsr_finalize(su_lfsr_t *lfsr);
 void   su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode);
 
-void su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBIT *seq);
-SUBIT su_lfsr_feed(su_lfsr_t *lfsr, SUBIT input);
+void su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq);
+SUBITS su_lfsr_feed(su_lfsr_t *lfsr, SUBITS input);
 
 /*
  * Auto-syncing mode: look for a sequence that once multiplitcatively
@@ -56,6 +56,6 @@ SUBIT su_lfsr_feed(su_lfsr_t *lfsr, SUBIT input);
  * scrambling right after that
  */
 void su_lfsr_blind_sync_reset(su_lfsr_t *lfsr);
-SUBIT su_lfsr_blind_sync_feed(su_lfsr_t *lfsr, SUBIT input);
+SUBITS su_lfsr_blind_sync_feed(su_lfsr_t *lfsr, SUBITS input);
 
 #endif /* _SIGUTILS_LFSR_H */

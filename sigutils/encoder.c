@@ -47,7 +47,7 @@ su_encoder_class_register(const struct sigutils_encoder_class *class)
   SU_TRYCATCH(class->decode != NULL, return SU_FALSE);
   SU_TRYCATCH(class->dtor   != NULL, return SU_FALSE);
 
-  SU_TRYCATCH(su_encoder_class_lookup(class->name), return SU_FALSE);
+  SU_TRYCATCH(su_encoder_class_lookup(class->name) == NULL, return SU_FALSE);
   SU_TRYCATCH(
       PTR_LIST_APPEND_CHECK(class, (void *) class) != -1,
       return SU_FALSE);
@@ -75,32 +75,33 @@ su_encoder_feed(su_encoder_t *encoder, SUSYMBOL x)
 {
   switch (encoder->direction) {
     case SU_ENCODER_DIRECTION_FORWARDS:
-      return (encoder->class->encode) (encoder->private, x);
+      return (encoder->class->encode) (encoder, encoder->private, x);
     case SU_ENCODER_DIRECTION_BACKWARDS:
-      return (encoder->class->decode) (encoder->private, x);
+      return (encoder->class->decode) (encoder, encoder->private, x);
   }
 
   return SU_NOSYMBOL;
 }
 
 su_encoder_t *
-su_encoder_new(const char *classname, ...)
+su_encoder_new(const char *classname, unsigned int bits, ...)
 {
   su_encoder_t *new = NULL;
   va_list ap;
 
-  va_start(ap, classname);
+  va_start(ap, bits);
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_encoder_t)), goto fail);
 
   new->direction = SU_ENCODER_DIRECTION_FORWARDS;
+  new->bits = bits;
 
   if ((new->class = su_encoder_class_lookup(classname)) == NULL) {
     SU_ERROR("No such encoder class `%s'\n", classname);
     goto fail;
   }
 
-  if (!(new->class->ctor) (&new->private, ap)) {
+  if (!(new->class->ctor) (new, &new->private, ap)) {
     SU_ERROR("Failed to construct `%s'\n", classname);
     goto fail;
   }

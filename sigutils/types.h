@@ -44,7 +44,7 @@
 #define SUBOOL     int
 #define SUCOMPLEX  complex SUFLOAT
 #define SUSYMBOL   int
-#define SUBIT      unsigned char /* Not exactly a bit */
+#define SUBITS     unsigned char /* Not exactly a bit */
 
 #define SU_NOSYMBOL '\0'
 #define SU_EOS      -1
@@ -108,6 +108,7 @@
 /* Symbol manipulation */
 #define SU_FROMSYM(x) ((x) - '0')
 #define SU_TOSYM(x)   ((x) + '0')
+#define SU_ISSYM(x)   ((x) > '0')
 
 /* Inline functions */
 

@@ -26,19 +26,19 @@
 #include "lfsr.h"
 
 SUBOOL
-su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBIT *coef, SUSCOUNT order)
+su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order)
 {
   memset(lfsr, 0, sizeof(su_lfsr_t));
 
   SU_TRYCATCH(
-      lfsr->coef = malloc(order * sizeof(SUBIT)),
+      lfsr->coef = malloc(order * sizeof(SUBITS)),
       goto fail);
 
   SU_TRYCATCH(
-      lfsr->buffer = calloc(order, sizeof(SUBIT)),
+      lfsr->buffer = calloc(order, sizeof(SUBITS)),
       goto fail);
 
-  memcpy(lfsr->coef, coef, order * sizeof(SUBIT));
+  memcpy(lfsr->coef, coef, order * sizeof(SUBITS));
   lfsr->order = order;
 
   return SU_TRUE;
@@ -81,10 +81,10 @@ su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
  *   y = F(P, x) ^ x
  *
  */
-SUINLINE SUBIT
-su_lfsr_transfer(su_lfsr_t *lfsr, SUBIT x)
+SUINLINE SUBITS
+su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
 {
-  SUBIT F = 0;
+  SUBITS F = 0;
   int i;
   int n = lfsr->p;
 
@@ -107,7 +107,7 @@ su_lfsr_transfer(su_lfsr_t *lfsr, SUBIT x)
 }
 
 void
-su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBIT *seq)
+su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
 {
   unsigned int i;
 
@@ -117,10 +117,10 @@ su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBIT *seq)
 }
 
 
-SUBIT
-su_lfsr_feed(su_lfsr_t *lfsr, SUBIT x)
+SUBITS
+su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
 {
-  SUBIT y;
+  SUBITS y;
   x = !!x;
 
   switch (lfsr->mode) {
@@ -145,13 +145,13 @@ su_lfsr_blind_sync_reset(su_lfsr_t *lfsr)
 {
   lfsr->zeroes = 0;
   su_lfsr_set_mode(lfsr, SU_LFSR_MODE_MULTIPLICATIVE);
-  memset(lfsr->buffer, 0, lfsr->order * sizeof(SUBIT));
+  memset(lfsr->buffer, 0, lfsr->order * sizeof(SUBITS));
 }
 
-SUBIT
-su_lfsr_blind_sync_feed(su_lfsr_t *lfsr, SUBIT x)
+SUBITS
+su_lfsr_blind_sync_feed(su_lfsr_t *lfsr, SUBITS x)
 {
-  SUBIT y = x;
+  SUBITS y = x;
 
   y = su_lfsr_feed(lfsr, x);
 

@@ -25,11 +25,13 @@
 
 #include "types.h"
 
+struct sigutils_encoder;
+
 struct sigutils_encoder_class {
   const char *name;
-  SUBOOL  *(*ctor) (void **, va_list);
-  SUSYMBOL (*encode) (void *, SUSYMBOL);
-  SUSYMBOL (*decode) (void *, SUSYMBOL);
+  SUBOOL   (*ctor) (struct sigutils_encoder *, void **, va_list);
+  SUSYMBOL (*encode) (struct sigutils_encoder *, void *, SUSYMBOL);
+  SUSYMBOL (*decode) (struct sigutils_encoder *, void *, SUSYMBOL);
   void     (*dtor) (void *);
 };
 
@@ -41,6 +43,7 @@ enum su_encoder_direction {
 struct sigutils_encoder {
   enum su_encoder_direction direction;
   const struct sigutils_encoder_class *class;
+  unsigned int bits;
   void *private;
 };
 
@@ -48,7 +51,7 @@ typedef struct sigutils_encoder su_encoder_t;
 
 SUBOOL su_encoder_class_register(const struct sigutils_encoder_class *class);
 
-su_encoder_t *su_encoder_new(const char *classname, ...);
+su_encoder_t *su_encoder_new(const char *classname, unsigned int bits, ...);
 
 void su_encoder_set_direction(
     su_encoder_t *encoder,
@@ -57,5 +60,8 @@ void su_encoder_set_direction(
 SUSYMBOL su_encoder_feed(su_encoder_t *encoder, SUSYMBOL x);
 
 void su_encoder_destroy(su_encoder_t *encoder);
+
+/* Built-in encoders */
+SUBOOL su_diff_encoder_register(void);
 
 #endif /* _SIGUTILS_ENCODER_H */
