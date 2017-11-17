@@ -56,4 +56,7 @@
   "su_test_channel_detector_qpsk/tx-complex.raw"
 #endif
 
+/* Encoder parameters */
+#define SU_TEST_ENCODER_NUM_SYMS 32
+
 #endif /* _SRC_TEST_PARAM */

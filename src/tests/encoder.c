@@ -27,8 +27,6 @@
 #include "test_list.h"
 #include "test_param.h"
 
-#define NUM_SYMS 32
-
 SUPRIVATE char
 su_test_symbol_to_char(SUSYMBOL sym)
 {
@@ -45,11 +43,14 @@ su_test_symbol_to_char(SUSYMBOL sym)
 }
 
 SUBOOL
-su_test_diff_encoder_bpsk(su_test_context_t *ctx)
+su_test_diff_encoder_generic(
+    su_test_context_t *ctx,
+    unsigned int bits,
+    SUBOOL sign)
 {
   su_encoder_t *encoder = NULL;
   su_encoder_t *decoder = NULL;
-  SUSYMBOL syms[NUM_SYMS + 1] = {};
+  SUSYMBOL syms[SU_TEST_ENCODER_NUM_SYMS + 1] = {};
   SUSYMBOL encoded, decoded;
   SUSCOUNT len;
   unsigned int i;
@@ -59,13 +60,13 @@ su_test_diff_encoder_bpsk(su_test_context_t *ctx)
   SU_TEST_START(ctx);
 
   /* Initialize symbol list */
-  for (i = 0; i < NUM_SYMS; ++i)
-    syms[i] = SU_TOSYM(rand() & 1);
+  for (i = 0; i < SU_TEST_ENCODER_NUM_SYMS; ++i)
+    syms[i] = SU_TOSYM(rand() & ((1 << bits) - 1));
   syms[i] = SU_EOS;
 
   /* Create differential encoder, 1 bit */
-  SU_TEST_ASSERT(encoder = su_encoder_new("diff", 1, SU_FALSE));
-  SU_TEST_ASSERT(decoder = su_encoder_new("diff", 1, SU_FALSE));
+  SU_TEST_ASSERT(encoder = su_encoder_new("diff", bits, sign));
+  SU_TEST_ASSERT(decoder = su_encoder_new("diff", bits, sign));
 
   /* Set encode mode */
   su_encoder_set_direction(encoder, SU_ENCODER_DIRECTION_FORWARDS);
@@ -76,14 +77,14 @@ su_test_diff_encoder_bpsk(su_test_context_t *ctx)
     encoded = su_encoder_feed(encoder, syms[i]);
     decoded = su_encoder_feed(decoder, encoded);
 
-    if (i > 0)
-      SU_TEST_ASSERT(syms[i] == decoded);
-
     SU_INFO(
         "'%c' --> ENCODER --> '%c' --> DECODER --> '%c'\n",
         su_test_symbol_to_char(syms[i]),
         su_test_symbol_to_char(encoded),
         su_test_symbol_to_char(decoded));
+
+    if (i > 0)
+      SU_TEST_ASSERT(syms[i] == decoded);
   }
 
   ok = SU_TRUE;
@@ -98,3 +99,16 @@ done:
 
   return ok;
 }
+
+SUBOOL
+su_test_diff_encoder_binary(su_test_context_t *ctx)
+{
+  return su_test_diff_encoder_generic(ctx, 1, SU_FALSE);
+}
+
+SUBOOL
+su_test_diff_encoder_quaternary(su_test_context_t *ctx)
+{
+  return su_test_diff_encoder_generic(ctx, 2, SU_FALSE);
+}
+

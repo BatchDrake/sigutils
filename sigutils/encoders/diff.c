@@ -54,9 +54,9 @@ SUINLINE SUBITS
 su_diff_encoder_int(const struct su_diff_encoder_state *s, SUBITS a, SUBITS b)
 {
   if (s->sign)
-    return s->mask & (a - b);
-  else
     return s->mask & (a + b);
+  else
+    return s->mask & (a - b);
 }
 
 SUINLINE SUBITS
