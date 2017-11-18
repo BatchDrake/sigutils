@@ -12,9 +12,9 @@ nobase_pkginclude_HEADERS = 	\
 	sigutils/agc.h		   \
 	sigutils/block.h	   \
 	sigutils/clock.h	   \
+	sigutils/codec.h		 \
 	sigutils/coef.h			 \
 	sigutils/detect.h 	 \
-	sigutils/encoder.h 	 \
 	sigutils/equalizer.h \
 	sigutils/iir.h		   \
 	sigutils/lfsr.h	     \

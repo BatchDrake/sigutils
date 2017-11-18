@@ -63,7 +63,7 @@ SUBOOL su_test_channel_detector_qpsk_noisy(su_test_context_t *ctx);
 SUBOOL su_test_channel_detector_real_capture(su_test_context_t *ctx);
 
 /* Encoder tests */
-SUBOOL su_test_diff_encoder_binary(su_test_context_t *ctx);
-SUBOOL su_test_diff_encoder_quaternary(su_test_context_t *ctx);
+SUBOOL su_test_diff_codec_binary(su_test_context_t *ctx);
+SUBOOL su_test_diff_codec_quaternary(su_test_context_t *ctx);
 
 #endif /* _SRC_TESTS_TEST_LIST_H */

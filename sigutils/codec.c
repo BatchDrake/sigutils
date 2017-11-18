@@ -18,16 +18,16 @@
 
 */
 
-#define SU_LOG_DOMAIN "encoder"
+#define SU_LOG_DOMAIN "codec"
 
 #include <string.h>
 #include "log.h"
-#include "encoder.h"
+#include "codec.h"
 
-PTR_LIST_CONST(SUPRIVATE struct sigutils_encoder_class, class);
+PTR_LIST_CONST(SUPRIVATE struct sigutils_codec_class, class);
 
-const struct sigutils_encoder_class *
-su_encoder_class_lookup(const char *name)
+const struct sigutils_codec_class *
+su_codec_class_lookup(const char *name)
 {
   unsigned int i;
 
@@ -39,7 +39,7 @@ su_encoder_class_lookup(const char *name)
 }
 
 SUBOOL
-su_encoder_class_register(const struct sigutils_encoder_class *class)
+su_codec_class_register(const struct sigutils_codec_class *class)
 {
   SU_TRYCATCH(class->name   != NULL, return SU_FALSE);
   SU_TRYCATCH(class->ctor   != NULL, return SU_FALSE);
@@ -47,7 +47,7 @@ su_encoder_class_register(const struct sigutils_encoder_class *class)
   SU_TRYCATCH(class->decode != NULL, return SU_FALSE);
   SU_TRYCATCH(class->dtor   != NULL, return SU_FALSE);
 
-  SU_TRYCATCH(su_encoder_class_lookup(class->name) == NULL, return SU_FALSE);
+  SU_TRYCATCH(su_codec_class_lookup(class->name) == NULL, return SU_FALSE);
   SU_TRYCATCH(
       PTR_LIST_APPEND_CHECK(class, (void *) class) != -1,
       return SU_FALSE);
@@ -56,48 +56,48 @@ su_encoder_class_register(const struct sigutils_encoder_class *class)
 }
 
 void
-su_encoder_destroy(su_encoder_t *encoder)
+su_codec_destroy(su_codec_t *codec)
 {
-  if (encoder->class != NULL)
-    (encoder->class->dtor)(encoder->private);
+  if (codec->class != NULL)
+    (codec->class->dtor)(codec->private);
 
-  free(encoder);
+  free(codec);
 }
 
 void
-su_encoder_set_direction(su_encoder_t *encoder, enum su_encoder_direction dir)
+su_codec_set_direction(su_codec_t *codec, enum su_codec_direction dir)
 {
-  encoder->direction = dir;
+  codec->direction = dir;
 }
 
 SUSYMBOL
-su_encoder_feed(su_encoder_t *encoder, SUSYMBOL x)
+su_codec_feed(su_codec_t *codec, SUSYMBOL x)
 {
-  switch (encoder->direction) {
-    case SU_ENCODER_DIRECTION_FORWARDS:
-      return (encoder->class->encode) (encoder, encoder->private, x);
-    case SU_ENCODER_DIRECTION_BACKWARDS:
-      return (encoder->class->decode) (encoder, encoder->private, x);
+  switch (codec->direction) {
+    case SU_CODEC_DIRECTION_FORWARDS:
+      return (codec->class->encode) (codec, codec->private, x);
+    case SU_CODEC_DIRECTION_BACKWARDS:
+      return (codec->class->decode) (codec, codec->private, x);
   }
 
   return SU_NOSYMBOL;
 }
 
-su_encoder_t *
-su_encoder_new(const char *classname, unsigned int bits, ...)
+su_codec_t *
+su_codec_new(const char *classname, unsigned int bits, ...)
 {
-  su_encoder_t *new = NULL;
+  su_codec_t *new = NULL;
   va_list ap;
 
   va_start(ap, bits);
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_encoder_t)), goto fail);
+  SU_TRYCATCH(new = calloc(1, sizeof(su_codec_t)), goto fail);
 
-  new->direction = SU_ENCODER_DIRECTION_FORWARDS;
+  new->direction = SU_CODEC_DIRECTION_FORWARDS;
   new->bits = bits;
 
-  if ((new->class = su_encoder_class_lookup(classname)) == NULL) {
-    SU_ERROR("No such encoder class `%s'\n", classname);
+  if ((new->class = su_codec_class_lookup(classname)) == NULL) {
+    SU_ERROR("No such codec class `%s'\n", classname);
     goto fail;
   }
 
@@ -112,7 +112,7 @@ su_encoder_new(const char *classname, unsigned int bits, ...)
 
 fail:
   if (new != NULL)
-    su_encoder_destroy(new);
+    su_codec_destroy(new);
 
   return NULL;
 }

@@ -37,7 +37,7 @@ extern struct sigutils_block_class su_block_class_SIGGEN;
 extern struct sigutils_modem_class su_modem_class_QPSK;
 
 /* Encoder classes */
-extern struct sigutils_encoder_class su_encoder_class_DIFF;
+extern struct sigutils_codec_class su_codec_class_DIFF;
 
 SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
 
@@ -102,9 +102,9 @@ su_lib_init_ex(const struct sigutils_log_config *logconfig)
           &su_modem_class_QPSK
       };
 
-  struct sigutils_encoder_class *encoders[] =
+  struct sigutils_codec_class *codecs[] =
       {
-          &su_encoder_class_DIFF
+          &su_codec_class_DIFF
       };
 
   if (logconfig == NULL)
@@ -126,10 +126,10 @@ su_lib_init_ex(const struct sigutils_log_config *logconfig)
       return SU_FALSE;
     }
 
-  for (i = 0; i < sizeof (encoders) / sizeof (encoders[0]); ++i)
-    if (!su_encoder_class_register(encoders[i])) {
-      if (encoders[i]->name != NULL)
-        SU_ERROR("Failed to register encoder class `%s'\n", encoders[i]->name);
+  for (i = 0; i < sizeof (codecs) / sizeof (codecs[0]); ++i)
+    if (!su_codec_class_register(codecs[i])) {
+      if (codecs[i]->name != NULL)
+        SU_ERROR("Failed to register codec class `%s'\n", codecs[i]->name);
       return SU_FALSE;
     }
 

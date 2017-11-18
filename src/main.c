@@ -44,8 +44,8 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_channel_detector_qpsk),
     SU_TEST_ENTRY(su_test_channel_detector_qpsk_noisy),
     SU_TEST_ENTRY(su_test_channel_detector_real_capture),
-    SU_TEST_ENTRY(su_test_diff_encoder_binary),
-    SU_TEST_ENTRY(su_test_diff_encoder_quaternary)
+    SU_TEST_ENTRY(su_test_diff_codec_binary),
+    SU_TEST_ENTRY(su_test_diff_codec_quaternary)
 };
 
 SUPRIVATE void

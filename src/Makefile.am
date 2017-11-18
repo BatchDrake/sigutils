@@ -19,7 +19,7 @@ sutest_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
 	tests/detect.c \
 	tests/filt.c \
 	tests/ncqo.c \
-	tests/encoder.c \
+	tests/codec.c \
 	tests/pll.c
 
 radio_CFLAGS = -I. -I.. -I../util @GLOBAL_CFLAGS@
