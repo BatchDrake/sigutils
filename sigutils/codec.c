@@ -83,6 +83,12 @@ su_codec_feed(su_codec_t *codec, SUSYMBOL x)
   return SU_NOSYMBOL;
 }
 
+unsigned int
+su_codec_get_output_bits(const su_codec_t *codec)
+{
+  return codec->output_bits;
+}
+
 su_codec_t *
 su_codec_new(const char *classname, unsigned int bits, ...)
 {
@@ -95,6 +101,7 @@ su_codec_new(const char *classname, unsigned int bits, ...)
 
   new->direction = SU_CODEC_DIRECTION_FORWARDS;
   new->bits = bits;
+  new->output_bits = bits; /* Can be modified by ctor */
 
   if ((new->class = su_codec_class_lookup(classname)) == NULL) {
     SU_ERROR("No such codec class `%s'\n", classname);

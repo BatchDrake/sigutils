@@ -44,6 +44,7 @@ struct sigutils_codec {
   enum su_codec_direction direction;
   const struct sigutils_codec_class *class;
   unsigned int bits;
+  unsigned int output_bits;
   void *private;
 };
 
@@ -52,6 +53,8 @@ typedef struct sigutils_codec su_codec_t;
 SUBOOL su_codec_class_register(const struct sigutils_codec_class *class);
 
 su_codec_t *su_codec_new(const char *classname, unsigned int bits, ...);
+
+unsigned int su_codec_get_output_bits(const su_codec_t *codec);
 
 void su_codec_set_direction(
     su_codec_t *codec,
