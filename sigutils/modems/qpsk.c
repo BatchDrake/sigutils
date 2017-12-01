@@ -316,7 +316,7 @@ su_qpsk_modem_read_sym(su_modem_t *modem, void *private)
   else if (got < 0)
     return SU_EOS;
 
-  sym = ((SU_C_REAL(sample) > 0) << 1) | (SU_C_IMAG(sample) > 0);
+  sym = 3 & (SUSYMBOL) floor(2 * (SU_C_ARG(sample) + M_PI) / M_PI);
 
   su_qpsk_modem_update_state(qpsk_modem);
 
