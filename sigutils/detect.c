@@ -609,7 +609,7 @@ su_channel_params_adjust_to_channel(
 
   width = MAX(channel->f_hi - channel->f_lo, channel->bw);
 
-  if ((params->decimation = .25 * SU_CEIL(params->samp_rate / width)) < 1)
+  if ((params->decimation = .3 * SU_CEIL(params->samp_rate / width)) < 1)
     params->decimation = 1;
 
   params->bw = width;
