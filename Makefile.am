@@ -25,6 +25,7 @@ nobase_pkginclude_HEADERS = 	\
 	sigutils/property.h	 \
 	sigutils/sampling.h	 \
 	sigutils/sigutils.h	 \
+	sigutils/softtune.h	 \
 	sigutils/taps.h		   \
 	sigutils/types.h	   \
 	util/util.h			

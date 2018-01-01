@@ -24,6 +24,7 @@
 #include "sigutils.h"
 #include "ncqo.h"
 #include "iir.h"
+#include "softtune.h"
 
 #define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 0  /* in FFT runs */
 #define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
@@ -46,10 +47,6 @@
     SU_NORM2ABS_FREQ(                                                       \
               (detector)->params.samp_rate * (detector)->params.decimation, \
               2 * (SUFLOAT) (i) / (SUFLOAT) (detector)->params.window_size)
-
-/* Extra bandwidth given to antialias filter */
-#define SU_CHANNEL_DETECTOR_ANTIALIAS_EXTRA_BW 2
-#define SU_CHANNEL_DETECTOR_ANTIALIAS_ORDER    8
 
 struct sigutils_peak_detector {
   unsigned int size;
@@ -99,6 +96,7 @@ struct sigutils_channel_detector_params {
   SUSCOUNT decimation;  /* Decimation */
   SUFLOAT  bw;          /* Low-pass filter bandwidth (in Hz) */
   SUSCOUNT max_order;   /* Max constellation order */
+  SUBOOL   tune;        /* Signal needs to be tuned to a channel */
 
   /* Detector parameters */
   enum sigutils_channel_detector_window window; /* Window function */
@@ -123,6 +121,7 @@ struct sigutils_channel_detector_params {
   1,        /* decimation */                                    \
   0.0,      /* bw */                                            \
   8,        /* max_order */                                     \
+  SU_TRUE,  /* tune */                                          \
   SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS, /* window */     \
   SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                        \
   SU_CHANNEL_DETECTOR_BETA,  /* beta */                         \
@@ -133,20 +132,6 @@ struct sigutils_channel_detector_params {
   2.,       /* pd_thres */                                      \
   10        /* pd_signif */                                     \
 }
-
-
-struct sigutils_channel {
-  SUFLOAT fc;    /* Channel central frequency */
-  SUFLOAT f_lo;  /* Lower frequency belonging to the channel */
-  SUFLOAT f_hi;  /* Upper frequency belonging to the channel */
-  SUFLOAT bw;    /* Equivalent bandwidth */
-  SUFLOAT snr;   /* Signal-to-noise ratio */
-  SUFLOAT S0;    /* Peak signal power */
-  SUFLOAT N0;    /* Noise level */
-  SUFLOAT ft;    /* Tuner frequency */
-  unsigned int age;     /* Channel age */
-  unsigned int present; /* Is channel present? */
-};
 
 #define sigutils_channel_INITIALIZER    \
 {                                       \
@@ -165,14 +150,11 @@ struct sigutils_channel {
 struct sigutils_channel_detector {
   /* Common members */
   struct sigutils_channel_detector_params params;
-  su_ncqo_t lo; /* Local oscillator */
-  su_iir_filt_t antialias; /* Antialiasing filter */
-  SUSCOUNT decim_ptr;
+  su_softtuner_t tuner;
+  SUCOMPLEX *tuner_buf;
   SUSCOUNT ptr; /* Sample in window */
   unsigned int iters;
   unsigned int chan_age;
-  SUBOOL consumed; /* Decimator signal */
-  SUCOMPLEX last_window_sample; /* Last window sample */
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
   SU_FFTW(_complex) *fft;
@@ -206,17 +188,6 @@ su_channel_detector_get_fs(const su_channel_detector_t *cd)
   return cd->params.samp_rate;
 }
 
-SUINLINE SUCOMPLEX
-su_channel_detector_get_last_sample(const su_channel_detector_t *cd)
-{
-  return cd->last_window_sample;
-}
-
-SUINLINE SUBOOL
-su_channel_detector_sample_was_consumed(const su_channel_detector_t *cd)
-{
-  return cd->consumed;
-}
 
 SUINLINE SUBOOL
 su_channel_detector_get_window_ptr(const su_channel_detector_t *cd)
