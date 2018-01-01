@@ -297,7 +297,10 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
 
   su_channel_detector_channel_list_clear(detector);
 
-  su_iir_filt_finalize(&detector->antialias);
+  su_softtuner_finalize(&detector->tuner);
+
+  if (detector->tuner_buf != NULL)
+    free(detector->tuner_buf);
 
   su_peak_detector_finalize(&detector->pd);
 
@@ -345,9 +348,8 @@ su_channel_detector_set_params(
   detector->params = *params;
 
   /* Initialize local oscillator */
-  su_ncqo_init(
-      &detector->lo,
-      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
+  if (params->tune)
+    su_channel_detector_set_fc(&detector->tuner, params->fc);
 
   return SU_TRUE;
 }
@@ -356,6 +358,8 @@ su_channel_detector_t *
 su_channel_detector_new(const struct sigutils_channel_detector_params *params)
 {
   su_channel_detector_t *new = NULL;
+  struct sigutils_softtuner_params tuner_params
+    = sigutils_softtuner_params_INITIALIZER;
 
   assert(params->alpha > .0);
   assert(params->samp_rate > 0);
@@ -449,18 +453,20 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
       break;
   }
 
-  /* Initialize local oscillator */
-  su_ncqo_init(
-      &new->lo,
-      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
+  /* Initialize tuner (if enabled) */
+  if (params->tune) {
+    SU_TRYCATCH(
+        new->tuner_buf = malloc(
+            SU_BLOCK_STREAM_BUFFER_SIZE * sizeof (SUCOMPLEX)),
+        goto fail);
 
-  /* Apply antialias filter */
-  if (params->bw > 0.0)
-    su_iir_bwlpf_init(
-        &new->antialias,
-        SU_CHANNEL_DETECTOR_ANTIALIAS_ORDER,
-        .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
-           * SU_CHANNEL_DETECTOR_ANTIALIAS_EXTRA_BW);
+    tuner_params.fc = params->fc;
+    tuner_params.bw = params->bw;
+    tuner_params.samp_rate = params->samp_rate;
+    tuner_params.decimation = params->decimation;
+
+    SU_TRYCATCH(su_softtuner_init(&new->tuner, &tuner_params), goto fail);
+  }
 
   /* Calculate the required number of samples to perform detection */
   new->req_samples = 0; /* We can perform detection immediately */
@@ -605,15 +611,16 @@ su_channel_params_adjust_to_channel(
     struct sigutils_channel_detector_params *params,
     const struct sigutils_channel *channel)
 {
-  SUFLOAT width;
+  struct sigutils_softtuner_params tuner_params =
+      sigutils_softtuner_params_INITIALIZER;
 
-  width = MAX(channel->f_hi - channel->f_lo, channel->bw);
+  tuner_params.samp_rate = params->samp_rate;
 
-  if ((params->decimation = .3 * SU_CEIL(params->samp_rate / width)) < 1)
-    params->decimation = 1;
+  su_softtuner_params_adjust_to_channel(&tuner_params, channel);
 
-  params->bw = width;
-  params->fc = channel->fc - channel->ft;
+  params->decimation = tuner_params.decimation;
+  params->bw = tuner_params.bw;
+  params->fc = tuner_params.fc;
 
   su_channel_params_adjust(params);
 }
@@ -949,34 +956,6 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
   SUCOMPLEX diff;
   SUFLOAT ac;
 
-  if (detector->req_samples > 0)
-    --detector->req_samples;
-
-  /* Carrier centering. Must happen *before* decimation */
-  x *= SU_C_CONJ(su_ncqo_read(&detector->lo));
-
-  /* If a filter is present, pass sample to filter */
-  if (detector->params.bw > 0.0)
-    x = su_iir_filt_feed(&detector->antialias, x);
-
-  /*
-   * The previous steps acted as a tuner. User code can reuse this
-   * result to skip manual channel tuning.
-   */
-  detector->last_window_sample = x;
-
-  /* Decimate if necessary */
-  if (detector->params.decimation > 1) {
-    if (++detector->decim_ptr < detector->params.decimation) {
-      detector->consumed = SU_FALSE;
-      return SU_TRUE;
-    }
-
-    detector->decim_ptr = 0; /* Reset decimation pointer */
-  }
-
-  detector->consumed = SU_TRUE;
-
   /* In nonlinear diff mode, we store something else in the window */
   if (detector->params.mode == SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF) {
      diff = (x - detector->prev) * detector->params.samp_rate;
@@ -1064,12 +1043,6 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
   return SU_TRUE;
 }
 
-SUBOOL
-su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
-{
-  return su_channel_detector_feed_internal(detector, x);
-}
-
 SUSCOUNT
 su_channel_detector_feed_bulk(
     su_channel_detector_t *detector,
@@ -1077,10 +1050,34 @@ su_channel_detector_feed_bulk(
     SUSCOUNT size)
 {
   unsigned int i;
+  const SUCOMPLEX *tuned_signal;
+  SUSCOUNT tuned_size;
+  SUSDIFF result;
 
-  for (i = 0; i < size; ++i)
-    if (!su_channel_detector_feed_internal(detector, signal[i]))
+  if (detector->params.tune) {
+    su_softtuner_feed(&detector->tuner, signal, size);
+
+    result = su_softtuner_read(
+        &detector->tuner,
+        detector->tuner_buf,
+        SU_BLOCK_STREAM_BUFFER_SIZE);
+
+    tuned_signal = detector->tuner_buf;
+    tuned_size   = result;
+  } else {
+    tuned_signal = signal;
+    tuned_size   = size;
+  }
+
+  for (i = 0; i < tuned_size; ++i)
+    if (!su_channel_detector_feed_internal(detector, tuned_signal[i]))
       break;
 
   return i;
+}
+
+SUBOOL
+su_channel_detector_feed(su_channel_detector_t *detector, SUCOMPLEX x)
+{
+  return su_channel_detector_feed_bulk(detector, &x, 1) >= 0;
 }
