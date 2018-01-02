@@ -280,6 +280,9 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
   if (detector->window != NULL)
     fftw_free(detector->window);
 
+  if (detector->window_func != NULL)
+    fftw_free(detector->window_func);
+
   if (detector->fft != NULL)
     fftw_free(detector->fft);
 
@@ -354,6 +357,55 @@ su_channel_detector_set_params(
   return SU_TRUE;
 }
 
+SUINLINE SUBOOL
+su_channel_detector_init_window_func(su_channel_detector_t *detector)
+{
+  unsigned int i;
+
+  for (i = 0; i < detector->params.window_size; ++i)
+    detector->window_func[i] = 1;
+
+  switch (detector->params.window) {
+    case SU_CHANNEL_DETECTOR_WINDOW_NONE:
+      /* Do nothing. */
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_HAMMING:
+      su_taps_apply_hamming_complex(
+          detector->window_func,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_HANN:
+      su_taps_apply_hann_complex(
+          detector->window_func,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
+      su_taps_apply_flat_top_complex(
+          detector->window_func,
+          detector->params.window_size);
+      break;
+
+    case SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS:
+      su_taps_apply_blackmann_harris_complex(
+          detector->window_func,
+          detector->params.window_size);
+      break;
+
+    default:
+      /*
+       * This surely will generate thousands of messages, but it should
+       * never happen either
+       */
+      SU_WARNING("Unsupported window function %d\n", detector->params.window);
+      return SU_FALSE;
+  }
+
+  return SU_TRUE;
+}
+
 su_channel_detector_t *
 su_channel_detector_new(const struct sigutils_channel_detector_params *params)
 {
@@ -377,6 +429,15 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     SU_ERROR("cannot allocate memory for window\n");
     goto fail;
   }
+
+  if ((new->window_func
+      = fftw_malloc(
+          params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+    SU_ERROR("cannot allocate memory for window function\n");
+    goto fail;
+  }
+
+  SU_TRYCATCH(su_channel_detector_init_window_func(new), goto fail);
 
   if ((new->fft
       = fftw_malloc(
@@ -906,46 +967,13 @@ su_channel_detect_baudrate_from_nonlinear_diff(su_channel_detector_t *detector)
   return SU_TRUE;
 }
 
-/* Apply window function. TODO: precalculate */
 SUINLINE void
 su_channel_detector_apply_window(su_channel_detector_t *detector)
 {
-  switch (detector->params.window) {
-    case SU_CHANNEL_DETECTOR_WINDOW_NONE:
-      /* Do nothing. */
-      break;
+  unsigned int i;
 
-    case SU_CHANNEL_DETECTOR_WINDOW_HAMMING:
-      su_taps_apply_hamming_complex(
-          detector->window,
-          detector->params.window_size);
-      break;
-
-    case SU_CHANNEL_DETECTOR_WINDOW_HANN:
-      su_taps_apply_hann_complex(
-          detector->window,
-          detector->params.window_size);
-      break;
-
-    case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
-      su_taps_apply_flat_top_complex(
-          detector->window,
-          detector->params.window_size);
-      break;
-
-    case SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS:
-      su_taps_apply_blackmann_harris_complex(
-          detector->window,
-          detector->params.window_size);
-      break;
-
-    default:
-      /*
-       * This surely will generate thousands of messages, but it should
-       * never happen either
-       */
-      SU_WARNING("Unsupported window function %d\n", detector->params.window);
-  }
+  for (i = 0; i < detector->params.window_size; ++i)
+    detector->window[i] *= detector->window_func[i];
 }
 
 SUINLINE SUBOOL

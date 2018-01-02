@@ -155,6 +155,7 @@ struct sigutils_channel_detector {
   SUSCOUNT ptr; /* Sample in window */
   unsigned int iters;
   unsigned int chan_age;
+  SU_FFTW(_complex) *window_func;
   SU_FFTW(_complex) *window;
   SU_FFTW(_plan) fft_plan;
   SU_FFTW(_complex) *fft;
