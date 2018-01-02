@@ -195,6 +195,12 @@ su_channel_detector_get_window_ptr(const su_channel_detector_t *cd)
   return cd->ptr;
 }
 
+SUINLINE SUFLOAT
+su_channel_detector_get_baud(const su_channel_detector_t *cd)
+{
+  return cd->baud;
+}
+
 /**************************** Peak detector API *****************************/
 SUBOOL su_peak_detector_init(
     su_peak_detector_t *pd,
