@@ -63,12 +63,14 @@ AC_SUBST(fftw3_CFLAGS)
 AC_SUBST(fftw3_LIBS)
 
 GLOBAL_LDFLAGS="-lm -lpthread -ldl -export-dynamic -rdynamic"
+SIGUTILS_CFLAGS="-ffast-math -O3"
 
 AC_CONFIG_FILES([sigutils.pc])
 AC_OUTPUT
 
 dnl Macro snippets imported from dependency `util'
 AC_SUBST(GLOBAL_CFLAGS)
+AC_SUBST(SIGUTILS_CFLAGS)
 AC_SUBST(GLOBAL_LDFLAGS)
 AC_OUTPUT([
   Makefile
