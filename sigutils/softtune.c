@@ -53,6 +53,7 @@ su_softtuner_init(
   memset(tuner, 0, sizeof (su_softtuner_t));
 
   tuner->params = *params;
+  tuner->avginv = 1. / params->decimation;
 
   SU_TRYCATCH(
       su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
@@ -100,6 +101,8 @@ su_softtuner_feed(
 
   SU_TRYCATCH(avail > 0, return 0);
 
+  buf[0] = 0;
+
   for (i = 0; i < size && n < avail; ++i) {
     /* Carrier centering. Must happen *before* decimation */
     x = input[i] * SU_C_CONJ(su_ncqo_read(&tuner->lo));
@@ -108,8 +111,11 @@ su_softtuner_feed(
       x = su_iir_filt_feed(&tuner->antialias, x);
 
     if (tuner->params.decimation > 1) {
-      if (++tuner->decim_ptr == tuner->params.decimation) {
-        buf[n++] = x;
+      if (++tuner->decim_ptr < tuner->params.decimation) {
+        buf[n] += tuner->avginv * x;
+      } else {
+        if (++n < avail)
+          buf[n] = 0;
         tuner->decim_ptr = 0; /* Reset decimation pointer */
       }
     } else {

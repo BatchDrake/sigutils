@@ -67,6 +67,7 @@ struct sigutils_softtuner {
   su_off_t read_ptr;
   SUSCOUNT decim_ptr;
   SUBOOL filtered;
+  SUFLOAT avginv;
 };
 
 typedef struct sigutils_softtuner su_softtuner_t;
