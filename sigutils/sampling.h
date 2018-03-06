@@ -68,8 +68,8 @@
 #define SU_NORM2ANG_FREQ(freq) (PI * (freq))
 #define SU_ANG2NORM_FREQ(omrel) ((omrel) / (PI))
 
-#define SU_T2N(fs, t) ((unsigned int) floor((t) * (SUFLOAT) (fs)))
-#define SU_N2T(fs, n) ((unsigned int) floor((n) / (SUFLOAT) (fs)))
+#define SU_T2N(fs, t) ((unsigned int) SU_FLOOR((t) * (SUFLOAT) (fs)))
+#define SU_N2T(fs, n) ((unsigned int) SU_FLOOR((n) / (SUFLOAT) (fs)))
 
 #define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT) (fs))
 #define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT) (fs))

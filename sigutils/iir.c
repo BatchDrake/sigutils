@@ -101,6 +101,7 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
   __su_iir_filt_push_y(filt, y);
 
   filt->curr_y = y;
+
   return filt->gain * y;
 }
 

@@ -59,9 +59,10 @@ __su_ncqo_step(su_ncqo_t *ncqo)
   ++ncqo->n;
   ncqo->phi += ncqo->omega;
 
-  if (ncqo->phi >= 2 * PI) {
+  if (ncqo->phi >= 2 * PI)
     ncqo->phi -= 2 * PI;
-  }
+  else if (ncqo->phi < 0)
+    ncqo->phi += 2 * PI;
 }
 
 void
@@ -77,7 +78,7 @@ su_ncqo_step(su_ncqo_t *ncqo)
 void
 su_ncqo_set_phase(su_ncqo_t *ncqo, SUFLOAT phi)
 {
-  ncqo->phi = phi - 2 * PI * floor(phi / (2 * PI));
+  ncqo->phi = phi - 2 * PI * SU_FLOOR(phi / (2 * PI));
 }
 
 SUFLOAT
@@ -92,7 +93,7 @@ su_ncqo_inc_phase(su_ncqo_t *ncqo, SUFLOAT delta)
   ncqo->phi += delta;
 
   if (ncqo->phi < 0 || ncqo->phi >= 2 * PI) {
-    ncqo->phi -= 2 * PI * floor(ncqo->phi / (2 * PI));
+    ncqo->phi -= 2 * PI * SU_FLOOR(ncqo->phi / (2 * PI));
   }
 }
 

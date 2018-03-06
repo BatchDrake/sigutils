@@ -7,5 +7,5 @@ Name: sigutils
 Description: Digital signal processing utility library
 URL: http://github.org/BatchDrake/sigutils
 Version: @PACKAGE_VERSION@ 
-Cflags: -I${includedir} -I${includedir}/util
-Libs: -L${libdir} -lsigutils
+Cflags: -I${includedir} -I${includedir}/util -D_SU_SINGLE_PRECISION
+Libs: -L${libdir} -lsigutils -lfftw3f

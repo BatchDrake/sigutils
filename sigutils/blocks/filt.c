@@ -42,8 +42,8 @@ su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
   }
 
   order = va_arg(ap, unsigned int);
-  T = va_arg(ap, SUFLOAT);
-  beta = va_arg(ap, SUFLOAT);
+  T = va_arg(ap, double);
+  beta = va_arg(ap, double);
 
   if (!su_iir_rrc_init(filt, order, T, beta)) {
     SU_ERROR("Failed to initialize RRC filter\n");

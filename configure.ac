@@ -62,16 +62,21 @@ PKG_CHECK_MODULES(fftw3, [fftw3 >= 3.0])
 AC_SUBST(fftw3_CFLAGS)
 AC_SUBST(fftw3_LIBS)
 
-GLOBAL_LDFLAGS="-lm -lpthread -ldl -export-dynamic -rdynamic"
-SIGUTILS_CFLAGS="-ffast-math -O3"
+GLOBAL_LDFLAGS="-lm -lpthread -ldl -lfftw3f -export-dynamic -rdynamic"
+
+SIGUTILS_CFLAGS="-ffast-math -O3 -D_SU_SINGLE_PRECISION"
+SIGUTILS_LDLAGS="-lfftw3f"
+
+AC_SUBST(GLOBAL_CFLAGS)
+AC_SUBST(GLOBAL_LDFLAGS)
+AC_SUBST(SIGUTILS_CFLAGS)
+AC_SUBST(SIGUTILS_LDFLAGS)
 
 AC_CONFIG_FILES([sigutils.pc])
 AC_OUTPUT
 
 dnl Macro snippets imported from dependency `util'
-AC_SUBST(GLOBAL_CFLAGS)
-AC_SUBST(SIGUTILS_CFLAGS)
-AC_SUBST(GLOBAL_LDFLAGS)
+
 AC_OUTPUT([
   Makefile
   src/Makefile

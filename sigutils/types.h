@@ -30,11 +30,11 @@
 #include <util.h>
 
 #ifdef _SU_SINGLE_PRECISION
-#define SUFLOAT    float
-#define SU_SOURCE_FFTW_PREFIX fftwf
+#  define SUFLOAT    float
+#  define SU_SOURCE_FFTW_PREFIX fftwf
 #else
-#define SUFLOAT    double
-#define SU_SOURCE_FFTW_PREFIX fftw
+#  define SUFLOAT    double
+#  define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
 #define SUPRIVATE  static
@@ -49,35 +49,46 @@
 #define SU_NOSYMBOL '\0'
 #define SU_EOS      -1
 
-#define SUFLOAT_FMT "%lg"
-#define SUFLOAT_PRECISION_FMT "%.15lf"
+#ifdef _SU_SINGLE_PRECISION
+#  define SUFLOAT_FMT "%g"
+#  define SUFLOAT_PRECISION_FMT "%.15f"
+#  define SUFLOAT_SCANF_FMT "%f"
+#  define SU_ADDSFX(token) token
+#else
+#  define SUFLOAT_FMT "%lg"
+#  define SUFLOAT_PRECISION_FMT "%.15lf"
+#  define SUFLOAT_SCANF_FMT "%lf"
+#  define SU_ADDSFX(token) JOIN(token, f)
+#endif
 
 #define SU_FALSE 0
 #define SU_TRUE  1
 
+
 #define SU_SQRT2  1.41421356237
-#define SU_COS    cos
-#define SU_ACOS   acos
-#define SU_SIN    sin
-#define SU_ASIN   asin
-#define SU_LOG    log10
-#define SU_LN     log
-#define SU_EXP    exp
-#define SU_POW    pow
-#define SU_ABS    fabs
-#define SU_SQRT   sqrt
-#define SU_FLOOR  floor
-#define SU_CEIL   ceil
-#define SU_COSH   cosh
-#define SU_ACOSH  acosh
+#define SU_COS    SU_ADDSFX(cos)
+#define SU_ACOS   SU_ADDSFX(acos)
+#define SU_SIN    SU_ADDSFX(sin)
+#define SU_ASIN   SU_ADDSFX(asin)
+#define SU_TAN    SU_ADDSFX(tan)
+#define SU_LOG    SU_ADDSFX(log10)
+#define SU_LN     SU_ADDSFX(log)
+#define SU_EXP    SU_ADDSFX(exp)
+#define SU_POW    SU_ADDSFX(pow)
+#define SU_ABS    SU_ADDSFX(fabs)
+#define SU_SQRT   SU_ADDSFX(sqrt)
+#define SU_FLOOR  SU_ADDSFX(floor)
+#define SU_CEIL   SU_ADDSFX(ceil)
+#define SU_COSH   SU_ADDSFX(cosh)
+#define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
 
-#define SU_C_ABS    cabs
-#define SU_C_ARG    carg
-#define SU_C_REAL   creal
-#define SU_C_IMAG   cimag
-#define SU_C_EXP    cexp
-#define SU_C_CONJ   conj
+#define SU_C_ABS    SU_ADDSFX(cabs)
+#define SU_C_ARG    SU_ADDSFX(carg)
+#define SU_C_REAL   SU_ADDSFX(creal)
+#define SU_C_IMAG   SU_ADDSFX(cimag)
+#define SU_C_EXP    SU_ADDSFX(cexp)
+#define SU_C_CONJ   SU_ADDSFX(conj)
 #define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
 #define SUFLOAT_MIN_REF_MAG 1e-8

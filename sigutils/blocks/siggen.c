@@ -137,7 +137,7 @@ su_block_siggen_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
-  state->i_desc.A = va_arg(ap, SUFLOAT);
+  state->i_desc.A = va_arg(ap, double);
   state->i_desc.T = va_arg(ap, SUSCOUNT);
   state->i_desc.n = va_arg(ap, SUSCOUNT);
 
@@ -147,7 +147,7 @@ su_block_siggen_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
-  state->q_desc.A = va_arg(ap, SUFLOAT);
+  state->q_desc.A = va_arg(ap, double);
   state->q_desc.T = va_arg(ap, SUSCOUNT);
   state->q_desc.n = va_arg(ap, SUSCOUNT);
 

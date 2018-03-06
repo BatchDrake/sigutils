@@ -42,11 +42,12 @@ su_block_costas_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
+  /* Variadic function calls promote floats to doubles */
   kind      = va_arg(ap, enum sigutils_costas_kind);
-  fhint     = va_arg(ap, SUFLOAT);
-  arm_bw    = va_arg(ap, SUFLOAT);
+  fhint     = va_arg(ap, double);
+  arm_bw    = va_arg(ap, double);
   arm_order = va_arg(ap, unsigned int);
-  loop_bw   = va_arg(ap, SUFLOAT);
+  loop_bw   = va_arg(ap, double);
 
   if (!su_costas_init(costas, kind, fhint, arm_bw, arm_order, loop_bw)) {
     SU_ERROR("Failed to initialize Costas loop");

@@ -25,6 +25,12 @@
 #include "log.h"
 #include "block.h"
 
+#ifdef _SU_SINGLE_PRECISION
+#  define sf_read sf_read_float
+#else
+#  define sf_read sf_read_double
+#endif
+
 struct su_wavfile {
   SF_INFO info;
   SNDFILE *sf;
@@ -148,7 +154,7 @@ su_block_wavfile_acquire(
   /* Get the number of complex samples to write */
   size = su_stream_get_contiguous(out, &start, SU_MIN(wav->size, out->size));
 
-  if ((got = sf_read_double(
+  if ((got = sf_read(
       wav->sf,
       wav->buffer,
       size * wav->info.channels)) > 0) {

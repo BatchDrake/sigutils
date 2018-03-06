@@ -41,8 +41,9 @@ su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
-  loop_gain = va_arg(ap, SUFLOAT);
-  bhint     = va_arg(ap, SUFLOAT);
+  /* Variadic function calls promote floats to doubles */
+  loop_gain = va_arg(ap, double);
+  bhint     = va_arg(ap, double);
   bufsiz    = va_arg(ap, SUSCOUNT);
 
   if (!su_clock_detector_init(clock_detector, loop_gain, bhint, bufsiz)) {

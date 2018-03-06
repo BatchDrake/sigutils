@@ -1,6 +1,6 @@
 /*
 
-  Copyright (C) 2016 Gonzalo José Carracedo Carballal
+  Copyright (C) 2016 Gonzalo Jose Carracedo Carballal
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -29,7 +29,7 @@
 
 /* Extra bandwidth given to antialias filter */
 #define SU_SOFTTUNER_ANTIALIAS_EXTRA_BW 2
-#define SU_SOFTTUNER_ANTIALIAS_ORDER    8
+#define SU_SOFTTUNER_ANTIALIAS_ORDER    4
 
 struct sigutils_channel {
   SUFLOAT fc;    /* Channel central frequency */
