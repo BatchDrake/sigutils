@@ -28,8 +28,11 @@
 
 /* TODO: Builtin filters */
 struct sigutils_iir_filt {
-  SUSCOUNT x_size;
-  SUSCOUNT y_size;
+  unsigned int x_size;
+  unsigned int y_size;
+
+  unsigned int x_alloc;
+  unsigned int y_alloc;
 
   int x_ptr;
   int y_ptr;
@@ -47,7 +50,7 @@ struct sigutils_iir_filt {
 
 typedef struct sigutils_iir_filt su_iir_filt_t;
 
-#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, 1}
+#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, 1}
 
 /* Push sample to filter */
 SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);

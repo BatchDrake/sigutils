@@ -20,39 +20,78 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "sampling.h"
 #include "iir.h"
 #include "coef.h"
 #include "taps.h"
+#include "config.h"
+
+#if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
+#  define SU_USE_VOLK
+#endif
 
 SUPRIVATE void
 __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 {
+#ifdef SU_USE_VOLK
+  if (--filt->x_ptr < 0)
+    filt->x_ptr += filt->x_size; /* ptr: size - 1 */
+  else
+    filt->x[filt->x_ptr + filt->x_size] = x;
+
+  filt->x[filt->x_ptr] = x;
+#else
   filt->x[filt->x_ptr++] = x;
   if (filt->x_ptr >= filt->x_size)
     filt->x_ptr = 0;
+#endif /* SU_USE_VOLK */
 }
 
 SUPRIVATE void
 __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
 {
   if (filt->y_size > 0) {
+#ifdef SU_USE_VOLK
+    if (--filt->y_ptr < 0)
+      filt->y_ptr += filt->y_size; /* ptr: size - 1 */
+    else
+      filt->y[filt->y_ptr + filt->y_size] = y;
+
+    filt->y[filt->y_ptr] = y;
+#else
     filt->y[filt->y_ptr++] = y;
     if (filt->y_ptr >= filt->y_size)
       filt->y_ptr = 0;
+#endif /* SU_USE_VOLK */
   }
 }
 
 SUPRIVATE SUCOMPLEX
 __su_iir_filt_eval(const su_iir_filt_t *filt)
 {
+#ifdef SU_USE_VOLK
+  const SUFLOAT   *taps;
+  const SUCOMPLEX *data;
+  unsigned int count;
+#else
   unsigned int i;
   int p;
+#endif /* SU_USE_VOLK */
 
   SUCOMPLEX y = 0;
 
   /* Input feedback */
+#ifdef SU_USE_VOLK
+  count = filt->x_size;
+  taps = filt->b;
+  data = filt->x + filt->x_ptr;
+
+  while (count-- != 0)
+    y += *taps++ * *data++;
+
+#else
   p = filt->x_ptr - 1;
   for (i = 0; i < filt->x_size; ++i) {
     if (p < 0)
@@ -60,8 +99,18 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
 
     y += filt->b[i] * filt->x[p--];
   }
+#endif /* SU_USE_VOLK */
 
   if (filt->y_size > 0) {
+#ifdef SU_USE_VOLK
+    count = filt->y_size - 1;
+    taps = filt->a + 1;
+    data = filt->y + filt->y_ptr;
+
+    while (count-- != 0)
+      y -= *taps++ * *data++;
+
+#else
     /* Output feedback - assumes that a[0] is 1 */
     p = filt->y_ptr - 1;
     for (i = 1; i < filt->y_size; ++i) {
@@ -70,6 +119,7 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
 
       y -= filt->a[i] * filt->y[p--];
     }
+#endif /* SU_USE_VOLK */
   }
 
   return y;
@@ -130,16 +180,31 @@ __su_iir_filt_init(
   SUCOMPLEX *y = NULL;
   SUFLOAT *a_copy = NULL;
   SUFLOAT *b_copy = NULL;
+  unsigned int x_alloc = x_size;
+  unsigned int y_alloc = y_size;
+
+  assert(x_size > 0);
 
   memset(filt, 0, sizeof (su_iir_filt_t));
 
   filt->gain = 1;
 
-  if ((x = calloc(x_size, sizeof (SUCOMPLEX))) == NULL)
+#ifdef SU_USE_VOLK
+  /*
+   * When Volk is enabled, we use contiguous buffers by duplicating
+   * values in the X and Y buffers
+   */
+  x_alloc = 2 * x_alloc - 1;
+
+  if (y_alloc > 0)
+    y_alloc = 2 * y_alloc - 1;
+#endif /* SU_USE_VOLK */
+
+  if ((x = calloc(x_alloc, sizeof (SUCOMPLEX))) == NULL)
     goto fail;
 
   if (y_size > 0)
-    if ((y = calloc(y_size, sizeof (SUCOMPLEX))) == NULL)
+    if ((y = calloc(y_alloc, sizeof (SUCOMPLEX))) == NULL)
       goto fail;
 
   if (copy_coef) {
@@ -170,6 +235,9 @@ __su_iir_filt_init(
 
   filt->x_size = x_size;
   filt->y_size = y_size;
+
+  filt->x_alloc = x_alloc;
+  filt->y_alloc = y_alloc;
 
   return SU_TRUE;
 
