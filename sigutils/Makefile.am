@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 lib_LTLIBRARIES = libsigutils.la
 
 libsigutils_la_CFLAGS = -I../util -I. -ggdb @fftw3_CFLAGS@ @SNDFILE_CFLAGS@ \
-	@SIGUTILS_CFLAGS@
+	@SIGUTILS_CFLAGS@ @volk_CFLAGS@
 libsigutils_la_LIBADD = ../util/libutil.la
 libsigutils_la_SOURCES = agc.c agc.h blocks/agc.c blocks/clock.c blocks/pll.c  \
  blocks/tuner.c blocks/filt.c blocks/siggen.c blocks/wavfile.c block.c block.h \

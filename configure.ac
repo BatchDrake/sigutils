@@ -5,7 +5,7 @@ AC_PREREQ(2.65)
 
 AC_INIT(sigutils, 0.1)
 
-AC_CONFIG_HEADERS(src/config.h)
+AC_CONFIG_HEADERS(sigutils/config.h)
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign])
@@ -61,8 +61,24 @@ AC_SUBST(SNDFILE_LIBS)
 PKG_CHECK_MODULES(fftw3, [fftw3 >= 3.0])
 AC_SUBST(fftw3_CFLAGS)
 AC_SUBST(fftw3_LIBS)
+FFTW3_EXTRA_LIBS="-lfftw3f"
 
-GLOBAL_LDFLAGS="-lm -lpthread -ldl -lfftw3f -export-dynamic -rdynamic"
+PKG_CHECK_MODULES(volk, [volk >= 1.0], ac_cv_volk=yes, ac_cv_volk=no)
+AC_SUBST(volk_CFLAGS)
+AC_SUBST(volk_LIBS)
+
+if test "$ac_cv_volk" != no ; then
+  AC_DEFINE([HAVE_VOLK], [0], [Compiled with Volk-accelerated filters])
+  AC_DEFINE(HAVE_VOLK,1)
+  AC_SUBST(HAVE_VOLK)
+  VOLK_EXTRA_CFLAGS="$volk_CFLAGS"
+  VOLK_EXTRA_LIBS="$volk_LIBS"
+fi
+
+EXTRA_CFLAGS="-D_SU_SINGLE_PRECISION $FFTW3_EXTRA_CFLAGS $VOLK_EXTRA_CFLAGS"
+EXTRA_LIBS="$FFTW3_EXTRA_LIBS $VOLK_EXTRA_LIBS"
+
+GLOBAL_LDFLAGS="-lm -lpthread -ldl $EXTRA_LIBS -export-dynamic -rdynamic"
 
 SIGUTILS_CFLAGS="-ffast-math -O3 -D_SU_SINGLE_PRECISION"
 SIGUTILS_LDLAGS="-lfftw3f"
@@ -73,6 +89,8 @@ AC_SUBST(SIGUTILS_CFLAGS)
 AC_SUBST(SIGUTILS_LDFLAGS)
 
 AC_CONFIG_FILES([sigutils.pc])
+AC_SUBST(EXTRA_CFLAGS)
+AC_SUBST(EXTRA_LIBS)
 AC_OUTPUT
 
 dnl Macro snippets imported from dependency `util'

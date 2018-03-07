@@ -3,13 +3,13 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = sutest radio
 sutest_CFLAGS = -I. -I.. -I../util -I../testutil -I tests -static \
-	@SIGUTILS_CFLAGS@ @SNDFILE_CFLAGS@ @fftw3_CFLAGS@ 
+	@SIGUTILS_CFLAGS@ @SNDFILE_CFLAGS@ @fftw3_CFLAGS@ @volk_CFLAGS@ 
 sutest_LDFLAGS = @GLOBAL_LDFLAGS@
 
 sutest_LDADD = \
 	../testutil/libtestutil.la \
 	../sigutils/libsigutils.la \
-	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@
+	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@ @volk_LIBS@
 
 sutest_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
 	tests/agc.c \
@@ -27,6 +27,6 @@ radio_LDFLAGS = @GLOBAL_LDFLAGS@
 radio_LDADD = \
 	../sigutils/libsigutils.la \
 	../util/libutil.la  \
-	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@
+	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@ @volk_CFLAGS@
 	
 radio_SOURCES = radio.c
