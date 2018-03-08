@@ -46,6 +46,8 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_MALLOC
 
+AC_CHECK_LIB(m, sincosf, [AC_DEFINE(HAVE_SINCOS, 1, [Define to 1 if you have the sincos function.])], [])
+
 PKG_PROG_PKG_CONFIG
 PKG_INSTALLDIR
 
