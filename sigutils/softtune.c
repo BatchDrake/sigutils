@@ -59,7 +59,7 @@ su_softtuner_init(
       su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
       goto fail);
 
-  su_ncqo_init(
+  su_ncqo_init_fixed(
       &tuner->lo,
       SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
 
