@@ -30,9 +30,10 @@
 
 #if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
 #  define SU_USE_VOLK
+#  include <volk/volk.h>
 #endif
 
-SUPRIVATE void
+SUINLINE void
 __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 {
 #ifdef SU_USE_VOLK
@@ -49,7 +50,7 @@ __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 #endif /* SU_USE_VOLK */
 }
 
-SUPRIVATE void
+SUINLINE void
 __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
 {
   if (filt->y_size > 0) {
@@ -68,13 +69,11 @@ __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
   }
 }
 
-SUPRIVATE SUCOMPLEX
+SUINLINE SUCOMPLEX
 __su_iir_filt_eval(const su_iir_filt_t *filt)
 {
 #ifdef SU_USE_VOLK
-  const SUFLOAT   *taps;
-  const SUCOMPLEX *data;
-  unsigned int count;
+  SUCOMPLEX y_tmp = 0;
 #else
   unsigned int i;
   int p;
@@ -84,12 +83,8 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
 
   /* Input feedback */
 #ifdef SU_USE_VOLK
-  count = filt->x_size;
-  taps = filt->b;
-  data = filt->x + filt->x_ptr;
 
-  while (count-- != 0)
-    y += *taps++ * *data++;
+  volk_32fc_32f_dot_prod_32fc(&y, filt->x + filt->x_ptr, filt->b, filt->x_size);
 
 #else
   p = filt->x_ptr - 1;
@@ -103,12 +98,13 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
 
   if (filt->y_size > 0) {
 #ifdef SU_USE_VOLK
-    count = filt->y_size - 1;
-    taps = filt->a + 1;
-    data = filt->y + filt->y_ptr;
+    volk_32fc_32f_dot_prod_32fc(
+        &y_tmp,
+        filt->y + filt->y_ptr,
+        filt->a + 1,
+        filt->y_size - 1);
 
-    while (count-- != 0)
-      y -= *taps++ * *data++;
+    y -= y_tmp;
 
 #else
     /* Output feedback - assumes that a[0] is 1 */
@@ -153,6 +149,25 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
   filt->curr_y = y;
 
   return filt->gain * y;
+}
+
+void
+su_iir_filt_feed_bulk(
+    su_iir_filt_t *filt,
+    const SUCOMPLEX *x,
+    SUCOMPLEX *y,
+    SUSCOUNT len)
+{
+  SUCOMPLEX tmp_y;
+
+  while (len-- != 0) {
+    __su_iir_filt_push_x(filt, *x++);
+    tmp_y = __su_iir_filt_eval(filt);
+    __su_iir_filt_push_y(filt, tmp_y);
+    *y++ = filt->gain * tmp_y;
+  }
+
+  filt->curr_y = tmp_y;
 }
 
 SUCOMPLEX

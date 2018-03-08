@@ -55,6 +55,13 @@ typedef struct sigutils_iir_filt su_iir_filt_t;
 /* Push sample to filter */
 SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
 
+/* Push a bunch of samples to filter */
+void su_iir_filt_feed_bulk(
+    su_iir_filt_t *filt,
+    const SUCOMPLEX *x,
+    SUCOMPLEX *y,
+    SUSCOUNT len);
+
 /* Get last output */
 SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
 
