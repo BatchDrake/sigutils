@@ -59,4 +59,11 @@
 /* Encoder parameters */
 #define SU_TEST_ENCODER_NUM_SYMS 32
 
+/* Spectral tuner */
+#define SU_TEST_SPECTTUNER_FREQ1     200.
+#define SU_TEST_SPECTTUNER_FREQ2     1000.
+
+#define SU_TEST_SPECTTUNER_SAMP_RATE 8000.
+#define SU_TEST_SPECTTUNER_N0        2e-2
+
 #endif /* _SRC_TEST_PARAM */

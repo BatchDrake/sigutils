@@ -22,11 +22,15 @@
 #define _SIGUTILS_SPECTTUNER_H
 
 #include "types.h"
-#include "ncqo.h"
 
 struct sigutils_specttuner_params {
   SUSCOUNT window_size;
 };
+
+#define sigutils_specttuner_params_INITIALIZER  \
+{                                               \
+  4096, /* window_size */                       \
+}
 
 enum sigutils_specttuner_state {
   SU_SPECTTUNER_STATE_EVEN,
@@ -46,6 +50,14 @@ struct sigutils_specttuner_channel_params {
       const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
       SUSCOUNT size);
 };
+
+#define sigutils_specttuner_channel_params_INITIALIZER  \
+{                                                       \
+  0,    /* f0 */                                        \
+  0,    /* bw */                                        \
+  NULL, /* private */                                   \
+  NULL, /* on_data */                                   \
+}
 
 struct sigutils_specttuner_channel {
   struct sigutils_specttuner_channel_params params;

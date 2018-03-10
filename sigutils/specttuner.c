@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "sampling.h"
 #include "specttuner.h"
 #include "log.h"
 
@@ -60,6 +61,10 @@ su_specttuner_channel_new(
 
   new->center = SU_ROUND(params->f0 / (2 * PI) * owner->params.window_size);
   new->size   = SU_CEIL(new->k * owner->params.window_size);
+
+  new->k /= new->size;
+  SU_TRYCATCH(new->size > 0, goto fail);
+
   new->halfsz = new->size >> 1;
   new->offset = new->size >> 2;
 
@@ -74,6 +79,8 @@ su_specttuner_channel_new(
   SU_TRYCATCH(
       new->fft = SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
       goto fail);
+
+  memset(new->fft, 0, new->size * sizeof(SU_FFTW(_complex)));
 
   SU_TRYCATCH(
       new->plan = SU_FFTW(_plan_dft_1d)(
@@ -96,6 +103,15 @@ fail:
 void
 su_specttuner_destroy(su_specttuner_t *st)
 {
+  unsigned int i;
+
+  for (i = 0; i < st->channel_count; ++i)
+    if (st->channel_list[i] != NULL)
+      su_specttuner_close_channel(st, st->channel_list[i]);
+
+  if (st->channel_list != NULL)
+    free(st->channel_list);
+
   if (st->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
     SU_FFTW(_destroy_plan) (st->plans[SU_SPECTTUNER_STATE_EVEN]);
 
@@ -120,6 +136,7 @@ su_specttuner_new(const struct sigutils_specttuner_params *params)
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_t)), goto fail);
 
+  new->params = *params;
   new->half_size = params->window_size >> 1;
   new->full_size = 3 * params->window_size;
 
@@ -148,8 +165,8 @@ su_specttuner_new(const struct sigutils_specttuner_params *params)
   /* Odd plan stars at window_size / 2 */
   SU_TRYCATCH(
       new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
-          params->window_size + new->half_size,
-          new->window,
+          params->window_size,
+          new->window + new->half_size,
           new->fft,
           FFTW_FORWARD,
           FFTW_ESTIMATE),
@@ -171,30 +188,43 @@ __su_specttuner_feed_bulk(
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
+  SUSDIFF p;
 
   if (size + st->p > st->params.window_size)
     size = st->params.window_size - st->p;
 
-  memcpy(st->window + st->p, buf, size * sizeof(SUCOMPLEX));
+  switch (st->state)
+  {
+    case SU_SPECTTUNER_STATE_EVEN:
+      /* Just copy at the beginning */
+      memcpy(st->window + st->p, buf, size * sizeof(SUCOMPLEX));
+      break;
 
-  if (st->state == SU_SPECTTUNER_STATE_ODD) {
-    /* In odd state, fill second half of odd buffer too */
-    halfsz = size;
-    if (st->p + halfsz > st->half_size)
-      halfsz = st->half_size - st->p;
+    case SU_SPECTTUNER_STATE_ODD:
+      /* Copy to the second third */
+      memcpy(st->window + st->p + st->half_size, buf, size * sizeof(SUCOMPLEX));
 
-    /* Copy to the second half */
-    if (halfsz > 0)
-      memcpy(
-          st->window + st->params.window_size,
-          buf,
-          halfsz * sizeof(SUCOMPLEX));
+      /* Did this copy populate the last third? */
+      if (st->p + size > st->half_size) {
+        halfsz = st->p + size - st->half_size;
+        p = st->p > st->half_size ? st->p : st->half_size;
+
+        /* Don't take into account data already written */
+        halfsz -= p - st->half_size;
+
+        /* Copy to the first third */
+        if (halfsz > 0)
+          memcpy(
+              st->window + p - st->half_size,
+              st->window + p + st->half_size,
+              halfsz * sizeof(SUCOMPLEX));
+      }
   }
 
   st->p += size;
 
   if (st->p == st->params.window_size) {
-    st->p = 0;
+    st->p = st->half_size;
 
     /* Compute FFT */
     SU_FFTW(_execute) (st->plans[st->state]);
@@ -227,7 +257,7 @@ __su_specttuner_feed_channel(
 
   /* Copy to the end */
   memcpy(
-      channel->window,
+      channel->fft,
       st->fft + p,
       len * sizeof(SUCOMPLEX));
 
@@ -240,13 +270,14 @@ __su_specttuner_feed_channel(
 
   /***************************** Lower sideband ******************************/
   len = channel->halfw;
-  if (p - len < 0) /* Roll over */
+  if (p < len) /* Roll over */
     len = p; /* Can copy up to p bytes */
+
 
   /* Copy higher frequencies */
   memcpy(
       channel->fft + channel->size - len,
-      st->fft + window_size - len,
+      st->fft + p - len,
       len * sizeof(SUCOMPLEX));
 
   /* Copy remaining part */
@@ -255,7 +286,6 @@ __su_specttuner_feed_channel(
         channel->fft + channel->size - channel->halfw,
         st->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
-
 
   /****************** Apply phase correction and scaling *********************/
   for (i = 0; i < channel->halfw; ++i)
@@ -300,6 +330,8 @@ su_specttuner_feed_bulk(
     buf += got;
     size -= got;
   }
+
+  return ok;
 }
 
 su_specttuner_channel_t *

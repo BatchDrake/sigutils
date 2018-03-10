@@ -25,6 +25,14 @@
 #include <sndfile.h>
 #include "test.h"
 
+#ifdef _SU_SINGLE_PRECISION
+#  define sf_write sf_write_float
+#  define SU_REAL_TYPE_STR "float"
+#else
+#  define sf_write sf_write_double
+#  define SU_REAL_TYPE_STR "double"
+#endif
+
 SUBOOL
 su_sigbuf_pool_helper_dump_matlab(
     const void *data,
@@ -155,7 +163,7 @@ su_sigbuf_pool_helper_dump_raw(
       "%s/%s-%s.raw",
       directory,
       name,
-      is_complex ? "complex" : "double");
+      is_complex ? "complex" : SU_REAL_TYPE_STR);
 
   if (filename == NULL) {
     SU_ERROR("Memory error while building filename\n");
@@ -240,7 +248,7 @@ su_sigbuf_pool_helper_dump_wav(
   samples = size * info.channels;
 
   /* UGLY HACK: WE ASSUME THAT A COMPLEX IS TWO DOUBLES */
-  if ((written = sf_write_double(sf, (const SUFLOAT *) data, samples))
+  if ((written = sf_write(sf, (const SUFLOAT *) data, samples))
       != samples) {
     SU_ERROR("Write to `%s' failed: %lu/%lu\n", filename, written, samples);
     goto fail;

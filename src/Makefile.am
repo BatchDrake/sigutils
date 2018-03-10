@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = sutest radio
 sutest_CFLAGS = -I. -I.. -I../util -I../testutil -I tests -static \
-	@SIGUTILS_CFLAGS@ @SNDFILE_CFLAGS@ @fftw3_CFLAGS@ @volk_CFLAGS@ 
+	@SIGUTILS_CFLAGS@ @SNDFILE_CFLAGS@ @fftw3_CFLAGS@ @volk_CFLAGS@ @GLOBAL_CFLAGS@
 sutest_LDFLAGS = @GLOBAL_LDFLAGS@
 
 sutest_LDADD = \
@@ -20,7 +20,8 @@ sutest_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
 	tests/filt.c \
 	tests/ncqo.c \
 	tests/codec.c \
-	tests/pll.c
+	tests/pll.c \
+	tests/specttuner.c
 
 radio_CFLAGS = -I. -I.. -I../util @SIGUTILS_CFLAGS@
 radio_LDFLAGS = @GLOBAL_LDFLAGS@
