@@ -79,6 +79,7 @@
 #define SU_SQRT   SU_ADDSFX(sqrt)
 #define SU_FLOOR  SU_ADDSFX(floor)
 #define SU_CEIL   SU_ADDSFX(ceil)
+#define SU_ROUND  SU_ADDSFX(round)
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
