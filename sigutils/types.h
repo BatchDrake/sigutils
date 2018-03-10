@@ -53,12 +53,12 @@
 #  define SUFLOAT_FMT "%g"
 #  define SUFLOAT_PRECISION_FMT "%.15f"
 #  define SUFLOAT_SCANF_FMT "%f"
-#  define SU_ADDSFX(token) token
+#  define SU_ADDSFX(token) JOIN(token, f)
 #else
 #  define SUFLOAT_FMT "%lg"
 #  define SUFLOAT_PRECISION_FMT "%.15lf"
 #  define SUFLOAT_SCANF_FMT "%lf"
-#  define SU_ADDSFX(token) JOIN(token, f)
+#  define SU_ADDSFX(token) token
 #endif
 
 #define SU_FALSE 0
@@ -81,6 +81,8 @@
 #define SU_CEIL   SU_ADDSFX(ceil)
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
+#define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
+
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
 
 #define SU_C_ABS    SU_ADDSFX(cabs)

@@ -23,9 +23,21 @@
 
 #include "types.h"
 
+#define SU_NCQO_USE_PRECALC_BUFFER
+#ifdef SU_NCQO_USE_PRECALC_BUFFER
+#  define SU_NCQO_PRECALC_BUFFER_LEN 1024
+#endif /* SU_NCQO_USE_PRECALC_BUFFER */
+
 /* The numerically-controlled quadruature oscillator definition */
 struct sigutils_ncqo {
-  SUSCOUNT n; /* Sample count */
+#ifdef SU_NCQO_USE_PRECALC_BUFFER
+  SUFLOAT phi_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUFLOAT sin_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUFLOAT cos_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUBOOL  pre_c;
+  unsigned int p; /* Pointer in precalc buffer */
+#endif /* SU_NCQO_USE_PRECALC_BUFFER */
+
   SUFLOAT phi;
   SUFLOAT omega; /* Normalized angular frequency */
   SUFLOAT fnor;  /* Normalized frequency in hcps */
@@ -45,6 +57,9 @@ typedef struct sigutils_ncqo su_ncqo_t;
 
 /* NCQO constructor */
 void su_ncqo_init(su_ncqo_t *ncqo, SUFLOAT frel);
+
+/* NCQO constructor for fixed frequency */
+void su_ncqo_init_fixed(su_ncqo_t *ncqo, SUFLOAT fnor);
 
 /* Compute next step */
 void su_ncqo_step(su_ncqo_t *ncqo);

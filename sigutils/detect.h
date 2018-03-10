@@ -121,7 +121,7 @@ struct sigutils_channel_detector_params {
   1,        /* decimation */                                    \
   0.0,      /* bw */                                            \
   8,        /* max_order */                                     \
-  SU_TRUE,  /* tune */                                          \
+  SU_FALSE, /* tune */                                          \
   SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS, /* window */     \
   SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                        \
   SU_CHANNEL_DETECTOR_BETA,  /* beta */                         \
