@@ -117,6 +117,8 @@ struct sigutils_specttuner {
   unsigned int full_size; /* 3/2 of window size */
   unsigned int p; /* From 0 to window_size - 1 */
 
+  unsigned int count; /* Active channels */
+
   SUBOOL ready; /* FFT ready */
 
   /* Channel list */
@@ -125,10 +127,33 @@ struct sigutils_specttuner {
 
 typedef struct sigutils_specttuner su_specttuner_t;
 
+SUINLINE unsigned int
+su_specttuner_get_channel_count(const su_specttuner_t *st)
+{
+  return st->count;
+}
+
+SUINLINE SUBOOL
+su_specttuner_new_data(const su_specttuner_t *st)
+{
+  return st->ready;
+}
+
+SUINLINE void
+su_specttuner_ack_data(su_specttuner_t *st)
+{
+  st->ready = SU_FALSE;
+}
+
 void su_specttuner_destroy(su_specttuner_t *st);
 
 su_specttuner_t *su_specttuner_new(
     const struct sigutils_specttuner_params *params);
+
+SUSDIFF su_specttuner_feed_bulk_single(
+    su_specttuner_t *st,
+    const SUCOMPLEX *buf,
+    SUSCOUNT size);
 
 SUBOOL su_specttuner_feed_bulk(
     su_specttuner_t *st,

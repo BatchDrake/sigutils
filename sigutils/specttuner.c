@@ -305,27 +305,47 @@ __su_specttuner_feed_channel(
       channel->halfsz);
 }
 
+SUSDIFF
+su_specttuner_feed_bulk_single(
+    su_specttuner_t *st,
+    const SUCOMPLEX *buf,
+    SUSCOUNT size)
+{
+  SUSDIFF got;
+  SUSCOUNT ok = SU_TRUE;
+  unsigned int i;
+
+  if (st->ready)
+    return 0;
+
+  got = __su_specttuner_feed_bulk(st, buf, size);
+
+  /* Buffer full, feed channels */
+  if (st->ready)
+    for (i = 0; i < st->channel_count; ++i)
+      if (st->channel_list[i] != NULL)
+        ok = __su_specttuner_feed_channel(st, st->channel_list[i]) && ok;
+
+  return ok ? got : -1;
+}
+
 SUBOOL
 su_specttuner_feed_bulk(
     su_specttuner_t *st,
     const SUCOMPLEX *buf,
     SUSCOUNT size)
 {
-  SUSCOUNT got;
-  unsigned int i;
+  SUSDIFF got;
   SUBOOL ok = SU_TRUE;
 
   while (size > 0) {
-    got = __su_specttuner_feed_bulk(st, buf, size);
+    got = su_specttuner_feed_bulk_single(st, buf, size);
 
-    /* Buffer full, feed channels */
-    if (st->ready) {
-      st->ready = SU_FALSE;
+    if (su_specttuner_new_data(st))
+      su_specttuner_ack_data(st);
 
-      for (i = 0; i < st->channel_count; ++i)
-        if (st->channel_list[i] != NULL)
-          ok = __su_specttuner_feed_channel(st, st->channel_list[i]) && ok;
-    }
+    if (got == -1)
+      ok = SU_FALSE;
 
     buf += got;
     size -= got;
@@ -350,6 +370,8 @@ su_specttuner_open_channel(
 
   new->index = index;
 
+  ++st->count;
+
   return new;
 
 fail:
@@ -373,6 +395,8 @@ su_specttuner_close_channel(
   st->channel_list[channel->index] = NULL;
 
   su_specttuner_channel_destroy(channel);
+
+  --st->count;
 
   return SU_TRUE;
 }
