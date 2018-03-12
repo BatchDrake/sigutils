@@ -79,6 +79,24 @@ struct sigutils_specttuner_channel {
 
 typedef struct sigutils_specttuner_channel su_specttuner_channel_t;
 
+SUINLINE SUFLOAT
+su_specttuner_channel_get_decimation(const su_specttuner_channel_t *channel)
+{
+  return channel->decimation;
+}
+
+SUINLINE SUFLOAT
+su_specttuner_channel_get_bw(const su_specttuner_channel_t *channel)
+{
+  return 2 * PI * (SUFLOAT) channel->width / (SUFLOAT) channel->size;
+}
+
+SUINLINE SUFLOAT
+su_specttuner_channel_get_f0(const su_specttuner_channel_t *channel)
+{
+  return channel->params.f0;
+}
+
 /*
  * The spectral tuner leverages its 3/2-sized window buffer by keeping
  * two FFT plans (even & odd) and conditionally saving the same sample
