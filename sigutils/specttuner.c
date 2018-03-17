@@ -153,8 +153,6 @@ su_specttuner_channel_new(
 
   actual_bw = params->bw * params->guard;
 
-  SU_INFO("Create new with guard band of %lg\n", params->guard);
-
   SU_TRYCATCH(actual_bw > 0 && actual_bw < 2 * PI, goto fail);
 
   new->params = *params;
@@ -167,7 +165,8 @@ su_specttuner_channel_new(
    * XXX: THERE IS SOMETHING HERE I COULD NOT FULLY UNDERSTAND
    *
    * For some reason, if we do not pick an even FFT bin for frequency
-   * centering, AM components will show up in the decimator output.
+   * centering, AM components will show up at the decimator output. This
+   * is probably related to some symmetry condition not being met
    *
    * TODO: Look into this ASAP
    */
@@ -200,7 +199,6 @@ su_specttuner_channel_new(
   new->width  = SU_CEIL(new->size / params->guard);
   new->halfw  = new->width >> 1;
 
-  SU_INFO("Ratio: %d/%d\n", new->width, new->size);
 
   SU_TRYCATCH(new->width > 0, goto fail);
 
