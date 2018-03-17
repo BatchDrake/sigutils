@@ -95,7 +95,6 @@ su_specttuner_init_filter_response(
     channel->h[window_size - i - 1] = 1;
   }
 
-#if 0
   /* Second step: switch to time domain */
   SU_FFTW(_execute) (backward);
 
@@ -107,7 +106,7 @@ su_specttuner_init_filter_response(
   }
 
   /* Fourth step: apply Window function */
-  su_taps_apply_hann_complex(channel->h, window_size);
+  su_taps_apply_blackmann_harris_complex(channel->h, window_size);
 
   /* Fifth step: recenter back */
   for (i = 0; i < window_half; ++i) {
@@ -118,7 +117,6 @@ su_specttuner_init_filter_response(
 
   /* Sixth step: move back to frequency domain */
   SU_FFTW(_execute) (forward);
-#endif
 
   ok = SU_TRUE;
 
