@@ -23,10 +23,6 @@
 
 #include "types.h"
 
-#ifndef PI
-#define PI 3.141592653589793238462643
-#endif
-
 /*
  * Conventions used for frequency representation
  * ---------------------------------------------

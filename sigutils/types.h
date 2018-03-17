@@ -29,6 +29,10 @@
 
 #include <util.h>
 
+#ifndef PI
+#  define PI 3.141592653589793238462643
+#endif
+
 #ifdef _SU_SINGLE_PRECISION
 #  define SUFLOAT    float
 #  define SU_SOURCE_FFTW_PREFIX fftwf
@@ -79,6 +83,7 @@
 #define SU_SQRT   SU_ADDSFX(sqrt)
 #define SU_FLOOR  SU_ADDSFX(floor)
 #define SU_CEIL   SU_ADDSFX(ceil)
+#define SU_ROUND  SU_ADDSFX(round)
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */

@@ -22,6 +22,7 @@
 #define _SIGUTILS_NCQO_H
 
 #include "types.h"
+#include "sampling.h"
 
 #define SU_NCQO_USE_PRECALC_BUFFER
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -54,6 +55,11 @@ typedef struct sigutils_ncqo su_ncqo_t;
 #define su_ncqo_INITIALIZER {0, 0, 0, 0, 0}
 
 /* Methods */
+SUINLINE SUFLOAT
+su_phase_adjust(SUFLOAT phi)
+{
+  return phi - 2 * PI * SU_FLOOR(phi / (2 * PI));
+}
 
 /* NCQO constructor */
 void su_ncqo_init(su_ncqo_t *ncqo, SUFLOAT frel);

@@ -408,6 +408,8 @@ su_test_run(
   SU_INFO("Sigutils library unit test starting: %s", ctime(&now));
   SU_INFO("  Configured buffer size: %d elements\n", params->buffer_size);
   SU_INFO("  Dumping buffers: %s\n", params->dump_fmt ? "yes" : "no");
+  SU_INFO("  Size of SUFLOAT: %d bits\n", sizeof(SUFLOAT) << 3);
+
   if (params->dump_fmt)
     SU_INFO(
         "  Dump format: %s\n",
