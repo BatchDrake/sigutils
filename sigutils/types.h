@@ -29,6 +29,10 @@
 
 #include <util.h>
 
+#ifndef PI
+#  define PI 3.141592653589793238462643
+#endif
+
 #ifdef _SU_SINGLE_PRECISION
 #  define SUFLOAT    float
 #  define SU_SOURCE_FFTW_PREFIX fftwf

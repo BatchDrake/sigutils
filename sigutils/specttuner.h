@@ -22,6 +22,7 @@
 #define _SIGUTILS_SPECTTUNER_H
 
 #include "types.h"
+#include "ncqo.h"
 
 struct sigutils_specttuner_params {
   SUSCOUNT window_size;
@@ -40,10 +41,11 @@ enum sigutils_specttuner_state {
 struct sigutils_specttuner_channel;
 
 struct sigutils_specttuner_channel_params {
-  SUFLOAT f0; /* Central frequency (angular frequency) */
-  SUFLOAT bw; /* Bandwidth (angular frequency) */
-
-  void *private; /* Private data */
+  SUFLOAT f0;       /* Central frequency (angular frequency) */
+  SUFLOAT bw;       /* Bandwidth (angular frequency) */
+  SUFLOAT guard;    /* Relative extra bandwidth */
+  SUBOOL  precise;  /* Precision mode */
+  void *private;    /* Private data */
   SUBOOL (*on_data) (
       const struct sigutils_specttuner_channel *channel,
       void *private,
@@ -53,10 +55,12 @@ struct sigutils_specttuner_channel_params {
 
 #define sigutils_specttuner_channel_params_INITIALIZER  \
 {                                                       \
-  0,    /* f0 */                                        \
-  0,    /* bw */                                        \
-  NULL, /* private */                                   \
-  NULL, /* on_data */                                   \
+  0,        /* f0 */                                    \
+  0,        /* bw */                                    \
+  1,        /* guard */                                 \
+  SU_FALSE, /* precise */                               \
+  NULL,     /* private */                               \
+  NULL,     /* on_data */                               \
 }
 
 struct sigutils_specttuner_channel {
@@ -65,6 +69,7 @@ struct sigutils_specttuner_channel {
 
   SUFLOAT k;           /* Scaling factor */
   SUFLOAT decimation;  /* Equivalent decimation */
+  su_ncqo_t lo;        /* Local oscilator to correct imprecise centering */
   unsigned int center; /* FFT center bin */
   unsigned int size;   /* FFT bins to allocate */
   unsigned int width;  /* FFT bins to copy (for guard bands, etc) */
@@ -72,9 +77,15 @@ struct sigutils_specttuner_channel {
   unsigned int halfsz; /* Half of window size */
   unsigned int offset; /* Window offset for overlapping */
 
-  SU_FFTW(_plan)     plan;
-  SU_FFTW(_complex) *window; /* Window */
-  SU_FFTW(_complex) *fft;    /* Filtered spectrum */
+  /*
+   * Again, we have to keep 2 buffers: this way we can perform
+   * a good windowing that does not rely on rectangular windows
+   */
+  enum sigutils_specttuner_state state;
+  SU_FFTW(_complex) *fft;     /* Filtered spectrum */
+  SU_FFTW(_plan)     plan[2]; /* Even & Odd plans */
+  SU_FFTW(_complex) *ifft[2]; /* Even & Odd time-domain signal */
+  SUFLOAT           *window;  /* Window function */
 };
 
 typedef struct sigutils_specttuner_channel su_specttuner_channel_t;
