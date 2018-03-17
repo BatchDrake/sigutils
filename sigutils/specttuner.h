@@ -83,6 +83,7 @@ struct sigutils_specttuner_channel {
    */
   enum sigutils_specttuner_state state;
   SU_FFTW(_complex) *fft;     /* Filtered spectrum */
+  SU_FFTW(_complex) *h;       /* Frequency response of filter */
   SU_FFTW(_plan)     plan[2]; /* Even & Odd plans */
   SU_FFTW(_complex) *ifft[2]; /* Even & Odd time-domain signal */
   SUFLOAT           *window;  /* Window function */
@@ -99,7 +100,7 @@ su_specttuner_channel_get_decimation(const su_specttuner_channel_t *channel)
 SUINLINE SUFLOAT
 su_specttuner_channel_get_bw(const su_specttuner_channel_t *channel)
 {
-  return 2 * PI * (SUFLOAT) channel->width / (SUFLOAT) channel->size;
+  return PI * (SUFLOAT) channel->width / (SUFLOAT) channel->size;
 }
 
 SUINLINE SUFLOAT

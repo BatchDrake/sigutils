@@ -48,7 +48,88 @@ su_specttuner_channel_destroy(su_specttuner_channel_t *channel)
   if (channel->window != NULL)
     SU_FFTW(_free) (channel->window);
 
+  if (channel->h != NULL)
+    SU_FFTW(_free) (channel->h);
+
   free(channel);
+}
+
+SUPRIVATE SUBOOL
+su_specttuner_init_filter_response(
+    const su_specttuner_t *owner,
+    su_specttuner_channel_t *channel)
+{
+  SUBOOL ok = SU_FALSE;
+  SU_FFTW(_plan) forward = NULL;
+  SU_FFTW(_plan) backward = NULL;
+  SUCOMPLEX tmp;
+  unsigned int window_size = owner->params.window_size;
+  unsigned int window_half = window_size / 2;
+  unsigned int i;
+
+  /* Backward plan */
+  SU_TRYCATCH(
+      forward = SU_FFTW(_plan_dft_1d)(
+          window_size,
+          channel->h,
+          channel->h,
+          FFTW_FORWARD,
+          FFTW_ESTIMATE),
+      goto done);
+
+  /* Forward plan */
+  SU_TRYCATCH(
+      backward = SU_FFTW(_plan_dft_1d)(
+          window_size,
+          channel->h,
+          channel->h,
+          FFTW_BACKWARD,
+          FFTW_ESTIMATE),
+      goto done);
+
+  /* First step: Setup ideal filter response */
+  memset(channel->h, 0, sizeof(SUCOMPLEX) * window_size);
+
+  for (i = 0; i < channel->halfw; ++i) {
+    channel->h[i] = 1;
+    channel->h[window_size - i - 1] = 1;
+  }
+
+#if 0
+  /* Second step: switch to time domain */
+  SU_FFTW(_execute) (backward);
+
+  /* Third step: recenter coefficients to apply window function */
+  for (i = 0; i < window_half; ++i) {
+    tmp = channel->h[i];
+    channel->h[i] = channel->k * channel->h[window_half + i];
+    channel->h[window_half + i] = channel->k * tmp;
+  }
+
+  /* Fourth step: apply Window function */
+  su_taps_apply_hann_complex(channel->h, window_size);
+
+  /* Fifth step: recenter back */
+  for (i = 0; i < window_half; ++i) {
+    tmp = channel->h[i];
+    channel->h[i] = channel->h[window_half + i];
+    channel->h[window_half + i] = tmp;
+  }
+
+  /* Sixth step: move back to frequency domain */
+  SU_FFTW(_execute) (forward);
+#endif
+
+  ok = SU_TRUE;
+
+done:
+  if (forward != NULL)
+    SU_FFTW(_destroy_plan) (forward);
+
+  if (backward != NULL)
+    SU_FFTW(_destroy_plan) (backward);
+
+  return ok;
 }
 
 SUPRIVATE su_specttuner_channel_t *
@@ -72,6 +153,8 @@ su_specttuner_channel_new(
 
   actual_bw = params->bw * params->guard;
 
+  SU_INFO("Create new with guard band of %lg\n", params->guard);
+
   SU_TRYCATCH(actual_bw > 0 && actual_bw < 2 * PI, goto fail);
 
   new->params = *params;
@@ -80,7 +163,15 @@ su_specttuner_channel_new(
   /* Tentative configuration */
   new->k = 1. / (2 * PI / actual_bw);
 
-  new->center = SU_ROUND(params->f0 / (2 * PI) * window_size);
+  /*
+   * XXX: THERE IS SOMETHING HERE I COULD NOT FULLY UNDERSTAND
+   *
+   * For some reason, if we do not pick an even FFT bin for frequency
+   * centering, AM components will show up in the decimator output.
+   *
+   * TODO: Look into this ASAP
+   */
+  new->center = 2 * SU_ROUND(params->f0 / (4 * PI) * window_size);
   min_size    = SU_CEIL(new->k * window_size);
 
   /* Find the nearest power of 2 than can hold all these samples */
@@ -109,8 +200,9 @@ su_specttuner_channel_new(
   new->width  = SU_CEIL(new->size / params->guard);
   new->halfw  = new->width >> 1;
 
+  SU_INFO("Ratio: %d/%d\n", new->width, new->size);
+
   SU_TRYCATCH(new->width > 0, goto fail);
-  SU_INFO("%d/%d samples\n", new->width, new->size);
 
   /*
    * Window function. We leverage fftw(f)_malloc aligned addresses
@@ -119,6 +211,12 @@ su_specttuner_channel_new(
   SU_TRYCATCH(
       new->window = SU_FFTW(_malloc)(new->size * sizeof(SUFLOAT)),
       goto fail);
+
+  SU_TRYCATCH(
+      new->h     = SU_FFTW(_malloc)(window_size * sizeof(SU_FFTW(_complex))),
+      goto fail);
+
+  SU_TRYCATCH(su_specttuner_init_filter_response(owner, new), goto fail);
 
   /*
    * Squared cosine window. Seems odd, right? Well, it turns out that
@@ -335,7 +433,7 @@ __su_specttuner_feed_bulk(
 
 SUINLINE SUBOOL
 __su_specttuner_feed_channel(
-    su_specttuner_t *st,
+    const su_specttuner_t *st,
     su_specttuner_channel_t *channel)
 {
   int p;
@@ -385,13 +483,20 @@ __su_specttuner_feed_channel(
         st->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
-  /****************** Apply phase correction and scaling *********************/
+  /*********************** Apply filter and scaling **************************/
+#ifdef SU_SPECTTUNER_SQUARE_FILTER
   for (i = 0; i < channel->halfw; ++i)
     channel->fft[i] *= channel->k;
 
   for (i = channel->size - channel->halfw; i < channel->size; ++i)
     channel->fft[i] *= channel->k;
-
+#else
+  for (i = 0; i < channel->halfsz; ++i) {
+    channel->fft[i] *= channel->k * channel->h[i];
+    channel->fft[channel->size - i - 1] *=
+        channel->k * channel->h[window_size - i - 1];
+  }
+#endif
   /************************* Back to time domain******************************/
   SU_FFTW(_execute) (channel->plan[channel->state]);
 
