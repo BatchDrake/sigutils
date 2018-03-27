@@ -15,6 +15,7 @@ nobase_pkginclude_HEADERS = 	\
 	sigutils/codec.h		  \
 	sigutils/coef.h			  \
 	sigutils/config.h		  \
+	sigutils/decider.h		\
 	sigutils/detect.h 	  \
 	sigutils/equalizer.h  \
 	sigutils/iir.h		    \
