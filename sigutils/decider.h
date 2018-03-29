@@ -45,6 +45,12 @@ struct sigutils_decider {
 
 typedef struct sigutils_decider su_decider_t;
 
+const struct sigutils_decider_params *
+su_decider_get_params(const su_decider_t *decider)
+{
+  return &decider->params;
+}
+
 SUBOOL
 su_decider_init(
     su_decider_t *decider,
