@@ -98,11 +98,11 @@
 #define SU_C_CONJ   SU_ADDSFX(conj)
 #define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
-#define SUFLOAT_MIN_REF_MAG 1e-8
-#define SUFLOAT_MIN_REF_DB  -160
-#define SUFLOAT_THRESHOLD 1e-15
-#define SUFLOAT_MAX_REF_MAG 1
-#define SUFLOAT_MAX_REF_DB  0
+#define SUFLOAT_THRESHOLD   1e-15
+#define SUFLOAT_MIN_REF_MAG SUFLOAT_THRESHOLD
+#define SUFLOAT_MIN_REF_DB  -300
+#define SUFLOAT_MAX_REF_MAG  1
+#define SUFLOAT_MAX_REF_DB   0
 
 #define SUFLOAT_EQUAL(a, b) (SU_ABS(a - b) <= SUFLOAT_THRESHOLD)
 #define SU_MAX(a, b) ((a) > (b) ? (a) : (b))
