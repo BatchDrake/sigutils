@@ -35,7 +35,7 @@
 #define SU_CHANNEL_DETECTOR_GAMMA            .5
 #define SU_CHANNEL_MAX_AGE                   40 /* In FFT runs */
 #define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
-
+#define SU_CHANNEL_DETECTOR_DC_ALPHA         .1
 #define SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW  10. /* In seconds */
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
@@ -173,6 +173,7 @@ struct sigutils_channel_detector {
   SUFLOAT *spmax;
   SUFLOAT *spmin;
   SUFLOAT N0; /* Detected noise floor */
+  SUCOMPLEX dc; /* Detected DC component */
   PTR_LIST(struct sigutils_channel, channel);
 
   /* Baudrate estimator members */
@@ -183,12 +184,17 @@ struct sigutils_channel_detector {
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
 
+SUINLINE SUCOMPLEX
+su_channel_detector_get_dc(const su_channel_detector_t *cd)
+{
+  return cd->dc;
+}
+
 SUINLINE SUSCOUNT
 su_channel_detector_get_fs(const su_channel_detector_t *cd)
 {
   return cd->params.samp_rate;
 }
-
 
 SUINLINE SUBOOL
 su_channel_detector_get_window_ptr(const su_channel_detector_t *cd)

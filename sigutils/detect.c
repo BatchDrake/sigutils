@@ -710,12 +710,14 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
     memcpy(detector->spmin, detector->spect, N * sizeof(SUFLOAT));
 
     /* First estimation of the noise floor */
-    N0 = INFINITY;
-    for (i = 0; i < N; ++i)
-      if (detector->spect[i] < N0)
-        N0 = detector->spect[i];
+    if (detector->N0 == 0) {
+      N0 = INFINITY;
+      for (i = 0; i < N; ++i)
+        if (detector->spect[i] < N0)
+          N0 = detector->spect[i];
 
-    detector->N0 = N0;
+      detector->N0 = N0;
+    }
   } else {
     /* Next runs */
 
@@ -747,7 +749,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
       if (detector_enabled) {
         /* Use previous N0 estimation to detect outliers */
         if (detector->spmin[i] < detector->N0
-            || detector->N0 < detector->spmax[i]) {
+            && detector->N0 < detector->spmax[i]) {
           N0 += psd;
           ++valid;
         }
@@ -761,7 +763,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
     }
 
     if (detector_enabled) {
-      if (valid == 0)
+      if (valid != 0)
         detector->N0 = N0 / valid;
       else
         detector->N0 = .5
@@ -991,7 +993,7 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
      x = diff * SU_C_CONJ(diff);
   }
 
-  detector->window[detector->ptr++] = x;
+  detector->window[detector->ptr++] = x - detector->dc;
 
   if (detector->ptr == detector->params.window_size) {
     /* Window is full, perform FFT */
@@ -1006,6 +1008,11 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
         su_channel_detector_apply_window(detector);
 
         SU_FFTW(_execute(detector->fft_plan));
+
+        /* Update DC component */
+        detector->dc +=
+            SU_CHANNEL_DETECTOR_DC_ALPHA *
+            (detector->fft[i] / detector->params.window_size - detector->dc);
 
         for (i = 0; i < detector->params.window_size; ++i) {
           psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
