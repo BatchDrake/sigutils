@@ -234,15 +234,13 @@ su_channel_detector_assert_channel(
   SUFLOAT k = .5;
 
   if ((chan = su_channel_detector_lookup_channel(detector, new->fc)) == NULL) {
-    if ((chan = malloc(sizeof (struct sigutils_channel))) == NULL)
+    if ((chan = calloc(1, sizeof (struct sigutils_channel))) == NULL)
       return SU_FALSE;
 
     chan->bw      = new->bw;
     chan->fc      = new->fc;
     chan->f_lo    = new->f_lo;
     chan->f_hi    = new->f_hi;
-    chan->age     = 0;
-    chan->present = 0;
 
     if (PTR_LIST_APPEND_CHECK(detector->channel, chan) == -1) {
       su_channel_destroy(chan);
@@ -430,6 +428,8 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     goto fail;
   }
 
+  memset(new->window, 0, params->window_size * sizeof(SU_FFTW(_complex)));
+
   if ((new->window_func
       = fftw_malloc(
           params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
@@ -445,6 +445,8 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     SU_ERROR("cannot allocate memory for FFT\n");
     goto fail;
   }
+
+  memset(new->fft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
   /*
    * Generic result allocation: the same buffer is used differently depending
@@ -493,6 +495,8 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
         goto fail;
       }
 
+      memset(new->ifft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
+
       if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(
           params->window_size,
           new->fft,
@@ -520,6 +524,11 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
         new->tuner_buf = malloc(
             SU_BLOCK_STREAM_BUFFER_SIZE * sizeof (SUCOMPLEX)),
         goto fail);
+
+    memset(
+        new->tuner_buf,
+        0,
+        SU_BLOCK_STREAM_BUFFER_SIZE * sizeof (SUCOMPLEX));
 
     tuner_params.fc = params->fc;
     tuner_params.bw = params->bw;
