@@ -194,7 +194,7 @@ su_specttuner_channel_new(
   new->halfsz = new->size >> 1;
   new->offset = new->size >> 2;
 
-  new->width  = SU_CEIL(new->size / params->guard);
+  new->width  = SU_CEIL(min_size / params->guard);
   new->halfw  = new->width >> 1;
 
 
