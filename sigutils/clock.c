@@ -66,6 +66,8 @@ void
 su_clock_detector_set_baud(su_clock_detector_t *cd, SUFLOAT bnor)
 {
   cd->bnor = bnor;
+  cd->phi = 0;
+  memset(cd->x, 0, sizeof(cd->x));
 }
 
 SUBOOL
