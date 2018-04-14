@@ -94,6 +94,6 @@ SUBOOL su_costas_init(
 
 void su_costas_set_loop_gain(su_costas_t *costas, SUFLOAT gain);
 
-void su_costas_feed(su_costas_t *costas, SUCOMPLEX x);
+SUCOMPLEX su_costas_feed(su_costas_t *costas, SUCOMPLEX x);
 
 #endif /* _SIGUTILS_PLL_H */

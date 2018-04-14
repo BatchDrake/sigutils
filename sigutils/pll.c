@@ -162,7 +162,7 @@ fail:
   return SU_FALSE;
 }
 
-void
+SUCOMPLEX
 su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
 {
   SUCOMPLEX s;
@@ -242,5 +242,6 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   su_ncqo_inc_angfreq(&costas->ncqo, costas->b * e);
   su_ncqo_inc_phase(&costas->ncqo, costas->a * e);
 
+  return costas->y;
 }
 
