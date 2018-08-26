@@ -46,6 +46,7 @@
 #define SUSCOUNT   unsigned long
 #define SUSDIFF    long
 #define SUBOOL     int
+#define SUFREQ     double
 #define SUCOMPLEX  complex SUFLOAT
 #define SUSYMBOL   int
 #define SUBITS     unsigned char /* Not exactly a bit */
