@@ -11,7 +11,7 @@ sutest_LDADD = \
 	../sigutils/libsigutils.la \
 	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@ @volk_LIBS@
 
-sutest_SOURCES = main.c sigutils.h tests/test_list.h tests/test_param.h\
+sutest_SOURCES = main.c tests/test_list.h tests/test_param.h\
 	tests/agc.c \
 	tests/block.c \
 	tests/clock.c \
@@ -29,5 +29,5 @@ radio_LDADD = \
 	../sigutils/libsigutils.la \
 	../util/libutil.la  \
 	@GLOBAL_LDFLAGS@ @SNDFILE_LIBS@ @fftw3_LIBS@ @volk_CFLAGS@
-	
+
 radio_SOURCES = radio.c
