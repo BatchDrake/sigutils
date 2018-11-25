@@ -29,10 +29,6 @@
 
 #include <util.h>
 
-#ifndef PI
-#  define PI 3.141592653589793238462643
-#endif
-
 #ifdef _SU_SINGLE_PRECISION
 #  define SUFLOAT    float
 #  define SU_SOURCE_FFTW_PREFIX fftwf
@@ -42,14 +38,28 @@
 #endif
 
 #define SUPRIVATE  static
-#define SUINLINE   static inline
 #define SUSCOUNT   unsigned long
 #define SUSDIFF    long
 #define SUBOOL     int
 #define SUFREQ     double
-#define SUCOMPLEX  complex SUFLOAT
+#define SUCOMPLEX  _Complex SUFLOAT
 #define SUSYMBOL   int
 #define SUBITS     unsigned char /* Not exactly a bit */
+
+#ifdef __cplusplus
+#  define SUINLINE   inline
+#else
+#  define SUINLINE   static inline
+#endif /* __cplusplus */
+
+/* Perform casts in C and C++ */
+#ifdef __cplusplus
+#  define SUCAST(type, value) static_cast<type>(value)
+#else
+#  define SUCAST(type, value) ((type) (value))
+#endif /* __cplusplus */
+
+#define SU_ASFLOAT(value) SUCAST(SUFLOAT, value)
 
 #define SU_NOSYMBOL '\0'
 #define SU_EOS      -1
@@ -99,7 +109,11 @@
 #define SU_C_CONJ   SU_ADDSFX(conj)
 #define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
-#define SUFLOAT_THRESHOLD   1e-15
+#ifndef PI
+#  define PI SU_ADDSFX(3.141592653589793238462643)
+#endif
+
+#define SUFLOAT_THRESHOLD   SU_ADDSFX(1e-15)
 #define SUFLOAT_MIN_REF_MAG SUFLOAT_THRESHOLD
 #define SUFLOAT_MIN_REF_DB  -300
 #define SUFLOAT_MAX_REF_MAG  1
@@ -137,19 +151,19 @@ su_sinc(SUFLOAT t)
 {
   /* Use l'Hôpital's near 0 */
   if (SU_ABS(t) <= SUFLOAT_THRESHOLD)
-    return SU_COS(M_PI * t);
+    return SU_COS(PI * t);
 
-  return SU_SIN(M_PI * t) / (M_PI * t);
+  return SU_SIN(PI * t) / (PI * t);
 }
 
 /* Additive white gaussian noise (AWGN) generator, Box-Muller method */
 SUINLINE SUCOMPLEX
 su_c_awgn(void)
 {
-  SUFLOAT U1 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
-  SUFLOAT U2 = ((SUFLOAT) rand() + 1.) / ((SUFLOAT) RAND_MAX + 1.);
+  SUFLOAT U1 = SU_ASFLOAT(rand() + 1.) / SU_ASFLOAT(RAND_MAX + 1.);
+  SUFLOAT U2 = SU_ASFLOAT(rand() + 1.) / SU_ASFLOAT(RAND_MAX + 1.);
   SUFLOAT SQ = SU_SQRT(-SU_LN(U1));
-  SUFLOAT PH = 2 * M_PI * U2;
+  SUFLOAT PH = 2 * PI * U2;
 
   return  SQ * (SU_COS(PH) + I * SU_SIN(PH));
 }

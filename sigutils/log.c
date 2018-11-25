@@ -128,7 +128,7 @@ su_log(
       if (pthread_mutex_lock(&log_mutex) == -1) /* Too dangerous to log */
         return;
 
-    (log_config.log_func) (log_config.private, &msg);
+    (log_config.log_func) (log_config.priv, &msg);
 
     if (log_config.exclusive)
       (void) pthread_mutex_unlock(&log_mutex);

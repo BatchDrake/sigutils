@@ -523,7 +523,7 @@ __su_specttuner_feed_channel(
   /************************** Call user callback *****************************/
   return (channel->params.on_data) (
       channel,
-      channel->params.private,
+      channel->params.privdata,
       curr,
       channel->halfsz);
 }

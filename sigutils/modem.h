@@ -62,8 +62,8 @@ struct sigutils_modem_class {
 };
 
 struct sigutils_modem {
-  struct sigutils_modem_class *class;
-  void *private;
+  struct sigutils_modem_class *classptr;
+  void *privdata;
 
   SUFLOAT signal; /* signal indicator */
   SUFLOAT fec; /* FEC quality indicator */

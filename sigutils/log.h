@@ -54,9 +54,9 @@ struct sigutils_log_message {
 }
 
 struct sigutils_log_config {
-  void *private;
+  void *priv;
   SUBOOL exclusive;
-  void (*log_func) (void *private, const struct sigutils_log_message *msg);
+  void (*log_func) (void *priv, const struct sigutils_log_message *msg);
 };
 
 #define sigutils_log_config_INITIALIZER         \

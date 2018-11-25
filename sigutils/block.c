@@ -436,14 +436,14 @@ su_block_destroy(su_block_t *block)
   unsigned int i;
   su_property_t *prop;
 
-  if (block->private != NULL)
-    block->class->dtor(block->private);
+  if (block->privdata != NULL)
+    block->classname->dtor(block->privdata);
 
   if (block->in != NULL)
     free(block->in);
 
   if (block->out != NULL) {
-    for (i = 0; i < block->class->out_size; ++i) {
+    for (i = 0; i < block->classname->out_size; ++i) {
       su_flow_controller_finalize(&block->out[i]);
     }
 
@@ -518,7 +518,7 @@ su_block_new(const char *class_name, ...)
     goto done;
   }
 
-  new->class = class;
+  new->classname = class;
 
   if (class->in_size > 0) {
     if ((new->in = calloc(class->in_size, sizeof(su_block_port_t))) == NULL) {
@@ -539,7 +539,7 @@ su_block_new(const char *class_name, ...)
   new->decimation = 1;
 
   /* Initialize object */
-  if (!class->ctor(new, &new->private, ap)) {
+  if (!class->ctor(new, &new->privdata, ap)) {
     SU_ERROR("Call to `%s' constructor failed\n", class_name);
     goto done;
   }
@@ -574,7 +574,7 @@ done:
 su_block_port_t *
 su_block_get_port(const su_block_t *block, unsigned int id)
 {
-  if (id >= block->class->in_size) {
+  if (id >= block->classname->in_size) {
     return NULL;
   }
 
@@ -584,7 +584,7 @@ su_block_get_port(const su_block_t *block, unsigned int id)
 su_flow_controller_t *
 su_block_get_flow_controller(const su_block_t *block, unsigned int id)
 {
-  if (id >= block->class->out_size) {
+  if (id >= block->classname->out_size) {
     return NULL;
   }
 
@@ -649,7 +649,7 @@ su_block_plug(
   if ((input = su_block_get_port(sink, in_id)) == NULL) {
     SU_ERROR(
         "Block `%s' doesn't have input port #%d\n",
-        sink->class->name,
+        sink->classname->name,
         in_id);
     return SU_FALSE;
   }
@@ -672,12 +672,12 @@ su_block_port_plug(su_block_port_t *port,
   if (su_block_port_is_plugged(port)) {
     SU_ERROR(
         "Port already plugged to block `%s'\n",
-        port->block->class->name);
+        port->block->classname->name);
     return SU_FALSE;
   }
 
-  if (portid >= block->class->out_size) {
-    SU_ERROR("Block `%s' has no output #%d\n", block->class->name, portid);
+  if (portid >= block->classname->out_size) {
+    SU_ERROR("Block `%s' has no output #%d\n", block->classname->name, portid);
     return SU_FALSE;
   }
 
@@ -733,13 +733,13 @@ su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
          * to call acquire. Since this call is protected, the block
          * implementation doesn't have to worry about threads.
          */
-        if ((acquired = port->block->class->acquire(
-            port->block->private,
+        if ((acquired = port->block->classname->acquire(
+            port->block->privdata,
             su_flow_controller_get_stream(port->block->out),
             port->port_id,
             port->block->in)) == -1) {
           /* Acquire error */
-          SU_ERROR("%s: acquire failed\n", port->block->class->name);
+          SU_ERROR("%s: acquire failed\n", port->block->classname->name);
           /* TODO: set error condition in flow control */
           su_flow_controller_leave(port->fc);
           return SU_BLOCK_PORT_READ_ERROR_ACQUIRE;
