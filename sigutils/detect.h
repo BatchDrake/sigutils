@@ -27,16 +27,16 @@
 #include "softtune.h"
 
 #define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 0  /* in FFT runs */
-#define SU_CHANNEL_DETECTOR_MIN_SNR          6  /* in DBs */
-#define SU_CHANNEL_DETECTOR_MIN_BW           10 /* in Hz */
+#define SU_CHANNEL_DETECTOR_MIN_SNR          SU_ADDSFX(6.)  /* in DBs */
+#define SU_CHANNEL_DETECTOR_MIN_BW           SU_ADDSFX(10.) /* in Hz */
 
-#define SU_CHANNEL_DETECTOR_ALPHA            1e-2
-#define SU_CHANNEL_DETECTOR_BETA             1e-3
-#define SU_CHANNEL_DETECTOR_GAMMA            .5
+#define SU_CHANNEL_DETECTOR_ALPHA            SU_ADDSFX(1e-2)
+#define SU_CHANNEL_DETECTOR_BETA             SU_ADDSFX(1e-3)
+#define SU_CHANNEL_DETECTOR_GAMMA            SU_ADDSFX(.5)
 #define SU_CHANNEL_MAX_AGE                   40 /* In FFT runs */
-#define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   .25
-#define SU_CHANNEL_DETECTOR_DC_ALPHA         .1
-#define SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW  10. /* In seconds */
+#define SU_CHANNEL_DETECTOR_PEAK_PSD_ALPHA   SU_ADDSFX(.25)
+#define SU_CHANNEL_DETECTOR_DC_ALPHA         SU_ADDSFX(.1)
+#define SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW  SU_ADDSFX(10.) /* In seconds */
 
 #define SU_CHANNEL_IS_VALID(cp)                               \
         ((cp)->age > SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE     \
@@ -117,20 +117,20 @@ struct sigutils_channel_detector_params {
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */                \
   8000,     /* samp_rate */                                     \
   512,      /* window_size */                                   \
-  0.0,      /* fc */                                            \
+  SU_ADDSFX(0.0),      /* fc */                                 \
   1,        /* decimation */                                    \
-  0.0,      /* bw */                                            \
+  SU_ADDSFX(0.0),      /* bw */                                 \
   8,        /* max_order */                                     \
   SU_FALSE, /* tune */                                          \
   SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS, /* window */     \
   SU_CHANNEL_DETECTOR_ALPHA, /* alpha */                        \
   SU_CHANNEL_DETECTOR_BETA,  /* beta */                         \
   SU_CHANNEL_DETECTOR_GAMMA, /* gamma */                        \
-  2,        /* snr */                                           \
+  SU_ADDSFX(2.),       /* snr */                                \
   SU_CHANNEL_MAX_AGE,        /* max_age */                      \
   10,       /* pd_samples */                                    \
-  2.,       /* pd_thres */                                      \
-  10        /* pd_signif */                                     \
+  SU_ADDSFX(2.),       /* pd_thres */                           \
+  SU_ADDSFX(10.)       /* pd_signif */                          \
 }
 
 #define sigutils_channel_INITIALIZER    \
