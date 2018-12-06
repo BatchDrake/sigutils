@@ -111,7 +111,7 @@ su_test_specttuner_two_tones(su_test_context_t *ctx)
   out_ctx.output = output;
   out_ctx.p = 0;
 
-  ch_params.private = &out_ctx;
+  ch_params.privdata = &out_ctx;
   ch_params.on_data = su_specttuner_append;
 
   ch_params.bw = SU_NORM2ANG_FREQ(

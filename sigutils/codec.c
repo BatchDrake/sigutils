@@ -58,8 +58,8 @@ su_codec_class_register(const struct sigutils_codec_class *class)
 void
 su_codec_destroy(su_codec_t *codec)
 {
-  if (codec->class != NULL)
-    (codec->class->dtor)(codec->private);
+  if (codec->classptr != NULL)
+    (codec->classptr->dtor)(codec->privdata);
 
   free(codec);
 }
@@ -75,9 +75,9 @@ su_codec_feed(su_codec_t *codec, SUSYMBOL x)
 {
   switch (codec->direction) {
     case SU_CODEC_DIRECTION_FORWARDS:
-      return (codec->class->encode) (codec, codec->private, x);
+      return (codec->classptr->encode) (codec, codec->privdata, x);
     case SU_CODEC_DIRECTION_BACKWARDS:
-      return (codec->class->decode) (codec, codec->private, x);
+      return (codec->classptr->decode) (codec, codec->privdata, x);
   }
 
   return SU_NOSYMBOL;
@@ -103,12 +103,12 @@ su_codec_new(const char *classname, unsigned int bits, ...)
   new->bits = bits;
   new->output_bits = bits; /* Can be modified by ctor */
 
-  if ((new->class = su_codec_class_lookup(classname)) == NULL) {
+  if ((new->classptr = su_codec_class_lookup(classname)) == NULL) {
     SU_ERROR("No such codec class `%s'\n", classname);
     goto fail;
   }
 
-  if (!(new->class->ctor) (new, &new->private, ap)) {
+  if (!(new->classptr->ctor) (new, &new->privdata, ap)) {
     SU_ERROR("Failed to construct `%s'\n", classname);
     goto fail;
   }

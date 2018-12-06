@@ -177,7 +177,7 @@ __su_modem_set_state_property_from_modem_property(
     return SU_FALSE;
   }
 
-  if (!(modem->class->onpropertychanged)(modem->private, prop)) {
+  if (!(modem->classptr->onpropertychanged)(modem->privdata, prop)) {
     SU_ERROR("change of property `%s' rejected by modem\n", prop->name);
     return SU_FALSE;
   }
@@ -595,8 +595,8 @@ su_modem_destroy(su_modem_t *modem)
   unsigned int i = 0;
   su_block_t *this = NULL;
 
-  if (modem->private != NULL)
-    (modem->class->dtor) (modem->private);
+  if (modem->privdata != NULL)
+    (modem->classptr->dtor) (modem->privdata);
 
   FOR_EACH_PTR(this, i, modem->block)
     su_block_destroy(this);
@@ -624,7 +624,7 @@ su_modem_new(const char *class_name)
   if ((new = calloc(1, sizeof(su_modem_t))) == NULL)
     goto fail;
 
-  new->class = class;
+  new->classptr = class;
 
   return new;
 
@@ -638,7 +638,7 @@ fail:
 SUBOOL
 su_modem_set_source(su_modem_t *modem, su_block_t *src)
 {
-  if (modem->private != NULL) {
+  if (modem->privdata != NULL) {
     SU_ERROR("cannot set source while modem has started\n");
     return SU_FALSE;
   }
@@ -854,7 +854,7 @@ su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
   old = prop->as_ptr;
   prop->as_ptr = val;
 
-  if (!su_modem_load_state_property(modem->private, prop)) {
+  if (!su_modem_load_state_property(modem->privdata, prop)) {
     SU_ERROR("change of property `%s' rejected\n", name);
     prop->as_ptr = old;
 
@@ -910,7 +910,7 @@ su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
     }
 
     /* This is not necessarily an error */
-    if (!(modem->class->onpropertychanged)(modem->private, this)) {
+    if (!(modem->classptr->onpropertychanged)(modem->privdata, this)) {
       SU_WARNING("property `%s' cannot be changed\n", this->name);
       continue;
     }
@@ -949,9 +949,9 @@ su_modem_start(su_modem_t *modem)
     return SU_FALSE;
   }
 
-  if (!(modem->class->ctor)(modem, &modem->private)) {
+  if (!(modem->classptr->ctor)(modem, &modem->privdata)) {
     SU_ERROR("failed to start modem\n");
-    modem->private = NULL;
+    modem->privdata = NULL;
 
     return SU_FALSE;
   }
@@ -962,29 +962,29 @@ su_modem_start(su_modem_t *modem)
 SUSYMBOL
 su_modem_read(su_modem_t *modem)
 {
-  if (modem->private == NULL) {
+  if (modem->privdata == NULL) {
     SU_ERROR("modem not started\n");
     return SU_EOS;
   }
 
-  return (modem->class->read_sym)(modem, modem->private);
+  return (modem->classptr->read_sym)(modem, modem->privdata);
 }
 
 SUCOMPLEX
 su_modem_read_sample(su_modem_t *modem)
 {
-  if (modem->private == NULL) {
+  if (modem->privdata == NULL) {
     SU_ERROR("modem not started\n");
     return SU_EOS;
   }
 
-  return (modem->class->read_sample)(modem, modem->private);
+  return (modem->classptr->read_sample)(modem, modem->privdata);
 }
 
 SUFLOAT
 su_modem_get_fec(su_modem_t *modem)
 {
-  if (modem->private == NULL) {
+  if (modem->privdata == NULL) {
     SU_ERROR("modem not started\n");
     return 0;
   }
@@ -995,7 +995,7 @@ su_modem_get_fec(su_modem_t *modem)
 SUFLOAT
 su_modem_get_snr(su_modem_t *modem)
 {
-  if (modem->private == NULL) {
+  if (modem->privdata == NULL) {
     SU_ERROR("modem not started\n");
     return 0;
   }
@@ -1006,7 +1006,7 @@ su_modem_get_snr(su_modem_t *modem)
 SUFLOAT
 su_modem_get_signal(su_modem_t *modem)
 {
-  if (modem->private == NULL) {
+  if (modem->privdata == NULL) {
     SU_ERROR("modem not started\n");
     return 0;
   }

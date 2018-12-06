@@ -45,10 +45,10 @@ struct sigutils_specttuner_channel_params {
   SUFLOAT bw;       /* Bandwidth (angular frequency) */
   SUFLOAT guard;    /* Relative extra bandwidth */
   SUBOOL  precise;  /* Precision mode */
-  void *private;    /* Private data */
+  void *privdata;   /* Private data */
   SUBOOL (*on_data) (
       const struct sigutils_specttuner_channel *channel,
-      void *private,
+      void *privdata,
       const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
       SUSCOUNT size);
 };

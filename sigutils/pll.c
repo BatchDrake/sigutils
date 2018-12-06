@@ -179,7 +179,7 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   switch (costas->kind) {
     case SU_COSTAS_KIND_NONE:
       SU_ERROR("Invalid Costas loop\n");
-      return;
+      return 0;
 
     case SU_COSTAS_KIND_BPSK:
       /* Taken directly from Wikipedia */
@@ -231,8 +231,8 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
       break;
 
     default:
-          SU_ERROR("Unsupported Costas loop kind\n");
-          return;
+      SU_ERROR("Unsupported Costas loop kind\n");
+      return 0;
   }
 
   costas->lock += costas->a * (1 - e - costas->lock);

@@ -21,6 +21,10 @@
 #ifndef _SIGUTILS_LOG_H
 #define _SIGUTILS_LOG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #include <stdint.h>
 #include <sys/time.h>
 
@@ -54,9 +58,9 @@ struct sigutils_log_message {
 }
 
 struct sigutils_log_config {
-  void *private;
+  void *priv;
   SUBOOL exclusive;
-  void (*log_func) (void *private, const struct sigutils_log_message *msg);
+  void (*log_func) (void *priv, const struct sigutils_log_message *msg);
 };
 
 #define sigutils_log_config_INITIALIZER         \
@@ -147,5 +151,9 @@ void su_logprintf(
     ...);
 
 void su_log_init(const struct sigutils_log_config *config);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_LOG_H */

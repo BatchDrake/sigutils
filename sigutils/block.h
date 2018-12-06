@@ -133,8 +133,8 @@ struct sigutils_block_class {
   unsigned int out_size;
 
   /* Generic constructor / destructor */
-  SUBOOL (*ctor) (struct sigutils_block *block, void **private, va_list);
-  void (*dtor) (void *private);
+  SUBOOL (*ctor) (struct sigutils_block *block, void **privdata, va_list);
+  void (*dtor) (void *privdata);
 
   /* This function gets called when more data is required */
   SUSDIFF (*acquire) (void *, su_stream_t *, unsigned int, su_block_port_t *);
@@ -144,9 +144,9 @@ typedef struct sigutils_block_class su_block_class_t;
 
 struct sigutils_block {
   /* Block overall configuration */
-  su_block_class_t *class;
+  su_block_class_t *classname;
   su_property_set_t properties;
-  void             *private;
+  void             *privdata;
 
   /* Architectural properties */
   su_block_port_t      *in; /* Input ports */
@@ -236,7 +236,7 @@ SUBOOL su_block_set_master_port(
     const su_block_port_t *port);
 
 /* su_block_class operations */
-SUBOOL su_block_class_register(struct sigutils_block_class *class);
+SUBOOL su_block_class_register(struct sigutils_block_class *classname);
 
 su_block_class_t *su_block_class_lookup(const char *name);
 

@@ -186,7 +186,6 @@ xstrdup (const char *str)
 static void
 xalloc_die (void)
 {
-  ERROR ("No memory left (internal)\n");
   abort ();
 }
 
