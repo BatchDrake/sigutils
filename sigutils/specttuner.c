@@ -130,6 +130,26 @@ done:
   return ok;
 }
 
+void
+su_specttuner_set_channel_freq(
+    const su_specttuner_t *st,
+    su_specttuner_channel_t *channel,
+    SUFLOAT f0)
+{
+  unsigned int window_size = st->params.window_size;
+  su_ncqo_t lo = su_ncqo_INITIALIZER;
+  SUFLOAT off;
+
+  channel->params.f0 = f0;
+  channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
+
+  if (channel->params.precise) {
+    off = f0 - channel->center * (2 * PI) / (SUFLOAT) window_size;
+    off *= channel->decimation;
+    su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
+  }
+}
+
 SUPRIVATE su_specttuner_channel_t *
 su_specttuner_channel_new(
     const su_specttuner_t *owner,
@@ -144,8 +164,8 @@ su_specttuner_channel_new(
   SUFLOAT off;
 
   SU_TRYCATCH(params->guard >= 1, goto fail);
-  SU_TRYCATCH(params->bw > 0 && params->bw < 2 * PI, goto fail);
-  SU_TRYCATCH(params->f0 > 0 && params->f0 < 2 * PI, goto fail);
+  SU_TRYCATCH(params->bw > 0  && params->bw < 2 * PI, goto fail);
+  SU_TRYCATCH(params->f0 >= 0 && params->f0 < 2 * PI, goto fail);
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_channel_t)), goto fail);
 

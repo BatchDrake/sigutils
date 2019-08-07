@@ -194,6 +194,11 @@ su_specttuner_channel_t *su_specttuner_open_channel(
     su_specttuner_t *st,
     const struct sigutils_specttuner_channel_params *params);
 
+void su_specttuner_set_channel_freq(
+    const su_specttuner_t *st,
+    su_specttuner_channel_t *channel,
+    SUFLOAT f0);
+
 SUBOOL su_specttuner_close_channel(
     su_specttuner_t *st,
     su_specttuner_channel_t *channel);
