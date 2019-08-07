@@ -329,9 +329,16 @@ su_channel_detector_set_params(
 
   /*
    * New window_size settings requires re-allocating all FFTW objects. It's
-   * better if we just create a new detector object
+   * better off if we just create a new detector object
    */
   if (params->window_size != detector->params.window_size)
+    return SU_FALSE;
+
+  /*
+   * Different window functions also require different preallocated
+   * buffers.
+   */
+  if (params->window != detector->params.window)
     return SU_FALSE;
 
   /* Changing the detector bandwidth implies recreating the antialias filter */
