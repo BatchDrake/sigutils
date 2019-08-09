@@ -389,6 +389,32 @@ fail:
 }
 
 SUBOOL
+su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n)
+{
+  SUFLOAT *b = NULL;
+  unsigned int i;
+
+  if (n < 1)
+    goto fail;
+
+  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+    goto fail;
+
+  su_taps_hilbert_init(b, n);
+
+  if (!__su_iir_filt_init(filt, 0, NULL, n, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+SUBOOL
 su_iir_brickwall_bp_init(
     su_iir_filt_t *filt,
     SUSCOUNT n,

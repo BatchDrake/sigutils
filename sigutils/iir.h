@@ -94,6 +94,9 @@ SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2
 /* Initialize Root Raised Cosine filter */
 SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta);
 
+/* Initialize Hilbert transform */
+SUBOOL su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n);
+
 /* Initialize brickwall LPF filter */
 SUBOOL su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 

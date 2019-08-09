@@ -167,6 +167,19 @@ su_taps_normalize_L1(SUFLOAT *h, SUSCOUNT size)
     su_taps_scale(h, 1. / amplitude, size);
 }
 
+/***************************** Hilbert transform *****************************/
+void
+su_taps_hilbert_init(SUFLOAT *h, SUSCOUNT size)
+{
+  unsigned int i;
+  int n = -size / 2;
+
+  for (i = 0; i < size; ++i, ++n)
+    h[i] = 2. / (M_PI * (n - .5f));
+
+  su_taps_apply_hamming(h, size);
+}
+
 void
 su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size)
 {

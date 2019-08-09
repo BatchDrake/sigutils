@@ -52,11 +52,15 @@ void su_taps_apply_flat_top_complex(SUCOMPLEX *h, SUSCOUNT size);
 void su_taps_apply_blackmann_harris(SUFLOAT *h, SUSCOUNT size);
 void su_taps_apply_blackmann_harris_complex(SUCOMPLEX *h, SUSCOUNT size);
 
+/* Hilbert transform */
+void su_taps_hilbert_init(SUFLOAT *h, SUSCOUNT size);
+
 /* Get coefficients of a RRC filter */
 void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);
 
 void su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size);
 
 void su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size);
+
 
 #endif /* _SIGUTILS_TAPS_H */
