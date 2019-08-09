@@ -35,10 +35,17 @@ su_pll_finalize(su_pll_t *pll)
 SUBOOL
 su_pll_init(su_pll_t *pll, SUFLOAT fhint, SUFLOAT fc)
 {
+  SUFLOAT dinv;
+
   memset(pll, 0, sizeof(su_pll_t));
 
-  pll->alpha = SU_NORM2ANG_FREQ(fc);
-  pll->beta  = SU_SQRT(pll->alpha);
+  fc = SU_NORM2ANG_FREQ(fc);
+
+  /* Settings taken from GNU Radio */
+  dinv = 1.f / (1.f + 2.f * .707f * fc + fc * fc);
+
+  pll->alpha = 4 * fc * fc * dinv;
+  pll->beta  = 4 * 0.707 * fc * dinv;
 
   su_ncqo_init(&pll->ncqo, fhint);
 
@@ -48,6 +55,20 @@ fail:
   su_pll_finalize(pll);
 
   return SU_FALSE;
+}
+
+SUCOMPLEX
+su_pll_track(su_pll_t *pll, SUCOMPLEX x)
+{
+  SUCOMPLEX ref = su_ncqo_read(&pll->ncqo);
+  SUCOMPLEX mix = x * SU_C_CONJ(ref);
+  SUFLOAT   phase = su_ncqo_get_phase(&pll->ncqo);
+  SUFLOAT   error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
+
+  su_ncqo_inc_angfreq(&pll->ncqo, pll->alpha * error);
+  su_ncqo_inc_phase  (&pll->ncqo, pll->beta  * error);
+
+  return mix;
 }
 
 void

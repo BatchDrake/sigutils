@@ -79,6 +79,7 @@ typedef struct sigutils_costas su_costas_t;
 /* Second order PLL */
 void su_pll_finalize(su_pll_t *);
 SUBOOL su_pll_init(su_pll_t *, SUFLOAT, SUFLOAT);
+SUCOMPLEX su_pll_track(su_pll_t *, SUCOMPLEX);
 void su_pll_feed(su_pll_t *, SUFLOAT);
 
 /* QPSK costas loops are way more complex than that */
