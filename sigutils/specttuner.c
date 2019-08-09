@@ -144,7 +144,7 @@ su_specttuner_set_channel_freq(
   channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
 
   if (channel->params.precise) {
-    off = f0 - channel->center * (2 * PI) / (SUFLOAT) window_size;
+    off = channel->center * (2 * PI) / (SUFLOAT) window_size - f0;
     off *= channel->decimation;
     su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
   }
@@ -206,7 +206,7 @@ su_specttuner_channel_new(
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
-    off = params->f0 - new->center * (2 * PI) / (SUFLOAT) window_size;
+    off = new->center * (2 * PI) / (SUFLOAT) window_size - params->f0;
     off *= new->decimation;
     su_ncqo_init_fixed(&new->lo, SU_ANG2NORM_FREQ(off));
   }
