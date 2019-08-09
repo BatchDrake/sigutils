@@ -20,12 +20,12 @@
 
 #define SU_LOG_DOMAIN "specttuner"
 
+#include "log.h"
 #include <string.h>
 #include <stdlib.h>
 #include "sampling.h"
 #include "taps.h"
 #include "specttuner.h"
-#include "log.h"
 
 SUPRIVATE void
 su_specttuner_channel_destroy(su_specttuner_channel_t *channel)
