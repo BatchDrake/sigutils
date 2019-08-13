@@ -48,44 +48,27 @@ su_specttuner_channel_destroy(su_specttuner_channel_t *channel)
   if (channel->window != NULL)
     SU_FFTW(_free) (channel->window);
 
+  if (channel->forward != NULL)
+    SU_FFTW(_destroy_plan) (channel->forward);
+
+  if (channel->backward != NULL)
+    SU_FFTW(_destroy_plan) (channel->backward);
+
   if (channel->h != NULL)
     SU_FFTW(_free) (channel->h);
 
   free(channel);
 }
 
-SUPRIVATE SUBOOL
-su_specttuner_init_filter_response(
+SUPRIVATE void
+su_specttuner_update_channel_filter(
     const su_specttuner_t *owner,
     su_specttuner_channel_t *channel)
 {
-  SUBOOL ok = SU_FALSE;
-  SU_FFTW(_plan) forward = NULL;
-  SU_FFTW(_plan) backward = NULL;
   SUCOMPLEX tmp;
   unsigned int window_size = owner->params.window_size;
   unsigned int window_half = window_size / 2;
   unsigned int i;
-
-  /* Backward plan */
-  SU_TRYCATCH(
-      forward = SU_FFTW(_plan_dft_1d)(
-          window_size,
-          channel->h,
-          channel->h,
-          FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto done);
-
-  /* Forward plan */
-  SU_TRYCATCH(
-      backward = SU_FFTW(_plan_dft_1d)(
-          window_size,
-          channel->h,
-          channel->h,
-          FFTW_BACKWARD,
-          FFTW_ESTIMATE),
-      goto done);
 
   /* First step: Setup ideal filter response */
   memset(channel->h, 0, sizeof(SUCOMPLEX) * window_size);
@@ -96,7 +79,7 @@ su_specttuner_init_filter_response(
   }
 
   /* Second step: switch to time domain */
-  SU_FFTW(_execute) (backward);
+  SU_FFTW(_execute) (channel->backward);
 
   /* Third step: recenter coefficients to apply window function */
   for (i = 0; i < window_half; ++i) {
@@ -116,16 +99,41 @@ su_specttuner_init_filter_response(
   }
 
   /* Sixth step: move back to frequency domain */
-  SU_FFTW(_execute) (forward);
+  SU_FFTW(_execute) (channel->forward);
+}
+
+SUPRIVATE SUBOOL
+su_specttuner_init_filter_response(
+    const su_specttuner_t *owner,
+    su_specttuner_channel_t *channel)
+{
+  SUBOOL ok = SU_FALSE;
+  unsigned int window_size = owner->params.window_size;
+
+  /* Backward plan */
+  SU_TRYCATCH(
+      channel->forward = SU_FFTW(_plan_dft_1d)(
+          window_size,
+          channel->h,
+          channel->h,
+          FFTW_FORWARD,
+          FFTW_ESTIMATE),
+      goto done);
+
+  /* Forward plan */
+  SU_TRYCATCH(
+      channel->backward = SU_FFTW(_plan_dft_1d)(
+          window_size,
+          channel->h,
+          channel->h,
+          FFTW_BACKWARD,
+          FFTW_ESTIMATE),
+      goto done);
+
+  su_specttuner_update_channel_filter(owner, channel);
 
   ok = SU_TRUE;
-
 done:
-  if (forward != NULL)
-    SU_FFTW(_destroy_plan) (forward);
-
-  if (backward != NULL)
-    SU_FFTW(_destroy_plan) (backward);
 
   return ok;
 }
@@ -148,6 +156,37 @@ su_specttuner_set_channel_freq(
     off *= channel->decimation;
     su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
   }
+}
+
+SUBOOL
+su_specttuner_set_channel_bandwidth(
+    const su_specttuner_t *st,
+    su_specttuner_channel_t *channel,
+    SUFLOAT bw)
+{
+  SUFLOAT actual_bw;
+  SUFLOAT k;
+  unsigned int min_size;
+  unsigned int width;
+
+  unsigned int window_size = st->params.window_size;
+
+  actual_bw = bw * channel->params.guard;
+
+  SU_TRYCATCH(actual_bw > 0 && actual_bw < 2 * PI, return SU_FALSE);
+
+  k = 1. / (2 * PI / actual_bw);
+  min_size    = SU_CEIL(k * window_size);
+
+  width           = SU_CEIL(min_size / channel->params.guard);
+
+  SU_TRYCATCH(width <= channel->size, return SU_FALSE);
+  SU_TRYCATCH(width > 1, return SU_FALSE);
+
+  channel->width  = width;
+  channel->halfw  = channel->width >> 1;
+
+  su_specttuner_update_channel_filter(st, channel);
 }
 
 SUPRIVATE su_specttuner_channel_t *

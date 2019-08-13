@@ -82,11 +82,14 @@ struct sigutils_specttuner_channel {
    * a good windowing that does not rely on rectangular windows
    */
   enum sigutils_specttuner_state state;
-  SU_FFTW(_complex) *fft;     /* Filtered spectrum */
-  SU_FFTW(_complex) *h;       /* Frequency response of filter */
-  SU_FFTW(_plan)     plan[2]; /* Even & Odd plans */
-  SU_FFTW(_complex) *ifft[2]; /* Even & Odd time-domain signal */
-  SUFLOAT           *window;  /* Window function */
+  SU_FFTW(_complex) *fft;      /* Filtered spectrum */
+  SU_FFTW(_complex) *h;        /* Frequency response of filter */
+  SU_FFTW(_plan)     plan[2];  /* Even & Odd plans */
+  SU_FFTW(_plan)     forward;  /* Filter response forward plan */
+  SU_FFTW(_plan)     backward; /* Filter response backward plan */
+
+  SU_FFTW(_complex) *ifft[2];  /* Even & Odd time-domain signal */
+  SUFLOAT           *window;   /* Window function */
 };
 
 typedef struct sigutils_specttuner_channel su_specttuner_channel_t;
@@ -198,6 +201,11 @@ void su_specttuner_set_channel_freq(
     const su_specttuner_t *st,
     su_specttuner_channel_t *channel,
     SUFLOAT f0);
+
+SUBOOL su_specttuner_set_channel_bandwidth(
+    const su_specttuner_t *st,
+    su_specttuner_channel_t *channel,
+    SUFLOAT bw);
 
 SUBOOL su_specttuner_close_channel(
     su_specttuner_t *st,
