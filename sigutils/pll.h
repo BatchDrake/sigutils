@@ -93,6 +93,8 @@ SUBOOL su_costas_init(
     unsigned int arm_order,
     SUFLOAT loop_bw);
 
+void su_costas_set_kind(su_costas_t *costas, enum sigutils_costas_kind);
+
 void su_costas_set_loop_gain(su_costas_t *costas, SUFLOAT gain);
 
 SUCOMPLEX su_costas_feed(su_costas_t *costas, SUCOMPLEX x);

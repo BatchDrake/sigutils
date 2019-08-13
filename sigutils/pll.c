@@ -266,3 +266,9 @@ su_costas_feed(su_costas_t *costas, SUCOMPLEX x)
   return costas->y;
 }
 
+
+void
+su_costas_set_kind(su_costas_t *costas, enum sigutils_costas_kind kind)
+{
+  costas->kind = kind;
+}
