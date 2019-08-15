@@ -74,6 +74,7 @@ typedef struct sigutils_peak_detector su_peak_detector_t;
 }
 
 enum sigutils_channel_detector_mode {
+  SU_CHANNEL_DETECTOR_MODE_SPECTRUM,        /* Spectrum only mode */
   SU_CHANNEL_DETECTOR_MODE_DISCOVERY,       /* Discover channels */
   SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION, /* To find baudrate */
   SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF,  /* To find baudrate (alt.) */
@@ -114,7 +115,7 @@ struct sigutils_channel_detector_params {
 
 #define sigutils_channel_detector_params_INITIALIZER            \
 {                                                               \
-  SU_CHANNEL_DETECTOR_MODE_DISCOVERY, /* Mode */                \
+  SU_CHANNEL_DETECTOR_MODE_SPECTRUM, /* Mode */                 \
   8000,     /* samp_rate */                                     \
   512,      /* window_size */                                   \
   SU_ADDSFX(0.0),      /* fc */                                 \

@@ -1000,6 +1000,7 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
   unsigned int i;
   SUFLOAT psd;
   SUCOMPLEX diff;
+  SUFLOAT wsizeinv = 1. / detector->params.window_size;
   SUFLOAT ac;
 
   /* In nonlinear diff mode, we store something else in the window */
@@ -1017,6 +1018,18 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 
     /* ^^^^^^^^^^^^^^^^^^ end of common part ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
     switch (detector->params.mode) {
+      case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
+        /*
+         * Spectrum mode only
+         */
+        su_channel_detector_apply_window(detector);
+        SU_FFTW(_execute(detector->fft_plan));
+
+        for (i = 0; i < detector->params.window_size; ++i)
+          detector->spect[i] = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+
+        return SU_TRUE;
+
       case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
         /*
          * Channel detection is based on the analysis of the power spectrum
@@ -1031,8 +1044,7 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
             (detector->fft[i] / detector->params.window_size - detector->dc);
 
         for (i = 0; i < detector->params.window_size; ++i) {
-          psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
-          psd /= detector->params.window_size;
+          psd = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
           detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
         }
 
