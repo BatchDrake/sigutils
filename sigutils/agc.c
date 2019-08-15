@@ -100,8 +100,7 @@ su_agc_feed(su_agc_t *agc, SUCOMPLEX x)
     agc->delay_line_ptr = 0;
 
   if (agc->enabled) {
-    x_dBFS = SU_DB(SU_MAX(SU_ABS(SU_C_REAL(x)), SU_ABS(SU_C_IMAG(x))))
-        - SUFLOAT_MAX_REF_DB;
+    x_dBFS = .5 * SU_DB(x * SU_C_CONJ(x)) - SUFLOAT_MAX_REF_DB;
 
     /* Push mag */
     x_dBFS_delayed = agc->mag_history[agc->mag_history_ptr];
