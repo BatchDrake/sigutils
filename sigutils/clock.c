@@ -25,6 +25,68 @@
 #include "log.h"
 #include "clock.h"
 
+
+/*
+ * Fixed sampler
+ */
+
+SUBOOL
+su_sampler_init(su_sampler_t *self, SUFLOAT bnor)
+{
+  SU_TRYCATCH(bnor >= 0, return SU_FALSE);
+
+  self->bnor = bnor;
+  if (bnor > 0)
+    self->period = 1./ bnor;
+  else
+    self->period = 0;
+
+  self->phase = 0;
+  self->prev = 0;
+  self->phase0_rel = 0;
+
+  return SU_TRUE;
+}
+
+SUBOOL
+su_sampler_set_rate(su_sampler_t *self, SUFLOAT bnor)
+{
+  SU_TRYCATCH(bnor >= 0, return SU_FALSE);
+
+  self->bnor = bnor;
+  if (bnor > 0) {
+    self->period = 1./ bnor;
+    if (self->phase > self->period)
+      self->phase -= self->period * SU_FLOOR(self->phase / self->period);
+
+    self->phase0 = self->phase0_rel * self->period;
+  } else {
+    self->period = 0;
+  }
+
+  return SU_TRUE;
+}
+
+/* Phase is always set in a relative fashion */
+void
+su_sampler_set_phase(su_sampler_t *self, SUFLOAT phase)
+{
+  if (phase > 1)
+    phase -= SU_FLOOR(phase);
+
+  self->phase = self->period * phase;
+}
+
+void
+su_sampler_finalize(su_sampler_t *self)
+{
+  /* No-op */
+}
+
+/*
+ * Clock detector
+ */
+
 void
 su_clock_detector_finalize(su_clock_detector_t *cd)
 {

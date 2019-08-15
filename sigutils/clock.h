@@ -24,6 +24,66 @@
 #include "types.h"
 #include "block.h"
 
+struct sigutils_sampler {
+  SUFLOAT bnor;
+  SUFLOAT period;
+  SUFLOAT phase;
+  SUFLOAT phase0_rel;
+  SUFLOAT phase0;
+  SUCOMPLEX prev;
+};
+
+typedef struct sigutils_sampler su_sampler_t;
+
+SUBOOL su_sampler_init(su_sampler_t *self, SUFLOAT bnor);
+
+SUINLINE SUFLOAT
+su_sampler_get_period(const su_sampler_t *self)
+{
+  return self->period;
+}
+
+SUINLINE void
+su_sampler_set_phase_addend(su_sampler_t *self, SUFLOAT addend)
+{
+  self->phase0_rel = SU_FLOOR(addend);
+  self->phase = self->period * self->phase0_rel;
+}
+
+SUINLINE SUBOOL
+su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
+{
+  SUBOOL sampled = SU_FALSE;
+  SUFLOAT alpha, phase;
+  SUCOMPLEX output = *sample, result;
+
+  if (self->period >= 1.) {
+    self->phase += 1.;
+    if (self->phase >= self->period)
+      self->phase -= self->period;
+
+    phase = self->phase + self->phase0;
+    if (phase >= self->period)
+      self->phase -= self->period;
+
+    /* Interpolate with previous sample for improved accuracy */
+    if (SU_FLOOR(phase) == 0) {
+      alpha = phase - SU_FLOOR(phase);
+      result = ((1 - alpha) * self->prev + alpha * output);
+      *sample = result;
+      sampled = SU_TRUE;
+    }
+  }
+
+  self->prev = output;
+
+  return sampled;
+}
+
+SUBOOL su_sampler_set_rate(su_sampler_t *self, SUFLOAT bnor);
+void su_sampler_set_phase(su_sampler_t *self, SUFLOAT phase);
+void su_sampler_finalize(su_sampler_t *self);
+
 /*
  * The implementation of the Gardner clock recovery algorithm computes the
  * following clock error estimate:
