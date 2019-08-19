@@ -41,11 +41,11 @@ And proceed to install the library in your system by running as root:
 
 ~~In order to run all unit tests, you must download [this ZIP file](http://www.sigidwiki.com/images/3/36/Strange_4psk.zip) first, extract the file `strange 8475 khz_2015-12-04T15-33-32Z_8474.1kHz.wav`, rename it to `test.wav` and place it in the project's root directory. After this step, you can run all unit tests by executing:~~
 
-_Please note: many of these unit tests are failing until the API harmonization work is completed. Don't worry to much about them for now. However, if both your build and installation were successful, you should see a list of unit tests taking place._
-
-```
+~~```
 % src/sutest
-```
+```~~
+
+_Please note: many of these unit tests are failing until the API harmonization work is completed. Don't worry to much about them for now. However, if both your build and installation were successful, you should see a list of unit tests taking place._
 
 ---
 # sigutils API overview
