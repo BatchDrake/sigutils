@@ -117,7 +117,7 @@ struct sigutils_channel_detector_params {
 {                                                               \
   SU_CHANNEL_DETECTOR_MODE_SPECTRUM, /* Mode */                 \
   8000,     /* samp_rate */                                     \
-  512,      /* window_size */                                   \
+  8192,     /* window_size */                                   \
   SU_ADDSFX(0.0),      /* fc */                                 \
   1,        /* decimation */                                    \
   SU_ADDSFX(0.0),      /* bw */                                 \
