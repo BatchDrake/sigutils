@@ -15,7 +15,7 @@ Just clone it from the GitHub repository:
 % git clone https://github.com/BatchDrake/sigutils.git
 ```
 
-## Building sigutils
+## Building and installing sigutils
 First, you must generate the configure script:
 
 ```
@@ -29,14 +29,22 @@ After that, you just need to run the standard ./configure and make:
 % make  
 ```
 
-## Running all unit tests
-If the compilation was successful, an executable file named `sigutils` must exist in the `src/` directory, containing a set of unit tests for various library features. It's a good idea to run all unit tests before going on. However, these tests rely on a real signal recording from [sigidwiki](http://www.sigidwiki.com).
-
-In order to run all unit tests, you must download [this ZIP file](http://www.sigidwiki.com/images/3/36/Strange_4psk.zip) first, extract the file `strange 8475 khz_2015-12-04T15-33-32Z_8474.1kHz.wav`, rename it to `test.wav` and place it in the project's root directory. After this step, you can run all unit tests by executing:
-
+And proceed to install the library in your system by running as root:
 
 ```
-% src/sigutils
+# make install
+# ldconfig
+```
+
+## Running all unit tests
+~~If the compilation was successful, an executable file named `sigutils` must exist in the `src/` directory, containing a set of unit tests for various library features. It's a good idea to run all unit tests before going on. However, these tests rely on a real signal recording from [sigidwiki](http://www.sigidwiki.com).~~
+
+~~In order to run all unit tests, you must download [this ZIP file](http://www.sigidwiki.com/images/3/36/Strange_4psk.zip) first, extract the file `strange 8475 khz_2015-12-04T15-33-32Z_8474.1kHz.wav`, rename it to `test.wav` and place it in the project's root directory. After this step, you can run all unit tests by executing:~~
+
+_Please note: many of these unit tests are failing until the API harmonization work is completed. Don't worry to much about them for now. However, if both your build and installation were successful, you should see a list of unit tests taking place after running:_
+
+```
+% src/sutest
 ```
 
 ---
