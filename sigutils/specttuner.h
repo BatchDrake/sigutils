@@ -68,6 +68,7 @@ struct sigutils_specttuner_channel {
   int index;           /* Back reference */
 
   SUFLOAT k;           /* Scaling factor */
+  SUFLOAT gain;        /* Channel gain */
   SUFLOAT decimation;  /* Equivalent decimation */
   su_ncqo_t lo;        /* Local oscilator to correct imprecise centering */
   unsigned int center; /* FFT center bin */

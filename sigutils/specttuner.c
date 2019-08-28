@@ -256,6 +256,7 @@ su_specttuner_channel_new(
   new->width  = SU_CEIL(min_size / params->guard);
   new->halfw  = new->width >> 1;
 
+  new->gain   = SU_SQRT(1.f / new->size);
 
   SU_TRYCATCH(new->width > 0, goto fail);
 
@@ -566,14 +567,14 @@ __su_specttuner_feed_channel(
 
       phase = su_ncqo_read(&channel->lo);
 
-      curr[i] = phase * (alpha * curr[i] + beta * prev[i]);
+      curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
     }
   } else {
     for (i = 0; i < channel->halfsz; ++i) {
       alpha = channel->window[i]; /* Positive slope */
       beta  = channel->window[i + channel->halfsz]; /* Negative slope */
 
-      curr[i] = alpha * curr[i] + beta * prev[i];
+      curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
     }
   }
 
