@@ -104,7 +104,8 @@ su_specttuner_channel_get_decimation(const su_specttuner_channel_t *channel)
 SUINLINE SUFLOAT
 su_specttuner_channel_get_bw(const su_specttuner_channel_t *channel)
 {
-  return PI * (SUFLOAT) channel->width / (SUFLOAT) channel->size;
+  return 2 * PI * (SUFLOAT) channel->width
+      / (SUFLOAT) (channel->size * channel->decimation);
 }
 
 SUINLINE SUFLOAT
