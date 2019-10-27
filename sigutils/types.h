@@ -29,6 +29,34 @@
 
 #include <util.h>
 
+#if defined(__cplusplus) && defined(__APPLE__)
+#  define SU_USE_CPP_COMPLEX_API
+#endif
+
+#ifndef I
+#define I std::complex<SUFLOAT>{0,1}
+#endif
+
+#ifdef SU_USE_CPP_COMPLEX_API
+#  define SUCOMPLEX  std::complex<SUFLOAT>
+#  define SU_C_REAL(c)  (c).real()
+#  define SU_C_IMAG(c)  (c).imag()
+#  define SU_C_ABS(c)   std::abs(c)
+#  define SU_C_ARG(c)   std::arg(c)
+#  define SU_C_EXP(c)   std::exp(c)
+#  define SU_C_CONJ(c)	std::conj(c)
+#  define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
+#else
+#  define SUCOMPLEX  _Complex SUFLOAT
+#  define SU_C_REAL(c)   creal(c)
+#  define SU_C_IMAG(c)   cimag(c)
+#  define SU_C_ABS    SU_ADDSFX(cabs)
+#  define SU_C_ARG    SU_ADDSFX(carg)
+#  define SU_C_EXP    SU_ADDSFX(cexp)
+#  define SU_C_CONJ   SU_ADDSFX(conj)
+#  define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
+#endif
+
 #ifdef _SU_SINGLE_PRECISION
 #  define SUFLOAT    float
 #  define SU_SOURCE_FFTW_PREFIX fftwf
@@ -42,7 +70,6 @@
 #define SUSDIFF    long
 #define SUBOOL     int
 #define SUFREQ     double
-#define SUCOMPLEX  _Complex SUFLOAT
 #define SUSYMBOL   int
 #define SUBITS     unsigned char /* Not exactly a bit */
 
@@ -100,14 +127,6 @@
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
 
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
-
-#define SU_C_ABS    SU_ADDSFX(cabs)
-#define SU_C_ARG    SU_ADDSFX(carg)
-#define SU_C_REAL   SU_ADDSFX(creal)
-#define SU_C_IMAG   SU_ADDSFX(cimag)
-#define SU_C_EXP    SU_ADDSFX(cexp)
-#define SU_C_CONJ   SU_ADDSFX(conj)
-#define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 
 #ifndef PI
 #  define PI SU_ADDSFX(3.141592653589793238462643)
