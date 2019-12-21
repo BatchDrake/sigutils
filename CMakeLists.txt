@@ -1,8 +1,27 @@
+#
+#  CMakeLists.txt: CMake configuration file for sigutils
+#
+#  Copyright (C) 2019 Gonzalo José Carracedo Carballal
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as
+#  published by the Free Software Foundation, either version 3 of the
+#  License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public
+#  License along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>
+#
+#
+  
 cmake_minimum_required(VERSION 3.7.2)
 project(sigutils VERSION 0.1 LANGUAGES C)
 include(FindPkgConfig)
-
-# set(CMAKE_BUILD_TYPE DEBUG)
 
 # Find requirements
 find_package(Threads)
@@ -18,11 +37,14 @@ set(BLOCKDIR ${SRCDIR}/blocks)
 set(MODEMDIR ${SRCDIR}/modems)
 
 # Compiler configuration
-set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION -lm")
+set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
+if(VOLK_FOUND)
+  set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
+endif()
+
 set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${SIGUTILS_CONFIG_CFLAGS}")
 set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math")
-
 
 ########################## pkg-config description #############################
 set(SIGUTILS_PC_FILE_PATH "${PROJECT_BINARY_DIR}/sigutils.pc")
@@ -32,7 +54,7 @@ set(
   "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" 
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
 set(SU_PC_CFLAGS "${SIGUTILS_CONFIG_CFLAGS}")
-set(SU_PC_LIBRARIES "-l${SNDFILE_LIBRARIES} -l${FFTW3_LIBRARIES} -l${VOLK_LIBRARIES}")
+set(SU_PC_LIBRARIES "-l${SNDFILE_LIBRARIES} -lm -l${FFTW3_LIBRARIES} -l${VOLK_LIBRARIES}")
 configure_file(sigutils.pc.in "${SIGUTILS_PC_FILE_PATH}" @ONLY)
 
 install(
@@ -113,16 +135,12 @@ target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
 # Required dependencies
 target_include_directories(sigutils SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
-#target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
-
 target_include_directories(sigutils SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
-#target_link_libraries(sigutils ${FFTW3_LIBRARIES})
 
 # Optional dependencies
 if(VOLK_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
   target_include_directories(sigutils SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
-  #target_link_libraries(sigutils ${VOLK_LIBRARIES})
 endif()
 
 install(
@@ -188,6 +206,7 @@ target_link_libraries(sutest ${FFTW3_LIBRARIES})
 target_link_libraries(sutest ${CMAKE_THREAD_LIBS_INIT})
 link_directories(sutest ${PROJECT_BINARY_DIR})
 target_link_libraries(sutest sigutils)
+target_link_libraries(sutest m)
 
 # Optional dependencies
 if(VOLK_FOUND)
