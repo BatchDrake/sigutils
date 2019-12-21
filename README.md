@@ -3,10 +3,12 @@
 The sigutils library is a digital signal processing library written in C, designed for blind signal analysis and automatic demodulation in GNU/Linux.
 
 ## Requirements and dependencies
-sigutils has been tested in GNU/Linux (i386 and x86_64), but it will probably work in many other architectures as well. Autoconf (2.65 or later) and automake (1.11.1 or later) are required to build the library. The following libraries (along with their respective development files) must also be present:
+**sigutils** has been tested in GNU/Linux (i386, x86_64 and armhf), but it will probably work in many other architectures as well. CMake 3.7.2 or higher is required for the build. The following libraries (along with their respective development files) must also be present:
 
-* libsndfile (1.0.2 or later)
-* alsa (1.0.25 or later)
+* sndfile (1.0.2 or later)
+* fftw3 (3.0 or later)
+
+Optional **volk** support requires version 1.0 or higher.
 
 ## Getting the code
 Just clone it from the GitHub repository:
@@ -16,17 +18,18 @@ Just clone it from the GitHub repository:
 ```
 
 ## Building and installing sigutils
-First, you must generate the configure script:
+First, you must create a build directory and configure it with:
 
 ```
-% autoreconf -fvi
+% mkdir build
+% cd build
+% cmake ..
 ```
 
-After that, you just need to run the standard ./configure and make:
+If the previous commands were successful, you can start the build by typing:
 
 ```
-% ./configure  
-% make  
+% make
 ```
 
 And proceed to install the library in your system by running as root:
