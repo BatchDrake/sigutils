@@ -24,10 +24,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <compat.h>
 #include <complex.h>
 #include <fftw3.h>
 #include <util.h>
+
+#include "compat.h"
 
 #if defined(__cplusplus) && defined(__APPLE__)
 #  define SU_USE_CPP_COMPLEX_API
