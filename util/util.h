@@ -26,7 +26,10 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/types.h>
-#include <unistd.h>
+
+#ifdef __unix__
+#  include <unistd.h>
+#endif /* __unix__ */
 
 #ifdef linux
 # include <linux/unistd.h>
@@ -96,12 +99,6 @@
 # define __UNITS(x, wrdsiz) ((((x) + (wrdsiz - 1)) / wrdsiz))
 # define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)
 
-    
-struct strlist
-{
-  PTR_LIST (char, strings);
-};
-
 typedef struct _al
 {
   int    al_argc;
@@ -133,14 +130,6 @@ int  ptr_list_remove_all (void ***, int *, void *);
 void errno_save (void);
 void errno_restore (void);
 
-struct strlist *strlist_new (void);
-void strlist_append_string (struct strlist *, const char *);
-void strlist_walk (struct strlist *, void *, void (*) (const char *, void *));
-void strlist_destroy (struct strlist *);
-void strlist_debug (const struct strlist *);
-void strlist_cat (struct strlist *, const struct strlist *);
-void strlist_union (struct strlist *, const struct strlist *);
-int  strlist_have_element (const struct strlist *, const char *);
 unsigned int yday_to_daymonth (int, int);
 
 char *trim (const char *);

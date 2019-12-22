@@ -22,7 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <sys/mman.h>
+#if defined(__unix__)
+#  include <sys/mman.h>
+#endif /* __unix__ */
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -194,6 +196,66 @@ su_test_channel_detector_qpsk_noisy(su_test_context_t *ctx)
 {
   return __su_test_channel_detector_qpsk(ctx, SU_TRUE);
 }
+
+#if defined(_WIN32)
+#  define mmap   mimic_mmap
+#  define munmap mimic_munmap
+#  define PROT_READ 0
+#  define MAP_PRIVATE 0
+static int
+mimic_munmap(void *base, size_t size)
+{
+  free(base);
+  return 0;
+}
+
+static void *
+mimic_mmap(
+  void *addr, 
+  size_t size, 
+  unsigned int prot, 
+  unsigned int flags, 
+  int fd, 
+  off_t off)
+{
+  size_t fsz, avail;
+  void *alloc = NULL;
+  
+  fsz = lseek(fd, 0, SEEK_END);
+  lseek(fd, off, SEEK_SET);
+  
+  if (fsz == -1) {
+    SU_ERROR("mimic_mmap: invalid seek to END\n");
+    errno = ESPIPE;
+    return (void *) -1;
+  }
+  
+  if (off > fsz)
+    off = fsz;
+  
+  avail = fsz - off;
+  
+  if (avail > size) {
+    SU_ERROR("mimic_mmap: invalid mmap size");
+    errno = EINVAL;
+    return (void *) -1;
+  }
+  
+  if ((alloc = malloc(size)) == NULL) {
+    SU_ERROR("mimic_mmap: cannot allocate %d bytes\n", size);
+    return (void *) -1;
+  }
+  
+  if (read(fd, alloc, size) != size) {
+    SU_ERROR("mimic_mmap: read failed\n", size);
+    free(alloc);
+    return (void *) -1;
+  }
+  
+  return alloc;
+}
+
+#endif /* defined(_WIN32) */
 
 SUBOOL
 su_test_channel_detector_real_capture(su_test_context_t *ctx)

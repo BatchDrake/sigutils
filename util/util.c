@@ -22,9 +22,12 @@
 #include <stdlib.h>
 #include <stdarg.h> // strbuild()
 #include <string.h> // strsep()
-#include <unistd.h>
 #include <ctype.h>
 #include <time.h>
+
+#ifdef __unix__
+#  include <unistd.h>
+#endif /* __unix__ */
 
 #include "util.h"
 
@@ -330,101 +333,6 @@ fread_line (FILE *fp)
     
   return line;
 }
-
-/* Todo: this is interesting. Export if necessary */
-
-struct strlist *
-strlist_new (void)
-{
-  struct strlist *new;
-  
-  new = xmalloc (sizeof (struct strlist));
-  
-  memset (new, 0, sizeof (struct strlist));
-  
-  return new;
-}
-
-void
-strlist_append_string (struct strlist *list, const char *string)
-{
-  ptr_list_append ((void ***) &list->strings_list, &list->strings_count,
-    xstrdup (string));
-}
-
-void
-strlist_walk (struct strlist *list, 
-              void *data,
-              void (*walk) (const char *, void *))
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      (walk) (list->strings_list[i], data);
-}
-
-void
-strlist_destroy (struct strlist *list)
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      free (list->strings_list[i]);
-      
-  if (list->strings_list != NULL)
-    free (list->strings_list);
-    
-  free (list);
-}
-
-int
-strlist_have_element (const struct strlist *list, const char *string)
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      if (strcmp (list->strings_list[i], string) == 0)
-        return 1;
-        
-  return 0;
-}
-
-void
-strlist_cat (struct strlist *dest, const struct strlist *list)
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      strlist_append_string (dest, list->strings_list[i]);
-}
-
-void
-strlist_union (struct strlist *dest, const struct strlist *list)
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      if (!strlist_have_element (dest, list->strings_list[i]))
-        strlist_append_string (dest, list->strings_list[i]);
-}
-
-void
-strlist_debug (const struct strlist *list)
-{
-  int i;
-  
-  for (i = 0; i < list->strings_count; i++)
-    if (list->strings_list[i] != NULL)
-      fprintf (stderr, "%3d. %s\n", i, list->strings_list[i]);
-    else
-      fprintf (stderr, "<empty slot>\n");
-}
-
 
 /* 
    Bit layout of returned byte:

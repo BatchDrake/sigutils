@@ -22,12 +22,12 @@
 cmake_minimum_required(VERSION 3.7.2)
 project(sigutils VERSION 0.1 LANGUAGES C)
 include(FindPkgConfig)
+include(cmake/FindFFTW3.cmake)
+include(cmake/FindSndFile.cmake)
+include(cmake/FindVolk.cmake)
 
 # Find requirements
 find_package(Threads)
-pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
-pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
-pkg_check_modules(VOLK              volk>=1.0)
 
 # Source location
 set(SRCDIR   sigutils)
@@ -35,6 +35,7 @@ set(UTILDIR  util)
 set(CODECDIR ${SRCDIR}/codecs)
 set(BLOCKDIR ${SRCDIR}/blocks)
 set(MODEMDIR ${SRCDIR}/modems)
+set(WIN32DIR ${SRCDIR}/win32)
 
 # Compiler configuration
 set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
@@ -71,6 +72,7 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/clock.h
     ${SRCDIR}/codec.h
     ${SRCDIR}/coef.h
+    ${SRCDIR}/compat.h
     ${SRCDIR}/decider.h
     ${SRCDIR}/detect.h
     ${SRCDIR}/equalizer.h
@@ -107,7 +109,12 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/softtune.c
     ${SRCDIR}/specttuner.c
     ${SRCDIR}/taps.c)
-    
+
+set(SIGUTILS_WIN32_COMPAT_HEADERS
+    ${WIN32DIR}/time.h)
+
+set(SIGUTILS_WIN32_COMPAT_SOURCES)
+
 set(SIGUTILS_BLOCK_SOURCES
     ${BLOCKDIR}/agc.c
     ${BLOCKDIR}/clock.c
@@ -119,7 +126,12 @@ set(SIGUTILS_BLOCK_SOURCES
 
 set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
 set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
- 
+
+if (WIN32)
+  set(SIGUTILS_LIB_SOURCES 
+  "${SIGUTILS_LIB_SOURCES};${SIGUTILS_WIN32_COMPAT_SOURCES}")
+endif()
+
 add_library(
   sigutils SHARED
   ${SIGUTILS_UTIL_SOURCES}
@@ -130,6 +142,17 @@ add_library(
   ${SIGUTILS_CODEC_SOURCES}
   ${SIGUTILS_MODEM_SOURCES})
   
+if(WIN32)
+  target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
+  target_link_libraries(sigutils ${FFTW3_LIBRARIES})
+  target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
+
+  # Optional dependencies
+  if(VOLK_FOUND)
+    target_link_libraries(sigutils ${VOLK_LIBRARIES})
+  endif()
+endif()
+
 # Private header directories
 target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
@@ -150,10 +173,15 @@ install(
 install(
   FILES ${SIGUTILS_UTIL_HEADERS} 
   DESTINATION include/sigutils/util)
-    
+
+if(WIN32)
+  install(
+    FILES ${SIGUTILS_WIN32_COMPAT_HEADERS}
+    DESTINATION include/sigutils/win32)
+endif()
+
 install(TARGETS sigutils DESTINATION lib)
-  
-  
+    
 ############################## Unit tests ######################################
 set(MAINDIR src)
 set(TESTDIR ${MAINDIR}/tests)

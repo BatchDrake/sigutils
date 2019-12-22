@@ -24,9 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <compat.h>
 #include <complex.h>
 #include <fftw3.h>
-
 #include <util.h>
 
 #if defined(__cplusplus) && defined(__APPLE__)
@@ -35,6 +35,14 @@
 
 #ifndef I
 #define I std::complex<SUFLOAT>{0,1}
+#endif
+
+#ifdef _SU_SINGLE_PRECISION
+#  define SUFLOAT    float
+#  define SU_SOURCE_FFTW_PREFIX fftwf
+#else
+#  define SUFLOAT    double
+#  define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
 #ifdef SU_USE_CPP_COMPLEX_API
@@ -57,14 +65,6 @@
 #  define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 #endif
 
-#ifdef _SU_SINGLE_PRECISION
-#  define SUFLOAT    float
-#  define SU_SOURCE_FFTW_PREFIX fftwf
-#else
-#  define SUFLOAT    double
-#  define SU_SOURCE_FFTW_PREFIX fftw
-#endif
-
 #define SUPRIVATE  static
 #define SUSCOUNT   unsigned long
 #define SUSDIFF    long
@@ -76,7 +76,7 @@
 #ifdef __cplusplus
 #  define SUINLINE   inline
 #else
-#  define SUINLINE   static inline
+#  define SUINLINE  static inline
 #endif /* __cplusplus */
 
 /* Perform casts in C and C++ */

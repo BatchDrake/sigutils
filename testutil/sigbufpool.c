@@ -218,6 +218,17 @@ su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool, const char *name, SUSCOUNT si
   return (SUCOMPLEX *) su_sigbuf_pool_get(pool, name, size, SU_TRUE);
 }
 
+#if defined(_WIN32)
+static int
+mimic_mkdir(const char *path, mode_t perm)
+{
+  return mkdir(path);
+}
+
+#define mkdir mimic_mkdir
+
+#endif /* defined(_WIN32) */
+
 SUBOOL
 su_sigbuf_pool_helper_ensure_directory(const char *name)
 {

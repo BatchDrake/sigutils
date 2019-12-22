@@ -18,6 +18,7 @@
 
 */
 
+#define _POSIX_SOURCE
 #include <math.h>
 #include <string.h>
 #include <time.h>
