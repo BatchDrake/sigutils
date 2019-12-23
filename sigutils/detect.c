@@ -276,16 +276,16 @@ su_channel_detector_destroy(su_channel_detector_t *detector)
     SU_FFTW(_destroy_plan)(detector->fft_plan_rev);
 
   if (detector->window != NULL)
-    fftw_free(detector->window);
+    SU_FFTW(_free)(detector->window);
 
   if (detector->window_func != NULL)
-    fftw_free(detector->window_func);
+    SU_FFTW(_free)(detector->window_func);
 
   if (detector->fft != NULL)
-    fftw_free(detector->fft);
+    SU_FFTW(_free)(detector->fft);
 
   if (detector->ifft != NULL)
-    fftw_free(detector->ifft);
+    SU_FFTW(_free)(detector->ifft);
 
   if (detector->_r_alloc != NULL)
     free(detector->_r_alloc);
@@ -429,7 +429,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   new->params = *params;
 
   if ((new->window
-      = fftw_malloc(
+      = SU_FFTW(_malloc)(
           params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
     SU_ERROR("cannot allocate memory for window\n");
     goto fail;
@@ -438,7 +438,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   memset(new->window, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
   if ((new->window_func
-      = fftw_malloc(
+      = SU_FFTW(_malloc)(
           params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
     SU_ERROR("cannot allocate memory for window function\n");
     goto fail;
@@ -447,7 +447,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   SU_TRYCATCH(su_channel_detector_init_window_func(new), goto fail);
 
   if ((new->fft
-      = fftw_malloc(
+      = SU_FFTW(_malloc)(
           params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
     SU_ERROR("cannot allocate memory for FFT\n");
     goto fail;
@@ -496,7 +496,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
     case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
       /* For inverse FFT */
       if ((new->ifft
-          = fftw_malloc(
+          = SU_FFTW(_malloc)(
               params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
         SU_ERROR("cannot allocate memory for IFFT\n");
         goto fail;

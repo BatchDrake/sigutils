@@ -26,7 +26,6 @@
 #include "log.h"
 #include "ncqo.h"
 #include "sampling.h"
-#include "config.h"
 
 /* Expects: relative frequency */
 void

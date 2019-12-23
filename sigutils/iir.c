@@ -26,7 +26,6 @@
 #include "iir.h"
 #include "coef.h"
 #include "taps.h"
-#include "config.h"
 
 #if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
 #  define SU_USE_VOLK
