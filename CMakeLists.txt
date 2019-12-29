@@ -42,6 +42,13 @@ if(VOLK_FOUND)
   set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING
+       "Choose the type of build, options are: None Debug Release RelWithDebInfo
+MinSizeRel."
+       FORCE )
+endif()
+
 set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${SIGUTILS_CONFIG_CFLAGS}")
 set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math")
