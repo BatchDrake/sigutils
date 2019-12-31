@@ -204,6 +204,9 @@ target_include_directories(
   PRIVATE . util ${SRCDIR} ${TESTDIR} ${TESTUTILDIR})
 
 # Required dependencies
+link_directories(sutest ${PROJECT_BINARY_DIR})
+target_link_libraries(sutest sigutils)
+
 target_include_directories(sutest SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
 target_link_libraries(sutest ${SNDFILE_LIBRARIES})
 
@@ -211,8 +214,6 @@ target_include_directories(sutest SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
 target_link_libraries(sutest ${FFTW3_LIBRARIES})
 
 target_link_libraries(sutest ${CMAKE_THREAD_LIBS_INIT})
-link_directories(sutest ${PROJECT_BINARY_DIR})
-target_link_libraries(sutest sigutils)
 target_link_libraries(sutest m)
 
 # Optional dependencies
