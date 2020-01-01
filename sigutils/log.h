@@ -70,9 +70,14 @@ struct sigutils_log_config {
     NULL, /* log_func */                        \
 }
 
+#ifndef __FILENAME__
+#  warning __FILENAME__ not defined. Defaulting to __FILE__
+#  define __FILENAME__ __FILE__
+#endif /* __FILENAME__ */
+
 #ifndef SU_LOG_DOMAIN
-#define SU_LOG_DOMAIN __FILE__
-#endif
+#  define SU_LOG_DOMAIN __FILENAME__
+#endif /* SU_LOG_DOMAIN */
 
 #define SU_ERROR(fmt, arg...)         \
     su_logprintf(                     \
@@ -107,7 +112,7 @@ struct sigutils_log_config {
     SU_ERROR(                           \
       "exception in \"%s\" (%s:%d)\n",  \
       STRINGIFY(expr),                  \
-      __FILE__,                         \
+      __FILENAME__,                     \
       __LINE__);                        \
       action;                           \
   }
