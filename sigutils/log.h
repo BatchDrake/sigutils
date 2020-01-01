@@ -71,8 +71,7 @@ struct sigutils_log_config {
 }
 
 #ifndef __FILENAME__
-#  warning __FILENAME__ not defined. Defaulting to __FILE__
-#  define __FILENAME__ __FILE__
+#  error __FILENAME__ not defined. Please verify your build system.
 #endif /* __FILENAME__ */
 
 #ifndef SU_LOG_DOMAIN
