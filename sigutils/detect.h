@@ -26,6 +26,10 @@
 #include "iir.h"
 #include "softtune.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define SU_CHANNEL_DETECTOR_MIN_MAJORITY_AGE 0  /* in FFT runs */
 #define SU_CHANNEL_DETECTOR_MIN_SNR          SU_ADDSFX(6.)  /* in DBs */
 #define SU_CHANNEL_DETECTOR_MIN_BW           SU_ADDSFX(10.) /* in Hz */
@@ -185,6 +189,19 @@ struct sigutils_channel_detector {
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
 
+SUINLINE void
+su_channel_detector_rewind(su_channel_detector_t *cd)
+{
+  cd->ptr = 0;
+  cd->iters = 0;
+}
+
+SUINLINE unsigned int
+su_channel_detector_get_iters(const su_channel_detector_t *cd)
+{
+  return cd->iters;
+}
+
 SUINLINE SUCOMPLEX
 su_channel_detector_get_dc(const su_channel_detector_t *cd)
 {
@@ -263,6 +280,10 @@ struct sigutils_channel *su_channel_detector_lookup_channel(
 struct sigutils_channel *su_channel_detector_lookup_valid_channel(
     const su_channel_detector_t *detector,
     SUFLOAT fc);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_DETECT_H */
 

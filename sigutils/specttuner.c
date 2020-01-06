@@ -187,6 +187,8 @@ su_specttuner_set_channel_bandwidth(
   channel->halfw  = channel->width >> 1;
 
   su_specttuner_update_channel_filter(st, channel);
+
+  return SU_TRUE;
 }
 
 SUPRIVATE su_specttuner_channel_t *
