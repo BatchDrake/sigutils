@@ -478,6 +478,9 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
 
   /* Mode-specific allocations */
   switch (params->mode) {
+    case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
+      break;
+
     case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
       /* Discovery mode requires these max/min levels */
       if ((new->spmax
@@ -781,7 +784,7 @@ su_channel_perform_discovery(su_channel_detector_t *detector)
     if (detector_enabled) {
       if (valid != 0)
         detector->N0 = N0 / valid;
-      else
+      else if (min_pwr_bin != -1)
         detector->N0 = .5
           * (detector->spmin[min_pwr_bin] + detector->spmax[min_pwr_bin]);
     }
@@ -1019,9 +1022,8 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
     /* ^^^^^^^^^^^^^^^^^^ end of common part ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
     switch (detector->params.mode) {
       case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
-        /*
-         * Spectrum mode only
-         */
+        /* Spectrum mode only */
+        ++detector->iters;
         su_channel_detector_apply_window(detector);
         SU_FFTW(_execute(detector->fft_plan));
 
@@ -1097,7 +1099,6 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
         break;
 
       default:
-
         SU_WARNING("Mode not implemented\n");
         return SU_FALSE;
     }
