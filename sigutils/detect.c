@@ -1040,11 +1040,11 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 
         SU_FFTW(_execute(detector->fft_plan));
 
-        /* Update DC component */
-        detector->dc +=
-            SU_CHANNEL_DETECTOR_DC_ALPHA *
-            (detector->fft[i] / detector->params.window_size - detector->dc);
+	detector->dc +=
+	  SU_CHANNEL_DETECTOR_DC_ALPHA *
+	  (detector->fft[0] / detector->params.window_size - detector->dc);
 
+	/* Update DC component */
         for (i = 0; i < detector->params.window_size; ++i) {
           psd = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
           detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
