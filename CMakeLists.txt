@@ -133,7 +133,7 @@ set(SIGUTILS_BLOCK_SOURCES
 set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
 set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
 
-link_directories(sutest ${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
+link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
  
 add_library(
   sigutils SHARED
@@ -166,7 +166,7 @@ endif()
 
 install(
   FILES ${SIGUTILS_LIB_HEADERS} 
-  DESTINATION include/sigutils)
+  DESTINATION include/sigutils/sigutils)
 
 install(
   FILES ${SIGUTILS_UTIL_HEADERS} 
