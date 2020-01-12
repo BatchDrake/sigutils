@@ -132,6 +132,8 @@ set(SIGUTILS_BLOCK_SOURCES
 
 set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
 set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
+
+link_directories(sutest ${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
  
 add_library(
   sigutils SHARED
@@ -148,7 +150,13 @@ target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
 # Required dependencies
 target_include_directories(sigutils SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
+target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
+
 target_include_directories(sigutils SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
+target_link_libraries(sigutils ${FFTW3_LIBRARIES})
+
+target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(sigutils m)
 
 # Optional dependencies
 if(VOLK_FOUND)
@@ -210,7 +218,6 @@ target_include_directories(
   PRIVATE . util ${SRCDIR} ${TESTDIR} ${TESTUTILDIR})
 
 # Required dependencies
-link_directories(sutest ${PROJECT_BINARY_DIR})
 target_link_libraries(sutest sigutils)
 
 target_include_directories(sutest SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
@@ -225,6 +232,7 @@ target_link_libraries(sutest m)
 # Optional dependencies
 if(VOLK_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
+  link_directories(${VOLK_LIBRARY_DIRS})
   target_include_directories(sutest SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sutest ${VOLK_LIBRARIES})
 endif()
