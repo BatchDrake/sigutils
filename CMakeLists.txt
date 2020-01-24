@@ -67,7 +67,8 @@ set(
   "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" 
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
 set(SU_PC_CFLAGS "${SIGUTILS_CONFIG_CFLAGS}")
-set(SU_PC_LIBRARIES "-l${SNDFILE_LIBRARIES} -lm -l${FFTW3_LIBRARIES} -l${VOLK_LIBRARIES}")
+set(SU_PC_LIBRARIES "${SNDFILE_LDFLAGS} -lm ${FFTW3_LDFLAGS}")
+
 configure_file(sigutils.pc.in "${SIGUTILS_PC_FILE_PATH}" @ONLY)
 
 install(
