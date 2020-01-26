@@ -40,6 +40,8 @@ set(MODEMDIR ${SRCDIR}/modems)
 set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
 if(VOLK_FOUND)
   set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
+  link_directories(${VOLK_LIBRARY_DIRS})
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -162,6 +164,7 @@ target_link_libraries(sigutils m)
 if(VOLK_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
   target_include_directories(sigutils SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
+  target_link_libraries(sigutils ${VOLK_LIBRARIES})
 endif()
 
 install(
@@ -231,8 +234,6 @@ target_link_libraries(sutest m)
 
 # Optional dependencies
 if(VOLK_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
-  link_directories(${VOLK_LIBRARY_DIRS})
   target_include_directories(sutest SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sutest ${VOLK_LIBRARIES})
 endif()
