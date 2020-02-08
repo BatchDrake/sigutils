@@ -67,7 +67,11 @@ set(
   "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" 
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
 set(SU_PC_CFLAGS "${SIGUTILS_CONFIG_CFLAGS}")
-set(SU_PC_LIBRARIES "-l${SNDFILE_LIBRARIES} -lm -l${FFTW3_LIBRARIES} -l${VOLK_LIBRARIES}")
+string(REPLACE ";" " " SNDFILE_SPC_LDFLAGS "${SNDFILE_LDFLAGS}")
+string(REPLACE ";" " " FFTW3_SPC_LDFLAGS "${FFTW3_LDFLAGS}")
+string(REPLACE ";" " " VOLK_SPC_LDFLAGS "${VOLK_LDFLAGS}")
+
+set(SU_PC_LIBRARIES "${SNDFILE_SPC_LDFLAGS} -lm ${FFTW3_SPC_LDFLAGS} ${VOLK_SPC_LDFLAGS}")
 configure_file(sigutils.pc.in "${SIGUTILS_PC_FILE_PATH}" @ONLY)
 
 install(
