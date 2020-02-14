@@ -226,6 +226,12 @@ su_channel_detector_get_baud(const su_channel_detector_t *cd)
   return cd->baud;
 }
 
+SUINLINE SUFLOAT
+su_channel_detector_get_window_size(const su_channel_detector_t *cd)
+{
+  return cd->params.window_size;
+}
+
 /**************************** Peak detector API *****************************/
 SUBOOL su_peak_detector_init(
     su_peak_detector_t *pd,
