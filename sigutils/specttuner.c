@@ -151,6 +151,11 @@ su_specttuner_set_channel_freq(
   channel->params.f0 = f0;
   channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
 
+  if (channel->center < 0)
+    channel->center = 0;
+  if (channel->center >= window_size)
+    channel->center = window_size - 2;
+
   if (channel->params.precise) {
     off = channel->center * (2 * PI) / (SUFLOAT) window_size - f0;
     off *= channel->decimation;
