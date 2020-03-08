@@ -20,7 +20,10 @@
 #
   
 cmake_minimum_required(VERSION 3.5.1)
-project(sigutils VERSION 0.1 LANGUAGES C)
+
+set(SIGUTILS_VERSION 0.1)
+
+project(sigutils VERSION ${SIGUTILS_VERSION} LANGUAGES C)
 include(FindPkgConfig)
 
 # Find requirements
@@ -241,3 +244,19 @@ if(VOLK_FOUND)
   target_include_directories(sutest SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sutest ${VOLK_LIBRARIES})
 endif()
+
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_NAME "libsigutils")
+set(CPACK_PACKAGE_VERSION "${SIGUTILS_VERSION}.0-1")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Gonzalo José Carracedo Carballal <BatchDrake@gmail.com>")
+set(CPACK_PACKAGE_DESCRIPTION "Signal processing utility library")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Sigutils is a DSP utility library which enables different signal processing tasks like filtering or demodulation.")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://batchdrake.github.io/SigDigger/")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_HOST_SYSTEM_PROCESSOR}")
+set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.14), libsndfile1 (>= 1.0.2), libvolk1.4 (>= 1.4), libfftw3-3 (>= 3.3)")
+set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+
+include(CPack)
+
