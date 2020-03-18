@@ -24,6 +24,10 @@
 #include "types.h"
 #include "sampling.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define SU_NCQO_USE_PRECALC_BUFFER
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
 #  define SU_NCQO_PRECALC_BUFFER_LEN 1024
@@ -90,7 +94,13 @@ __su_ncqo_step(su_ncqo_t *ncqo)
 #  define SU_VOLK_CALL_STRIDE_BITS 5
 #  define SU_VOLK_CALL_STRIDE      (1 << SU_VOLK_CALL_STRIDE_BITS)
 #  define SU_VOLK_CALL_STRIDE_MASK (SU_VOLK_CALL_STRIDE - 1)
+#  ifdef __cplusplus
+}
+#  endif /* __cplusplus */
 #  include <volk/volk.h>
+#  ifdef __cplusplus
+extern "C" {
+#  endif /* __cplusplus */
 #endif
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -235,5 +245,9 @@ void su_ncqo_inc_freq(su_ncqo_t *ncqo, SUFLOAT delta);
 
 /* Get current frequency (normalized freq) */
 SUFLOAT su_ncqo_get_freq(const su_ncqo_t *ncqo);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_NCQO_H */
