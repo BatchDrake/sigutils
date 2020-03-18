@@ -158,6 +158,8 @@ struct sigutils_channel_detector {
   su_softtuner_t tuner;
   SUCOMPLEX *tuner_buf;
   SUSCOUNT ptr; /* Sample in window */
+  SUBOOL fft_issued;
+  SUSCOUNT next_to_window;
   unsigned int iters;
   unsigned int chan_age;
   SU_FFTW(_complex) *window_func;
@@ -258,6 +260,8 @@ void su_channel_detector_destroy(su_channel_detector_t *detector);
 SUBOOL su_channel_detector_feed(
     su_channel_detector_t *detector,
     SUCOMPLEX x);
+
+SUBOOL su_channel_detector_exec_fft(su_channel_detector_t *detector);
 
 SUSCOUNT su_channel_detector_feed_bulk(
     su_channel_detector_t *detector,
