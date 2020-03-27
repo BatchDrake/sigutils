@@ -26,6 +26,10 @@
 
 #define SU_FLOAT_GUARD INFINITY
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* TODO: Builtin filters */
 struct sigutils_iir_filt {
   unsigned int x_size;
@@ -105,5 +109,9 @@ SUBOOL su_iir_brickwall_bp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT bw, SUF
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif

@@ -25,6 +25,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 enum sigutils_property_type {
   SU_PROPERTY_TYPE_ANY,
   SU_PROPERTY_TYPE_BOOL,
@@ -85,5 +89,9 @@ su_property_t *__su_property_set_assert_property(
     SUBOOL mandatory);
 
 void su_property_set_finalize(su_property_set_t *set);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_PROPERTY_H */

@@ -28,6 +28,10 @@
 #include "types.h"
 #include "property.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define SU_BLOCK_STREAM_BUFFER_SIZE 4096
 
 #define SU_BLOCK_PORT_READ_END_OF_STREAM          0
@@ -239,5 +243,9 @@ SUBOOL su_block_set_master_port(
 SUBOOL su_block_class_register(struct sigutils_block_class *classname);
 
 su_block_class_t *su_block_class_lookup(const char *name);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_BLOCK_H */
