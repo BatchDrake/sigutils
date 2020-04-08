@@ -479,6 +479,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   /* Mode-specific allocations */
   switch (params->mode) {
     case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
+    case SU_CHANNEL_DETECTOR_MODE_ORDER_ESTIMATION:
       break;
 
     case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:

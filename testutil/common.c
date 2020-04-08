@@ -236,7 +236,7 @@ su_test_complex_buffer_dump_matlab(
       goto fail;
   }
 
-  if (fprintf(fp, "\n];\n", arrname) < 0)
+  if (fprintf(fp, "\n];\n") < 0)
       goto fail;
 
   fclose(fp);
@@ -275,7 +275,7 @@ su_test_buffer_dump_matlab(
       goto fail;
   }
 
-  if (fprintf(fp, "\n];\n", arrname) < 0)
+  if (fprintf(fp, "\n];\n") < 0)
       goto fail;
 
   fclose(fp);

@@ -291,9 +291,9 @@ su_test_costas_qpsk_decision(SUCOMPLEX x)
 }
 
 SUINLINE void
-su_swap(char *a, char *b)
+su_swap(unsigned char *a, unsigned char *b)
 {
-  char tmp;
+  unsigned char tmp;
 
   tmp = *a;
   *a = *b;

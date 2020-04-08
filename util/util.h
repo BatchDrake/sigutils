@@ -79,11 +79,11 @@
 
 #define PTR_LIST_APPEND(name, ptr)                   \
   ptr_list_append ((void ***) &JOIN (name, _list),   \
-                   &JOIN (name, _count), ptr)
+		   &JOIN (name, _count), ptr)
 
 #define PTR_LIST_APPEND_CHECK(name, ptr)                   \
   ptr_list_append_check ((void ***) &JOIN (name, _list),   \
-                   &JOIN (name, _count), ptr)
+			 &JOIN (name, _count), ptr)
 
 #define PTR_LIST_REMOVE(name, ptr)  \
   ptr_list_remove_first ((void ***) &JOIN (name, _list),   \
@@ -125,9 +125,9 @@ char *vstrbuild (const char *fmt, va_list ap);
 char *strbuild (const char *fmt, ...);
 char *str_append_char (char* source, char c);
 char *fread_line (FILE *fp);
-void ptr_list_append (void ***, int *, void *);
-int  ptr_list_append_check (void ***, int *, void *);
-int  ptr_list_remove_first (void ***, int *, void *);
+void ptr_list_append (void ***, unsigned int *, void *);
+int  ptr_list_append_check (void ***, unsigned int *, void *);
+int  ptr_list_remove_first (void ***, unsigned int *, void *);
 int  ptr_list_remove_all (void ***, int *, void *);
 
 void errno_save (void);

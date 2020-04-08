@@ -121,7 +121,7 @@ su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
      SU_SYSCALL_ASSERT(
          fprintf(
              fp,
-             "%% %s: %s buffer, %d elements\n",
+             "%% %s: %s buffer, %lu elements\n",
              this->name,
              this->is_complex ? "complex" : "float",
              this->size));
