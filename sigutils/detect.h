@@ -27,6 +27,10 @@
 #include "softtune.h"
 
 #ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -292,6 +296,9 @@ struct sigutils_channel *su_channel_detector_lookup_valid_channel(
     SUFLOAT fc);
 
 #ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
 }
 #endif /* __cplusplus */
 
