@@ -198,6 +198,9 @@ __su_modem_set_state_property_from_modem_property(
   case SU_PROPERTY_TYPE_INTEGER:
     *state_prop->int_ptr = prop->as_int;
     break;
+
+  default:
+    return SU_FALSE;
   }
 
   return SU_TRUE;
@@ -364,7 +367,7 @@ su_modem_property_unmarshall(
   value_size = su_modem_property_get_value_marshalled_size(type);
   if (ptr + value_size > buffer_size)
     goto corrupted;
-  value = (const char *) &as_bytes[ptr];
+  value = (const uint8_t *) &as_bytes[ptr];
   ptr += value_size;
 
   /* All required data is available, initialize property */

@@ -40,6 +40,8 @@ set(MODEMDIR ${SRCDIR}/modems)
 set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
 if(VOLK_FOUND)
   set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
+  link_directories(${VOLK_LIBRARY_DIRS})
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -136,6 +138,8 @@ set(SIGUTILS_BLOCK_SOURCES
 
 set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
 set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
+
+link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
  
 add_library(
   sigutils SHARED
@@ -152,17 +156,24 @@ target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
 # Required dependencies
 target_include_directories(sigutils SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
+target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
+
 target_include_directories(sigutils SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
+target_link_libraries(sigutils ${FFTW3_LIBRARIES})
+
+target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(sigutils m)
 
 # Optional dependencies
 if(VOLK_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
   target_include_directories(sigutils SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
+  target_link_libraries(sigutils ${VOLK_LIBRARIES})
 endif()
 
 install(
   FILES ${SIGUTILS_LIB_HEADERS} 
-  DESTINATION include/sigutils)
+  DESTINATION include/sigutils/sigutils)
 
 install(
   FILES ${SIGUTILS_UTIL_HEADERS} 
@@ -214,7 +225,6 @@ target_include_directories(
   PRIVATE . util ${SRCDIR} ${TESTDIR} ${TESTUTILDIR})
 
 # Required dependencies
-link_directories(sutest ${PROJECT_BINARY_DIR})
 target_link_libraries(sutest sigutils)
 
 target_include_directories(sutest SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
@@ -228,7 +238,6 @@ target_link_libraries(sutest m)
 
 # Optional dependencies
 if(VOLK_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
   target_include_directories(sutest SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sutest ${VOLK_LIBRARIES})
 endif()

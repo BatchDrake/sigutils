@@ -191,7 +191,7 @@ xalloc_die (void)
 
 /* Para manipular arrays de punteros */
 int
-ptr_list_append_check (void ***list, int *count, void *new)
+ptr_list_append_check (void ***list, unsigned int *count, void *new)
 {
   int i;
   void **reallocd_list;
@@ -217,13 +217,13 @@ ptr_list_append_check (void ***list, int *count, void *new)
 }
 
 void
-ptr_list_append (void ***list, int *count, void *new)
+ptr_list_append (void ***list, unsigned int *count, void *new)
 {
   (void) ptr_list_append_check (list, count, new);
 }
 
 int
-ptr_list_remove_first (void ***list, int *count, void *ptr)
+ptr_list_remove_first (void ***list, unsigned int *count, void *ptr)
 {
   int i;
   int found;

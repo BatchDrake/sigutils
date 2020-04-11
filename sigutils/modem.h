@@ -25,6 +25,14 @@
 #include "types.h"
 #include "block.h"
 
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct sigutils_modem_class su_modem_class_t;
 
 struct sigutils_modem_property {
@@ -174,5 +182,12 @@ void su_modem_set_snr(su_modem_t *modem, SUFLOAT snr);
 void su_modem_set_signal(su_modem_t *modem, SUFLOAT signal);
 
 void su_modem_destroy(su_modem_t *modem);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_MODEM_H */

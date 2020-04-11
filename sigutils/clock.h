@@ -24,6 +24,10 @@
 #include "types.h"
 #include "block.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct sigutils_sampler {
   SUFLOAT bnor;
   SUFLOAT period;
@@ -282,5 +286,8 @@ SUSDIFF su_clock_detector_read(
     SUCOMPLEX *buf,
     size_t size);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_CLOCK_H */
