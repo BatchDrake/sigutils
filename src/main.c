@@ -71,8 +71,16 @@ help(const char *argv0)
   fprintf(stderr, "                           Default is %d samples per second\n", SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
   fprintf(stderr, "     -l, --list            Provides a list of available unit tests\n");
   fprintf(stderr, "                           with their corresponding test ID and exit\n");
+  fprintf(stderr, "     -v, --version         Print sigutils version\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
   fprintf(stderr, "(c) 2016 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
+}
+
+SUPRIVATE void
+version(void)
+{
+  fprintf(stderr, "sigutils " SIGUTILS_VERSION_STRING "\n");
+  fprintf(stderr, "Package version: %s\n", sigutils_pkgversion());
 }
 
 SUPRIVATE void
@@ -97,6 +105,7 @@ SUPRIVATE struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"count", no_argument, NULL, 'c'},
     {"list", no_argument, NULL, 'l'},
+    {"version", no_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}
 };
 
@@ -113,7 +122,7 @@ main (int argc, char *argv[], char *envp[])
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "Rdhclws:r:", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -153,6 +162,11 @@ main (int argc, char *argv[], char *envp[])
           help(argv[0]);
           exit(EXIT_SUCCESS);
         }
+        break;
+
+      case 'v':
+        version();
+        exit(EXIT_SUCCESS);
         break;
 
       case '?':

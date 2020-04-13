@@ -20,7 +20,22 @@
 #
   
 cmake_minimum_required(VERSION 3.5.1)
-project(sigutils VERSION 0.1 LANGUAGES C)
+
+set(SIGUTILS_VERSION_MAJOR 0)
+set(SIGUTILS_VERSION_MINOR 1)
+set(SIGUTILS_VERSION_PATCH 1)
+
+set(SIGUTILS_ABI_VERSION   1)
+
+set(
+  SIGUTILS_VERSION
+  ${SIGUTILS_VERSION_MAJOR}.${SIGUTILS_VERSION_MINOR}.${SIGUTILS_VERSION_PATCH})
+
+project(
+  sigutils
+  VERSION ${SIGUTILS_VERSION}
+  LANGUAGES C)
+
 include(FindPkgConfig)
 
 # Find requirements
@@ -57,6 +72,17 @@ set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${SIGUTILS_CONFIG_CFLAGS}")
 # path of each source file.
 set(CMAKE_C_FLAGS
   "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
+
+#
+# If you are building sigutils for your own software distribution, you may want
+# to set PKGVERSION to some string describing it.
+#
+
+if (DEFINED PKGVERSION)
+  set(
+    CMAKE_C_FLAGS
+    "${CMAKE_C_FLAGS} -DSIGUTILS_PKGVERSION='\"${PKGVERSION}\"'")
+endif()
   
 set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -s -DNDEBUG")
@@ -105,7 +131,8 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/softtune.h
     ${SRCDIR}/specttuner.h
     ${SRCDIR}/taps.h
-    ${SRCDIR}/types.h)
+    ${SRCDIR}/types.h
+    ${SRCDIR}/version.h)
     
 set(SIGUTILS_LIB_SOURCES 
     ${SRCDIR}/agc.c
@@ -125,7 +152,8 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/property.c
     ${SRCDIR}/softtune.c
     ${SRCDIR}/specttuner.c
-    ${SRCDIR}/taps.c)
+    ${SRCDIR}/taps.c
+    ${SRCDIR}/version.c)
     
 set(SIGUTILS_BLOCK_SOURCES
     ${BLOCKDIR}/agc.c
@@ -151,6 +179,9 @@ add_library(
   ${SIGUTILS_CODEC_SOURCES}
   ${SIGUTILS_MODEM_SOURCES})
   
+set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
+set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
+
 # Private header directories
 target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 

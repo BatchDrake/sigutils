@@ -26,6 +26,7 @@
 #include "block.h"
 #include "codec.h"
 #include "modem.h"
+#include "version.h"
 
 SUBOOL su_lib_init_ex(const struct sigutils_log_config *logconfig);
 SUBOOL su_lib_init(void);
