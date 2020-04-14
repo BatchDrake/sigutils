@@ -75,7 +75,7 @@ set(CMAKE_C_FLAGS
 
 #
 # If you are building sigutils for your own software distribution, you may want
-# to set PKGVERSION to some string describing it.
+# to set PKGVERSION to some descriptive string.
 #
 
 if (DEFINED PKGVERSION)

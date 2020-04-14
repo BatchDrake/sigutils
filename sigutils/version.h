@@ -61,8 +61,10 @@
 
 
 unsigned int sigutils_abi_version(void);
+const char  *sigutils_api_version(void);
+const char  *sigutils_pkgversion(void);
+
 void sigutils_abi_check(unsigned int);
-const char *sigutils_pkgversion(void);
 
 #define SIGUTILS_ABI_CHECK() sigutils_abi_check(SIGUTILS_ABI_VERSION)
 

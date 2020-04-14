@@ -80,7 +80,12 @@ SUPRIVATE void
 version(void)
 {
   fprintf(stderr, "sigutils " SIGUTILS_VERSION_STRING "\n");
-  fprintf(stderr, "Package version: %s\n", sigutils_pkgversion());
+  fprintf(stderr, "pkgversion: %s\n\n", sigutils_pkgversion());
+
+  fprintf(stderr, "Copyright © 2020 Gonzalo José Carracedo Carballal\n");
+  fprintf(
+      stderr,
+      "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
 }
 
 SUPRIVATE void

@@ -32,6 +32,12 @@ sigutils_abi_version(void)
 }
 
 const char *
+sigutils_api_version(void)
+{
+  return SIGUTILS_VERSION_STRING;
+}
+
+const char *
 sigutils_pkgversion(void)
 {
   return SIGUTILS_PKGVERSION;
