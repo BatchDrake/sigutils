@@ -73,7 +73,7 @@ help(const char *argv0)
   fprintf(stderr, "                           with their corresponding test ID and exit\n");
   fprintf(stderr, "     -v, --version         Print sigutils version\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
-  fprintf(stderr, "(c) 2016 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
+  fprintf(stderr, "(c) 2020 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
 }
 
 SUPRIVATE void
