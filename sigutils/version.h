@@ -23,6 +23,10 @@
 
 #include "util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /*
  * Sigutils API uses semantic versioning (see https://semver.org/).
  *
@@ -67,6 +71,10 @@ const char  *sigutils_pkgversion(void);
 void sigutils_abi_check(unsigned int);
 
 #define SIGUTILS_ABI_CHECK() sigutils_abi_check(SIGUTILS_ABI_VERSION)
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_VERSION */
 
