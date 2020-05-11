@@ -29,7 +29,7 @@
 
 #include <util.h>
 
-#if defined(__cplusplus)
+#if defined(__cplusplus) && defined(__APPLE__)
 #  define SU_USE_CPP_COMPLEX_API
 #endif
 
