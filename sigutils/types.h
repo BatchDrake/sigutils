@@ -33,18 +33,18 @@
 #  define SU_USE_CPP_COMPLEX_API
 #endif
 
-#ifndef I
-#define I std::complex<SUFLOAT>{0,1}
-#endif
-
 #ifdef SU_USE_CPP_COMPLEX_API
+#  ifdef I
+#    undef I
+#  endif /* I */
+#  define I std::complex<SUFLOAT>{0,1}
 #  define SUCOMPLEX  std::complex<SUFLOAT>
 #  define SU_C_REAL(c)  (c).real()
 #  define SU_C_IMAG(c)  (c).imag()
 #  define SU_C_ABS(c)   std::abs(c)
 #  define SU_C_ARG(c)   std::arg(c)
 #  define SU_C_EXP(c)   std::exp(c)
-#  define SU_C_CONJ(c)	std::conj(c)
+#  define SU_C_CONJ(c)  std::conj(c)
 #  define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
 #else
 #  define SUCOMPLEX  _Complex SUFLOAT
