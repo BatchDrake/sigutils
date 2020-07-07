@@ -104,7 +104,7 @@ su_sigbuf_pool_destroy(su_sigbuf_pool_t *pool)
   unsigned int i;
   su_sigbuf_t *this;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf)
+  FOR_EACH_PTR(this, pool, sigbuf)
     su_sigbuf_destroy(this);
 
   if (pool->sigbuf_list != NULL)
@@ -144,7 +144,7 @@ su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name)
   unsigned int i;
   su_sigbuf_t *this;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf)
+  FOR_EACH_PTR(this, pool, sigbuf)
     if (strcmp(this->name, name) == 0)
       return this;
 
@@ -247,7 +247,7 @@ su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
   SU_INFO("Pool `%s' status:\n", pool->name);
   SU_INFO(" ID  Buf name   Type      Size   Allocation size\n");
   SU_INFO("------------------------------------------------\n");
-  FOR_EACH_PTR(this, i, pool->sigbuf) {
+  FOR_EACH_PTR(this, pool, sigbuf) {
     allocation = this->size *
         (this->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT));
     SU_INFO("[%2d] %-10s %-7s %8d %8d bytes\n",

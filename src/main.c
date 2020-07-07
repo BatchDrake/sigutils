@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 #include <sigutils/sampling.h>
 #include <sigutils/ncqo.h>
@@ -127,6 +128,8 @@ main (int argc, char *argv[], char *envp[])
   int c;
   int index;
 
+  printf("%d %d\n", sizeof(SUBOOL), sizeof(bool));
+  
   while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index)) != -1) {
     switch (c) {
       case 'c':

@@ -166,9 +166,8 @@ SUPRIVATE void
 su_channel_detector_channel_list_clear(su_channel_detector_t *detector)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     su_channel_destroy(chan);
 
   if (detector->channel_list != NULL)
@@ -198,9 +197,8 @@ su_channel_detector_lookup_channel(
     SUFLOAT fc)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     if (fc >= chan->fc - chan->bw * .5 &&
         fc <= chan->fc + chan->bw * .5)
       return chan;
@@ -214,9 +212,8 @@ su_channel_detector_lookup_valid_channel(
     SUFLOAT fc)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     if (SU_CHANNEL_IS_VALID(chan))
       if (fc >= chan->fc - chan->bw * .5 &&
           fc <= chan->fc + chan->bw * .5)

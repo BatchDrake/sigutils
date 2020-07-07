@@ -20,8 +20,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h> // strbuild()
-#include <string.h> // strsep()
+#include <stdarg.h> 
+#include <string.h> 
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
@@ -58,57 +58,45 @@ is_asciiz(const char *buf, int lbound, int ubound)
   return 0;
 }
 
-/* ESCRIBIRLA */
-char*
-vstrbuild (const char *fmt, va_list ap)
+char *
+vstrbuild(const char *fmt, va_list ap)
 {
   char *out;
-  void *p;
   int size, zeroindex;
   int last;
   va_list copy;
   
   last = 0;
   
-  if (fmt != NULL)
-  {
-    if (!*fmt) /* Yo no hago trabajo extra */
-    {
-      out = xmalloc (1);
+  if (fmt != NULL) {
+    if (!*fmt) {
+      out = malloc(1);
       out[0] = '\0';
       return out;
     }
     
-    va_copy (copy, ap);
-    size = vsnprintf (NULL, 0, fmt, copy) + 1;
-    va_end (copy);
+    va_copy(copy, ap);
+    size = vsnprintf(NULL, 0, fmt, copy) + 1;
+    va_end(copy);
     
-    out = xmalloc (size);
+    if ((out = malloc(size)) == NULL)
+      return NULL;
     
-    va_copy (copy, ap);
-    vsnprintf (out, size, fmt, copy);
-    va_end (copy);
+    va_copy(copy, ap);
+    vsnprintf(out, size, fmt, copy);
+    va_end(copy);
     
-    for(;;)
-    {
-      
-      if ((zeroindex = is_asciiz (out, last, size)) != 0)
+    for (;;) {
+      if ((zeroindex = is_asciiz(out, last, size)) != 0)
         break;
-      
-      /* Oh, algo ha ocurrido. No hay un cero en ese
-	 intervalo. Tenemos que buscarlo */
-      
-      /* Estamos seguros de que en los intervalos anteriores NO hay
-	 cero, as� que buscaremos a partir del size anterior */
 
-      /* Incrementaremos el tama�o en STRBUILD_BSIZ bytes */
       last = size;
       size += STRBUILD_BSIZ;
       
-      out = xrealloc (out, size); /* Reasignamos */
+      out = realloc(out, size); /* Reasignamos */
       
       va_copy (copy, ap);
-      vsnprintf (out, size, fmt, copy);
+      vsnprintf(out, size, fmt, copy);
       va_end (copy);
     }
   }
@@ -691,3 +679,124 @@ get_curr_ctime (void)
   return text;
 }
 
+void *
+grow_buf_alloc(grow_buf_t *buf, size_t size)
+{
+  size_t alloc = buf->alloc;
+  size_t total_size = buf->size + size;
+  void *tmp;
+
+  if (alloc == 0)
+    alloc = 1;
+
+  while (alloc < total_size)
+    alloc <<= 1;
+
+  if (alloc != buf->alloc) {
+    if ((tmp = realloc(buf->buffer, alloc)) == NULL)
+      return NULL;
+
+    buf->buffer = tmp;
+    buf->alloc = alloc;
+  }
+
+  tmp = (char *) buf->buffer + buf->size;
+  buf->size = total_size;
+
+  return tmp;
+}
+
+int
+grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
+{
+  void *buffer;
+
+  if ((buffer = grow_buf_alloc(buf, size)) == NULL)
+    return -1;
+
+  memcpy(buffer, data, size);
+
+  return 0;
+}
+
+int
+grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...)
+{
+  va_list ap;
+  char *result = NULL;
+  int code = -1;
+
+  va_start(ap, fmt);
+
+  if ((result = vstrbuild(fmt, ap)) == NULL)
+    goto done;
+
+  if (grow_buf_append(buf, result, strlen(result)) == -1)
+    goto done;
+
+  va_end(ap);
+
+  code = 0;
+
+done:
+  if (result != NULL)
+    free(result);
+
+  return code;
+}
+
+int
+grow_buf_append_null(grow_buf_t *buf)
+{
+  return grow_buf_append(buf, "", 1);
+}
+
+void *
+grow_buf_get_buffer(const grow_buf_t *buf)
+{
+  return buf->buffer;
+}
+
+size_t
+grow_buf_get_size(const grow_buf_t *buf)
+{
+  return buf->size;
+}
+
+void
+grow_buf_finalize(grow_buf_t *buf)
+{
+  if (buf->buffer != NULL)
+    free(buf->buffer);
+}
+
+void
+grow_buf_shrink(grow_buf_t *buf)
+{
+  buf->size = 0;
+}
+
+
+void
+grow_buf_clear(grow_buf_t *buf)
+{
+  buf->alloc = 0;
+  buf->size = 0;
+  grow_buf_finalize(buf);
+  buf->buffer = NULL;
+}
+
+int
+grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
+{
+  void *new = NULL;
+
+  if ((new = grow_buf_alloc(dest, src->size)) == NULL)
+    return -1;
+
+  memcpy(new, src->buffer, src->size);
+
+  grow_buf_clear(src);
+
+  return 0;
+}

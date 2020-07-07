@@ -78,7 +78,6 @@ SUBOOL
 su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
   char *filename = NULL;
   FILE *fp = NULL;
   time_t now;
@@ -109,7 +108,7 @@ su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
            "%% File generated on %s",
            ctime(&now)));
 
-   FOR_EACH_PTR(this, i, pool->sigbuf) {
+   FOR_EACH_PTR(this, pool, sigbuf) {
      if (!su_sigbuf_pool_helper_dump_matlab(
          this->buffer,
          this->size,
@@ -196,9 +195,8 @@ SUBOOL
 su_sigbuf_pool_dump_raw(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf)
+  FOR_EACH_PTR(this, pool, sigbuf)
     if (!su_sigbuf_pool_helper_dump_raw(
         this->buffer,
         this->size,
@@ -273,9 +271,8 @@ SUBOOL
 su_sigbuf_pool_dump_wav(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf) {
+  FOR_EACH_PTR(this, pool, sigbuf) {
     if (!su_sigbuf_pool_helper_dump_wav(
         this->buffer,
         this->size,

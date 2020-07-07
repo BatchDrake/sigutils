@@ -58,11 +58,11 @@
 #endif
 
 #ifdef _SU_SINGLE_PRECISION
-#  define SUFLOAT    float
-#  define SU_SOURCE_FFTW_PREFIX fftwf
+#define SUFLOAT    float
+#define SU_SOURCE_FFTW_PREFIX fftwf
 #else
-#  define SUFLOAT    double
-#  define SU_SOURCE_FFTW_PREFIX fftw
+#define SUFLOAT    double
+#define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
 #define SUPRIVATE  static
@@ -130,6 +130,14 @@
 
 #ifndef PI
 #  define PI SU_ADDSFX(3.141592653589793238462643)
+#endif
+
+    #ifndef M_PI
+#define M_PI PI
+    #endif
+
+#ifndef INFINITY
+#define INFINITY (1.0 / 0)
 #endif
 
 #define SUFLOAT_THRESHOLD   SU_ADDSFX(1e-15)
