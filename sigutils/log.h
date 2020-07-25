@@ -124,6 +124,8 @@ uint32_t su_log_get_mask(void);
 
 void su_log_set_mask(uint32_t mask);
 
+const char *su_log_severity_to_string(enum sigutils_log_severity sev);
+
 SUBOOL su_log_is_masked(enum sigutils_log_severity sev);
 
 void sigutils_log_message_destroy(struct sigutils_log_message *msg);
