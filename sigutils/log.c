@@ -105,6 +105,30 @@ fail:
   return NULL;
 }
 
+const char *
+su_log_severity_to_string(enum sigutils_log_severity sev)
+{
+  switch (sev) {
+    case SU_LOG_SEVERITY_CRITICAL:
+      return "Critical";
+
+    case SU_LOG_SEVERITY_ERROR:
+      return "Error";
+
+    case SU_LOG_SEVERITY_WARNING:
+      return "Warning";
+
+    case SU_LOG_SEVERITY_INFO:
+      return "Information";
+
+    case SU_LOG_SEVERITY_DEBUG:
+      return "Debug";
+
+  }
+
+  return "Unknown";
+}
+
 void
 su_log(
     enum sigutils_log_severity sev,
