@@ -131,6 +131,7 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/softtune.h
     ${SRCDIR}/specttuner.h
     ${SRCDIR}/taps.h
+    ${SRCDIR}/tvproc.h
     ${SRCDIR}/types.h
     ${SRCDIR}/version.h)
     
@@ -153,6 +154,7 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/softtune.c
     ${SRCDIR}/specttuner.c
     ${SRCDIR}/taps.c
+    ${SRCDIR}/tvproc.c
     ${SRCDIR}/version.c)
     
 set(SIGUTILS_BLOCK_SOURCES

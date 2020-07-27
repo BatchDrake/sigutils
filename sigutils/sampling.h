@@ -67,6 +67,9 @@
 #define SU_T2N(fs, t) ((unsigned int) SU_FLOOR((t) * (SUFLOAT) (fs)))
 #define SU_N2T(fs, n) ((unsigned int) SU_FLOOR((n) / (SUFLOAT) (fs)))
 
+#define SU_T2N_COUNT(fs, t) ((unsigned int) SU_CEIL((t) * (SUFLOAT) (fs)))
+#define SU_N2T_COUNT(fs, n) ((unsigned int) SU_CEIL((n) / (SUFLOAT) (fs)))
+
 #define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT) (fs))
 #define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT) (fs))
 
