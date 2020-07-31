@@ -24,15 +24,21 @@
 #include "types.h"
 #include "iir.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 struct sigutils_tv_processor_params {
   SUFLOAT  sync_level;
   SUFLOAT  black_level;
   SUFLOAT  white_level;
+  SUBOOL   enable_comb;
 
   /* Timing */
   SUSCOUNT hsync_len;
   SUSCOUNT vsync_len;
   SUSCOUNT line_len;
+  SUSCOUNT frame_len;
   SUSCOUNT vsync_pulses; /* 6 for NTSC, 5 for PAL */
   SUSCOUNT max_lines;
 
@@ -48,6 +54,7 @@ struct sigutils_tv_processor_params {
   0,    /* sync_level */                         \
   .339, /* black_level */                        \
   1,    /* white_level */                        \
+  SU_TRUE, /* enable_comb */                     \
   19,   /* hsync_len */                          \
   9,    /* vsync_len */                          \
   254,  /* line_len */                           \
@@ -65,6 +72,8 @@ struct sigutils_pulse_finder {
   SUSCOUNT length;
   SUFLOAT  level_tolerance;
   SUFLOAT  time_tolerance;
+
+  SUFLOAT  last_y;
 
   su_iir_filt_t corr;
   SUBOOL  present;
@@ -88,29 +97,74 @@ SUFLOAT su_pulse_finder_get_pos(const su_pulse_finder_t *self);
 
 void su_pulse_finder_destroy(su_pulse_finder_t *self);
 
+struct sigutils_tv_frame_buffer {
+  int width, height;
+  SUFLOAT *buffer;
+  struct sigutils_tv_frame_buffer *next;
+};
+
+struct sigutils_tv_frame_buffer *su_tv_frame_buffer_new(
+    const struct sigutils_tv_processor_params *);
+
+void su_tv_frame_buffer_destroy(struct sigutils_tv_frame_buffer *);
+
 enum sigutils_tv_processor_state {
-  SU_TV_PROCESSOR_STATE_FIND_VSYNC,
-  SU_TV_PROCESSOR_STATE_FIND_HSYNC,
+  SU_TV_PROCESSOR_SEARCH,
+  SU_TV_PROCESSOR_SYNCED,
 };
 
 struct sigutils_tv_processor {
   struct sigutils_tv_processor_params params;
   enum sigutils_tv_processor_state state;
 
+  struct sigutils_tv_frame_buffer *free_pool;
+  struct sigutils_tv_frame_buffer *current;
+
+  /* Frame state */
+  SUSCOUNT field_x;
+  SUFLOAT  field_x_dec;
+  SUSCOUNT field_y;
+  SUBOOL   field_parity;
+
   su_pulse_finder_t *hsync_finder;
   su_pulse_finder_t *vsync_finder;
 
-  SUFLOAT *line_buffer;
-  SUSCOUNT line_ptr;
-  SUSCOUNT line_count;
-  SUBOOL   field_parity;
-
+  /* Sample counter */
   SUSCOUNT ptr;
-  SUSCOUNT last_hsync;
-  SUFLOAT  last_hsync_add;
 
+  /* Sync pulse detection */
+  SUBOOL   sync_found;
+  SUSCOUNT sync_start;
+
+  /* HSYNC detection */
+  SUSCOUNT last_hsync;
+  SUBOOL   have_last_hsync;
+  SUFLOAT  true_hsync_len;
+  SUSCOUNT hsync_corr_count;
+
+  /* VSYNC detection */
   SUSCOUNT last_vsync;
-  SUFLOAT  last_vsync_add;
+  SUBOOL   frame_synced;
+
+  /* Line length estimation */
+  SUFLOAT  true_line_len;
+  SUFLOAT  true_line_len_accum;
+  SUSCOUNT true_line_len_count;
+
+  /* Pulse output */
+  SUFLOAT  pulse_alpha;
+  SUFLOAT  pulse_x;
+
+  /* AGC */
+  SUFLOAT  agc_gain;
+  SUFLOAT  agc_line_max;
+  SUFLOAT  agc_accum;
+  SUSCOUNT agc_lines;
+
+  /* Comb filter's delay line */
+  SUFLOAT *delay_line;
+  SUSCOUNT delay_line_ptr;
+
 };
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
@@ -134,10 +188,17 @@ SUBOOL su_tv_processor_feed(
     su_tv_processor_t *self,
     SUFLOAT feed);
 
-const SUFLOAT *su_tv_processor_get_line_data(const su_tv_processor_t *self);
-SUSCOUNT su_tv_processor_get_line_size(const su_tv_processor_t *self);
-SUSCOUNT su_tv_processor_get_line_number(const su_tv_processor_t *self);
+struct sigutils_tv_frame_buffer *su_tv_processor_take_frame(
+    su_tv_processor_t *);
+
+void su_tv_processor_return_frame(
+    su_tv_processor_t *self,
+    struct sigutils_tv_frame_buffer *);
 
 void su_tv_processor_destroy(su_tv_processor_t *self);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_TVPROC_H */
