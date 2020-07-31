@@ -29,42 +29,45 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct sigutils_tv_processor_params {
-  SUFLOAT  sync_level;
-  SUFLOAT  black_level;
-  SUFLOAT  white_level;
+  /* Flags */
+  SUBOOL   enable_sync;
+  SUBOOL   reverse;
+  SUBOOL   interlace;
+  SUBOOL   enable_agc;
+  SUFLOAT  x_off;
+
+  /* Geometry */
+  SUSCOUNT frame_lines;
+
+  /* Filtering */
   SUBOOL   enable_comb;
+  SUBOOL   comb_reverse;
 
   /* Timing */
-  SUSCOUNT hsync_len;
-  SUSCOUNT vsync_len;
-  SUSCOUNT line_len;
-  SUSCOUNT frame_len;
-  SUSCOUNT vsync_pulses; /* 6 for NTSC, 5 for PAL */
-  SUSCOUNT max_lines;
+  SUFLOAT  hsync_len;
+  SUFLOAT  vsync_len;
+  SUFLOAT  line_len;
 
   /* Tolerances */
   SUFLOAT  t_tol; /* Timing tolerance */
-  SUFLOAT  v_tol; /* Voltage tolerance */
+  SUFLOAT  l_tol; /* Level tolerance */
+  SUFLOAT  g_tol; /* Geometry tolerance. */
+
+  /* Error triggers */
+  SUFLOAT  hsync_huge_err; /* .25 */
+  SUFLOAT  hsync_max_err; /* .15 */
+  SUFLOAT  hsync_min_err; /* .1 */
+  SUSCOUNT vsync_max_off; /* 10 */
+
+  /* Time constants */
+  SUFLOAT  hsync_len_tau; /* 9.5 */
+  SUFLOAT  hsync_fast_track_tau; /* 9.5 */
+  SUFLOAT  hsync_slow_track_tau;
+  SUFLOAT  line_len_tau; /* 9.5 */
+
+  SUFLOAT  agc_tau; /* 3 */
+
 };
-
-/* Defaults assume 4 Msps arbitrarily */
-
-#define sigutils_tv_processor_params_INITIALIZER \
-{                                                \
-  0,    /* sync_level */                         \
-  .339, /* black_level */                        \
-  1,    /* white_level */                        \
-  SU_TRUE, /* enable_comb */                     \
-  19,   /* hsync_len */                          \
-  9,    /* vsync_len */                          \
-  254,  /* line_len */                           \
-  5e-2, /* t_tol */                              \
-}
-
-/*
- * Algorithm is as follows:
- *  - Look for an HSYNC and then a VSYNC along
- */
 
 struct sigutils_pulse_finder {
   SUFLOAT  base;
@@ -120,17 +123,38 @@ struct sigutils_tv_processor {
   struct sigutils_tv_frame_buffer *free_pool;
   struct sigutils_tv_frame_buffer *current;
 
+  /* Sample counter */
+  SUSCOUNT ptr;
+
+  /* Precalculated data */
+  SUSCOUNT field_lines;
+  SUFLOAT  agc_alpha;
+  SUFLOAT  pulse_alpha;
+  SUFLOAT  hsync_len_alpha;
+  SUFLOAT  hsync_slow_track_alpha;
+  SUFLOAT  hsync_fast_track_alpha;
+  SUFLOAT  line_len_alpha;
+
   /* Frame state */
   SUSCOUNT field_x;
   SUFLOAT  field_x_dec;
   SUSCOUNT field_y;
   SUBOOL   field_parity;
+  SUBOOL   field_complete;
 
-  su_pulse_finder_t *hsync_finder;
-  su_pulse_finder_t *vsync_finder;
+  /* Comb filter's delay line */
+  SUFLOAT *delay_line;
+  SUSCOUNT delay_line_len;
+  SUSCOUNT delay_line_ptr;
 
-  /* Sample counter */
-  SUSCOUNT ptr;
+  /* AGC */
+  SUFLOAT  agc_gain;
+  SUFLOAT  agc_line_max;
+  SUFLOAT  agc_accum;
+  SUSCOUNT agc_lines;
+
+  /* Pulse output */
+  SUFLOAT  pulse_x;
 
   /* Sync pulse detection */
   SUBOOL   sync_found;
@@ -139,32 +163,17 @@ struct sigutils_tv_processor {
   /* HSYNC detection */
   SUSCOUNT last_hsync;
   SUBOOL   have_last_hsync;
-  SUFLOAT  true_hsync_len;
-  SUSCOUNT hsync_corr_count;
+  SUFLOAT  est_hsync_len;
+  SUBOOL   hsync_slow_track;
 
   /* VSYNC detection */
   SUSCOUNT last_vsync;
-  SUBOOL   frame_synced;
+  SUBOOL   frame_has_vsync;
 
   /* Line length estimation */
-  SUFLOAT  true_line_len;
-  SUFLOAT  true_line_len_accum;
-  SUSCOUNT true_line_len_count;
-
-  /* Pulse output */
-  SUFLOAT  pulse_alpha;
-  SUFLOAT  pulse_x;
-
-  /* AGC */
-  SUFLOAT  agc_gain;
-  SUFLOAT  agc_line_max;
-  SUFLOAT  agc_accum;
-  SUSCOUNT agc_lines;
-
-  /* Comb filter's delay line */
-  SUFLOAT *delay_line;
-  SUSCOUNT delay_line_ptr;
-
+  SUFLOAT  est_line_len;
+  SUFLOAT  est_line_len_accum;
+  SUSCOUNT est_line_len_count;
 };
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
