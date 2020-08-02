@@ -262,9 +262,10 @@ su_specttuner_channel_new(
     new->width  = SU_CEIL(min_size / params->guard);
     new->halfw  = new->width >> 1;
   } else {
+    new->k = 1. / (2 * PI / params->bw);
     new->center = SU_ROUND(params->f0 / (2 * PI) * window_size);
     new->size   = window_size;
-    new->width  = SU_CEIL(window_size * 2 * PI / actual_bw);
+    new->width  = SU_CEIL(new->k * window_size);
     if (new->width > window_size)
       new->width = window_size;
     new->halfw  = new->width >> 1;
