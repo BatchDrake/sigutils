@@ -47,6 +47,8 @@ struct sigutils_tv_processor_params {
   SUFLOAT  hsync_len;
   SUFLOAT  vsync_len;
   SUFLOAT  line_len;
+  SUSCOUNT vsync_odd_trigger;
+  SUBOOL   dominance;
 
   /* Tolerances */
   SUFLOAT  t_tol; /* Timing tolerance */
@@ -57,7 +59,6 @@ struct sigutils_tv_processor_params {
   SUFLOAT  hsync_huge_err; /* .25 */
   SUFLOAT  hsync_max_err; /* .15 */
   SUFLOAT  hsync_min_err; /* .1 */
-  SUSCOUNT vsync_max_off; /* 10 */
 
   /* Time constants */
   SUFLOAT  hsync_len_tau; /* 9.5 */
@@ -108,6 +109,9 @@ struct sigutils_tv_frame_buffer {
 
 struct sigutils_tv_frame_buffer *su_tv_frame_buffer_new(
     const struct sigutils_tv_processor_params *);
+
+struct sigutils_tv_frame_buffer *su_tv_frame_buffer_dup(
+    const struct sigutils_tv_frame_buffer *dup);
 
 void su_tv_frame_buffer_destroy(struct sigutils_tv_frame_buffer *);
 
@@ -167,7 +171,9 @@ struct sigutils_tv_processor {
   SUBOOL   hsync_slow_track;
 
   /* VSYNC detection */
+  SUSCOUNT last_frame;
   SUSCOUNT last_vsync;
+  SUSCOUNT vsync_counter;
   SUBOOL   frame_has_vsync;
 
   /* Line length estimation */

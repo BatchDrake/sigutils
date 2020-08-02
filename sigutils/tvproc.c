@@ -136,23 +136,24 @@ su_tv_processor_params_ntsc(
   self->interlace     = SU_TRUE;
   self->enable_agc    = SU_TRUE;
   self->x_off         = 0;
-
+  self->dominance     = SU_TRUE;
   self->frame_lines   = 525;
 
   self->enable_comb   = SU_TRUE;
   self->comb_reverse  = SU_FALSE;
 
-  self->hsync_len     = SU_T2N_FLOAT(samp_rate, 4.749e-6);
-  self->vsync_len     = SU_T2N_FLOAT(samp_rate, 2.375e-6);
-  self->line_len      = SU_T2N_FLOAT(samp_rate, 63.556e-6);
+  self->hsync_len         = SU_T2N_FLOAT(samp_rate, 4.749e-6);
+  self->vsync_len         = SU_T2N_FLOAT(samp_rate, 2.375e-6);
+  self->line_len          = SU_T2N_FLOAT(samp_rate, 63.556e-6);
+  self->vsync_odd_trigger = 6;  /* VSYNC counter to trigger vertical sync */
 
   self->t_tol           = 1e-1; /* Timing error tolerance */
   self->l_tol           = 1e-1; /* Level error tolerance */
   self->g_tol           = 1e-1; /* Geometry adjustment tolerance */
 
+  self->hsync_huge_err  = .25;
   self->hsync_max_err   = 1e-2; /* Maximum time error for hsync */
   self->hsync_min_err   = .5e-2; /* Minimum time error for hsync */
-  self->vsync_max_off   = 10;   /* Maximum vertical error (in lines) */
 
   self->hsync_len_tau   = 9.5;  /* Time constant for hsync length adjust */
   self->line_len_tau    = 1e4;  /* Time constant for line length estimation */
@@ -172,23 +173,24 @@ su_tv_processor_params_pal(
   self->interlace     = SU_TRUE;
   self->enable_agc    = SU_TRUE;
   self->x_off         = 0;
-
+  self->dominance     = SU_TRUE;
   self->frame_lines   = 625;
 
   self->enable_comb   = SU_TRUE;
   self->comb_reverse  = SU_FALSE;
 
-  self->hsync_len     = SU_T2N_FLOAT(samp_rate, 4e-6);
-  self->vsync_len     = SU_T2N_FLOAT(samp_rate, 2e-6);
-  self->line_len      = SU_T2N_FLOAT(samp_rate, 64e-6);
+  self->hsync_len         = SU_T2N_FLOAT(samp_rate, 4e-6);
+  self->vsync_len         = SU_T2N_FLOAT(samp_rate, 2e-6);
+  self->line_len          = SU_T2N_FLOAT(samp_rate, 64e-6);
+  self->vsync_odd_trigger = 5;  /* VSYNC counter to trigger vertical sync */
 
   self->t_tol           = 1e-1; /* Timing error tolerance */
   self->l_tol           = 1e-1; /* Level error tolerance */
   self->g_tol           = 1e-1; /* Geometry adjustment tolerance */
 
+  self->hsync_huge_err  = .25;
   self->hsync_max_err   = 1e-2; /* Maximum time error for hsync */
   self->hsync_min_err   = .5e-2; /* Minimum time error for hsync */
-  self->vsync_max_off   = 10;   /* Maximum vertical error (in lines) */
 
   self->hsync_len_tau   = 9.5;  /* Time constant for hsync length adjust */
   self->line_len_tau    = 1e4;  /* Time constant for line length estimation */
@@ -214,6 +216,36 @@ su_tv_frame_buffer_new(const struct sigutils_tv_processor_params *params)
   SU_TRYCATCH(
       new->buffer = calloc(sizeof(SUFLOAT), new->width * new->height),
       goto fail);
+
+  return new;
+
+fail:
+  if (new != NULL)
+    su_tv_frame_buffer_destroy(new);
+
+  return NULL;
+}
+
+struct sigutils_tv_frame_buffer *
+su_tv_frame_buffer_dup(const struct sigutils_tv_frame_buffer *dup)
+{
+  struct sigutils_tv_frame_buffer *new = NULL;
+
+  SU_TRYCATCH(
+      new = calloc(1, sizeof (struct sigutils_tv_frame_buffer)),
+      goto fail);
+
+  new->width  = dup->width;
+  new->height = dup->height;
+
+  SU_TRYCATCH(
+      new->buffer = malloc(sizeof(SUFLOAT) * new->width * new->height),
+      goto fail);
+
+  memcpy(
+      new->buffer,
+      dup->buffer,
+      sizeof(SUFLOAT) * new->width * new->height);
 
   return new;
 
@@ -280,25 +312,41 @@ su_tv_processor_set_params(
   SUFLOAT *line_buffer = NULL;
   SUSCOUNT delay_line_len = SU_CEIL(params->line_len);
 
-  if (params->enable_comb) {
-    if (self->delay_line_len != delay_line_len) {
-      SU_TRYCATCH(
-          line_buffer = realloc(
-              self->delay_line,
-              sizeof(SUFLOAT) * params->line_len),
-          goto fail);
-    }
+  SU_TRYCATCH(params->line_len > 0, goto fail);
+  SU_TRYCATCH(params->frame_lines > 0, goto fail);
 
-    if (delay_line_len > self->delay_line_len)
-      memset(
-          line_buffer + self->delay_line_len,
-          0,
-          delay_line_len - self->delay_line_len);
+  SU_TRYCATCH(!params->enable_sync || params->hsync_len > 0, goto fail);
+  SU_TRYCATCH(!params->enable_sync || params->vsync_len > 0, goto fail);
+
+  /* Reset comb filter */
+  self->delay_line_ptr = 0;
+  self->delay_line_len = delay_line_len;
+
+  if (params->enable_comb) {
+    if (self->delay_line_len != delay_line_len || line_buffer == NULL) {
+      SU_TRYCATCH(
+          line_buffer = realloc(line_buffer, sizeof(SUFLOAT) * delay_line_len),
+          goto fail);
+
+      if (self->delay_line == NULL) {
+        memset(line_buffer, 0, sizeof(SUFLOAT) * delay_line_len);
+      } else  if (delay_line_len > self->delay_line_len) {
+        memset(
+            line_buffer + self->delay_line_len,
+            0,
+            sizeof(SUFLOAT) * (delay_line_len - self->delay_line_len));
+      }
+    } else {
+      line_buffer = self->delay_line;
+    }
   } else {
     if (self->delay_line != NULL)
       free(self->delay_line);
+    line_buffer = NULL;
   }
 
+  self->delay_line = line_buffer;
+  line_buffer      = NULL;
 
   self->params = *params;
   self->state  = SU_TV_PROCESSOR_SEARCH;
@@ -309,11 +357,6 @@ su_tv_processor_set_params(
   self->field_y      = 0;
   self->field_parity = SU_TRUE;
   su_tv_processor_swap_field(self);
-
-  /* Reset comb filter */
-  self->delay_line_ptr = 0;
-  self->delay_line     = line_buffer;
-  self->delay_line_len = delay_line_len;
 
   /* Reset AGC state */
   self->agc_gain     = 1;
@@ -333,8 +376,9 @@ su_tv_processor_set_params(
   self->have_last_hsync  = SU_FALSE;
   self->est_hsync_len    = params->hsync_len;
 
-  /* Reset VSYNC detecto state */
-  self->last_vsync       = 0;
+  /* Reset VSYNC detector state */
+  self->last_frame           = 0;
+  self->last_vsync           = 0;
   self->hsync_slow_track     = SU_FALSE;
 
   /* Reset line estimations */
@@ -388,8 +432,6 @@ su_tv_processor_set_params(
   return SU_TRUE;
 
 fail:
-  if (line_buffer != NULL)
-    free(line_buffer);
 
   return SU_FALSE;
 }
@@ -399,7 +441,7 @@ su_tv_processor_frame_buffer_is_valid(
     const su_tv_processor_t *self,
     const struct sigutils_tv_frame_buffer *fb)
 {
-  return fb->width == self->params.line_len
+  return fb->width == self->delay_line_len
       && fb->height == self->params.frame_lines;
 }
 
@@ -429,14 +471,6 @@ su_tv_processor_return_to_pool(
 {
   this->next = self->free_pool;
   self->free_pool = this;
-}
-
-SUINLINE void
-su_tv_processor_force_scan_reset(su_tv_processor_t *self)
-{
-  self->field_x = self->field_y = 0;
-  self->delay_line_ptr = 0;
-  self->field_parity = SU_FALSE;
 }
 
 SUPRIVATE SUBOOL
@@ -490,8 +524,9 @@ su_tv_processor_comb_filter_feed(su_tv_processor_t *self, SUFLOAT x)
       prev_x = -prev_x;
 
     self->delay_line[self->delay_line_ptr] = x;
-    if (++self->delay_line_ptr == self->delay_line_len)
-      self->delay_line_ptr = 0;
+
+    if (++self->delay_line_ptr >= self->delay_line_len)
+      self->delay_line_ptr %= self->delay_line_len;
 
     x = .5 * (x + prev_x);
   }
@@ -623,8 +658,6 @@ su_tv_processor_do_hsync(su_tv_processor_t *self, SUSCOUNT hsync_len)
 
     xf_error  = xf_offset - xf;
 
-    xf = xf_offset;
-
     if (SU_ABS(xf_error / self->est_line_len) < self->params.hsync_min_err) {
       self->state = SU_TV_PROCESSOR_SYNCED;
       self->hsync_slow_track = SU_TRUE;
@@ -648,26 +681,47 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
 {
   SUSCOUNT last_hsync_age;
   SUSCOUNT last_vsync_age;
-  SUFLOAT  frame_len = self->est_line_len * self->params.frame_lines;
-  SUFLOAT  err_vsync_pos;
+  SUFLOAT  frame_len = self->params.line_len * self->params.frame_lines;
+  SUFLOAT  err_vsync_offset;
+  SUFLOAT  err_vsync_age;
+
   SUSCOUNT vsync_pos;
   SUBOOL   vsync_forced = SU_FALSE;
 
   last_hsync_age = self->ptr - self->last_hsync;
   last_vsync_age = self->ptr - self->last_vsync;
 
-  vsync_pos      = last_hsync_age % (SUSCOUNT) SU_FLOOR(self->est_line_len);
-  err_vsync_pos  = 2 * SU_ABS(.5 - vsync_pos / self->est_line_len);
+  vsync_pos         = last_hsync_age % (SUSCOUNT) SU_FLOOR(self->est_line_len);
+  err_vsync_offset  = 2 * SU_ABS(.5 - vsync_pos / self->est_line_len);
+  err_vsync_age     = 2 * SU_ABS(.5 - last_vsync_age / self->est_line_len);
 
-  if (err_vsync_pos <= 2 * self->params.t_tol
-      && self->field_y < (self->field_lines - self->params.vsync_max_off)
-      && self->field_parity
-      && self->state == SU_TV_PROCESSOR_SYNCED) {
-    su_tv_processor_swap_field(self);
-    self->field_y = self->field_lines - 1;
-
-    vsync_forced = SU_TRUE;
+  if (err_vsync_offset <= self->params.t_tol
+      && last_vsync_age > frame_len / 4) {
+    /*
+     * First oddly separated pulse seen in a while.
+     * This marks the beginning of a vsync pulse train
+     */
+    self->vsync_counter = 1;
+  } else if (err_vsync_age <= self->params.t_tol
+      && self->vsync_counter > 0) {
+    /*
+     * Last vsync found half a line ago, and we stared counting. Increase
+     * the counter.
+     */
+    if (++self->vsync_counter == self->params.vsync_odd_trigger) {
+       if (self->field_parity)
+         su_tv_processor_swap_field(self);
+       self->field_y = self->field_lines - 1;
+       vsync_forced = SU_TRUE;
+     }
+  } else {
+    /*
+     * None of the above. Reset the pulse train.
+     */
+    self->vsync_counter = 0;
   }
+
+  self->last_vsync = self->ptr;
 
   return vsync_forced;
 }
@@ -675,7 +729,6 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
 SUINLINE void
 su_tv_processor_sync_feed(
     su_tv_processor_t *self,
-    SUFLOAT x,
     SUFLOAT pulse_x)
 {
 
@@ -698,7 +751,6 @@ su_tv_processor_sync_feed(
       self->sync_start = self->ptr;
     }
   } else {
-
     if (pulse_trigger_down) { /* SYNC PULSE END */
       self->sync_found = SU_FALSE;
       sync_length      = self->ptr - self->sync_start;
@@ -717,12 +769,10 @@ su_tv_processor_sync_feed(
         self->have_last_hsync = SU_FALSE;
       }
 
-      if (err_vsync <= 2 * self->params.t_tol && !self->frame_has_vsync) {
-        if (su_tv_processor_do_vsync(self, sync_length)) {
-          self->last_vsync = self->sync_start;
-          self->frame_has_vsync = SU_TRUE;
-        }
-      }
+      if (err_vsync <= 2 * self->params.t_tol)
+        if (!self->frame_has_vsync)
+          if (su_tv_processor_do_vsync(self, sync_length))
+            self->frame_has_vsync = SU_TRUE;
     }
   }
 }
@@ -757,6 +807,7 @@ su_tv_processor_frame_feed(su_tv_processor_t *self, SUFLOAT x)
 
   if (xf >= self->est_line_len) {
     su_tv_processor_set_field_x(self, xf - self->est_line_len);
+
     have_line = SU_TRUE;
 
     if (++self->field_y >= self->field_lines) {
@@ -781,22 +832,24 @@ su_tv_processor_feed(su_tv_processor_t *self, SUFLOAT x)
 
   SU_TRYCATCH(su_tv_processor_assert_current_frame(self), return SU_FALSE);
 
-  x = su_tv_processor_comb_filter_feed(self, x);
-
   pulse_x = su_tv_processor_pulse_filter_feed(self, x);
+
+  x = su_tv_processor_comb_filter_feed(self, x);
 
   if (self->params.enable_agc)
     su_tv_processor_line_agc_feed(self, pulse_x);
 
   if (self->params.enable_sync)
-    su_tv_processor_sync_feed(self, x, pulse_x);
+    su_tv_processor_sync_feed(self, pulse_x);
 
   if (su_tv_processor_frame_feed(self, x)) {
     if (self->params.enable_agc)
       su_tv_processor_line_agc_commit(self);
 
     if (self->field_complete) {
-      have_frame = self->field_parity;
+      have_frame = self->field_parity == !!self->params.dominance;
+      if (have_frame)
+        self->last_frame = self->ptr;
       if (self->params.enable_agc)
         su_tv_processor_line_agc_update_gain(self);
     }
