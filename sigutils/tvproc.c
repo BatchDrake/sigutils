@@ -200,7 +200,6 @@ su_tv_processor_params_pal(
   self->hsync_slow_track_tau = 1e3;  /* Time constant for horizontal adjustment */
 }
 
-
 struct sigutils_tv_frame_buffer *
 su_tv_frame_buffer_new(const struct sigutils_tv_processor_params *params)
 {

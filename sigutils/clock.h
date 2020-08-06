@@ -63,19 +63,16 @@ su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
 
   if (self->period >= 1.) {
     self->phase += 1.;
-    if (self->phase >= self->period)
+    if (self->phase >= self->period) {
       self->phase -= self->period;
 
-    phase = self->phase + self->phase0;
-    if (phase >= self->period)
-      self->phase -= self->period;
-
-    /* Interpolate with previous sample for improved accuracy */
-    if (SU_FLOOR(phase) == 0) {
-      alpha = phase - SU_FLOOR(phase);
-      result = ((1 - alpha) * self->prev + alpha * output);
-      *sample = result;
-      sampled = SU_TRUE;
+      /* Interpolate with previous sample for improved accuracy */
+      if (SU_FLOOR(phase) == 0) {
+        alpha = phase - SU_FLOOR(phase);
+        result = ((1 - alpha) * self->prev + alpha * output);
+        *sample = result;
+        sampled = SU_TRUE;
+      }
     }
   }
 
