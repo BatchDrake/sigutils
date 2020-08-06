@@ -156,7 +156,7 @@ su_tv_processor_params_ntsc(
   self->hsync_min_err   = .5e-2; /* Minimum time error for hsync */
 
   self->hsync_len_tau   = 9.5;  /* Time constant for hsync length adjust */
-  self->line_len_tau    = 1e4;  /* Time constant for line length estimation */
+  self->line_len_tau    = 1e3;  /* Time constant for line length estimation */
   self->agc_tau         = 1e-5; /* Time constant for AGC adjustment (frames) */
 
   self->hsync_fast_track_tau = 9.5;  /* Time constant for horizontal adjustment */
@@ -193,7 +193,7 @@ su_tv_processor_params_pal(
   self->hsync_min_err   = .5e-2; /* Minimum time error for hsync */
 
   self->hsync_len_tau   = 9.5;  /* Time constant for hsync length adjust */
-  self->line_len_tau    = 1e4;  /* Time constant for line length estimation */
+  self->line_len_tau    = 1e3;  /* Time constant for line length estimation */
   self->agc_tau         = 1e-5; /* Time constant for AGC adjustment (frames) */
 
   self->hsync_fast_track_tau = 9.5;  /* Time constant for horizontal adjustment */
@@ -312,11 +312,11 @@ su_tv_processor_set_params(
   SUFLOAT *line_buffer = NULL;
   SUSCOUNT delay_line_len = SU_CEIL(params->line_len);
 
-  SU_TRYCATCH(params->line_len > 0, goto fail);
-  SU_TRYCATCH(params->frame_lines > 0, goto fail);
+  SU_TRYCATCH(params->line_len >= 1, goto fail);
+  SU_TRYCATCH(params->frame_lines >= 1, goto fail);
 
-  SU_TRYCATCH(!params->enable_sync || params->hsync_len > 0, goto fail);
-  SU_TRYCATCH(!params->enable_sync || params->vsync_len > 0, goto fail);
+  SU_TRYCATCH(!params->enable_sync || params->hsync_len >= 1, goto fail);
+  SU_TRYCATCH(!params->enable_sync || params->vsync_len >= 1, goto fail);
 
   /* Reset comb filter */
   self->delay_line_ptr = 0;
@@ -352,10 +352,11 @@ su_tv_processor_set_params(
   self->state  = SU_TV_PROCESSOR_SEARCH;
 
   /* Reset coordinates */
-  self->field_x      = 0;
-  self->field_x_dec  = 0;
-  self->field_y      = 0;
-  self->field_parity = SU_TRUE;
+  self->field_x        = 0;
+  self->field_x_dec    = 0;
+  self->field_y        = 0;
+  self->field_parity   = SU_TRUE;
+  self->field_prev_ptr = 0;
   su_tv_processor_swap_field(self);
 
   /* Reset AGC state */
@@ -681,7 +682,7 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
 {
   SUSCOUNT last_hsync_age;
   SUSCOUNT last_vsync_age;
-  SUFLOAT  frame_len = self->params.line_len * self->params.frame_lines;
+  SUFLOAT  frame_len = self->est_line_len * self->params.frame_lines;
   SUFLOAT  err_vsync_offset;
   SUFLOAT  err_vsync_age;
 
@@ -793,12 +794,13 @@ su_tv_processor_frame_feed(su_tv_processor_t *self, SUFLOAT x)
 
   if (self->field_x < self->delay_line_len
       && line < self->params.frame_lines) {
-    p = line * self->params.line_len + self->field_x;
+    p = line * self->delay_line_len + self->field_x;
 
-    if (p > 0)
-      self->current->buffer[p - 1] += (1 - beta) * value;
+    if (self->field_prev_ptr < p)
+      self->current->buffer[self->field_prev_ptr] += (1 - beta) * value;
 
     self->current->buffer[p] = beta * value;
+    self->field_prev_ptr = p;
   }
 
   ++self->field_x;

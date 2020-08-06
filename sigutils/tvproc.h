@@ -145,6 +145,7 @@ struct sigutils_tv_processor {
   SUSCOUNT field_y;
   SUBOOL   field_parity;
   SUBOOL   field_complete;
+  SUSCOUNT field_prev_ptr;
 
   /* Comb filter's delay line */
   SUFLOAT *delay_line;
