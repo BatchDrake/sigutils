@@ -73,6 +73,8 @@ void su_iir_filt_feed_bulk(
 /* Get last output */
 SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
 
+void su_iir_filt_reset(su_iir_filt_t *filt);
+
 /* Initialize filter */
 SUBOOL su_iir_filt_init(
     su_iir_filt_t *filt,
