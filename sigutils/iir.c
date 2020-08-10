@@ -176,6 +176,14 @@ su_iir_filt_get(const su_iir_filt_t *filt)
 }
 
 void
+su_iir_filt_reset(su_iir_filt_t *filt)
+{
+  memset(filt->x, 0, sizeof(SUCOMPLEX) * filt->x_size);
+  memset(filt->y, 0, sizeof(SUCOMPLEX) * filt->y_size);
+  filt->curr_y = 0;
+}
+
+void
 su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
 {
   filt->gain = gain;
