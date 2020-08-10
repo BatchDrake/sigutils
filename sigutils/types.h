@@ -125,8 +125,9 @@
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
-#define SU_VALID  isfinite
 
+#define SU_VALID  isfinite
+#define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
 
 #ifndef PI
