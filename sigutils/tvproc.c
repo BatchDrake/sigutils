@@ -318,7 +318,6 @@ su_tv_processor_set_params(
   SU_TRYCATCH(!params->enable_sync || params->vsync_len >= 1, goto fail);
 
   /* Reset comb filter */
-  self->delay_line_ptr = 0;
   self->delay_line_len = delay_line_len;
 
   if (params->enable_comb) {
@@ -350,6 +349,7 @@ su_tv_processor_set_params(
   self->params = *params;
   self->state  = SU_TV_PROCESSOR_SEARCH;
 
+#if 0
   /* Reset coordinates */
   self->field_x        = 0;
   self->field_x_dec    = 0;
@@ -357,12 +357,15 @@ su_tv_processor_set_params(
   self->field_parity   = SU_TRUE;
   self->field_prev_ptr = 0;
   su_tv_processor_swap_field(self);
+#endif
 
   /* Reset AGC state */
-  self->agc_gain     = 1;
-  self->agc_line_max = 0;
-  self->agc_accum    = 0;
-  self->agc_lines    = 0;
+  if (!SU_VALID(self->agc_gain)) {
+    self->agc_gain     = 1;
+    self->agc_line_max = 0;
+    self->agc_accum    = 0;
+    self->agc_lines    = 0;
+  }
 
   /* Reset pulse filter state */
   self->pulse_x     = 0;
@@ -518,6 +521,9 @@ su_tv_processor_comb_filter_feed(su_tv_processor_t *self, SUFLOAT x)
   SUFLOAT prev_x;
 
   if (self->delay_line != NULL) {
+    if (self->delay_line_ptr >= self->delay_line_len)
+      self->delay_line_ptr %= self->delay_line_len;
+
     prev_x = self->delay_line[self->delay_line_ptr];
 
     if (self->params.comb_reverse)
@@ -525,8 +531,7 @@ su_tv_processor_comb_filter_feed(su_tv_processor_t *self, SUFLOAT x)
 
     self->delay_line[self->delay_line_ptr] = x;
 
-    if (++self->delay_line_ptr >= self->delay_line_len)
-      self->delay_line_ptr %= self->delay_line_len;
+    ++self->delay_line_ptr;
 
     x = .5 * (x + prev_x);
   }
@@ -807,7 +812,12 @@ su_tv_processor_frame_feed(su_tv_processor_t *self, SUFLOAT x)
   xf = su_tv_processor_get_field_x(self);
 
   if (xf >= self->est_line_len) {
-    su_tv_processor_set_field_x(self, xf - self->est_line_len);
+    if (xf < 2 * self->est_line_len)
+      su_tv_processor_set_field_x(self, xf - self->est_line_len);
+    else
+      su_tv_processor_set_field_x(
+          self,
+          xf - self->est_line_len * SU_FLOOR(xf / self->est_line_len));
 
     have_line = SU_TRUE;
 
