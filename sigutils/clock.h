@@ -58,7 +58,7 @@ SUINLINE SUBOOL
 su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
 {
   SUBOOL sampled = SU_FALSE;
-  SUFLOAT alpha, phase;
+  SUFLOAT alpha;
   SUCOMPLEX output = *sample, result;
 
   if (self->period >= 1.) {
@@ -67,9 +67,9 @@ su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
       self->phase -= self->period;
 
       /* Interpolate with previous sample for improved accuracy */
-      if (SU_FLOOR(phase) == 0) {
-        alpha = phase - SU_FLOOR(phase);
-        result = ((1 - alpha) * self->prev + alpha * output);
+      if (SU_FLOOR(self->phase) == 0) {
+        alpha   = self->phase - SU_FLOOR(self->phase);
+        result  = (1 - alpha) * self->prev + alpha * output;
         *sample = result;
         sampled = SU_TRUE;
       }
