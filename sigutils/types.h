@@ -106,7 +106,6 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
-
 #define SU_SQRT2  1.41421356237
 #define SU_COS    SU_ADDSFX(cos)
 #define SU_ACOS   SU_ADDSFX(acos)
@@ -125,6 +124,8 @@
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
+
+#define SU_SPLPF_ALPHA(tau) (1 - SU_EXP(-1. / (tau)))
 
 #define SU_VALID  isfinite
 #define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
