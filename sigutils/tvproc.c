@@ -590,14 +590,11 @@ SUINLINE void
 su_tv_processor_measure_line_len(su_tv_processor_t *self)
 {
   SUSCOUNT new_line_len;
-  SUFLOAT  g_error;
 
   if (self->have_last_hsync) {
     new_line_len = self->sync_start - self->last_hsync;
-    g_error = SU_ABS(
-        (new_line_len - self->params.line_len) / self->params.line_len);
 
-    if (g_error < self->params.g_tol) {
+    if (sufreleq(new_line_len, self->params.line_len, self->params.g_tol)) {
       self->est_line_len_accum += new_line_len;
       ++self->est_line_len_count;
     }
@@ -687,27 +684,29 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
   SUSCOUNT last_hsync_age;
   SUSCOUNT last_vsync_age;
   SUFLOAT  frame_len = self->est_line_len * self->params.frame_lines;
-  SUFLOAT  err_vsync_offset;
-  SUFLOAT  err_vsync_age;
 
-  SUSCOUNT vsync_pos;
-  SUBOOL   vsync_forced = SU_FALSE;
+  SUFLOAT vsync_pos;
+  SUBOOL  vsync_forced = SU_FALSE;
 
   last_hsync_age = self->ptr - self->last_hsync;
   last_vsync_age = self->ptr - self->last_vsync;
 
-  vsync_pos         = last_hsync_age % (SUSCOUNT) SU_FLOOR(self->est_line_len);
-  err_vsync_offset  = 2 * SU_ABS(.5f - vsync_pos / self->est_line_len);
-  err_vsync_age     = 2 * SU_ABS(.5f - last_vsync_age / self->est_line_len);
+  vsync_pos      = SU_MOD(last_hsync_age, self->est_line_len);
 
-  if (err_vsync_offset <= self->params.t_tol
+  if (sufreleq(
+        vsync_pos,
+        self->est_line_len / 2,
+        2 * self->params.t_tol)
       && last_vsync_age > frame_len / 4) {
     /*
      * First oddly separated pulse seen in a while.
      * This marks the beginning of a vsync pulse train
      */
     self->vsync_counter = 1;
-  } else if (err_vsync_age <= self->params.t_tol
+  } else if (sufreleq(
+        last_vsync_age,
+        self->est_line_len / 2,
+        2 * self->params.t_tol)
       && self->vsync_counter > 0) {
     /*
      * Last vsync found half a line ago, and we stared counting. Increase
@@ -740,10 +739,7 @@ su_tv_processor_sync_feed(
   SUBOOL   pulse_trigger_up;
   SUBOOL   pulse_trigger_down;
 
-  SUSCOUNT sync_length;
-
-  SUFLOAT  err_hsync;
-  SUFLOAT  err_vsync;
+  SUSCOUNT sync_len;
 
   pulse_x *= self->agc_gain;
 
@@ -758,25 +754,22 @@ su_tv_processor_sync_feed(
   } else {
     if (pulse_trigger_down) { /* SYNC PULSE END */
       self->sync_found = SU_FALSE;
-      sync_length      = self->ptr - self->sync_start;
+      sync_len      = self->ptr - self->sync_start;
 
       /*
        * We now proceed to compare the pulse length to any known
        * pulse length (hsync and vsync).
        */
-      err_hsync = SU_ABS(1. - (SUFLOAT) sync_length / self->params.hsync_len);
-      err_vsync = SU_ABS(1. - (SUFLOAT) sync_length / self->params.vsync_len);
-
-      if (err_hsync <= self->params.t_tol) {
+      if (sufreleq(sync_len,  self->params.hsync_len, self->params.t_tol)) {
         su_tv_processor_measure_line_len(self);
-        su_tv_processor_do_hsync(self, sync_length);
+        su_tv_processor_do_hsync(self, sync_len);
       } else {
         self->have_last_hsync = SU_FALSE;
       }
 
-      if (err_vsync <= 2 * self->params.t_tol)
+      if (sufreleq(sync_len,  self->params.vsync_len, 2 * self->params.t_tol))
         if (!self->frame_has_vsync)
-          if (su_tv_processor_do_vsync(self, sync_length))
+          if (su_tv_processor_do_vsync(self, sync_len))
             self->frame_has_vsync = SU_TRUE;
     }
   }

@@ -130,18 +130,25 @@
 #define SU_VALID  isfinite
 #define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
+#define SU_MOD(x, d) ((x) - (d) * SU_FLOOR((x) / (d)))
 
 #ifndef PI
 #  define PI SU_ADDSFX(3.141592653589793238462643)
 #endif
 
-    #ifndef M_PI
-#define M_PI PI
-    #endif
+#ifndef M_PI
+#  define M_PI PI
+#endif
 
 #ifndef INFINITY
-#define INFINITY (1.0 / 0)
+#  define INFINITY (1.0 / 0)
 #endif
+
+#define sufcmp(a, b, tol) (SU_ABS(SU_ASFLOAT(a) - SU_ASFLOAT(b)) > (tol))
+#define sufrelcmp(a, b, tol) sufcmp(1, SU_ASFLOAT(a) / SU_ASFLOAT(b), tol)
+
+#define sufeq(a, b, tol) (sufcmp(a, b, tol) == 0)
+#define sufreleq(a, b, tol) (sufrelcmp(a, b, tol) == 0)
 
 #define SUFLOAT_THRESHOLD   SU_ADDSFX(1e-15)
 #define SUFLOAT_MIN_REF_MAG SUFLOAT_THRESHOLD
