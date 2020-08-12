@@ -697,8 +697,8 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
   last_vsync_age = self->ptr - self->last_vsync;
 
   vsync_pos         = last_hsync_age % (SUSCOUNT) SU_FLOOR(self->est_line_len);
-  err_vsync_offset  = 2 * SU_ABS(.5 - vsync_pos / self->est_line_len);
-  err_vsync_age     = 2 * SU_ABS(.5 - last_vsync_age / self->est_line_len);
+  err_vsync_offset  = 2 * SU_ABS(.5f - vsync_pos / self->est_line_len);
+  err_vsync_age     = 2 * SU_ABS(.5f - last_vsync_age / self->est_line_len);
 
   if (err_vsync_offset <= self->params.t_tol
       && last_vsync_age > frame_len / 4) {
