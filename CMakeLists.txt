@@ -121,6 +121,7 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/iir.h
     ${SRCDIR}/lfsr.h
     ${SRCDIR}/log.h
+    ${SRCDIR}/matfile.h
     ${SRCDIR}/modem.h
     ${SRCDIR}/ncqo.h
     ${SRCDIR}/pll.h
@@ -146,6 +147,7 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/lfsr.c
     ${SRCDIR}/lib.c
     ${SRCDIR}/log.c
+    ${SRCDIR}/matfile.c
     ${SRCDIR}/modem.c
     ${SRCDIR}/ncqo.c
     ${SRCDIR}/pll.c
