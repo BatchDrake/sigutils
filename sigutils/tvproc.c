@@ -851,7 +851,8 @@ su_tv_processor_feed(su_tv_processor_t *self, SUFLOAT x)
       su_tv_processor_line_agc_commit(self);
 
     if (self->field_complete) {
-      have_frame = self->field_parity == !!self->params.dominance;
+      have_frame = !self->params.interlace
+          || self->field_parity == !!self->params.dominance;
       if (have_frame)
         self->last_frame = self->ptr;
       if (self->params.enable_agc)
