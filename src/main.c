@@ -48,6 +48,8 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_diff_codec_binary),
     SU_TEST_ENTRY(su_test_diff_codec_quaternary),
     SU_TEST_ENTRY(su_test_specttuner_two_tones),
+    SU_TEST_ENTRY(su_test_mat_file_regular),
+    SU_TEST_ENTRY(su_test_mat_file_streaming),
 };
 
 SUPRIVATE void

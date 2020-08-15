@@ -237,6 +237,7 @@ set(SIGUTILS_TEST_SOURCES
   ${TESTDIR}/detect.c
   ${TESTDIR}/filt.c
   ${MAINDIR}/main.c
+  ${TESTDIR}/mat.c
   ${TESTDIR}/ncqo.c
   ${TESTDIR}/codec.c
   ${TESTDIR}/pll.c
