@@ -38,6 +38,7 @@ struct sigutils_mat_matrix {
 
   int col_ptr; /* Keep col pointer in order to populate matrix */
 
+  int col_start; /* All columns before this one were dumped */
   SUFLOAT **coef;
 };
 
@@ -50,8 +51,8 @@ SUBOOL su_mat_matrix_write_col(su_mat_matrix_t *, ...);
 SUBOOL su_mat_matrix_write_col_array(su_mat_matrix_t *, const SUFLOAT *);
 SUBOOL su_mat_matrix_set_col_ptr(su_mat_matrix_t *, int);
 SUBOOL su_mat_matrix_resize(su_mat_matrix_t *, int, int);
-
-void su_mat_matrix_destroy(su_mat_matrix_t *);
+void  su_mat_matrix_discard_cols(su_mat_matrix_t *);
+void  su_mat_matrix_destroy(su_mat_matrix_t *);
 
 struct sigutils_mat_file {
   PTR_LIST(su_mat_matrix_t, matrix);

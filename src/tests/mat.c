@@ -105,6 +105,8 @@ su_test_mat_file_streaming(su_test_context_t *ctx)
   SU_TRYCATCH(su_mat_file_stream_col(mf, 13., 14., 15.), goto done);
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
 
+  SU_TEST_ASSERT(mtx->cols_alloc == 1);
+
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
   ok = SU_TRUE;
 

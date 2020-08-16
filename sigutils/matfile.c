@@ -76,6 +76,7 @@ SUBOOL
 su_mat_matrix_resize(su_mat_matrix_t *self, int rows, int cols)
 {
   int curr_alloc = self->cols_alloc;
+  int true_cols;
   int i;
 
   SUFLOAT **tmp;
@@ -83,14 +84,16 @@ su_mat_matrix_resize(su_mat_matrix_t *self, int rows, int cols)
   SUBOOL ok = SU_FALSE;
 
   SU_TRYCATCH(rows <= self->rows_alloc, goto done);
+  SU_TRYCATCH(self->col_start <= cols, goto done);
 
   self->rows = rows;
+  true_cols = cols - self->col_start;
 
-  if (cols > curr_alloc) {
+  if (true_cols > curr_alloc) {
     if (curr_alloc == 0)
-      curr_alloc = cols;
+      curr_alloc = true_cols;
     else
-      while (curr_alloc < cols)
+      while (curr_alloc < true_cols)
         curr_alloc <<= 1;
 
     SU_TRYCATCH(
@@ -112,7 +115,7 @@ su_mat_matrix_resize(su_mat_matrix_t *self, int rows, int cols)
     }
   }
 
-  self->cols = cols;
+  self->cols = true_cols;
 
   ok = SU_TRUE;
 
@@ -156,6 +159,14 @@ su_mat_matrix_set_col_ptr(su_mat_matrix_t *self, int ptr)
   return SU_TRUE;
 }
 
+void
+su_mat_matrix_discard_cols(su_mat_matrix_t *self)
+{
+  self->col_start += self->cols;
+  self->cols       = 0;
+  self->col_ptr    = 0;
+}
+
 SUBOOL
 su_mat_matrix_write_col_va(su_mat_matrix_t *self, va_list ap)
 {
@@ -164,7 +175,9 @@ su_mat_matrix_write_col_va(su_mat_matrix_t *self, va_list ap)
   SUBOOL ok = SU_FALSE;
 
   if (ptr >= self->cols)
-    SU_TRYCATCH(su_mat_matrix_resize(self, self->rows, ptr + 1), goto done);
+    SU_TRYCATCH(
+        su_mat_matrix_resize(self, self->rows, self->col_start + ptr + 1),
+        goto done);
 
   /*
    * I know this looks odd. It's actually C ABI's fault: all floats get
@@ -454,10 +467,11 @@ su_mat_file_dump_matrix(
 {
   uint32_t metadata_size = sizeof(struct sigutils_mat_tag) * 6;
   uint32_t matrix_size   = SU_MAT_ALIGN(
-      sizeof(SUFLOAT) * matrix->rows * matrix->cols);
+      sizeof(SUFLOAT) * matrix->rows * (matrix->cols + matrix->col_start));
   off_t last_off;
   uint32_t extra_size;
   uint64_t pad = 0;
+  SUFLOAT gap = 0;
   int i;
   SUBOOL ok = SU_FALSE;
 
@@ -498,7 +512,9 @@ su_mat_file_dump_matrix(
             2 * sizeof(int32_t)),
         goto done);
   SU_TRYCATCH(su_mat_file_write_int32(self, matrix->rows), goto done);
-  SU_TRYCATCH(su_mat_file_write_int32(self, matrix->cols), goto done);
+  SU_TRYCATCH(
+      su_mat_file_write_int32(self, matrix->cols + matrix->col_start),
+      goto done);
 
   /* Name */
   SU_TRYCATCH(
@@ -519,6 +535,9 @@ su_mat_file_dump_matrix(
             matrix_size),
         goto done);
 
+  for (i = 0; i < matrix->col_start * matrix->rows; ++i)
+    SU_TRYCATCH(fwrite(&gap, sizeof(SUFLOAT), 1, self->fp) == 1, goto done);
+
   for (i = 0; i < matrix->cols; ++i)
     SU_TRYCATCH(
         fwrite(
@@ -529,7 +548,7 @@ su_mat_file_dump_matrix(
         goto done);
 
   if (matrix == self->sm)
-    self->sm_last_col = matrix->cols;
+    self->sm_last_col = matrix->cols + matrix->col_start;
 
   /* Correct file alignment */
   last_off = ftell(self->fp);
@@ -617,20 +636,21 @@ su_mat_file_flush(su_mat_file_t *self)
   struct sigutils_mat_tag tag;
   uint32_t metadata_size = sizeof(struct sigutils_mat_tag) * 6;
   uint32_t matrix_size;
+  int total_cols;
 
   SU_TRYCATCH(self->fp != NULL, goto done);
 
   if (self->sm != NULL) {
-    matrix_size =
-        SU_MAT_ALIGN(sizeof(SUFLOAT) * self->sm->rows * self->sm->cols);
+    total_cols = self->sm->cols + self->sm->col_start;
+    matrix_size = SU_MAT_ALIGN(sizeof(SUFLOAT) * self->sm->rows * total_cols);
 
     if (strlen(self->sm->name) > 4)
       metadata_size += SU_MAT_ALIGN(strlen(self->sm->name));
 
     last_off = ftell(self->fp);
-    if (self->sm_last_col < self->sm->cols) {
+    if (self->sm_last_col < total_cols) {
       extra_size =
-          (self->sm->cols - self->sm_last_col)
+          (total_cols - self->sm_last_col)
           * self->sm->rows
           * sizeof(SUFLOAT);
 
@@ -649,7 +669,7 @@ su_mat_file_flush(su_mat_file_t *self)
           fseek(self->fp, self->sm_off + 32, SEEK_SET) != -1,
           goto done);
       SU_TRYCATCH(su_mat_file_write_int32(self, self->sm->rows), goto done);
-      SU_TRYCATCH(su_mat_file_write_int32(self, self->sm->cols), goto done);
+      SU_TRYCATCH(su_mat_file_write_int32(self, total_cols), goto done);
 
       /* Increment matrix data size */
       SU_TRYCATCH(
@@ -664,7 +684,10 @@ su_mat_file_flush(su_mat_file_t *self)
 
       SU_TRYCATCH(fseek(self->fp, last_off, SEEK_SET) != -1, goto done);
 
-      for (i = self->sm_last_col; i < self->sm->cols; ++i)
+      for (
+          i = self->sm_last_col - self->sm->col_start;
+          i < self->sm->cols;
+          ++i)
         SU_TRYCATCH(
             fwrite(
                 self->sm->coef[i],
@@ -673,7 +696,8 @@ su_mat_file_flush(su_mat_file_t *self)
                 self->fp) == 1,
             goto done);
 
-      self->sm_last_col = self->sm->cols;
+      self->sm_last_col = total_cols;
+      su_mat_matrix_discard_cols(self->sm);
 
       /* Correct file alignment */
       last_off = ftell(self->fp);
