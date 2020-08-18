@@ -125,7 +125,7 @@
 #define SU_ACOSH  SU_ADDSFX(acosh)
 #define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
 
-#define SU_SPLPF_ALPHA(tau) (1 - SU_EXP(-1. / (tau)))
+#define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
 
 #define SU_VALID  isfinite
 #define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
