@@ -263,17 +263,36 @@ fail:
   return NULL;
 }
 
-su_mat_matrix_t *
-su_mat_file_lookup_matrix(const su_mat_file_t *self, const char *name)
+int
+su_mat_file_lookup_matrix_handle(
+    const su_mat_file_t *self,
+    const char *name)
 {
   unsigned int i;
 
   for (i = 0; i < self->matrix_count; ++i)
     if (self->matrix_list[i] != NULL
         && strcmp(self->matrix_list[i]->name, name) == 0)
-      return self->matrix_list[i];
+      return (int) i;
 
-  return NULL;
+  return -1;
+}
+
+su_mat_matrix_t *
+su_mat_file_get_matrix_by_handle(const su_mat_file_t *self, int handle)
+{
+  if (handle < 0 || handle >= (int) self->matrix_count)
+    return NULL;
+
+  return self->matrix_list[handle];
+}
+
+su_mat_matrix_t *
+su_mat_file_lookup_matrix(const su_mat_file_t *self, const char *name)
+{
+  return su_mat_file_get_matrix_by_handle(
+      self,
+      su_mat_file_lookup_matrix_handle(self, name));
 }
 
 SUBOOL

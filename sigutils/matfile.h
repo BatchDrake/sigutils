@@ -44,6 +44,21 @@ struct sigutils_mat_matrix {
 
 typedef struct sigutils_mat_matrix su_mat_matrix_t;
 
+SUINLINE SUFLOAT
+su_mat_matrix_get(const su_mat_matrix_t *self, int row, int col)
+{
+  if (row < 0
+      || row >= self->rows
+      || col < 0
+      || col >= (self->cols + self->col_start))
+    return 0;
+
+  if (self->coef[col] == NULL)
+    return 0;
+
+  return self->coef[col][row];
+}
+
 su_mat_matrix_t *su_mat_matrix_new(const char *name, int rows, int cols);
 
 SUBOOL su_mat_matrix_write_col_va(su_mat_matrix_t *, va_list);
@@ -68,6 +83,14 @@ struct sigutils_mat_file {
 typedef struct sigutils_mat_file su_mat_file_t;
 
 su_mat_file_t *su_mat_file_new(void);
+
+int su_mat_file_lookup_matrix_handle(
+    const su_mat_file_t *,
+    const char *);
+
+su_mat_matrix_t *su_mat_file_get_matrix_by_handle(
+    const su_mat_file_t *,
+    int);
 
 su_mat_matrix_t *su_mat_file_lookup_matrix(
     const su_mat_file_t *,
