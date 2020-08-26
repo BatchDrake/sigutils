@@ -21,6 +21,10 @@
 #ifndef _SIGUTILS_TYPES_H
 #define _SIGUTILS_TYPES_H
 
+#if defined(__GNUC__) && !defined(_GNU_SOURCE)
+#  define _GNU_SOURCE
+#endif /* __GNUC__ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -57,11 +61,14 @@
 #  define SU_C_SGN(x)  (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 #endif
 
+#define SUSINGLE   float
+#define SUDOUBLE   double
+
 #ifdef _SU_SINGLE_PRECISION
-#define SUFLOAT    float
+#define SUFLOAT    SUSINGLE
 #define SU_SOURCE_FFTW_PREFIX fftwf
 #else
-#define SUFLOAT    double
+#define SUFLOAT    SUDOUBLE
 #define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
@@ -123,14 +130,31 @@
 #define SU_ROUND  SU_ADDSFX(round)
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
-#define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
+#define SU_FMOD   SU_ADDSFX(fmod)
+#define SU_ATAN2  SU_ADDSFX(atan2)
+#define SU_MODF   SU_ADDSFX(modf)
+
+#ifdef __GNUC__
+#  define SU_SINCOS SU_ADDSFX(sincos)
+#else
+#  define SU_SINCOS(phi, sinptr, cosptr) \
+  do {                                    \
+    *(sinptr) = SU_SIN(phi);              \
+    *(cosptr) = SU_COS(phi);              \
+  } while(0)
+#endif /* __GNUC__ */
 
 #define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
 
 #define SU_VALID  isfinite
 #define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
-#define SU_MOD(x, d) ((x) - (d) * SU_FLOOR((x) / (d)))
+#define SU_MOD(x, d) SU_FMOD(x, d)
+#define SU_SQR(x)    ((x) * (x))
+#define SU_CUBE(x)   (SU_SQR(x) * (x))
+
+#define SU_RAD2DEG(rad) ((rad) * (180 / PI))
+#define SU_DEG2RAD(rad) ((rad) * (PI / 180))
 
 #ifndef PI
 #  define PI SU_ADDSFX(3.141592653589793238462643)
