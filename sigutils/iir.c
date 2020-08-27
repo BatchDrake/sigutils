@@ -342,10 +342,10 @@ su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 
   unsigned int i;
 
-  if ((a = su_dcof_bwlp(n, fc)) == NULL)
+  if ((a = su_dcof_bwhp(n, fc)) == NULL)
     goto fail;
 
-  if ((b = su_ccof_bwlp(n)) == NULL)
+  if ((b = su_ccof_bwhp(n)) == NULL)
     goto fail;
 
   scaling = su_sf_bwhp(n, fc);
