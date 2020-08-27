@@ -334,6 +334,41 @@ fail:
 }
 
 SUBOOL
+su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
+{
+  SUFLOAT *a = NULL;
+  SUFLOAT *b = NULL;
+  SUFLOAT scaling;
+
+  unsigned int i;
+
+  if ((a = su_dcof_bwlp(n, fc)) == NULL)
+    goto fail;
+
+  if ((b = su_ccof_bwlp(n)) == NULL)
+    goto fail;
+
+  scaling = su_sf_bwhp(n, fc);
+
+  for (i = 0; i < n + 1; ++i)
+    b[i] *= scaling;
+
+  if (!__su_iir_filt_init(filt, n + 1, a, n + 1, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (a != NULL)
+    free(a);
+
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+SUBOOL
 su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2)
 {
   SUFLOAT *a = NULL;

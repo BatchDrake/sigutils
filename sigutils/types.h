@@ -145,7 +145,7 @@
 #endif /* __GNUC__ */
 
 #define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
-
+#define SU_SPLPF_FEED(y, x, alpha) y += (alpha) * ((x) - (y))
 #define SU_VALID  isfinite
 #define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))

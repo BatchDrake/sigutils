@@ -101,6 +101,9 @@ SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 /* Initialize Butterworth band-pass filter of order N */
 SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2);
 
+/* Initialize Butterworh high-pass filter of order N */
+SUBOOL su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
+
 /* Initialize Root Raised Cosine filter */
 SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta);
 
