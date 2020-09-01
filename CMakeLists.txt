@@ -38,6 +38,11 @@ project(
 
 include(FindPkgConfig)
 
+# Make sure CMAKE_INSTALL_LIBDIR is defined for all systems
+if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+  set(CMAKE_INSTALL_LIBDIR lib)
+endif()
+
 # Find requirements
 find_package(Threads)
 pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
@@ -91,7 +96,7 @@ set(SIGUTILS_PC_FILE_PATH "${PROJECT_BINARY_DIR}/sigutils.pc")
   
 set(
   INSTALL_PKGCONFIG_DIR 
-  "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" 
+  "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
 set(SU_PC_CFLAGS "${SIGUTILS_CONFIG_CFLAGS}")
 string(REPLACE ";" " " SNDFILE_SPC_LDFLAGS "${SNDFILE_LDFLAGS}")
@@ -212,8 +217,8 @@ install(
 install(
   FILES ${SIGUTILS_UTIL_HEADERS} 
   DESTINATION include/sigutils/util)
-    
-install(TARGETS sigutils DESTINATION lib)
+
+install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
   
   
 ############################## Unit tests ######################################
