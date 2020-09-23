@@ -32,22 +32,22 @@
 #define SU_SOFTTUNER_ANTIALIAS_ORDER    4
 
 struct sigutils_channel {
-  SUFLOAT fc;    /* Channel central frequency */
-  SUFLOAT f_lo;  /* Lower frequency belonging to the channel */
-  SUFLOAT f_hi;  /* Upper frequency belonging to the channel */
+  SUFREQ  fc;    /* Channel central frequency */
+  SUFREQ  f_lo;  /* Lower frequency belonging to the channel */
+  SUFREQ  f_hi;  /* Upper frequency belonging to the channel */
   SUFLOAT bw;    /* Equivalent bandwidth */
   SUFLOAT snr;   /* Signal-to-noise ratio */
   SUFLOAT S0;    /* Peak signal power */
   SUFLOAT N0;    /* Noise level */
-  SUFLOAT ft;    /* Tuner frequency */
-  unsigned int age;     /* Channel age */
-  unsigned int present; /* Is channel present? */
+  SUFREQ  ft;    /* Tuner frequency */
+  uint32_t age;     /* Channel age */
+  uint32_t present; /* Is channel present? */
 };
 
 struct sigutils_softtuner_params {
   SUSCOUNT samp_rate;
   SUSCOUNT decimation;
-  SUFLOAT  fc;
+  SUFREQ   fc;
   SUFLOAT  bw;
 };
 
