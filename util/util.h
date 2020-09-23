@@ -140,7 +140,7 @@ struct grow_buf {
 
 typedef struct grow_buf grow_buf_t;
 
-#define grow_buf_INITIALIZER {0, 0, 0, 0, NULL}
+#define grow_buf_INITIALIZER {0, 0, 0, 0, {NULL}}
 #define GROW_BUF_STRCAT(gbuf, str) grow_buf_append((gbuf), (str), strlen(str))
 
 void  al_append_argument (arg_list_t *, const char*);
