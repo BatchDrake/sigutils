@@ -156,6 +156,7 @@ void grow_buf_init_loan(
     size_t alloc);
 
 void *grow_buf_alloc(grow_buf_t *buf, size_t size);
+void *grow_buf_append_hollow(grow_buf_t *buf, size_t size);
 int grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
 ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t);
 int grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...);

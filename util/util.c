@@ -720,21 +720,33 @@ grow_buf_alloc(grow_buf_t *buf, size_t size)
   return tmp;
 }
 
+void *
+grow_buf_append_hollow(grow_buf_t *buf, size_t size)
+{
+  void *reserved = NULL;
+  size_t avail = grow_buf_avail(buf);
+
+  if (size > avail)
+    if (grow_buf_alloc(buf, size - avail) == NULL)
+      return NULL;
+
+  if ((reserved = grow_buf_current_data(buf)) == NULL)
+    return NULL;
+
+  grow_buf_seek(buf, size, SEEK_CUR);
+
+  return reserved;
+}
+
 int
 grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
 {
-  void *buffer;
-  size_t avail = grow_buf_avail(buf);
+  void *reserved = grow_buf_append_hollow(buf, size);
 
-  if (size > avail) {
-    if (grow_buf_alloc(buf, size - avail) == NULL)
-      return -1;
+  if (reserved == NULL)
+    return -1;
 
-    buffer = grow_buf_current_data(buf);
-  }
-
-  memcpy(buffer, data, size);
-  grow_buf_seek(buf, size, SEEK_CUR);
+  memcpy(reserved, data, size);
 
   return 0;
 }
