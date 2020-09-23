@@ -128,14 +128,19 @@ typedef struct _al
 arg_list_t;
 
 struct grow_buf {
+  size_t ptr;
   size_t size;
   size_t alloc;
-  void  *buffer;
+  int    loan;
+  union {
+    void  *buffer;
+    unsigned char *bytes;
+  };
 };
 
 typedef struct grow_buf grow_buf_t;
 
-#define grow_buf_INITIALIZER {0, 0, NULL}
+#define grow_buf_INITIALIZER {0, 0, 0, 0, NULL}
 #define GROW_BUF_STRCAT(gbuf, str) grow_buf_append((gbuf), (str), strlen(str))
 
 void  al_append_argument (arg_list_t *, const char*);
@@ -144,15 +149,26 @@ void  free_al (arg_list_t *);
 arg_list_t *csv_split_line (const char *);
 arg_list_t *split_line (const char *);
 
+void grow_buf_init_loan(
+    grow_buf_t *buf,
+    const void *data,
+    size_t size,
+    size_t alloc);
+
 void *grow_buf_alloc(grow_buf_t *buf, size_t size);
 int grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
+ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t);
 int grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...);
 int grow_buf_append_null(grow_buf_t *buf);
 void *grow_buf_get_buffer(const grow_buf_t *buf);
+void *grow_buf_current_data(const grow_buf_t *buf);
 size_t grow_buf_get_size(const grow_buf_t *buf);
+size_t grow_buf_ptr(const grow_buf_t *buf);
+size_t grow_buf_avail(const grow_buf_t *buf);
 void grow_buf_finalize(grow_buf_t *buf);
 void grow_buf_shrink(grow_buf_t *buf);
 void grow_buf_clear(grow_buf_t *buf);
+size_t grow_buf_seek(grow_buf_t *buf, off_t offset, int whence);
 int grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src);
 
 void *xmalloc (size_t siz);

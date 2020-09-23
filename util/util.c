@@ -679,6 +679,20 @@ get_curr_ctime (void)
   return text;
 }
 
+void
+grow_buf_init_loan(
+    grow_buf_t *buf,
+    const void *data,
+    size_t size,
+    size_t alloc)
+{
+  buf->buffer = (void *) data;
+  buf->alloc  = alloc;
+  buf->size   = size;
+  buf->ptr    = 0;
+  buf->loan   = 1;
+}
+
 void *
 grow_buf_alloc(grow_buf_t *buf, size_t size)
 {
@@ -710,11 +724,17 @@ int
 grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
 {
   void *buffer;
+  size_t avail = grow_buf_avail(buf);
 
-  if ((buffer = grow_buf_alloc(buf, size)) == NULL)
-    return -1;
+  if (size > avail) {
+    if (grow_buf_alloc(buf, size - avail) == NULL)
+      return -1;
+
+    buffer = grow_buf_current_data(buf);
+  }
 
   memcpy(buffer, data, size);
+  grow_buf_seek(buf, size, SEEK_CUR);
 
   return 0;
 }
@@ -745,6 +765,22 @@ done:
   return code;
 }
 
+ssize_t
+grow_buf_read(grow_buf_t *buf, void *data, size_t size)
+{
+  ssize_t avail = grow_buf_avail(buf);
+
+  if (size > avail)
+    size = avail;
+
+  if (size > 0) {
+    memcpy(data, grow_buf_current_data(buf), size);
+    grow_buf_seek(buf, 0, SEEK_CUR);
+  }
+
+  return size;
+}
+
 int
 grow_buf_append_null(grow_buf_t *buf)
 {
@@ -757,16 +793,40 @@ grow_buf_get_buffer(const grow_buf_t *buf)
   return buf->buffer;
 }
 
+void *
+grow_buf_current_data(const grow_buf_t *buf)
+{
+  if (buf->ptr >= buf->size)
+    return NULL;
+
+  return buf->bytes + buf->ptr;
+}
+
 size_t
 grow_buf_get_size(const grow_buf_t *buf)
 {
   return buf->size;
 }
 
+size_t
+grow_buf_ptr(const grow_buf_t *buf)
+{
+  return buf->ptr;
+}
+
+size_t
+grow_buf_avail(const grow_buf_t *buf)
+{
+  if (buf->ptr > buf->size)
+    return 0;
+
+  return buf->size - buf->ptr;
+}
+
 void
 grow_buf_finalize(grow_buf_t *buf)
 {
-  if (buf->buffer != NULL)
+  if (!buf->loan && buf->buffer != NULL)
     free(buf->buffer);
 }
 
@@ -774,16 +834,48 @@ void
 grow_buf_shrink(grow_buf_t *buf)
 {
   buf->size = 0;
+  buf->ptr = 0;
 }
 
 
 void
 grow_buf_clear(grow_buf_t *buf)
 {
-  buf->alloc = 0;
-  buf->size = 0;
   grow_buf_finalize(buf);
-  buf->buffer = NULL;
+  memset(buf, 0, sizeof(grow_buf_t));
+}
+
+size_t
+grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
+{
+  off_t new_off;
+
+  switch (whence) {
+    case SEEK_SET:
+      new_off = offset;
+      break;
+
+    case SEEK_CUR:
+      new_off = buf->ptr + offset;
+      break;
+
+    case SEEK_END:
+      new_off = buf->size + offset;
+      break;
+
+    default:
+      errno = EINVAL;
+      return -1;
+  }
+
+  if (new_off < 0 || new_off > buf->size) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  buf->ptr = new_off;
+
+  return buf->ptr;
 }
 
 int
@@ -795,7 +887,7 @@ grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
     return -1;
 
   memcpy(new, src->buffer, src->size);
-
+  grow_buf_seek(new, src->size, SEEK_CUR);
   grow_buf_clear(src);
 
   return 0;
