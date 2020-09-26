@@ -693,6 +693,29 @@ grow_buf_init_loan(
   buf->loan   = 1;
 }
 
+void
+grow_buf_init(grow_buf_t *buf)
+{
+  memset(buf, 0, sizeof(grow_buf_t));
+}
+
+int
+grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc)
+{
+  void *tmp;
+
+  if (buf->alloc < min_alloc) {
+    tmp = realloc(buf->buffer, min_alloc);
+    if (tmp == NULL)
+      return -1;
+
+    buf->buffer = tmp;
+    buf->alloc = min_alloc;
+  }
+
+  return 0;
+}
+
 void *
 grow_buf_alloc(grow_buf_t *buf, size_t size)
 {

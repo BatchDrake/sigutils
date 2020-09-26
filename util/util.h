@@ -149,12 +149,14 @@ void  free_al (arg_list_t *);
 arg_list_t *csv_split_line (const char *);
 arg_list_t *split_line (const char *);
 
+void grow_buf_init(grow_buf_t *buf);
 void grow_buf_init_loan(
     grow_buf_t *buf,
     const void *data,
     size_t size,
     size_t alloc);
 
+int grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc);
 void *grow_buf_alloc(grow_buf_t *buf, size_t size);
 void *grow_buf_append_hollow(grow_buf_t *buf, size_t size);
 int grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
