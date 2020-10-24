@@ -810,7 +810,7 @@ grow_buf_read(grow_buf_t *buf, void *data, size_t size)
 
   if (size > 0) {
     memcpy(data, grow_buf_current_data(buf), size);
-    grow_buf_seek(buf, 0, SEEK_CUR);
+    grow_buf_seek(buf, size, SEEK_CUR);
   }
 
   return size;
