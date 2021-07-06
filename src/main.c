@@ -157,7 +157,7 @@ main (int argc, char *argv[], char *envp[])
         exit(EXIT_SUCCESS);
 
       case 's':
-        if (sscanf(optarg, "%lu", &params.buffer_size) < 0) {
+        if (sscanf(optarg, "%llu", &params.buffer_size) < 0) {
           fprintf(stderr, "%s: invalid buffer size `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
@@ -165,7 +165,7 @@ main (int argc, char *argv[], char *envp[])
         break;
 
       case 'r':
-        if (sscanf(optarg, "%lu", &params.fs) < 0) {
+        if (sscanf(optarg, "%llu", &params.fs) < 0) {
           fprintf(stderr, "%s: invalid sampling rate `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
