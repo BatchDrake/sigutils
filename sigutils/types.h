@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
 #include <complex.h>
 #include <fftw3.h>
@@ -72,12 +73,12 @@
 #endif
 
 #define SUPRIVATE  static
-#define SUSCOUNT   unsigned long
-#define SUSDIFF    long
+#define SUSCOUNT   uint64_t
+#define SUSDIFF    int64_t
 #define SUBOOL     int
 #define SUFREQ     double
 #define SUSYMBOL   int
-#define SUBITS     unsigned char /* Not exactly a bit */
+#define SUBITS     uint8_t /* Not exactly a bit */
 
 #ifdef __cplusplus
 #  define SUINLINE   inline
