@@ -132,6 +132,7 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/property.h
     ${SRCDIR}/sampling.h
     ${SRCDIR}/sigutils.h
+    ${SRCDIR}/smoothpsd.h
     ${SRCDIR}/softtune.h
     ${SRCDIR}/specttuner.h
     ${SRCDIR}/taps.h
@@ -156,6 +157,7 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/ncqo.c
     ${SRCDIR}/pll.c
     ${SRCDIR}/property.c
+    ${SRCDIR}/smoothpsd.c
     ${SRCDIR}/softtune.c
     ${SRCDIR}/specttuner.c
     ${SRCDIR}/taps.c
