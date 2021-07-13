@@ -57,6 +57,31 @@ fail:
   return NULL;
 }
 
+SUPRIVATE SUBOOL
+su_smoothpsd_exec_fft(su_smoothpsd_t *self)
+{
+  unsigned int i;
+  SUFLOAT wsizeinv = 1. / self->params.fft_size;
+
+  /* Execute FFT */
+  SU_FFTW(_execute(self->fft_plan));
+
+  /* Keep real coefficients only */
+  for (i = 0; i < self->params.fft_size; ++i)
+    self->realfft[i] =
+        wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
+
+  SU_TRYCATCH(
+      (self->psd_func)(
+          self->userdata,
+          self->realfft,
+          self->params.fft_size),
+      return SU_FALSE);
+
+  ++self->iters;
+
+  return SU_TRUE;
+}
 SUBOOL
 su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
 {
@@ -66,65 +91,85 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
   SUFLOAT wsizeinv;
   SUBOOL mutex_acquired = SU_FALSE;
   SUBOOL ok = SU_FALSE;
+  SUBOOL exec_fft = SU_FALSE;
 
   SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
   mutex_acquired = SU_TRUE;
 
   if (self->max_p > 0) {
-    while (size > 0) {
-      /* We can copy this much */
-      chunk = SU_MIN(
-          self->max_p - self->fft_p,
-          self->params.fft_size - self->p);
+    if (self->max_p >= self->params.fft_size) {
+      /* Non-overlapped mode. We copy directly to the FFT buffer */
+      while (size > 0) {
+        chunk = SU_MIN(size, self->params.fft_size - self->p);
 
-      /* But maybe we were not fed those many samples */
-      if (size < chunk)
-        chunk = size;
-
-      /*
-       * TODO: Do not perform a copy every time. It should be enough to
-       * copy samples only when we are about to perform a FFT.
-       */
-      memcpy(self->buffer + self->p, data, chunk * sizeof(SUCOMPLEX));
-
-      size -= chunk;
-      data += chunk;
-
-      self->p     += chunk;
-      self->fft_p += chunk;
-
-      if (self->p >= self->params.fft_size)
-        self->p = 0;
-
-      /* Time to trigger FFT! */
-      if (self->fft_p >= self->max_p) {
-        wsizeinv = 1. / self->params.fft_size;
-        self->fft_p = 0;
-        p = self->p;
-
-        /* Apply window function */
-        for (i = 0; i < self->params.fft_size; ++i) {
-          self->fft[i] = self->buffer[p++] * self->window_func[i];
-          if (p >= self->params.fft_size)
-            p = 0;
+        if (chunk > 0) {
+          /* Filling the FFT buffer */
+          memcpy(self->fft + self->p, data, chunk * sizeof(SUCOMPLEX));
+          self->p += chunk;
+        } else {
+          /* FFT buffer full, now we just skip samples */
+          chunk = SU_MIN(size, self->max_p - self->fft_p);
         }
 
-        /* Execute FFT */
-        SU_FFTW(_execute(self->fft_plan));
+        size        -= chunk;
+        data        += chunk;
+        self->fft_p += chunk;
 
-        /* Keep real coefficients only */
-        for (i = 0; i < self->params.fft_size; ++i)
-          self->realfft[i] =
-              wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
+        /* Time to trigger FFT! */
+        if (self->fft_p >= self->max_p) {
+          self->fft_p = 0;
+          self->p = 0;
 
-        SU_TRYCATCH(
-            (self->psd_func)(
-                self->userdata,
-                self->realfft,
-                self->params.fft_size),
-            goto done);
+          /* Apply window function */
+          for (i = 0; i < self->params.fft_size; ++i)
+            self->fft[i] *= self->window_func[i];
 
-        ++self->iters;
+          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+        }
+      }
+
+    } else {
+      /* Overlapped mode. This is a bit trickier. */
+      while (size > 0) {
+        /* We can copy this much */
+        chunk = SU_MIN(
+            self->max_p - self->fft_p,
+            self->params.fft_size - self->p);
+
+        /* But maybe we were not fed those many samples */
+        if (size < chunk)
+          chunk = size;
+
+        /*
+         * TODO: Do not perform a copy every time. It should be enough to
+         * copy samples only when we are about to perform a FFT.
+         */
+        memcpy(self->buffer + self->p, data, chunk * sizeof(SUCOMPLEX));
+
+        size -= chunk;
+        data += chunk;
+
+        self->p     += chunk;
+        self->fft_p += chunk;
+
+        if (self->p >= self->params.fft_size)
+          self->p = 0;
+
+        /* Time to trigger FFT! */
+        if (self->fft_p >= self->max_p) {
+          wsizeinv = 1. / self->params.fft_size;
+          self->fft_p = 0;
+          p = self->p;
+
+          /* Apply window function */
+          for (i = 0; i < self->params.fft_size; ++i) {
+            self->fft[i] = self->buffer[p++] * self->window_func[i];
+            if (p >= self->params.fft_size)
+              p = 0;
+          }
+
+          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+        }
       }
     }
   }
@@ -183,6 +228,8 @@ su_smoothpsd_set_params(
       SU_ERROR("cannot allocate memory for FFT buffer\n");
       goto done;
     }
+
+    memset(fftbuf, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
     /* Direct FFT plan */
     if ((fft_plan = SU_FFTW(_plan_dft_1d)(
