@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -176,6 +175,14 @@ su_iir_filt_get(const su_iir_filt_t *filt)
 }
 
 void
+su_iir_filt_reset(su_iir_filt_t *filt)
+{
+  memset(filt->x, 0, sizeof(SUCOMPLEX) * filt->x_size);
+  memset(filt->y, 0, sizeof(SUCOMPLEX) * filt->y_size);
+  filt->curr_y = 0;
+}
+
+void
 su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
 {
   filt->gain = gain;
@@ -306,6 +313,41 @@ su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
     goto fail;
 
   scaling = su_sf_bwlp(n, fc);
+
+  for (i = 0; i < n + 1; ++i)
+    b[i] *= scaling;
+
+  if (!__su_iir_filt_init(filt, n + 1, a, n + 1, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (a != NULL)
+    free(a);
+
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+SUBOOL
+su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
+{
+  SUFLOAT *a = NULL;
+  SUFLOAT *b = NULL;
+  SUFLOAT scaling;
+
+  unsigned int i;
+
+  if ((a = su_dcof_bwhp(n, fc)) == NULL)
+    goto fail;
+
+  if ((b = su_ccof_bwhp(n)) == NULL)
+    goto fail;
+
+  scaling = su_sf_bwhp(n, fc);
 
   for (i = 0; i < n + 1; ++i)
     b[i] *= scaling;

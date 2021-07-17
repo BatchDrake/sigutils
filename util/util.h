@@ -4,8 +4,7 @@
   
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -61,8 +60,12 @@
   type       **name ## _list;                        \
   unsigned int name ## _count;
 
+#define PTR_LIST_PRIVATE(type, name)                 \
+  SUPRIVATE type **name ## _list;                    \
+  SUPRIVATE unsigned int name ## _count;
+
 #define PTR_LIST_CONST(type, name)                   \
-  type *const *name ## _list;                        \
+  const type **name ## _list;                        \
   unsigned int name ## _count;
 
 #define PTR_LIST_LOCAL(type, name)                   \
@@ -79,19 +82,31 @@
 
 #define PTR_LIST_APPEND(name, ptr)                   \
   ptr_list_append ((void ***) &JOIN (name, _list),   \
-                   &JOIN (name, _count), ptr)
+		   &JOIN (name, _count), ptr)
 
 #define PTR_LIST_APPEND_CHECK(name, ptr)                   \
   ptr_list_append_check ((void ***) &JOIN (name, _list),   \
-                   &JOIN (name, _count), ptr)
+			 &JOIN (name, _count), ptr)
 
 #define PTR_LIST_REMOVE(name, ptr)  \
   ptr_list_remove_first ((void ***) &JOIN (name, _list),   \
                    &JOIN (name, _count), ptr)
 
-#define FOR_EACH_PTR(this, idx, name)                     \
-  for (idx = 0; idx  < name ## _count; ++idx)             \
-    if ((this = name ## _list[idx]) != NULL)
+#define FOR_EACH_PTR_STANDALONE(this, name)               \
+  unsigned int JOIN (_idx_, __LINE__);                    \
+  for (JOIN (_idx_, __LINE__) = 0;                        \
+       JOIN (_idx_, __LINE__) < name ## _count;           \
+       JOIN (_idx_, __LINE__)++)                          \
+    if ((this = name ## _list[                            \
+      JOIN (_idx_, __LINE__)]) != NULL)
+
+#define FOR_EACH_PTR(this, where, name)                   \
+  unsigned int JOIN (_idx_, __LINE__);                    \
+  for (JOIN (_idx_, __LINE__) = 0;                        \
+       JOIN (_idx_, __LINE__) < where->name ## _count;    \
+       JOIN (_idx_, __LINE__)++)                          \
+    if ((this = where->name ## _list[                \
+      JOIN (_idx_, __LINE__)]) != NULL)
 
 # define __UNITS(x, wrdsiz) ((((x) + (wrdsiz - 1)) / wrdsiz))
 # define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)
@@ -111,11 +126,52 @@ typedef struct _al
 }
 arg_list_t;
 
+struct grow_buf {
+  size_t ptr;
+  size_t size;
+  size_t alloc;
+  int    loan;
+  union {
+    void  *buffer;
+    unsigned char *bytes;
+  };
+};
+
+typedef struct grow_buf grow_buf_t;
+
+#define grow_buf_INITIALIZER {0, 0, 0, 0, {NULL}}
+#define GROW_BUF_STRCAT(gbuf, str) grow_buf_append((gbuf), (str), strlen(str))
+
 void  al_append_argument (arg_list_t *, const char*);
 void  free_al (arg_list_t *);
 
 arg_list_t *csv_split_line (const char *);
 arg_list_t *split_line (const char *);
+
+void grow_buf_init(grow_buf_t *buf);
+void grow_buf_init_loan(
+    grow_buf_t *buf,
+    const void *data,
+    size_t size,
+    size_t alloc);
+
+int grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc);
+void *grow_buf_alloc(grow_buf_t *buf, size_t size);
+void *grow_buf_append_hollow(grow_buf_t *buf, size_t size);
+int grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
+ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t);
+int grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...);
+int grow_buf_append_null(grow_buf_t *buf);
+void *grow_buf_get_buffer(const grow_buf_t *buf);
+void *grow_buf_current_data(const grow_buf_t *buf);
+size_t grow_buf_get_size(const grow_buf_t *buf);
+size_t grow_buf_ptr(const grow_buf_t *buf);
+size_t grow_buf_avail(const grow_buf_t *buf);
+void grow_buf_finalize(grow_buf_t *buf);
+void grow_buf_shrink(grow_buf_t *buf);
+void grow_buf_clear(grow_buf_t *buf);
+size_t grow_buf_seek(grow_buf_t *buf, off_t offset, int whence);
+int grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src);
 
 void *xmalloc (size_t siz);
 void *xrealloc (void *p, size_t siz);
@@ -125,9 +181,9 @@ char *vstrbuild (const char *fmt, va_list ap);
 char *strbuild (const char *fmt, ...);
 char *str_append_char (char* source, char c);
 char *fread_line (FILE *fp);
-void ptr_list_append (void ***, int *, void *);
-int  ptr_list_append_check (void ***, int *, void *);
-int  ptr_list_remove_first (void ***, int *, void *);
+void ptr_list_append (void ***, unsigned int *, void *);
+int  ptr_list_append_check (void ***, unsigned int *, void *);
+int  ptr_list_remove_first (void ***, unsigned int *, void *);
 int  ptr_list_remove_all (void ***, int *, void *);
 
 void errno_save (void);

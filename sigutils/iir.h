@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,6 +24,14 @@
 #include "types.h"
 
 #define SU_FLOAT_GUARD INFINITY
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
 
 /* TODO: Builtin filters */
 struct sigutils_iir_filt {
@@ -65,6 +72,8 @@ void su_iir_filt_feed_bulk(
 /* Get last output */
 SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
 
+void su_iir_filt_reset(su_iir_filt_t *filt);
+
 /* Initialize filter */
 SUBOOL su_iir_filt_init(
     su_iir_filt_t *filt,
@@ -91,6 +100,9 @@ SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 /* Initialize Butterworth band-pass filter of order N */
 SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2);
 
+/* Initialize Butterworh high-pass filter of order N */
+SUBOOL su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
+
 /* Initialize Root Raised Cosine filter */
 SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta);
 
@@ -105,5 +117,12 @@ SUBOOL su_iir_brickwall_bp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT bw, SUF
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif

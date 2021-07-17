@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,57 +20,65 @@
 #ifndef _SIGUTILS_TYPES_H
 #define _SIGUTILS_TYPES_H
 
+#if defined(__GNUC__) && !defined(_GNU_SOURCE)
+#  define _GNU_SOURCE
+#endif /* __GNUC__ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
 #include <complex.h>
 #include <fftw3.h>
 
 #include <util.h>
 
-#if defined(__cplusplus) && defined(__APPLE__)
+#if defined(__cplusplus)
 #  define SU_USE_CPP_COMPLEX_API
 #endif
 
-#ifndef I
-#define I std::complex<SUFLOAT>{0,1}
-#endif
-
 #ifdef SU_USE_CPP_COMPLEX_API
+#  ifdef I
+#    undef I
+#  endif /* I */
+#  define I std::complex<SUFLOAT>{0,1}
 #  define SUCOMPLEX  std::complex<SUFLOAT>
 #  define SU_C_REAL(c)  (c).real()
 #  define SU_C_IMAG(c)  (c).imag()
 #  define SU_C_ABS(c)   std::abs(c)
 #  define SU_C_ARG(c)   std::arg(c)
 #  define SU_C_EXP(c)   std::exp(c)
-#  define SU_C_CONJ(c)	std::conj(c)
+#  define SU_C_CONJ(c)  std::conj(c)
 #  define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
 #else
 #  define SUCOMPLEX  _Complex SUFLOAT
-#  define SU_C_REAL(c)   creal(c)
-#  define SU_C_IMAG(c)   cimag(c)
-#  define SU_C_ABS    SU_ADDSFX(cabs)
-#  define SU_C_ARG    SU_ADDSFX(carg)
-#  define SU_C_EXP    SU_ADDSFX(cexp)
-#  define SU_C_CONJ   SU_ADDSFX(conj)
-#  define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
+#  define SU_C_REAL(c) (SU_ADDSFX(creal)(c))
+#  define SU_C_IMAG(c) (SU_ADDSFX(cimag)(c))
+#  define SU_C_ABS     SU_ADDSFX(cabs)
+#  define SU_C_ARG     SU_ADDSFX(carg)
+#  define SU_C_EXP     SU_ADDSFX(cexp)
+#  define SU_C_CONJ    SU_ADDSFX(conj)
+#  define SU_C_SGN(x)  (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 #endif
 
+#define SUSINGLE   float
+#define SUDOUBLE   double
+
 #ifdef _SU_SINGLE_PRECISION
-#  define SUFLOAT    float
-#  define SU_SOURCE_FFTW_PREFIX fftwf
+#define SUFLOAT    SUSINGLE
+#define SU_SOURCE_FFTW_PREFIX fftwf
 #else
-#  define SUFLOAT    double
-#  define SU_SOURCE_FFTW_PREFIX fftw
+#define SUFLOAT    SUDOUBLE
+#define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
 #define SUPRIVATE  static
-#define SUSCOUNT   unsigned long
-#define SUSDIFF    long
+#define SUSCOUNT   uint64_t
+#define SUSDIFF    int64_t
 #define SUBOOL     int
 #define SUFREQ     double
 #define SUSYMBOL   int
-#define SUBITS     unsigned char /* Not exactly a bit */
+#define SUBITS     uint8_t /* Not exactly a bit */
 
 #ifdef __cplusplus
 #  define SUINLINE   inline
@@ -106,7 +113,6 @@
 #define SU_FALSE 0
 #define SU_TRUE  1
 
-
 #define SU_SQRT2  1.41421356237
 #define SU_COS    SU_ADDSFX(cos)
 #define SU_ACOS   SU_ADDSFX(acos)
@@ -124,13 +130,49 @@
 #define SU_ROUND  SU_ADDSFX(round)
 #define SU_COSH   SU_ADDSFX(cosh)
 #define SU_ACOSH  SU_ADDSFX(acosh)
-#define SU_SINCOS SU_ADDSFX(sincos) /* May be unavailable, see config.h */
+#define SU_FMOD   SU_ADDSFX(fmod)
+#define SU_ATAN2  SU_ADDSFX(atan2)
+#define SU_MODF   SU_ADDSFX(modf)
 
+#ifdef __GNUC__
+#  define SU_SINCOS SU_ADDSFX(sincos)
+#else
+#  define SU_SINCOS(phi, sinptr, cosptr) \
+  do {                                    \
+    *(sinptr) = SU_SIN(phi);              \
+    *(cosptr) = SU_COS(phi);              \
+  } while(0)
+#endif /* __GNUC__ */
+
+#define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
+#define SU_SPLPF_FEED(y, x, alpha) y += (alpha) * ((x) - (y))
+#define SU_VALID  isfinite
+#define SU_C_VALID(x) (SU_VALID(SU_C_REAL(x)) && SU_VALID(SU_C_IMAG(x)))
 #define SU_SGN(x) ((x) < 0 ? -1 : ((x) > 0 ? 1 : 0))
+#define SU_MOD(x, d) SU_FMOD(x, d)
+#define SU_SQR(x)    ((x) * (x))
+#define SU_CUBE(x)   (SU_SQR(x) * (x))
+
+#define SU_RAD2DEG(rad) ((rad) * (180 / PI))
+#define SU_DEG2RAD(rad) ((rad) * (PI / 180))
 
 #ifndef PI
 #  define PI SU_ADDSFX(3.141592653589793238462643)
 #endif
+
+#ifndef M_PI
+#  define M_PI PI
+#endif
+
+#ifndef INFINITY
+#  define INFINITY (1.0 / 0)
+#endif
+
+#define sufcmp(a, b, tol) (SU_ABS(SU_ASFLOAT(a) - SU_ASFLOAT(b)) > (tol))
+#define sufrelcmp(a, b, tol) sufcmp(1, SU_ASFLOAT(a) / SU_ASFLOAT(b), tol)
+
+#define sufeq(a, b, tol) (sufcmp(a, b, tol) == 0)
+#define sufreleq(a, b, tol) (sufrelcmp(a, b, tol) == 0)
 
 #define SUFLOAT_THRESHOLD   SU_ADDSFX(1e-15)
 #define SUFLOAT_MIN_REF_MAG SUFLOAT_THRESHOLD

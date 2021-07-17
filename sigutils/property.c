@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -75,10 +74,9 @@ su_property_set_init(su_property_set_t *set)
 su_property_t *
 su_property_set_lookup(const su_property_set_t *set, const char *name)
 {
-  unsigned int i;
   su_property_t *this = NULL;
 
-  FOR_EACH_PTR(this, i, set->property)
+  FOR_EACH_PTR(this, set, property)
     if (strcmp(this->name, name) == 0)
       return this;
 
@@ -169,10 +167,9 @@ su_property_set_assert_mandatory_property(
 void
 su_property_set_finalize(su_property_set_t *set)
 {
-  unsigned int i = 0;
   su_property_t *this = NULL;
 
-  FOR_EACH_PTR(this, i, set->property)
+  FOR_EACH_PTR(this, set, property)
     su_property_destroy(this);
 
   if (set->property_list != NULL)

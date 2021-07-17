@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,6 +26,10 @@
 #include <pthread.h>
 #include "types.h"
 #include "property.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #define SU_BLOCK_STREAM_BUFFER_SIZE 4096
 
@@ -239,5 +242,9 @@ SUBOOL su_block_set_master_port(
 SUBOOL su_block_class_register(struct sigutils_block_class *classname);
 
 su_block_class_t *su_block_class_lookup(const char *name);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_BLOCK_H */

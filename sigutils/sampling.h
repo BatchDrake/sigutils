@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -66,6 +65,9 @@
 
 #define SU_T2N(fs, t) ((unsigned int) SU_FLOOR((t) * (SUFLOAT) (fs)))
 #define SU_N2T(fs, n) ((unsigned int) SU_FLOOR((n) / (SUFLOAT) (fs)))
+
+#define SU_T2N_COUNT(fs, t) ((unsigned int) SU_CEIL((t) * (SUFLOAT) (fs)))
+#define SU_N2T_COUNT(fs, n) ((unsigned int) SU_CEIL((n) / (SUFLOAT) (fs)))
 
 #define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT) (fs))
 #define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT) (fs))

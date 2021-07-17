@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,7 +13,7 @@
 
   You should have received a copy of the GNU Lesser General Public
   License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>
+  <http:
 
 */
 
@@ -32,10 +31,9 @@ PTR_LIST(SUPRIVATE su_modem_class_t, modem_class);
 su_modem_class_t *
 su_modem_class_lookup(const char *name)
 {
-  unsigned int i = 0;
   su_modem_class_t *this = NULL;
 
-  FOR_EACH_PTR(this, i, modem_class)
+  FOR_EACH_PTR_STANDALONE(this, modem_class)
     if (strcmp(this->name, name) == 0)
       return this;
 
@@ -94,10 +92,9 @@ fail:
 su_modem_property_t *
 su_modem_property_set_lookup(const su_modem_property_set_t *set, const char *name)
 {
-  unsigned int i;
   su_modem_property_t *this = NULL;
 
-  FOR_EACH_PTR(this, i, set->property)
+  FOR_EACH_PTR(this, set, property)
     if (strcmp(this->name, name) == 0)
       return this;
 
@@ -198,6 +195,9 @@ __su_modem_set_state_property_from_modem_property(
   case SU_PROPERTY_TYPE_INTEGER:
     *state_prop->int_ptr = prop->as_int;
     break;
+
+  default:
+    return SU_FALSE;
   }
 
   return SU_TRUE;
@@ -231,9 +231,8 @@ su_modem_load_all_state_properties(su_modem_t *modem)
 {
   su_property_t *state_prop;
   const su_modem_property_t *prop;
-  unsigned int i;
 
-  FOR_EACH_PTR(state_prop, i, modem->state_properties.property) {
+  FOR_EACH_PTR(state_prop, modem, state_properties.property) {
     if ((prop =
         su_modem_property_lookup_typed(
             modem,
@@ -364,7 +363,7 @@ su_modem_property_unmarshall(
   value_size = su_modem_property_get_value_marshalled_size(type);
   if (ptr + value_size > buffer_size)
     goto corrupted;
-  value = (const char *) &as_bytes[ptr];
+  value = (const uint8_t *) &as_bytes[ptr];
   ptr += value_size;
 
   /* All required data is available, initialize property */
@@ -431,12 +430,11 @@ su_modem_property_set_get_marshalled_size(const su_modem_property_set_t *set)
 {
   size_t size = 0;
   ssize_t prop_size = 0;
-  unsigned int i = 0;
   const su_modem_property_t *this = NULL;
 
   size = sizeof(uint16_t); /* Property counter */
 
-  FOR_EACH_PTR(this, i, set->property)
+  FOR_EACH_PTR(this, set, property)
     if ((prop_size = su_modem_property_get_marshalled_size(this)) > 0)
       size += prop_size;
 
@@ -451,7 +449,6 @@ su_modem_property_set_marshall(
 {
   size_t marshalled_size = 0;
   ssize_t prop_size;
-  unsigned int i = 0;
   const su_modem_property_t *this = NULL;
   off_t ptr = 0;
   uint8_t *as_bytes = NULL;
@@ -469,7 +466,7 @@ su_modem_property_set_marshall(
 
   ptr = 2;
 
-  FOR_EACH_PTR(this, i, set->property) {
+  FOR_EACH_PTR(this, set, property) {
     if ((prop_size = su_modem_property_get_marshalled_size(this)) > 0) {
       if ((prop_size = su_modem_property_marshall(
           this,
@@ -555,11 +552,10 @@ su_modem_property_set_copy(
     su_modem_property_set_t *dest,
     const su_modem_property_set_t *src)
 {
-  unsigned int i = 0;
   su_modem_property_t *this = NULL;
   su_modem_property_t *dst_prop = NULL;
 
-  FOR_EACH_PTR(this, i, src->property) {
+  FOR_EACH_PTR(this, src, property) {
     if ((dst_prop = su_modem_property_set_assert_property(dest, this->name, this->type))
         == NULL) {
       SU_ERROR("failed to assert property `%s'\n", this->name);
@@ -578,10 +574,9 @@ su_modem_property_set_copy(
 void
 su_modem_property_set_finalize(su_modem_property_set_t *set)
 {
-  unsigned int i = 0;
   su_modem_property_t *this = NULL;
 
-  FOR_EACH_PTR(this, i, set->property)
+  FOR_EACH_PTR(this, set, property)
     su_modem_property_destroy(this);
 
   if (set->property_list != NULL)
@@ -592,13 +587,12 @@ su_modem_property_set_finalize(su_modem_property_set_t *set)
 void
 su_modem_destroy(su_modem_t *modem)
 {
-  unsigned int i = 0;
   su_block_t *this = NULL;
 
   if (modem->privdata != NULL)
     (modem->classptr->dtor) (modem->privdata);
 
-  FOR_EACH_PTR(this, i, modem->block)
+  FOR_EACH_PTR(this, modem, block)
     su_block_destroy(this);
 
   if (modem->block_list != NULL)
@@ -896,11 +890,10 @@ su_modem_property_lookup_typed(
 SUBOOL
 su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
 {
-  unsigned int i = 0;
   su_modem_property_t *this = NULL;
   su_modem_property_t *dst_prop = NULL;
 
-  FOR_EACH_PTR(this, i, set->property) {
+  FOR_EACH_PTR(this, set, property) {
     if ((dst_prop = su_modem_property_set_assert_property(
         &modem->properties,
         this->name,

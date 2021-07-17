@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -69,4 +68,7 @@ SUBOOL su_test_diff_codec_quaternary(su_test_context_t *ctx);
 /* Spectral tuner tests */
 SUBOOL su_test_specttuner_two_tones(su_test_context_t *ctx);
 
+/* MAT file tests */
+SUBOOL su_test_mat_file_regular(su_test_context_t *ctx);
+SUBOOL su_test_mat_file_streaming(su_test_context_t *ctx);
 #endif /* _SRC_TESTS_TEST_LIST_H */

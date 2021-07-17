@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -71,7 +70,7 @@ struct sigutils_log_config {
 }
 
 #ifndef __FILENAME__
-#  error __FILENAME__ not defined. Please verify your build system.
+#  define __FILENAME__ "(no file)"
 #endif /* __FILENAME__ */
 
 #ifndef SU_LOG_DOMAIN
@@ -123,6 +122,8 @@ void su_log_unmask_severity(enum sigutils_log_severity sev);
 uint32_t su_log_get_mask(void);
 
 void su_log_set_mask(uint32_t mask);
+
+const char *su_log_severity_to_string(enum sigutils_log_severity sev);
 
 SUBOOL su_log_is_masked(enum sigutils_log_severity sev);
 

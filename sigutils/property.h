@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,6 +23,10 @@
 #include <stdint.h>
 
 #include "types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 enum sigutils_property_type {
   SU_PROPERTY_TYPE_ANY,
@@ -85,5 +88,9 @@ su_property_t *__su_property_set_assert_property(
     SUBOOL mandatory);
 
 void su_property_set_finalize(su_property_set_t *set);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_PROPERTY_H */

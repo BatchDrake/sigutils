@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,6 +20,10 @@
 #ifndef _SIGUTILS_TAPS_H
 #define _SIGUTILS_TAPS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+  
 #define SU_HAMMING_ALPHA 0.54
 #define SU_MAMMING_BETA (1 - SU_HAMMING_ALPHA)
 
@@ -62,5 +65,8 @@ void su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size);
 
 void su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_TAPS_H */

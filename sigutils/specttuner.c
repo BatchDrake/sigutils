@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -151,6 +150,11 @@ su_specttuner_set_channel_freq(
   channel->params.f0 = f0;
   channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
 
+  if (channel->center < 0)
+    channel->center = 0;
+  if (channel->center >= window_size)
+    channel->center = window_size - 2;
+
   if (channel->params.precise) {
     off = channel->center * (2 * PI) / (SUFLOAT) window_size - f0;
     off *= channel->decimation;
@@ -164,21 +168,26 @@ su_specttuner_set_channel_bandwidth(
     su_specttuner_channel_t *channel,
     SUFLOAT bw)
 {
-  SUFLOAT actual_bw;
   SUFLOAT k;
   unsigned int min_size;
   unsigned int width;
 
   unsigned int window_size = st->params.window_size;
 
-  actual_bw = bw * channel->params.guard;
+  if (bw > 2 * PI)
+    bw = 2 * PI;
 
-  SU_TRYCATCH(actual_bw > 0 && actual_bw < 2 * PI, return SU_FALSE);
+  /*
+   * Don't respect guard bands. They are just a hint for the user
+   * to give her some margin.
+   */
 
-  k = 1. / (2 * PI / actual_bw);
-  min_size    = SU_CEIL(k * window_size);
+  k = 1. / (2 * PI / bw);
+  width = SU_CEIL(k * window_size);
 
-  width           = SU_CEIL(min_size / channel->params.guard);
+  /* Accounts for rounding errors */
+  if (width > window_size)
+    width = window_size;
 
   SU_TRYCATCH(width <= channel->size, return SU_FALSE);
   SU_TRYCATCH(width > 1, return SU_FALSE);
@@ -203,47 +212,70 @@ su_specttuner_channel_new(
   unsigned int min_size;
   SUFLOAT actual_bw;
   SUFLOAT off;
-
+  SUFLOAT corrbw;
+  SUBOOL  full_spectrum = SU_FALSE;
   SU_TRYCATCH(params->guard >= 1, goto fail);
-  SU_TRYCATCH(params->bw > 0  && params->bw < 2 * PI, goto fail);
+  SU_TRYCATCH(params->bw > 0, goto fail);
   SU_TRYCATCH(params->f0 >= 0 && params->f0 < 2 * PI, goto fail);
+
+  corrbw = params->bw;
+
+  if (corrbw > 2 * PI)
+    corrbw = 2 * PI;
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_channel_t)), goto fail);
 
-  actual_bw = params->bw * params->guard;
+  actual_bw = corrbw * params->guard;
 
-  SU_TRYCATCH(actual_bw > 0 && actual_bw < 2 * PI, goto fail);
+  if (actual_bw >= 2 * PI) {
+    actual_bw = 2 * PI;
+    full_spectrum = SU_TRUE;
+  }
 
   new->params = *params;
   new->index = -1;
 
-  /* Tentative configuration */
-  new->k = 1. / (2 * PI / actual_bw);
 
-  /*
-   * XXX: THERE IS SOMETHING HERE I COULD NOT FULLY UNDERSTAND
-   *
-   * For some reason, if we do not pick an even FFT bin for frequency
-   * centering, AM components will show up at the decimator output. This
-   * is probably related to some symmetry condition not being met
-   *
-   * TODO: Look into this ASAP
-   */
-  new->center = 2 * SU_ROUND(params->f0 / (4 * PI) * window_size);
-  min_size    = SU_CEIL(new->k * window_size);
+  if (!full_spectrum) {
+    /* Tentative configuration */
+    new->k = 1. / (2 * PI / actual_bw);
 
-  /* Find the nearest power of 2 than can hold all these samples */
-  while (n < min_size)
-    n <<= 1;
+    /*
+     * XXX: THERE IS SOMETHING HERE I COULD NOT FULLY UNDERSTAND
+     *
+     * For some reason, if we do not pick an even FFT bin for frequency
+     * centering, AM components will show up at the decimator output. This
+     * is probably related to some symmetry condition not being met
+     *
+     * TODO: Look into this ASAP
+     */
+    new->center = 2 * SU_ROUND(params->f0 / (4 * PI) * window_size);
+    min_size    = SU_CEIL(new->k * window_size);
 
-  new->size = n;
+    /* Find the nearest power of 2 than can hold all these samples */
+    while (n < min_size)
+      n <<= 1;
+
+    new->size = n;
+
+    new->width  = SU_CEIL(min_size / params->guard);
+    new->halfw  = new->width >> 1;
+  } else {
+    new->k = 1. / (2 * PI / params->bw);
+    new->center = SU_ROUND(params->f0 / (2 * PI) * window_size);
+    new->size   = window_size;
+    new->width  = SU_CEIL(new->k * window_size);
+    if (new->width > window_size)
+      new->width = window_size;
+    new->halfw  = new->width >> 1;
+  }
 
   /* Adjust configuration to new size */
   new->decimation = window_size / new->size;
   new->k = 1. / (new->decimation * new->size);
 
   /*
-   * High precision mode: initialize local oscilator to compensate
+   * High precision mode: initialize local oscillator to compensate
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
@@ -254,9 +286,6 @@ su_specttuner_channel_new(
 
   new->halfsz = new->size >> 1;
   new->offset = new->size >> 2;
-
-  new->width  = SU_CEIL(min_size / params->guard);
-  new->halfw  = new->width >> 1;
 
   new->gain   = SU_SQRT(1.f / new->size);
 

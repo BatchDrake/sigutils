@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 #include <sigutils/sampling.h>
 #include <sigutils/ncqo.h>
@@ -47,6 +48,8 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_diff_codec_binary),
     SU_TEST_ENTRY(su_test_diff_codec_quaternary),
     SU_TEST_ENTRY(su_test_specttuner_two_tones),
+    SU_TEST_ENTRY(su_test_mat_file_regular),
+    SU_TEST_ENTRY(su_test_mat_file_streaming),
 };
 
 SUPRIVATE void
@@ -71,8 +74,21 @@ help(const char *argv0)
   fprintf(stderr, "                           Default is %d samples per second\n", SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
   fprintf(stderr, "     -l, --list            Provides a list of available unit tests\n");
   fprintf(stderr, "                           with their corresponding test ID and exit\n");
+  fprintf(stderr, "     -v, --version         Print sigutils version\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
-  fprintf(stderr, "(c) 2016 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
+  fprintf(stderr, "(c) 2020 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
+}
+
+SUPRIVATE void
+version(void)
+{
+  fprintf(stderr, "sigutils " SIGUTILS_VERSION_STRING "\n");
+  fprintf(stderr, "pkgversion: %s\n\n", sigutils_pkgversion());
+
+  fprintf(stderr, "Copyright © 2020 Gonzalo José Carracedo Carballal\n");
+  fprintf(
+      stderr,
+      "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
 }
 
 SUPRIVATE void
@@ -97,6 +113,7 @@ SUPRIVATE struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"count", no_argument, NULL, 'c'},
     {"list", no_argument, NULL, 'l'},
+    {"version", no_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}
 };
 
@@ -113,7 +130,7 @@ main (int argc, char *argv[], char *envp[])
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "Rdhclws:r:", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index)) != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -140,19 +157,24 @@ main (int argc, char *argv[], char *envp[])
         exit(EXIT_SUCCESS);
 
       case 's':
-        if (sscanf(optarg, "%u", &params.buffer_size) < 0) {
-          fprintf(stderr, "%s: invalid buffer size `%s'\n", optarg);
+        if (sscanf(optarg, "%llu", &params.buffer_size) < 0) {
+          fprintf(stderr, "%s: invalid buffer size `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
         }
         break;
 
       case 'r':
-        if (sscanf(optarg, "%lu", &params.fs) < 0) {
-          fprintf(stderr, "%s: invalid sampling rate `%s'\n", optarg);
+        if (sscanf(optarg, "%llu", &params.fs) < 0) {
+          fprintf(stderr, "%s: invalid sampling rate `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
         }
+        break;
+
+      case 'v':
+        version();
+        exit(EXIT_SUCCESS);
         break;
 
       case '?':

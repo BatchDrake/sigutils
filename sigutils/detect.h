@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,6 +26,10 @@
 #include "softtune.h"
 
 #ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -158,6 +161,8 @@ struct sigutils_channel_detector {
   su_softtuner_t tuner;
   SUCOMPLEX *tuner_buf;
   SUSCOUNT ptr; /* Sample in window */
+  SUBOOL fft_issued;
+  SUSCOUNT next_to_window;
   unsigned int iters;
   unsigned int chan_age;
   SU_FFTW(_complex) *window_func;
@@ -226,6 +231,12 @@ su_channel_detector_get_baud(const su_channel_detector_t *cd)
   return cd->baud;
 }
 
+SUINLINE SUFLOAT
+su_channel_detector_get_window_size(const su_channel_detector_t *cd)
+{
+  return cd->params.window_size;
+}
+
 /**************************** Peak detector API *****************************/
 SUBOOL su_peak_detector_init(
     su_peak_detector_t *pd,
@@ -252,6 +263,8 @@ void su_channel_detector_destroy(su_channel_detector_t *detector);
 SUBOOL su_channel_detector_feed(
     su_channel_detector_t *detector,
     SUCOMPLEX x);
+
+SUBOOL su_channel_detector_exec_fft(su_channel_detector_t *detector);
 
 SUSCOUNT su_channel_detector_feed_bulk(
     su_channel_detector_t *detector,
@@ -282,6 +295,9 @@ struct sigutils_channel *su_channel_detector_lookup_valid_channel(
     SUFLOAT fc);
 
 #ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
 }
 #endif /* __cplusplus */
 

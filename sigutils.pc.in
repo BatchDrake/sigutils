@@ -1,11 +1,11 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix="${prefix}"
 libdir="${prefix}/lib"
-includedir="${prefix}/include/sigutils"
+includedir="${prefix}/include"
 
 Name: sigutils
 Description: Digital signal processing utility library
 URL: http://github.org/BatchDrake/sigutils
 Version: @PROJECT_VERSION@ 
-Cflags: -I${includedir} -I${includedir}/util @SU_PC_CFLAGS@
+Cflags: -I${includedir}/sigutils -I${includedir}/sigutils/util @SU_PC_CFLAGS@
 Libs: -L${libdir} -lsigutils @SU_PC_LIBRARIES@

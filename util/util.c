@@ -4,8 +4,7 @@
   
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,8 +19,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h> // strbuild()
-#include <string.h> // strsep()
+#include <stdarg.h> 
+#include <string.h> 
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
@@ -58,57 +57,45 @@ is_asciiz(const char *buf, int lbound, int ubound)
   return 0;
 }
 
-/* ESCRIBIRLA */
-char*
-vstrbuild (const char *fmt, va_list ap)
+char *
+vstrbuild(const char *fmt, va_list ap)
 {
   char *out;
-  void *p;
   int size, zeroindex;
   int last;
   va_list copy;
   
   last = 0;
   
-  if (fmt != NULL)
-  {
-    if (!*fmt) /* Yo no hago trabajo extra */
-    {
-      out = xmalloc (1);
+  if (fmt != NULL) {
+    if (!*fmt) {
+      out = malloc(1);
       out[0] = '\0';
       return out;
     }
     
-    va_copy (copy, ap);
-    size = vsnprintf (NULL, 0, fmt, copy) + 1;
-    va_end (copy);
+    va_copy(copy, ap);
+    size = vsnprintf(NULL, 0, fmt, copy) + 1;
+    va_end(copy);
     
-    out = xmalloc (size);
+    if ((out = malloc(size)) == NULL)
+      return NULL;
     
-    va_copy (copy, ap);
-    vsnprintf (out, size, fmt, copy);
-    va_end (copy);
+    va_copy(copy, ap);
+    vsnprintf(out, size, fmt, copy);
+    va_end(copy);
     
-    for(;;)
-    {
-      
-      if ((zeroindex = is_asciiz (out, last, size)) != 0)
+    for (;;) {
+      if ((zeroindex = is_asciiz(out, last, size)) != 0)
         break;
-      
-      /* Oh, algo ha ocurrido. No hay un cero en ese
-	 intervalo. Tenemos que buscarlo */
-      
-      /* Estamos seguros de que en los intervalos anteriores NO hay
-	 cero, as� que buscaremos a partir del size anterior */
 
-      /* Incrementaremos el tama�o en STRBUILD_BSIZ bytes */
       last = size;
       size += STRBUILD_BSIZ;
       
-      out = xrealloc (out, size); /* Reasignamos */
+      out = realloc(out, size); /* Reasignamos */
       
       va_copy (copy, ap);
-      vsnprintf (out, size, fmt, copy);
+      vsnprintf(out, size, fmt, copy);
       va_end (copy);
     }
   }
@@ -191,7 +178,7 @@ xalloc_die (void)
 
 /* Para manipular arrays de punteros */
 int
-ptr_list_append_check (void ***list, int *count, void *new)
+ptr_list_append_check (void ***list, unsigned int *count, void *new)
 {
   int i;
   void **reallocd_list;
@@ -217,13 +204,13 @@ ptr_list_append_check (void ***list, int *count, void *new)
 }
 
 void
-ptr_list_append (void ***list, int *count, void *new)
+ptr_list_append (void ***list, unsigned int *count, void *new)
 {
   (void) ptr_list_append_check (list, count, new);
 }
 
 int
-ptr_list_remove_first (void ***list, int *count, void *ptr)
+ptr_list_remove_first (void ***list, unsigned int *count, void *ptr)
 {
   int i;
   int found;
@@ -691,3 +678,251 @@ get_curr_ctime (void)
   return text;
 }
 
+void
+grow_buf_init_loan(
+    grow_buf_t *buf,
+    const void *data,
+    size_t size,
+    size_t alloc)
+{
+  buf->buffer = (void *) data;
+  buf->alloc  = alloc;
+  buf->size   = size;
+  buf->ptr    = 0;
+  buf->loan   = 1;
+}
+
+void
+grow_buf_init(grow_buf_t *buf)
+{
+  memset(buf, 0, sizeof(grow_buf_t));
+}
+
+int
+grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc)
+{
+  void *tmp;
+
+  if (buf->alloc < min_alloc) {
+    tmp = realloc(buf->buffer, min_alloc);
+    if (tmp == NULL)
+      return -1;
+
+    buf->buffer = tmp;
+    buf->alloc = min_alloc;
+  }
+
+  return 0;
+}
+
+void *
+grow_buf_alloc(grow_buf_t *buf, size_t size)
+{
+  size_t alloc = buf->alloc;
+  size_t total_size = buf->size + size;
+  void *tmp;
+
+  if (alloc == 0)
+    alloc = 1;
+
+  while (alloc < total_size)
+    alloc <<= 1;
+
+  if (alloc != buf->alloc) {
+    if ((tmp = realloc(buf->buffer, alloc)) == NULL)
+      return NULL;
+
+    buf->buffer = tmp;
+    buf->alloc = alloc;
+  }
+
+  tmp = (char *) buf->buffer + buf->size;
+  buf->size = total_size;
+
+  return tmp;
+}
+
+void *
+grow_buf_append_hollow(grow_buf_t *buf, size_t size)
+{
+  void *reserved = NULL;
+  size_t avail = grow_buf_avail(buf);
+
+  if (size > avail)
+    if (grow_buf_alloc(buf, size - avail) == NULL)
+      return NULL;
+
+  if ((reserved = grow_buf_current_data(buf)) == NULL)
+    return NULL;
+
+  grow_buf_seek(buf, size, SEEK_CUR);
+
+  return reserved;
+}
+
+int
+grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
+{
+  void *reserved = grow_buf_append_hollow(buf, size);
+
+  if (reserved == NULL)
+    return -1;
+
+  memcpy(reserved, data, size);
+
+  return 0;
+}
+
+int
+grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...)
+{
+  va_list ap;
+  char *result = NULL;
+  int code = -1;
+
+  va_start(ap, fmt);
+
+  if ((result = vstrbuild(fmt, ap)) == NULL)
+    goto done;
+
+  if (grow_buf_append(buf, result, strlen(result)) == -1)
+    goto done;
+
+  va_end(ap);
+
+  code = 0;
+
+done:
+  if (result != NULL)
+    free(result);
+
+  return code;
+}
+
+ssize_t
+grow_buf_read(grow_buf_t *buf, void *data, size_t size)
+{
+  ssize_t avail = grow_buf_avail(buf);
+
+  if (size > avail)
+    size = avail;
+
+  if (size > 0) {
+    memcpy(data, grow_buf_current_data(buf), size);
+    grow_buf_seek(buf, size, SEEK_CUR);
+  }
+
+  return size;
+}
+
+int
+grow_buf_append_null(grow_buf_t *buf)
+{
+  return grow_buf_append(buf, "", 1);
+}
+
+void *
+grow_buf_get_buffer(const grow_buf_t *buf)
+{
+  return buf->buffer;
+}
+
+void *
+grow_buf_current_data(const grow_buf_t *buf)
+{
+  if (buf->ptr >= buf->size)
+    return NULL;
+
+  return buf->bytes + buf->ptr;
+}
+
+size_t
+grow_buf_get_size(const grow_buf_t *buf)
+{
+  return buf->size;
+}
+
+size_t
+grow_buf_ptr(const grow_buf_t *buf)
+{
+  return buf->ptr;
+}
+
+size_t
+grow_buf_avail(const grow_buf_t *buf)
+{
+  if (buf->ptr > buf->size)
+    return 0;
+
+  return buf->size - buf->ptr;
+}
+
+void
+grow_buf_finalize(grow_buf_t *buf)
+{
+  if (!buf->loan && buf->buffer != NULL)
+    free(buf->buffer);
+}
+
+void
+grow_buf_shrink(grow_buf_t *buf)
+{
+  buf->size = 0;
+  buf->ptr = 0;
+}
+
+
+void
+grow_buf_clear(grow_buf_t *buf)
+{
+  grow_buf_finalize(buf);
+  memset(buf, 0, sizeof(grow_buf_t));
+}
+
+size_t
+grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
+{
+  off_t new_off;
+
+  switch (whence) {
+    case SEEK_SET:
+      new_off = offset;
+      break;
+
+    case SEEK_CUR:
+      new_off = buf->ptr + offset;
+      break;
+
+    case SEEK_END:
+      new_off = buf->size + offset;
+      break;
+
+    default:
+      errno = EINVAL;
+      return -1;
+  }
+
+  if (new_off < 0 || new_off > buf->size) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  buf->ptr = new_off;
+
+  return buf->ptr;
+}
+
+int
+grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
+{
+  void *new = NULL;
+
+  if ((new = grow_buf_alloc(dest, src->size)) == NULL)
+    return -1;
+
+  memcpy(new, src->buffer, src->size);
+  grow_buf_seek(new, src->size, SEEK_CUR);
+  grow_buf_clear(src);
+
+  return 0;
+}

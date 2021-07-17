@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,6 +23,14 @@
 #include <util.h>
 #include "types.h"
 #include "block.h"
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
 
 typedef struct sigutils_modem_class su_modem_class_t;
 
@@ -174,5 +181,12 @@ void su_modem_set_snr(su_modem_t *modem, SUFLOAT snr);
 void su_modem_set_signal(su_modem_t *modem, SUFLOAT signal);
 
 void su_modem_destroy(su_modem_t *modem);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_MODEM_H */

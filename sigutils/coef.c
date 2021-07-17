@@ -177,16 +177,16 @@ su_trinomial_mult(int n, const SUFLOAT *b, const SUFLOAT *c)
 
 SUFLOAT *
 su_dcof_bwlp(int n, SUFLOAT fcf) {
-  int k;      // loop variables
-  SUFLOAT theta;   // M_PI * fcf / 2.0
-  SUFLOAT st;    // SU_SINe of theta
-  SUFLOAT ct;    // coSU_SINe of theta
-  SUFLOAT parg;    // pole angle
-  SUFLOAT sparg;   // SU_SINe of the pole angle
-  SUFLOAT cparg;   // coSU_SINe of the pole angle
-  SUFLOAT a;     // workspace variable
-  SUFLOAT *rcof = NULL;   // binomial coefficients
-  SUFLOAT *dcof = NULL;   // dk coefficients
+  int k;      
+  SUFLOAT theta; 
+  SUFLOAT st;    
+  SUFLOAT ct;   
+  SUFLOAT parg; 
+  SUFLOAT sparg;
+  SUFLOAT cparg;
+  SUFLOAT a;    
+  SUFLOAT *rcof = NULL;  
+  SUFLOAT *dcof = NULL;  
 
   if ((rcof = malloc(2 * n * sizeof(SUFLOAT))) == NULL)
     goto done;
@@ -242,27 +242,27 @@ su_dcof_bwhp(int n, SUFLOAT fcf)
 SUFLOAT *
 su_dcof_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      // loop variables
-  SUFLOAT theta;   // M_PI * (f2f - f1f) / 2.0
-  SUFLOAT cp;    // coSU_SINe of phi
-  SUFLOAT st;    // SU_SINe of theta
-  SUFLOAT ct;    // coSU_SINe of theta
-  SUFLOAT s2t;     // SU_SINe of 2 * theta
-  SUFLOAT c2t;     // coSU_SINe 0f 2 * theta
-  SUFLOAT *rcof = NULL;   // z^-2 coefficients
-  SUFLOAT *tcof = NULL;   // z^-1 coefficients
-  SUFLOAT *dcof = NULL;   // dk coefficients
-  SUFLOAT parg;    // pole angle
-  SUFLOAT sparg;   // SU_SINe of pole angle
-  SUFLOAT cparg;   // coSU_SINe of pole angle
-  SUFLOAT a;     // workspace variables
+  int k;     
+  SUFLOAT theta;
+  SUFLOAT cp;    
+  SUFLOAT st;    
+  SUFLOAT ct;    
+  SUFLOAT s2t;     
+  SUFLOAT c2t;     
+  SUFLOAT *rcof = NULL;   
+  SUFLOAT *tcof = NULL;   
+  SUFLOAT *dcof = NULL;   
+  SUFLOAT parg;    
+  SUFLOAT sparg;   
+  SUFLOAT cparg;   
+  SUFLOAT a;     
 
   cp    = SU_COS(M_PI * (f2f + f1f) / 2.0);
   theta = M_PI * (f2f - f1f) / 2.0;
   st  = SU_SIN(theta);
   ct  = SU_COS(theta);
-  s2t = 2.0 * st * ct;    // SU_SINe of 2 * theta
-  c2t = 2.0 * ct * ct - 1.0;  // coSU_SINe of 2 * theta
+  s2t = 2.0 * st * ct;    
+  c2t = 2.0 * ct * ct - 1.0;  
 
   if ((rcof = malloc(2 * n * sizeof (SUFLOAT))) == NULL)
     goto done;
@@ -310,27 +310,27 @@ done:
 SUFLOAT *
 su_dcof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      // loop variables
-  SUFLOAT theta;   // M_PI * (f2f - f1f) / 2.0
-  SUFLOAT cp;    // coSU_SINe of phi
-  SUFLOAT st;    // SU_SINe of theta
-  SUFLOAT ct;    // coSU_SINe of theta
-  SUFLOAT s2t;     // SU_SINe of 2 * theta
-  SUFLOAT c2t;     // coSU_SINe 0f 2 * theta
-  SUFLOAT *rcof = NULL;   // z^-2 coefficients
-  SUFLOAT *tcof = NULL;   // z^-1 coefficients
-  SUFLOAT *dcof = NULL;   // dk coefficients
-  SUFLOAT parg;    // pole angle
-  SUFLOAT sparg;   // SU_SINe of pole angle
-  SUFLOAT cparg;   // coSU_SINe of pole angle
-  SUFLOAT a;     // workspace variables
+  int k;      
+  SUFLOAT theta;   
+  SUFLOAT cp;    
+  SUFLOAT st;    
+  SUFLOAT ct;    
+  SUFLOAT s2t;     
+  SUFLOAT c2t;     
+  SUFLOAT *rcof = NULL;   
+  SUFLOAT *tcof = NULL;   
+  SUFLOAT *dcof = NULL;   
+  SUFLOAT parg;    
+  SUFLOAT sparg;   
+  SUFLOAT cparg;   
+  SUFLOAT a;     
 
   cp = SU_COS(M_PI * (f2f + f1f) / 2.0);
   theta = M_PI * (f2f - f1f) / 2.0;
   st = SU_SIN(theta);
   ct = SU_COS(theta);
-  s2t = 2.0 * st * ct;    // SU_SINe of 2 * theta
-  c2t = 2.0 * ct * ct - 1.0;  // coSU_SINe 0f 2 * theta
+  s2t = 2.0 * st * ct;    
+  c2t = 2.0 * ct * ct - 1.0;  
 
   if ((rcof = malloc(2 * n * sizeof(SUFLOAT))) == NULL)
     goto done;
@@ -497,11 +497,11 @@ su_ccof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 SUFLOAT
 su_sf_bwlp(int n, SUFLOAT fcf)
 {
-  int m, k;     // loop variables
-  SUFLOAT omega;   // M_PI * fcf
-  SUFLOAT fomega;  // function of omega
-  SUFLOAT parg0;   // zeroth pole angle
-  SUFLOAT sf;    // scaling factor
+  int m, k;     
+  SUFLOAT omega;   
+  SUFLOAT fomega;  
+  SUFLOAT parg0;   
+  SUFLOAT sf;    
 
   omega = M_PI * fcf;
   fomega = SU_SIN(omega);
@@ -532,11 +532,11 @@ su_sf_bwlp(int n, SUFLOAT fcf)
 SUFLOAT
 su_sf_bwhp(int n, SUFLOAT fcf)
 {
-  int m, k;     // loop variables
-  SUFLOAT omega;   // M_PI * fcf
-  SUFLOAT fomega;  // function of omega
-  SUFLOAT parg0;   // zeroth pole angle
-  SUFLOAT sf;    // scaling factor
+  int m, k;     
+  SUFLOAT omega;   
+  SUFLOAT fomega;  
+  SUFLOAT parg0;   
+  SUFLOAT sf;    
 
   omega = M_PI * fcf;
   fomega = SU_SIN(omega);
@@ -568,13 +568,13 @@ su_sf_bwhp(int n, SUFLOAT fcf)
 SUFLOAT
 su_sf_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      // loop variables
-  SUFLOAT ctt;     // coSU_TANgent of theta
-  SUFLOAT sfr, sfi;  // real and imaginary parts of the scaling factor
-  SUFLOAT parg;    // pole angle
-  SUFLOAT sparg;   // SU_SINe of pole angle
-  SUFLOAT cparg;   // coSU_SINe of pole angle
-  SUFLOAT a, b, c;   // workspace variables
+  int k;      
+  SUFLOAT ctt;     
+  SUFLOAT sfr, sfi;  
+  SUFLOAT parg;    
+  SUFLOAT sparg;   
+  SUFLOAT cparg;   
+  SUFLOAT a, b, c;   
 
   ctt = 1.0 / SU_TAN(M_PI * (f2f - f1f) / 2.0);
   sfr = 1.0;
@@ -604,13 +604,13 @@ su_sf_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 SUFLOAT
 su_sf_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      // loop variables
-  SUFLOAT tt;    // SU_TANgent of theta
-  SUFLOAT sfr, sfi;  // real and imaginary parts of the scaling factor
-  SUFLOAT parg;    // pole angle
-  SUFLOAT sparg;   // SU_SINe of pole angle
-  SUFLOAT cparg;   // coSU_SINe of pole angle
-  SUFLOAT a, b, c;   // workspace variables
+  int k;      
+  SUFLOAT tt;    
+  SUFLOAT sfr, sfi;  
+  SUFLOAT parg;    
+  SUFLOAT sparg;   
+  SUFLOAT cparg;   
+  SUFLOAT a, b, c;   
 
   tt = SU_TAN(M_PI * (f2f - f1f) / 2.0);
   sfr = 1.0;

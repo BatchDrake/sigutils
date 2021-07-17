@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,6 +22,10 @@
 
 #include "types.h"
 #include "block.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 struct sigutils_sampler {
   SUFLOAT bnor;
@@ -54,24 +57,21 @@ SUINLINE SUBOOL
 su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
 {
   SUBOOL sampled = SU_FALSE;
-  SUFLOAT alpha, phase;
+  SUFLOAT alpha;
   SUCOMPLEX output = *sample, result;
 
   if (self->period >= 1.) {
     self->phase += 1.;
-    if (self->phase >= self->period)
+    if (self->phase >= self->period) {
       self->phase -= self->period;
 
-    phase = self->phase + self->phase0;
-    if (phase >= self->period)
-      self->phase -= self->period;
-
-    /* Interpolate with previous sample for improved accuracy */
-    if (SU_FLOOR(phase) == 0) {
-      alpha = phase - SU_FLOOR(phase);
-      result = ((1 - alpha) * self->prev + alpha * output);
-      *sample = result;
-      sampled = SU_TRUE;
+      /* Interpolate with previous sample for improved accuracy */
+      if (SU_FLOOR(self->phase) == 0) {
+        alpha   = self->phase - SU_FLOOR(self->phase);
+        result  = (1 - alpha) * self->prev + alpha * output;
+        *sample = result;
+        sampled = SU_TRUE;
+      }
     }
   }
 
@@ -282,5 +282,8 @@ SUSDIFF su_clock_detector_read(
     SUCOMPLEX *buf,
     size_t size);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_CLOCK_H */

@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -78,7 +77,6 @@ SUBOOL
 su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
   char *filename = NULL;
   FILE *fp = NULL;
   time_t now;
@@ -109,7 +107,7 @@ su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
            "%% File generated on %s",
            ctime(&now)));
 
-   FOR_EACH_PTR(this, i, pool->sigbuf) {
+   FOR_EACH_PTR(this, pool, sigbuf) {
      if (!su_sigbuf_pool_helper_dump_matlab(
          this->buffer,
          this->size,
@@ -121,7 +119,7 @@ su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
      SU_SYSCALL_ASSERT(
          fprintf(
              fp,
-             "%% %s: %s buffer, %d elements\n",
+             "%% %s: %s buffer, %lu elements\n",
              this->name,
              this->is_complex ? "complex" : "float",
              this->size));
@@ -196,9 +194,8 @@ SUBOOL
 su_sigbuf_pool_dump_raw(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf)
+  FOR_EACH_PTR(this, pool, sigbuf)
     if (!su_sigbuf_pool_helper_dump_raw(
         this->buffer,
         this->size,
@@ -273,9 +270,8 @@ SUBOOL
 su_sigbuf_pool_dump_wav(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
 
-  FOR_EACH_PTR(this, i, pool->sigbuf) {
+  FOR_EACH_PTR(this, pool, sigbuf) {
     if (!su_sigbuf_pool_helper_dump_wav(
         this->buffer,
         this->size,

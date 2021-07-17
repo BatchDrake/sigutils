@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,6 +22,15 @@
 
 #include "types.h"
 #include "sampling.h"
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
+
 
 #define SU_NCQO_USE_PRECALC_BUFFER
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -90,7 +98,13 @@ __su_ncqo_step(su_ncqo_t *ncqo)
 #  define SU_VOLK_CALL_STRIDE_BITS 5
 #  define SU_VOLK_CALL_STRIDE      (1 << SU_VOLK_CALL_STRIDE_BITS)
 #  define SU_VOLK_CALL_STRIDE_MASK (SU_VOLK_CALL_STRIDE - 1)
+#  ifdef __cplusplus
+}
+#  endif /* __cplusplus */
 #  include <volk/volk.h>
+#  ifdef __cplusplus
+extern "C" {
+#  endif /* __cplusplus */
 #endif
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -235,5 +249,12 @@ void su_ncqo_inc_freq(su_ncqo_t *ncqo, SUFLOAT delta);
 
 /* Get current frequency (normalized freq) */
 SUFLOAT su_ncqo_get_freq(const su_ncqo_t *ncqo);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_NCQO_H */

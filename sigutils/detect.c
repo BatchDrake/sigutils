@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -166,9 +165,8 @@ SUPRIVATE void
 su_channel_detector_channel_list_clear(su_channel_detector_t *detector)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     su_channel_destroy(chan);
 
   if (detector->channel_list != NULL)
@@ -198,9 +196,8 @@ su_channel_detector_lookup_channel(
     SUFLOAT fc)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     if (fc >= chan->fc - chan->bw * .5 &&
         fc <= chan->fc + chan->bw * .5)
       return chan;
@@ -214,9 +211,8 @@ su_channel_detector_lookup_valid_channel(
     SUFLOAT fc)
 {
   struct sigutils_channel *chan;
-  unsigned int i;
 
-  FOR_EACH_PTR(chan, i, detector->channel)
+  FOR_EACH_PTR(chan, detector, channel)
     if (SU_CHANNEL_IS_VALID(chan))
       if (fc >= chan->fc - chan->bw * .5 &&
           fc <= chan->fc + chan->bw * .5)
@@ -479,6 +475,7 @@ su_channel_detector_new(const struct sigutils_channel_detector_params *params)
   /* Mode-specific allocations */
   switch (params->mode) {
     case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
+    case SU_CHANNEL_DETECTOR_MODE_ORDER_ESTIMATION:
       break;
 
     case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
@@ -993,18 +990,115 @@ su_channel_detector_apply_window(su_channel_detector_t *detector)
 {
   unsigned int i;
 
-  for (i = 0; i < detector->params.window_size; ++i)
+  for (i = detector->next_to_window; i < detector->ptr; ++i)
     detector->window[i] *= detector->window_func[i];
+
+  detector->next_to_window = detector->ptr;
+}
+
+SUBOOL
+su_channel_detector_exec_fft(su_channel_detector_t *detector)
+{
+  unsigned int i;
+  SUFLOAT psd;
+  SUFLOAT wsizeinv = 1. / detector->params.window_size;
+  SUFLOAT ac;
+
+  if (detector->fft_issued)
+    return SU_TRUE;
+
+  detector->fft_issued = SU_TRUE;
+
+  switch (detector->params.mode) {
+    case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
+      /* Spectrum mode only */
+      ++detector->iters;
+      su_channel_detector_apply_window(detector);
+      SU_FFTW(_execute(detector->fft_plan));
+
+      for (i = 0; i < detector->params.window_size; ++i)
+        detector->spect[i] = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+
+      return SU_TRUE;
+
+    case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
+      /*
+       * Channel detection is based on the analysis of the power spectrum
+       */
+      su_channel_detector_apply_window(detector);
+
+      SU_FFTW(_execute(detector->fft_plan));
+
+      detector->dc +=
+        SU_CHANNEL_DETECTOR_DC_ALPHA *
+        (detector->fft[0] / detector->params.window_size - detector->dc);
+
+      /* Update DC component */
+      for (i = 0; i < detector->params.window_size; ++i) {
+        psd = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+        detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
+      }
+
+      return su_channel_perform_discovery(detector);
+
+    case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
+      /*
+       * Find repetitive patterns in received signal. We find them
+       * using the Fast Auto-Correlation Technique, which is relies on
+       * two FFTs - O(2nlog(n)) - rather than its definition - O(n^2)
+       */
+
+      /* Don't apply *any* window function */
+      SU_FFTW(_execute(detector->fft_plan));
+      for (i = 0; i < detector->params.window_size; ++i)
+        detector->fft[i] *= SU_C_CONJ(detector->fft[i]);
+      SU_FFTW(_execute(detector->fft_plan_rev));
+
+      /* Average result */
+      for (i = 0; i < detector->params.window_size; ++i) {
+        ac = SU_C_REAL(detector->ifft[i] * SU_C_CONJ(detector->ifft[i]));
+        detector->acorr[i] +=
+            detector->params.alpha * (ac - detector->acorr[i]);
+      }
+
+      /* Update baudrate estimation */
+      return su_channel_detect_baudrate_from_acorr(detector);
+
+    case SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF:
+      /*
+       * Compute FFT of the square of the absolute value of the derivative
+       * of the signal. This will introduce a train of pulses on every
+       * non-equal symbol transition.
+       */
+      su_taps_apply_blackmann_harris_complex(
+          detector->window,
+          detector->params.window_size);
+
+      SU_FFTW(_execute(detector->fft_plan));
+
+      for (i = 0; i < detector->params.window_size; ++i) {
+        psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
+        psd /= detector->params.window_size;
+        detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
+      }
+
+      /* Update baudrate estimation */
+      return su_channel_detect_baudrate_from_nonlinear_diff(detector);
+
+      break;
+
+    default:
+      SU_WARNING("Mode not implemented\n");
+      return SU_FALSE;
+  }
+
+  return SU_TRUE;
 }
 
 SUINLINE SUBOOL
 su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
 {
-  unsigned int i;
-  SUFLOAT psd;
   SUCOMPLEX diff;
-  SUFLOAT wsizeinv = 1. / detector->params.window_size;
-  SUFLOAT ac;
 
   /* In nonlinear diff mode, we store something else in the window */
   if (detector->params.mode == SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF) {
@@ -1014,94 +1108,16 @@ su_channel_detector_feed_internal(su_channel_detector_t *detector, SUCOMPLEX x)
   }
 
   detector->window[detector->ptr++] = x - detector->dc;
+  detector->fft_issued = SU_FALSE;
 
   if (detector->ptr == detector->params.window_size) {
     /* Window is full, perform FFT */
+    SU_TRYCATCH(
+        su_channel_detector_exec_fft(detector),
+        return SU_FALSE);
+
     detector->ptr = 0;
-
-    /* ^^^^^^^^^^^^^^^^^^ end of common part ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ */
-    switch (detector->params.mode) {
-      case SU_CHANNEL_DETECTOR_MODE_SPECTRUM:
-        /* Spectrum mode only */
-        ++detector->iters;
-        su_channel_detector_apply_window(detector);
-        SU_FFTW(_execute(detector->fft_plan));
-
-        for (i = 0; i < detector->params.window_size; ++i)
-          detector->spect[i] = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
-
-        return SU_TRUE;
-
-      case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
-        /*
-         * Channel detection is based on the analysis of the power spectrum
-         */
-        su_channel_detector_apply_window(detector);
-
-        SU_FFTW(_execute(detector->fft_plan));
-
-        /* Update DC component */
-        detector->dc +=
-            SU_CHANNEL_DETECTOR_DC_ALPHA *
-            (detector->fft[i] / detector->params.window_size - detector->dc);
-
-        for (i = 0; i < detector->params.window_size; ++i) {
-          psd = wsizeinv * SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
-          detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
-        }
-
-        return su_channel_perform_discovery(detector);
-
-      case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
-        /*
-         * Find repetitive patterns in received signal. We find them
-         * using the Fast Auto-Correlation Technique, which is relies on
-         * two FFTs - O(2nlog(n)) - rather than its definition - O(n^2)
-         */
-
-        /* Don't apply *any* window function */
-        SU_FFTW(_execute(detector->fft_plan));
-        for (i = 0; i < detector->params.window_size; ++i)
-          detector->fft[i] *= SU_C_CONJ(detector->fft[i]);
-        SU_FFTW(_execute(detector->fft_plan_rev));
-
-        /* Average result */
-        for (i = 0; i < detector->params.window_size; ++i) {
-          ac = SU_C_REAL(detector->ifft[i] * SU_C_CONJ(detector->ifft[i]));
-          detector->acorr[i] +=
-              detector->params.alpha * (ac - detector->acorr[i]);
-        }
-
-        /* Update baudrate estimation */
-        return su_channel_detect_baudrate_from_acorr(detector);
-
-      case SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF:
-        /*
-         * Compute FFT of the square of the absolute value of the derivative
-         * of the signal. This will introduce a train of pulses on every
-         * non-equal symbol transition.
-         */
-        su_taps_apply_blackmann_harris_complex(
-            detector->window,
-            detector->params.window_size);
-
-        SU_FFTW(_execute(detector->fft_plan));
-
-        for (i = 0; i < detector->params.window_size; ++i) {
-          psd = SU_C_REAL(detector->fft[i] * SU_C_CONJ(detector->fft[i]));
-          psd /= detector->params.window_size;
-          detector->spect[i] += detector->params.alpha * (psd - detector->spect[i]);
-        }
-
-        /* Update baudrate estimation */
-        return su_channel_detect_baudrate_from_nonlinear_diff(detector);
-
-        break;
-
-      default:
-        SU_WARNING("Mode not implemented\n");
-        return SU_FALSE;
-    }
+    detector->next_to_window = 0;
   }
 
   return SU_TRUE;

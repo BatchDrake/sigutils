@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, either version 3 of the
-  License, or (at your option) any later version.
+  published by the Free Software Foundation, version 3.
 
   This program is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -103,6 +102,30 @@ fail:
   sigutils_log_message_destroy(dup);
 
   return NULL;
+}
+
+const char *
+su_log_severity_to_string(enum sigutils_log_severity sev)
+{
+  switch (sev) {
+    case SU_LOG_SEVERITY_CRITICAL:
+      return "Critical";
+
+    case SU_LOG_SEVERITY_ERROR:
+      return "Error";
+
+    case SU_LOG_SEVERITY_WARNING:
+      return "Warning";
+
+    case SU_LOG_SEVERITY_INFO:
+      return "Information";
+
+    case SU_LOG_SEVERITY_DEBUG:
+      return "Debug";
+
+  }
+
+  return "Unknown";
 }
 
 void
