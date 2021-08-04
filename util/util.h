@@ -1,7 +1,7 @@
 /*
-  
+
   Copyright (C) 2013 Gonzalo José Carracedo Carballal
-  
+
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
   published by the Free Software Foundation, version 3.
@@ -78,7 +78,7 @@
 
 #define PTR_LIST_INIT(where, name)                   \
   where->name ## _list = NULL;                       \
-  where->name ## _count = 0;                 
+  where->name ## _count = 0;
 
 #define PTR_LIST_APPEND(name, ptr)                   \
   ptr_list_append ((void ***) &JOIN (name, _list),   \
@@ -111,7 +111,17 @@
 # define __UNITS(x, wrdsiz) ((((x) + (wrdsiz - 1)) / wrdsiz))
 # define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)
 
-    
+#ifdef __GNUC__
+#  define IGNORE_RESULT(type, expr)              \
+  do {                                           \
+    type ignored_val__ __attribute__((unused));  \
+    ignored_val__ = expr;                        \
+  } while (0)
+#else
+#  define IGNORE_RESULT(type, expr) (void) expr
+#endif /* __GNUC__ */
+
+
 struct strlist
 {
   PTR_LIST (char, strings);
@@ -210,4 +220,3 @@ int dprintf (int fd, const char *fmt, ...);
 #endif
 
 #endif /* _UTIL_H */
-
