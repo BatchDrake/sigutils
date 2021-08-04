@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include <sigutils/sampling.h>
 #include <sigutils/ncqo.h>
@@ -157,7 +158,7 @@ main (int argc, char *argv[], char *envp[])
         exit(EXIT_SUCCESS);
 
       case 's':
-        if (sscanf(optarg, "%llu", &params.buffer_size) < 0) {
+        if (sscanf(optarg, "%" SCNu64, &params.buffer_size) < 0) {
           fprintf(stderr, "%s: invalid buffer size `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
@@ -165,7 +166,7 @@ main (int argc, char *argv[], char *envp[])
         break;
 
       case 'r':
-        if (sscanf(optarg, "%llu", &params.fs) < 0) {
+        if (sscanf(optarg, "%" SCNu64, &params.fs) < 0) {
           fprintf(stderr, "%s: invalid sampling rate `%s'\n", argv[0], optarg);
           help(argv[0]);
           exit(EXIT_SUCCESS);
@@ -223,4 +224,3 @@ main (int argc, char *argv[], char *envp[])
 
   return !result;
 }
-
