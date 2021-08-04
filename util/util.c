@@ -915,14 +915,8 @@ grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
 int
 grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
 {
-  void *new = NULL;
-
-  if ((new = grow_buf_alloc(dest, src->size)) == NULL)
-    return -1;
-
-  memcpy(new, src->buffer, src->size);
-  grow_buf_seek(new, src->size, SEEK_CUR);
-  grow_buf_clear(src);
+  memcpy(dest, src, sizeof(grow_buf_t));
+  memset(src, 0, sizeof(grow_buf_t));
 
   return 0;
 }
