@@ -54,6 +54,7 @@ set(UTILDIR  util)
 set(CODECDIR ${SRCDIR}/codecs)
 set(BLOCKDIR ${SRCDIR}/blocks)
 set(MODEMDIR ${SRCDIR}/modems)
+set(SPECDIR  ${SRCDIR}/specific)
 
 # Compiler configuration
 set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
@@ -112,6 +113,11 @@ install(
 ########################## Sigutils library build #############################
 set(SIGUTILS_UTIL_HEADERS ${UTILDIR}/util.h)
 set(SIGUTILS_UTIL_SOURCES ${UTILDIR}/util.c)
+
+set(SIGUTILS_SPECIFIC_HEADERS
+    ${SPECDIR}/apt.h)
+set(SIGUTILS_SPECIFIC_SOURCES
+    ${SPECDIR}/apt.c)
 
 set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/agc.h
@@ -186,7 +192,8 @@ add_library(
   ${SIGUTILS_LIB_HEADERS}
   ${SIGUTILS_BLOCK_SOURCES}
   ${SIGUTILS_CODEC_SOURCES}
-  ${SIGUTILS_MODEM_SOURCES})
+  ${SIGUTILS_MODEM_SOURCES}
+  ${SIGUTILS_SPECIFIC_SOURCES})
   
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
@@ -214,6 +221,10 @@ endif()
 install(
   FILES ${SIGUTILS_LIB_HEADERS} 
   DESTINATION include/sigutils/sigutils)
+
+install(
+  FILES ${SIGUTILS_SPECIFIC_HEADERS} 
+  DESTINATION include/sigutils/sigutils/specific)
 
 install(
   FILES ${SIGUTILS_UTIL_HEADERS} 
