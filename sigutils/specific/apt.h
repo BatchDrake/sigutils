@@ -24,6 +24,10 @@
 #include <sigutils/clock.h>
 #include <sigutils/detect.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* https://web.archive.org/web/20070505090431/http://www2.ncdc.noaa.gov/docs/klm/html/c4/sec4-2.htm */
 
 #define SU_APT_IF_RATE            4160
@@ -108,7 +112,8 @@ struct sigutils_apt_decoder {
   SUSCOUNT       last_sync;
   SUSCOUNT       next_sync;
   SUSCOUNT       next_search;
-
+  SUFLOAT        last_sync_delta;
+  
   /* Line buffer */
   SUFLOAT        line_buffer[SU_APT_LINE_BUFF_LEN];
   SUSCOUNT       last_epoch;
@@ -143,5 +148,9 @@ void su_apt_decoder_set_snr(su_apt_decoder_t *self, SUFLOAT);
 SUBOOL su_apt_decoder_dump_pgm(const su_apt_decoder_t *self, const char *path);
 
 void su_apt_decoder_destroy(su_apt_decoder_t *self);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_SPECIFIC_APT_H */

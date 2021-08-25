@@ -32,13 +32,17 @@ su_apt_decoder_correlate(
   const SUCOMPLEX *pat,
   unsigned int start,
   unsigned int end,
-  SUFLOAT *snr)
+  SUFLOAT *snr,
+  SUFLOAT *delta)
 {
   unsigned int i, where;
   unsigned int p = start;
   unsigned int len;
+  int p_signed;
   SUFLOAT max, psd;
   SUFLOAT sig_noise = SU_APT_MIN_LEVEL;
+
+  SUFLOAT mean, sum;
 
   /* Correlate */
   SU_FFTW(_execute)(self->direct_plan);  
@@ -46,7 +50,7 @@ su_apt_decoder_correlate(
     self->corr_fft[i] *= SU_C_CONJ(pat[i]);
   SU_FFTW(_execute)(self->reverse_plan);
 
-  /* Find pulse */
+  /* Find pulse. This is actually a first guess. */
   max   = SU_APT_MIN_LEVEL;
   where = start;
   len   = (SU_APT_BUFF_LEN + end - start) % SU_APT_BUFF_LEN + 1;
@@ -65,8 +69,21 @@ su_apt_decoder_correlate(
       p = 0;
   }
 
-  *snr = len * max / (sig_noise - max);
+  *snr   = len * max / (sig_noise - max);
 
+  /* Get the pulse position _with decimals_ */
+  mean = sum = 0;
+  for (i = 0; i < 7; ++i) {
+    p_signed = where + i - 3;
+    psd      = SU_C_REAL(self->corr_fft[(SU_APT_BUFF_LEN + p_signed) % SU_APT_BUFF_LEN]);
+    mean    += p_signed * psd;
+    sum     += psd;
+  }
+  mean  /= sum;
+  
+  *delta = mean - SU_FLOOR(mean);
+  where = (SU_APT_BUFF_LEN + (int) SU_FLOOR(mean)) % SU_APT_BUFF_LEN;
+  
   return where;
 }
 
@@ -122,7 +139,9 @@ su_apt_decoder_update_levels(su_apt_decoder_t *self, SUBOOL detected)
 }
 
 SUPRIVATE SUBOOL
-su_apt_decoder_flush_line(su_apt_decoder_t *self, SUBOOL detected)
+su_apt_decoder_flush_line(
+  su_apt_decoder_t *self, 
+  SUBOOL detected)
 {
   uint8_t *line = NULL;
   unsigned int i, j, ndx;
@@ -214,7 +233,10 @@ su_apt_decoder_extract_line_until(su_apt_decoder_t *self, unsigned int pos)
     if (self->line_ptr >= SU_APT_LINE_LEN)
       break;
 
-    self->line_buffer[self->line_ptr++] = self->samp_buffer[p++];
+    self->line_buffer[self->line_ptr++] = 
+      (1 - self->last_sync_delta) * self->samp_buffer[p]
+      + (self->last_sync_delta) * self->samp_buffer[(p + 1) % SU_APT_LINE_BUFF_LEN];
+    ++p;
   }
 
   self->line_last_samp = pos;
@@ -240,6 +262,7 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
   unsigned int search_start, search_end;
   SUSDIFF last_sync_pos = self->last_sync - self->samp_epoch;
   SUBOOL  have_line = SU_FALSE;
+  SUFLOAT delta;
   SUBOOL  ok = SU_FALSE;
 
   /* 
@@ -260,7 +283,8 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
     self->sync_fft, 
     search_start, 
     search_end,
-    &snr);
+    &snr,
+    &delta);
   abs_pos = su_apt_decoder_pos_to_abs(self, pos);
 
   if (snr > SU_APT_SYNC_MIN_SNR) {
@@ -302,9 +326,11 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
     next_search     = abs_pos + self->line_len + SU_APT_SYNC_SIZE;
     self->last_sync = abs_pos;
     self->next_sync = self->last_sync + self->line_len;
-    
+
     su_apt_decoder_extract_line_until(self, pos);
     su_apt_decoder_flush_line(self, have_line);
+
+    self->last_sync_delta = delta;
   } else {
     if (self->lines > 0) {
       if (su_apt_decoder_pos_to_abs(self, search_start) < self->next_sync 
@@ -312,8 +338,12 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
         next_search      = self->next_sync + self->line_len + SU_APT_SYNC_SIZE;
         expected_sync    = self->next_sync % SU_APT_LINE_BUFF_LEN;
         self->next_sync += SU_FLOOR(self->line_len);
+        delta            = 0;
+
         su_apt_decoder_extract_line_until(self, expected_sync);
         su_apt_decoder_flush_line(self, SU_FALSE);
+
+        self->last_sync_delta = delta;
       }
     }
   }
