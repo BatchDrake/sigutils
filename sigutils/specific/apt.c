@@ -371,14 +371,31 @@ su_apt_decoder_feed(
 {
   SUSCOUNT i, elapsed;
   SUCOMPLEX x;
+  SUFLOAT pwr;
+  SUFLOAT snr;
 
   for (i = 0; i < count; ++i) {
     x = su_iir_filt_feed(&self->mf, su_pll_track(&self->pll, buffer[i]));
 
     if (su_sampler_feed(&self->resampler, &x)) {
-      self->samp_buffer[self->samp_ptr++] = SU_C_REAL(x * SU_C_CONJ(x));
+      pwr = SU_C_REAL(x * SU_C_CONJ(x));
+      self->mean_i += SU_C_REAL(x) * SU_C_REAL(x);
+      self->mean_q += SU_C_IMAG(x) * SU_C_IMAG(x);
+      
+      self->samp_buffer[self->samp_ptr++] = pwr;
       if (self->samp_ptr >= SU_APT_BUFF_LEN) {
+        snr = SU_ABS(SU_POWER_DB_RAW(self->mean_i / self->mean_q));
+
+        if (self->callbacks.on_carrier != NULL)
+          SU_TRYCATCH(
+            (self->callbacks.on_carrier) (
+              self, 
+              self->callbacks.userdata, 
+              SU_POWER_DB(snr)),
+            return SU_FALSE);
+
         self->samp_ptr = 0;
+        self->mean_i = self->mean_q = 0;
         self->samp_epoch += SU_APT_BUFF_LEN;
       }
 
@@ -507,7 +524,7 @@ su_apt_decoder_new(
   su_pll_init(
     &new->pll, 
     SU_ABS2NORM_FREQ(fs, SU_APT_AM_CARRIER_FREQ),
-    .005f * bw);
+    .001f * bw);
 
   /* Setup matched filter for 4160 Hz */
   SU_TRYCATCH(

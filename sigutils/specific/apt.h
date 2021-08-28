@@ -55,7 +55,7 @@ extern "C" {
 #define SU_APT_LEVEL_LEN          10
 #define SU_APT_BLACK_START        1085
 #define SU_APT_WHITE_START        45
-
+#define SU_APT_MIN_CARRIER_DB     1
 #define SU_APT_MIN_LEVEL          1e-30
 
 enum sigutils_apt_decoder_channel {
@@ -68,8 +68,9 @@ struct sigutils_apt_decoder;
 struct sigutils_apt_decoder_callbacks {
   void *userdata;
 
-  SUBOOL (*on_sync) (struct sigutils_apt_decoder *, void *, SUSCOUNT);
-  SUBOOL (*on_line) (struct sigutils_apt_decoder *, void *, SUFLOAT);
+  SUBOOL (*on_carrier) (struct sigutils_apt_decoder *, void *, SUFLOAT);
+  SUBOOL (*on_sync)    (struct sigutils_apt_decoder *, void *, SUSCOUNT);
+  SUBOOL (*on_line)    (struct sigutils_apt_decoder *, void *, SUFLOAT);
   SUBOOL (*on_line_data) (
     struct sigutils_apt_decoder *,
     void *,
@@ -83,6 +84,7 @@ struct sigutils_apt_decoder_callbacks {
 #define sigutils_apt_decoder_callbacks_INITIALIZER \
 {                                                  \
   NULL, /* userdata */                             \
+  NULL, /* on_carrier */                           \
   NULL, /* on_sync */                              \
   NULL, /* on_line */                              \
   NULL, /* on_line_data */                         \
@@ -100,6 +102,9 @@ struct sigutils_apt_decoder {
   SUCOMPLEX     samp_buffer[SU_APT_BUFF_LEN];
   unsigned int  samp_ptr;
   SUSCOUNT      samp_epoch;
+  
+  SUFLOAT       mean_i;
+  SUFLOAT       mean_q;
   
   /* Correlator data */
   SUFLOAT        sync_snr;
