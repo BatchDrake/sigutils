@@ -27,29 +27,27 @@
 #include "sampling.h"
 
 /* Expects: relative frequency */
-void
-su_ncqo_init(su_ncqo_t *ncqo, SUFLOAT fnor)
+SU_CONSTRUCTOR_TYPED(void, su_ncqo, SUFLOAT fnor)
 {
-  ncqo->phi   = .0;
-  ncqo->omega = SU_NORM2ANG_FREQ(fnor);
-  ncqo->fnor  = fnor;
-  ncqo->sin   = 0;
-  ncqo->cos   = 1;
+  self->phi   = .0;
+  self->omega = SU_NORM2ANG_FREQ(fnor);
+  self->fnor  = fnor;
+  self->sin   = 0;
+  self->cos   = 1;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  ncqo->p     = 0;
-  ncqo->pre_c = SU_FALSE;
+  self->p     = 0;
+  self->pre_c = SU_FALSE;
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 
-void
-su_ncqo_init_fixed(su_ncqo_t *ncqo, SUFLOAT fnor)
+SU_METHOD(su_ncqo, void, init_fixed, SUFLOAT fnor)
 {
-  su_ncqo_init(ncqo, fnor);
+  su_ncqo_init(self, fnor);
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  ncqo->pre_c = SU_TRUE;
-  __su_ncqo_populate_precalc_buffer(ncqo);
+  self->pre_c = SU_TRUE;
+  __su_ncqo_populate_precalc_buffer(self);
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 
@@ -71,84 +69,79 @@ __su_ncqo_assert_sin(su_ncqo_t *ncqo)
   }
 }
 
-void
-su_ncqo_set_phase(su_ncqo_t *ncqo, SUFLOAT phi)
+SU_METHOD(su_ncqo, void, set_phase, SUFLOAT phi)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
+  if (self->pre_c) {
     SU_ERROR("Cannot set phase on a fixed NCQO\n");
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  ncqo->phi = phi - 2 * PI * SU_FLOOR(phi / (2 * PI));
+  self->phi = phi - 2 * PI * SU_FLOOR(phi / (2 * PI));
 }
 
-SUFLOAT
-su_ncqo_get_i(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUFLOAT, get_i)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    return ncqo->cos_buffer[ncqo->p];
+  if (self->pre_c) {
+    return self->cos_buffer[self->p];
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-    __su_ncqo_assert_cos(ncqo);
-    return ncqo->cos;
+    __su_ncqo_assert_cos(self);
+    return self->cos;
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 
-SUFLOAT
-su_ncqo_get_q(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUFLOAT, get_q)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    return ncqo->sin_buffer[ncqo->p];
+  if (self->pre_c) {
+    return self->sin_buffer[self->p];
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-    __su_ncqo_assert_sin(ncqo);
-    return ncqo->sin;
+    __su_ncqo_assert_sin(self);
+    return self->sin;
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 
-SUCOMPLEX
-su_ncqo_get(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUCOMPLEX, get)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    return ncqo->cos_buffer[ncqo->p] + I * ncqo->sin_buffer[ncqo->p];
+  if (self->pre_c) {
+    return self->cos_buffer[self->p] + I * self->sin_buffer[self->p];
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-  __su_ncqo_assert_cos(ncqo);
-  __su_ncqo_assert_sin(ncqo);
+  __su_ncqo_assert_cos(self);
+  __su_ncqo_assert_sin(self);
 
-  return ncqo->cos + ncqo->sin * I;
+  return self->cos + self->sin * I;
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 
-SUFLOAT
-su_ncqo_read_i(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUFLOAT, read_i)
 {
   SUFLOAT old;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    old = ncqo->cos_buffer[ncqo->p];
-    __su_ncqo_step_precalc(ncqo);
+  if (self->pre_c) {
+    old = self->cos_buffer[self->p];
+    __su_ncqo_step_precalc(self);
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-    old = ncqo->cos;
+    old = self->cos;
 
-    __su_ncqo_step(ncqo);
+    __su_ncqo_step(self);
 
-    ncqo->cos_updated = SU_TRUE;
-    ncqo->sin_updated = SU_FALSE;
-    ncqo->cos = SU_COS(ncqo->phi);
+    self->cos_updated = SU_TRUE;
+    self->sin_updated = SU_FALSE;
+    self->cos = SU_COS(self->phi);
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
@@ -156,24 +149,23 @@ su_ncqo_read_i(su_ncqo_t *ncqo)
   return old;
 }
 
-SUFLOAT
-su_ncqo_read_q(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUFLOAT, read_q)
 {
   SUFLOAT old;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    old = ncqo->sin_buffer[ncqo->p];
-    __su_ncqo_step_precalc(ncqo);
+  if (self->pre_c) {
+    old = self->sin_buffer[self->p];
+    __su_ncqo_step_precalc(self);
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-    old = ncqo->sin;
+    old = self->sin;
 
-    __su_ncqo_step(ncqo);
+    __su_ncqo_step(self);
 
-    ncqo->cos_updated = SU_FALSE;
-    ncqo->sin_updated = SU_TRUE;
-    ncqo->sin = SU_SIN(ncqo->phi);
+    self->cos_updated = SU_FALSE;
+    self->sin_updated = SU_TRUE;
+    self->sin = SU_SIN(self->phi);
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
@@ -181,26 +173,25 @@ su_ncqo_read_q(su_ncqo_t *ncqo)
   return old;
 }
 
-SUCOMPLEX
-su_ncqo_read(su_ncqo_t *ncqo)
+SU_METHOD(su_ncqo, SUCOMPLEX, read)
 {
   SUCOMPLEX old;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
-    old = ncqo->cos_buffer[ncqo->p] + I * ncqo->sin_buffer[ncqo->p];
-    __su_ncqo_step_precalc(ncqo);
+  if (self->pre_c) {
+    old = self->cos_buffer[self->p] + I * self->sin_buffer[self->p];
+    __su_ncqo_step_precalc(self);
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-    old = ncqo->cos + I * ncqo->sin;
+    old = self->cos + I * self->sin;
 
-    __su_ncqo_step(ncqo);
+    __su_ncqo_step(self);
 
-    ncqo->cos_updated = SU_TRUE;
-    ncqo->sin_updated = SU_TRUE;
+    self->cos_updated = SU_TRUE;
+    self->sin_updated = SU_TRUE;
 
-    ncqo->cos = SU_COS(ncqo->phi);
-    ncqo->sin = SU_SIN(ncqo->phi);
+    self->cos = SU_COS(self->phi);
+    self->sin = SU_SIN(self->phi);
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
@@ -208,71 +199,64 @@ su_ncqo_read(su_ncqo_t *ncqo)
   return old;
 }
 
-void
-su_ncqo_set_angfreq(su_ncqo_t *ncqo, SUFLOAT omrel)
+SU_METHOD(su_ncqo, void, set_angfreq, SUFLOAT omrel)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
+  if (self->pre_c) {
     SU_ERROR("Cannot change frequency on a fixed NCQO\n");
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  ncqo->omega = omrel;
-  ncqo->fnor  = SU_ANG2NORM_FREQ(omrel);
+  self->omega = omrel;
+  self->fnor  = SU_ANG2NORM_FREQ(omrel);
 }
 
-void
-su_ncqo_inc_angfreq(su_ncqo_t *ncqo, SUFLOAT delta)
+SU_METHOD(su_ncqo, void, inc_angfreq, SUFLOAT delta)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
+  if (self->pre_c) {
     SU_ERROR("Cannot increase frequency on a fixed NCQO\n");
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  ncqo->omega += delta;
-  ncqo->fnor   = SU_ANG2NORM_FREQ(ncqo->omega);
+  self->omega += delta;
+  self->fnor   = SU_ANG2NORM_FREQ(self->omega);
 }
 
-SUFLOAT
-su_ncqo_get_angfreq(const su_ncqo_t *ncqo)
+SU_GETTER(su_ncqo, SUFLOAT, get_angfreq)
 {
-  return ncqo->omega;
+  return self->omega;
 }
 
-void
-su_ncqo_set_freq(su_ncqo_t *ncqo, SUFLOAT fnor)
+SU_METHOD(su_ncqo, void, set_freq, SUFLOAT fnor)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
+  if (self->pre_c) {
     SU_ERROR("Cannot change frequency on a fixed NCQO\n");
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  ncqo->fnor  = fnor;
-  ncqo->omega = SU_NORM2ANG_FREQ(fnor);
+  self->fnor  = fnor;
+  self->omega = SU_NORM2ANG_FREQ(fnor);
 }
 
-void
-su_ncqo_inc_freq(su_ncqo_t *ncqo, SUFLOAT delta)
+SU_METHOD(su_ncqo, void, inc_freq, SUFLOAT delta)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  if (ncqo->pre_c) {
+  if (self->pre_c) {
     SU_ERROR("Cannot increase frequency on a fixed NCQO\n");
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  ncqo->fnor  += delta;
-  ncqo->omega  = SU_NORM2ANG_FREQ(ncqo->fnor);
+  self->fnor  += delta;
+  self->omega  = SU_NORM2ANG_FREQ(self->fnor);
 }
 
-SUFLOAT
-su_ncqo_get_freq(const su_ncqo_t *ncqo)
+SU_GETTER(su_ncqo, SUFLOAT, get_freq)
 {
-  return ncqo->fnor;
+  return self->fnor;
 }
-
