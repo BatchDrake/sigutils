@@ -20,14 +20,15 @@
 #ifndef _SIGUTILS_LOG_H
 #define _SIGUTILS_LOG_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <stdint.h>
 #include <sys/time.h>
 
 #include "types.h"
+#include "defs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 enum sigutils_log_severity {
   SU_LOG_SEVERITY_DEBUG,
@@ -103,17 +104,6 @@ struct sigutils_log_config {
         __LINE__,                     \
         fmt,                          \
         ##arg)
-
-/* Other useful macros */
-#define SU_TRYCATCH(expr, action)       \
-  if (!(expr)) {                        \
-    SU_ERROR(                           \
-      "exception in \"%s\" (%s:%d)\n",  \
-      STRINGIFY(expr),                  \
-      __FILENAME__,                     \
-      __LINE__);                        \
-      action;                           \
-  }
 
 void su_log_mask_severity(enum sigutils_log_severity sev);
 

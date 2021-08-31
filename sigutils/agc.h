@@ -21,6 +21,7 @@
 #define _SIGUTILS_AGC_H
 
 #include "types.h"
+#include "defs.h"
 
 /*
  * This Hang AGC implementation is essentially inspired in GQRX's
@@ -87,10 +88,9 @@ struct su_agc_params {
 #define su_agc_params_INITIALIZER \
   { -100, 6, 100, 20, 20, 2, 4, 20, 40 }
 
-SUBOOL su_agc_init(su_agc_t *agc, const struct su_agc_params *params);
+SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params);
+SU_DESTRUCTOR (su_agc);
 
-SUCOMPLEX su_agc_feed(su_agc_t *agc, SUCOMPLEX x);
-
-void su_agc_finalize(su_agc_t *agc);
+SU_METHOD     (su_agc, SUCOMPLEX, feed, SUCOMPLEX x);
 
 #endif /* _SIGUTILS_AGC_H */

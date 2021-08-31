@@ -19,54 +19,52 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 #include "agc.h"
 
-SUBOOL
-su_agc_init(su_agc_t *agc, const struct su_agc_params *params)
+SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params)
 {
-  SUFLOAT *mag_buf = NULL;
-  SUCOMPLEX *delay_line = NULL;
+  memset(self, 0, sizeof (su_agc_t));
 
-  memset(agc, 0, sizeof (su_agc_t));
+  SU_ALLOCATE_MANY_FAIL(
+    self->mag_history, 
+    params->mag_history_size, 
+    SUFLOAT);
 
-  if ((mag_buf = calloc(params->mag_history_size, sizeof (SUFLOAT))) == NULL)
-    goto fail;
+  SU_ALLOCATE_MANY_FAIL(
+    self->delay_line, 
+    params->delay_line_size, 
+    SUCOMPLEX);
 
-  if ((delay_line = calloc(params->delay_line_size, sizeof (SUCOMPLEX))) == NULL)
-    goto fail;
+  self->mag_history_size = params->mag_history_size;
+  self->delay_line_size  = params->delay_line_size;
+  self->knee             = params->threshold;
+  self->hang_max         = params->hang_max;
+  self->gain_slope       = params->slope_factor * 1e-2;
+  self->fast_alpha_rise  = 1 - SU_EXP(-1. / params->fast_rise_t);
+  self->fast_alpha_fall  = 1 - SU_EXP(-1. / params->fast_fall_t);
+  self->slow_alpha_rise  = 1 - SU_EXP(-1. / params->slow_rise_t);
+  self->slow_alpha_fall  = 1 - SU_EXP(-1. / params->slow_fall_t);
+  self->fixed_gain       = SU_MAG_RAW(self->knee * (self->gain_slope - 1));
 
-  agc->mag_history      = mag_buf;
-  agc->delay_line       = delay_line;
-  agc->mag_history_size = params->mag_history_size;
-  agc->delay_line_size  = params->delay_line_size;
-  agc->knee             = params->threshold;
-  agc->hang_max         = params->hang_max;
-  agc->gain_slope       = params->slope_factor * 1e-2;
-  agc->fast_alpha_rise  = 1 - SU_EXP(-1. / params->fast_rise_t);
-  agc->fast_alpha_fall  = 1 - SU_EXP(-1. / params->fast_fall_t);
-  agc->slow_alpha_rise  = 1 - SU_EXP(-1. / params->slow_rise_t);
-  agc->slow_alpha_fall  = 1 - SU_EXP(-1. / params->slow_fall_t);
-  agc->fixed_gain       = SU_MAG_RAW(agc->knee * (agc->gain_slope - 1));
-
-  agc->enabled          = SU_TRUE;
+  self->enabled          = SU_TRUE;
 
   return SU_TRUE;
 
 fail:
-
-  su_agc_finalize(agc);
+  SU_DESTRUCT(su_agc, self);
 
   return SU_FALSE;
 }
 
 void
-su_agc_finalize(su_agc_t *agc)
+su_agc_finalize(su_agc_t *self)
 {
-  if (agc->mag_history != NULL)
-    free(agc->mag_history);
+  if (self->mag_history != NULL)
+    free(self->mag_history);
 
-  if (agc->delay_line != NULL)
-    free(agc->delay_line);
+  if (self->delay_line != NULL)
+    free(self->delay_line);
 }
 
 /*
@@ -82,7 +80,7 @@ su_agc_finalize(su_agc_t *agc)
  */
 
 SUCOMPLEX
-su_agc_feed(su_agc_t *agc, SUCOMPLEX x)
+su_agc_feed(su_agc_t *self, SUCOMPLEX x)
 {
   unsigned int i;
 
@@ -92,62 +90,62 @@ su_agc_feed(su_agc_t *agc, SUCOMPLEX x)
   SUFLOAT peak_delta;
 
   /* Push sample */
-  x_delayed = agc->delay_line[agc->delay_line_ptr];
+  x_delayed = self->delay_line[self->delay_line_ptr];
 
-  agc->delay_line[agc->delay_line_ptr++] = x;
-  if (agc->delay_line_ptr >= agc->delay_line_size)
-    agc->delay_line_ptr = 0;
+  self->delay_line[self->delay_line_ptr++] = x;
+  if (self->delay_line_ptr >= self->delay_line_size)
+    self->delay_line_ptr = 0;
 
-  if (agc->enabled) {
+  if (self->enabled) {
     x_dBFS = .5 * SU_DB(x * SU_C_CONJ(x)) - SUFLOAT_MAX_REF_DB;
 
     /* Push mag */
-    x_dBFS_delayed = agc->mag_history[agc->mag_history_ptr];
+    x_dBFS_delayed = self->mag_history[self->mag_history_ptr];
 
-    agc->mag_history[agc->mag_history_ptr++] = x_dBFS;
-    if (agc->mag_history_ptr >= agc->mag_history_size)
-      agc->mag_history_ptr = 0;
+    self->mag_history[self->mag_history_ptr++] = x_dBFS;
+    if (self->mag_history_ptr >= self->mag_history_size)
+      self->mag_history_ptr = 0;
 
-    if (x_dBFS > agc->peak)
-      agc->peak = x_dBFS;
-    else if (agc->peak == x_dBFS_delayed) {
+    if (x_dBFS > self->peak)
+      self->peak = x_dBFS;
+    else if (self->peak == x_dBFS_delayed) {
       /*
        * We've just removed the peak value from the magnitude history, we
        * need to recalculate the current peak value.
        */
-      agc->peak = SUFLOAT_MIN_REF_DB;
+      self->peak = SUFLOAT_MIN_REF_DB;
 
-      for (i = 0; i < agc->mag_history_size; ++i) {
-        if (agc->peak < agc->mag_history[i])
-          agc->peak = agc->mag_history[i];
+      for (i = 0; i < self->mag_history_size; ++i) {
+        if (self->peak < self->mag_history[i])
+          self->peak = self->mag_history[i];
       }
     }
 
     /* Update levels for fast averager */
-    peak_delta = agc->peak - agc->fast_level;
+    peak_delta = self->peak - self->fast_level;
     if (peak_delta > 0)
-      agc->fast_level += agc->fast_alpha_rise * peak_delta;
+      self->fast_level += self->fast_alpha_rise * peak_delta;
     else
-      agc->fast_level += agc->fast_alpha_fall * peak_delta;
+      self->fast_level += self->fast_alpha_fall * peak_delta;
 
     /* Update levels for slow averager */
-    peak_delta = agc->peak - agc->slow_level;
+    peak_delta = self->peak - self->slow_level;
     if (peak_delta > 0) {
-      agc->slow_level += agc->slow_alpha_rise * peak_delta;
-      agc->hang_n = 0;
-    } else if (agc->hang_n >= agc->hang_max)
-      agc->slow_level += agc->slow_alpha_fall * peak_delta;
+      self->slow_level += self->slow_alpha_rise * peak_delta;
+      self->hang_n = 0;
+    } else if (self->hang_n >= self->hang_max)
+      self->slow_level += self->slow_alpha_fall * peak_delta;
     else
-      ++agc->hang_n;
+      ++self->hang_n;
 
     /* Keep biggest magnitude */
-    x_dBFS_delayed = SU_MAX(agc->fast_level, agc->slow_level);
+    x_dBFS_delayed = SU_MAX(self->fast_level, self->slow_level);
 
     /* Is AGC on? */
-    if (x_dBFS_delayed < agc->knee)
-      x_delayed *= agc->fixed_gain;
+    if (x_dBFS_delayed < self->knee)
+      x_delayed *= self->fixed_gain;
     else
-      x_delayed *= SU_MAG_RAW(x_dBFS_delayed * (agc->gain_slope - 1));
+      x_delayed *= SU_MAG_RAW(x_dBFS_delayed * (self->gain_slope - 1));
 
     x_delayed *= SU_AGC_RESCALE;
   }
