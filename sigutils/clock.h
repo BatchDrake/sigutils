@@ -38,23 +38,21 @@ struct sigutils_sampler {
 
 typedef struct sigutils_sampler su_sampler_t;
 
-SUBOOL su_sampler_init(su_sampler_t *self, SUFLOAT bnor);
-
-SUINLINE SUFLOAT
-su_sampler_get_period(const su_sampler_t *self)
+SUINLINE
+SU_GETTER(su_sampler, SUFLOAT, get_period)
 {
   return self->period;
 }
 
-SUINLINE void
-su_sampler_set_phase_addend(su_sampler_t *self, SUFLOAT addend)
+SUINLINE 
+SU_METHOD(su_sampler, void, set_phase_addend, SUFLOAT addend)
 {
   self->phase0_rel = SU_FLOOR(addend);
   self->phase = self->period * self->phase0_rel;
 }
 
-SUINLINE SUBOOL
-su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
+SUINLINE
+SU_METHOD(su_sampler, SUBOOL, feed, SUCOMPLEX *sample)
 {
   SUBOOL sampled = SU_FALSE;
   SUFLOAT alpha;
@@ -80,9 +78,11 @@ su_sampler_feed(su_sampler_t *self, SUCOMPLEX *sample)
   return sampled;
 }
 
-SUBOOL su_sampler_set_rate(su_sampler_t *self, SUFLOAT bnor);
-void su_sampler_set_phase(su_sampler_t *self, SUFLOAT phase);
-void su_sampler_finalize(su_sampler_t *self);
+SU_CONSTRUCTOR(su_sampler, SUFLOAT bnor);
+SU_DESTRUCTOR(su_sampler);
+
+SU_METHOD(su_sampler, SUBOOL, set_rate, SUFLOAT bnor);
+SU_METHOD(su_sampler, void,   set_phase, SUFLOAT phase);
 
 /*
  * The implementation of the Gardner clock recovery algorithm computes the
@@ -260,27 +260,17 @@ typedef struct sigutils_clock_detector su_clock_detector_t;
   0, /* prev */                                 \
 }
 
-SUBOOL su_clock_detector_init(
-    su_clock_detector_t *cd,
-    SUFLOAT loop_gain,
-    SUFLOAT bhint,
-    SUSCOUNT bufsiz);
+SU_CONSTRUCTOR(
+  su_clock_detector, 
+  SUFLOAT  loop_gain,
+  SUFLOAT  bhint,
+  SUSCOUNT bufsiz);
+SU_DESTRUCTOR(su_clock_detector);
 
-void su_clock_detector_set_baud(su_clock_detector_t *cd, SUFLOAT bnor);
-
-void su_clock_detector_finalize(su_clock_detector_t *cd);
-
-void su_clock_detector_feed(su_clock_detector_t *cd, SUCOMPLEX val);
-
-SUBOOL su_clock_detector_set_bnor_limits(
-    su_clock_detector_t *cd,
-    SUFLOAT lo,
-    SUFLOAT hi);
-
-SUSDIFF su_clock_detector_read(
-    su_clock_detector_t *cd,
-    SUCOMPLEX *buf,
-    size_t size);
+SU_METHOD(su_clock_detector, void,    set_baud, SUFLOAT bnor);
+SU_METHOD(su_clock_detector, void,    feed, SUCOMPLEX val);
+SU_METHOD(su_clock_detector, SUBOOL,  set_bnor_limits, SUFLOAT lo, SUFLOAT hi);
+SU_METHOD(su_clock_detector, SUSDIFF, read, SUCOMPLEX *buf, size_t size);
 
 #ifdef __cplusplus
 }

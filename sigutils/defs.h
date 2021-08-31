@@ -93,7 +93,7 @@
   }
 
 #define SU_CONSTRUCT_CATCH(class, dest, action, ...)        \
-  if (JOIN(class, _init)(dest, __VA_ARGS__))) {             \
+  if (!JOIN(class, _init)(dest, __VA_ARGS__)) {             \
     SU_ERROR(                                               \
       "failed to call constructor of class \"%s\"\n",       \
       STRINGIFY(class));                                    \
