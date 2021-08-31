@@ -36,11 +36,14 @@
  *
  */
 
+#define SU_LOG_DOMAIN "coef"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "iir.h"
+#include "log.h"
 
 /**********************************************************************
   binomial_mult - multiplies a series of binomials together and returns
@@ -188,8 +191,7 @@ su_dcof_bwlp(int n, SUFLOAT fcf) {
   SUFLOAT *rcof = NULL;  
   SUFLOAT *dcof = NULL;  
 
-  if ((rcof = malloc(2 * n * sizeof(SUFLOAT))) == NULL)
-    goto done;
+  SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
 
   theta = M_PI * fcf;
   st = SU_SIN(theta);
@@ -264,11 +266,8 @@ su_dcof_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
   s2t = 2.0 * st * ct;    
   c2t = 2.0 * ct * ct - 1.0;  
 
-  if ((rcof = malloc(2 * n * sizeof (SUFLOAT))) == NULL)
-    goto done;
-
-  if ((tcof = malloc(2 * n * sizeof (SUFLOAT))) == NULL)
-    goto done;
+  SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
+  SU_ALLOCATE_MANY(tcof, 2 * n, SUFLOAT);
 
   for (k = 0; k < n; ++k)
   {
@@ -332,11 +331,8 @@ su_dcof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
   s2t = 2.0 * st * ct;    
   c2t = 2.0 * ct * ct - 1.0;  
 
-  if ((rcof = malloc(2 * n * sizeof(SUFLOAT))) == NULL)
-    goto done;
-
-  if ((tcof = malloc(2 * n * sizeof(SUFLOAT))) == NULL)
-    goto done;
+  SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
+  SU_ALLOCATE_MANY(tcof, 2 * n, SUFLOAT);
 
   for (k = 0; k < n; ++k) {
     parg = M_PI * (SUFLOAT) (2 * k + 1) / (SUFLOAT) (2 * n);
@@ -380,8 +376,7 @@ su_ccof_bwlp(int n)
   int m;
   int i;
 
-  if ((ccof = malloc((n + 1) * sizeof (SUFLOAT))) == NULL)
-    return NULL;
+  SU_ALLOCATE_MANY_CATCH(ccof, n + 1, SUFLOAT, return NULL);
 
   ccof[0] = 1;
   ccof[1] = n;
@@ -435,8 +430,7 @@ su_ccof_bwbp(int n)
   if ((tcof = su_ccof_bwhp(n)) == NULL)
     goto done;
 
-  if ((ccof = malloc((2 * n + 1) * sizeof (SUFLOAT))) == NULL)
-    goto done;
+  SU_ALLOCATE_MANY(ccof, 2 * n + 1, SUFLOAT);
 
   for (i = 0; i < n; ++i) {
     ccof[2 * i] = tcof[i];
@@ -467,8 +461,7 @@ su_ccof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 
   alpha = -2.0 * SU_COS(M_PI * (f2f + f1f) / 2.0) / SU_COS(M_PI * (f2f - f1f) / 2.0);
 
-  if ((ccof = malloc((2 * n + 1) * sizeof (SUFLOAT))) == NULL)
-    return NULL;
+  SU_ALLOCATE_MANY_CATCH(ccof, 2 * n + 1, SUFLOAT, return NULL);
 
   ccof[0] = 1.0;
 
