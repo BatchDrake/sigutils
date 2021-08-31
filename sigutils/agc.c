@@ -57,8 +57,7 @@ fail:
   return SU_FALSE;
 }
 
-void
-su_agc_finalize(su_agc_t *self)
+SU_DESTRUCTOR(su_agc)
 {
   if (self->mag_history != NULL)
     free(self->mag_history);
