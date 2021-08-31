@@ -39,17 +39,19 @@
 #define SU_METHOD(class, ret, name, ...)        \
   ret SU_METHOD_NAME(class, name) (             \
     SU_TYPENAME(class) *self,                   \
-    __VA_ARGS__)
+    ##__VA_ARGS__)
 
 #define SU_METHOD_CONST(class, ret, name, ...)  \
   ret SU_METHOD_NAME(class, name) (             \
     const SU_TYPENAME(class) *self,             \
-    __VA_ARGS__)
+    ##__VA_ARGS__)
+
+#define SU_GETTER SU_METHOD_CONST
 
 #define SU_CONSTRUCTOR(class, ...)              \
   SUBOOL                                        \
   SU_METHOD_NAME(class, init) (                 \
-    SU_TYPENAME(class) *self, __VA_ARGS__)
+    SU_TYPENAME(class) *self, ##__VA_ARGS__)
 
 #define SU_DESTRUCTOR(class)                    \
   void                                          \

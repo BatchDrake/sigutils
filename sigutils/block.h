@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include "types.h"
 #include "property.h"
+#include "defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,6 +66,17 @@ typedef struct sigutils_stream su_stream_t;
   0     /* post */              \
 }
 
+/* su_stream operations */
+SU_CONSTRUCTOR(su_stream, SUSCOUNT size);
+SU_DESTRUCTOR(su_stream);
+
+SU_METHOD(su_stream, void,     write, const SUCOMPLEX *data, SUSCOUNT size);
+SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size);
+SU_GETTER(su_stream, SUSCOUNT, get_contiguous, SUCOMPLEX **start, SUSCOUNT size);
+SU_GETTER(su_stream, su_off_t, tell);
+SU_GETTER(su_stream, SUSDIFF,  read, su_off_t off, SUCOMPLEX *data, SUSCOUNT size);
+
+/**************************** DEPRECATED API ********************************/
 struct sigutils_block;
 
 enum sigutils_flow_controller_kind {
@@ -158,28 +170,6 @@ struct sigutils_block {
 };
 
 typedef struct sigutils_block su_block_t;
-
-/* su_stream operations */
-SUBOOL su_stream_init(su_stream_t *stream, SUSCOUNT size);
-
-void su_stream_finalize(su_stream_t *stream);
-
-void su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, SUSCOUNT size);
-
-SUSCOUNT su_stream_get_contiguous(
-    const su_stream_t *stream,
-    SUCOMPLEX **start,
-    SUSCOUNT size);
-
-SUSCOUNT su_stream_advance_contiguous(su_stream_t *stream, SUSCOUNT size);
-
-su_off_t su_stream_tell(const su_stream_t *);
-
-SUSDIFF su_stream_read(
-    const su_stream_t *stream,
-    su_off_t off,
-    SUCOMPLEX *data,
-    SUSCOUNT size);
 
 /* su_block operations */
 su_block_t *su_block_new(const char *, ...);

@@ -30,39 +30,37 @@ static unsigned int      class_storage;
 static unsigned int      class_count;
 
 /****************************** su_stream API ********************************/
-SUBOOL
-su_stream_init(su_stream_t *stream, SUSCOUNT size)
+SU_CONSTRUCTOR(su_stream, SUSCOUNT size)
 {
-  SUCOMPLEX *buffer = NULL;
   int i = 0;
 
-  if ((buffer = malloc(size * sizeof (SUCOMPLEX))) == NULL) {
-    SU_ERROR("buffer allocation failed\n");
-    return SU_FALSE;
-  }
+  memset(self, 0, sizeof(su_stream_t));
 
+  SU_ALLOCATE_MANY_CATCH(
+    self->buffer,
+    size,
+    SUCOMPLEX,
+    return SU_FALSE);
+    
   /* Populate uninitialized buffer with NaNs */
   for (i = 0; i < size; ++i)
-    buffer[i] = nan("uninitialized");
+    self->buffer[i] = nan("uninitialized");
 
-  stream->buffer = buffer;
-  stream->size  = size;
-  stream->ptr = 0;
-  stream->avail = 0;
-  stream->pos   = 0ull;
+  self->size  = size;
+  self->ptr = 0;
+  self->avail = 0;
+  self->pos   = 0ull;
 
   return SU_TRUE;
 }
 
-void
-su_stream_finalize(su_stream_t *stream)
+SU_DESTRUCTOR(su_stream)
 {
-  if (stream->buffer != NULL)
-    free(stream->buffer);
+  if (self->buffer != NULL)
+    free(self->buffer);
 }
 
-void
-su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, SUSCOUNT size)
+SU_METHOD(su_stream, void, write, const SUCOMPLEX *data, SUSCOUNT size)
 {
   SUSCOUNT skip = 0;
   SUSCOUNT chunksz;
@@ -71,95 +69,96 @@ su_stream_write(su_stream_t *stream, const SUCOMPLEX *data, SUSCOUNT size)
    * We increment this always. Current reading position is
    *  stream->pos - stream->avail
    */
-  stream->pos += size;
+  self->pos += size;
 
-  if (size > stream->size) {
+  if (size > self->size) {
     SU_WARNING("write will overflow stream, keeping latest samples\n");
 
-    skip = size - stream->size;
+    skip = size - self->size;
     data += skip;
     size -= skip;
   }
 
-  if ((chunksz = stream->size - stream->ptr) > size)
+  if ((chunksz = self->size - self->ptr) > size)
     chunksz = size;
 
   /* This needs to be updated only once */
-  if (stream->avail < stream->size)
-    stream->avail += chunksz;
+  if (self->avail < self->size)
+    self->avail += chunksz;
 
-  memcpy(stream->buffer + stream->ptr, data, chunksz * sizeof (SUCOMPLEX));
-  stream->ptr += chunksz;
+  memcpy(self->buffer + self->ptr, data, chunksz * sizeof (SUCOMPLEX));
+  self->ptr += chunksz;
 
   /* Rollover only can happen here */
-  if (stream->ptr == stream->size) {
-    stream->ptr = 0;
+  if (self->ptr == self->size) {
+    self->ptr = 0;
 
     /* Is there anything left to be written? */
     if (size > 0) {
       size -= chunksz;
       data += chunksz;
 
-      memcpy(stream->buffer + stream->ptr, data, size * sizeof (SUCOMPLEX));
-      stream->ptr += size;
+      memcpy(self->buffer + self->ptr, data, size * sizeof (SUCOMPLEX));
+      self->ptr += size;
     }
   }
 }
 
-su_off_t
-su_stream_tell(const su_stream_t *stream)
+SU_GETTER(su_stream, su_off_t, tell)
 {
-  return stream->pos - stream->avail;
+  return self->pos - self->avail;
 }
 
-
-SUSCOUNT
-su_stream_get_contiguous(
-    const su_stream_t *stream,
-    SUCOMPLEX **start,
-    SUSCOUNT size)
+SU_GETTER(
+  su_stream, 
+  SUSCOUNT, 
+  get_contiguous, 
+  SUCOMPLEX **start, 
+  SUSCOUNT size)
 {
-  SUSCOUNT avail = stream->size - stream->ptr;
+  SUSCOUNT avail = self->size - self->ptr;
 
   if (size > avail) {
     size = avail;
   }
 
-  *start = stream->buffer + stream->ptr;
+  *start = self->buffer + self->ptr;
 
   return size;
 }
 
-SUSCOUNT
-su_stream_advance_contiguous(
-    su_stream_t *stream,
-    SUSCOUNT size)
+SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size)
 {
-  SUSCOUNT avail = stream->size - stream->ptr;
+  SUSCOUNT avail = self->size - self->ptr;
 
   if (size > avail) {
     size = avail;
   }
 
-  stream->pos += size;
-  stream->ptr += size;
-  if (stream->avail < stream->size) {
-    stream->avail += size;
+  self->pos += size;
+  self->ptr += size;
+  if (self->avail < self->size) {
+    self->avail += size;
   }
 
   /* Rollover */
-  if (stream->ptr == stream->size) {
-    stream->ptr = 0;
+  if (self->ptr == self->size) {
+    self->ptr = 0;
   }
 
   return size;
 }
 
-SUSDIFF
-su_stream_read(const su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUNT size)
+SU_GETTER(
+  su_stream, 
+  SUSDIFF,  
+  read, 
+  su_off_t off, 
+  SUCOMPLEX *data, 
+  SUSCOUNT size)
 {
   SUSCOUNT avail;
-  su_off_t readpos = su_stream_tell(stream);
+  su_off_t readpos = su_stream_tell(self);
   SUSCOUNT reloff;
   SUSCOUNT chunksz;
   SUSDIFF ptr;
@@ -169,36 +168,36 @@ su_stream_read(const su_stream_t *stream, su_off_t off, SUCOMPLEX *data, SUSCOUN
     return -1;
 
   /* Greedy reader */
-  if (off >= stream->pos)
+  if (off >= self->pos)
     return 0;
 
   reloff = off - readpos;
 
   /* Compute how many samples are available from here */
-  avail = stream->avail - reloff;
+  avail = self->avail - reloff;
   if (avail < size) {
     size = avail;
   }
 
   /* Compute position in the stream buffer to read from */
-  if ((ptr = stream->ptr - avail) < 0)
-    ptr += stream->size;
+  if ((ptr = self->ptr - avail) < 0)
+    ptr += self->size;
 
   /* Adjust in case reloff causes ptr to rollover */
-  if (ptr > stream->size)
-    ptr = ptr - stream->size;
+  if (ptr > self->size)
+    ptr = ptr - self->size;
 
-  if (ptr + size > stream->size)
-    chunksz = stream->size - ptr;
+  if (ptr + size > self->size)
+    chunksz = self->size - ptr;
   else
     chunksz = size;
 
-  memcpy(data, stream->buffer + ptr, chunksz * sizeof (SUCOMPLEX));
+  memcpy(data, self->buffer + ptr, chunksz * sizeof (SUCOMPLEX));
   size -= chunksz;
 
   /* Is there anything left to read? */
   if (size > 0)
-    memcpy(data + chunksz, stream->buffer, size * sizeof (SUCOMPLEX));
+    memcpy(data + chunksz, self->buffer, size * sizeof (SUCOMPLEX));
 
   return chunksz + size;
 }
