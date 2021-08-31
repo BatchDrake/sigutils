@@ -78,8 +78,7 @@ SU_DESTRUCTOR(su_agc)
  *  7. Output sample
  */
 
-SUCOMPLEX
-su_agc_feed(su_agc_t *self, SUCOMPLEX x)
+SU_METHOD(su_agc, SUCOMPLEX, feed, SUCOMPLEX x)
 {
   unsigned int i;
 
