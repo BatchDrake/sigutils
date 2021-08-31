@@ -48,10 +48,16 @@
 
 #define SU_GETTER SU_METHOD_CONST
 
-#define SU_CONSTRUCTOR(class, ...)              \
-  SUBOOL                                        \
+#define SU_CONSTRUCTOR_TYPED(ret, class, ...)   \
+  ret                                           \
   SU_METHOD_NAME(class, init) (                 \
     SU_TYPENAME(class) *self, ##__VA_ARGS__)
+
+#define SU_CONSTRUCTOR(class, ...)              \
+  SU_CONSTRUCTOR_TYPED(                         \
+    SUBOOL,                                     \
+    class,                                      \
+    ##__VA_ARGS__)
 
 #define SU_DESTRUCTOR(class)                    \
   void                                          \
@@ -77,7 +83,7 @@
   }
 
 #define SU_ALLOCATE_CATCH(dest, type, action)               \
-  if ((dest = su_calloc(len, sizeof(type))) == NULL) {      \
+  if ((dest = su_calloc(1, sizeof(type))) == NULL) {        \
     SU_ERROR(                                               \
       "failed to allocate one object of type \"%s\"\n",     \
       STRINGIFY(type));                                     \
