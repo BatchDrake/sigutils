@@ -30,35 +30,36 @@
   a = b;                \
   b = tmp;
 
-su_smoothpsd_t *
-su_smoothpsd_new(
-    const struct sigutils_smoothpsd_params *params,
-    SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
-    void *userdata)
+SU_INSTANCER(
+  su_smoothpsd,
+  const struct sigutils_smoothpsd_params *params,
+  SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
+  void *userdata)
 {
   su_smoothpsd_t *new = NULL;
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_smoothpsd_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_smoothpsd_t);
 
-  SU_TRYCATCH(pthread_mutex_init(&new->mutex, NULL) == 0, goto fail);
+  SU_TRYZ_FAIL(pthread_mutex_init(&new->mutex, NULL));
+
   new->mutex_init = SU_TRUE;
 
   new->psd_func = psd_func;
   new->userdata = userdata;
 
-  SU_TRYCATCH(su_smoothpsd_set_params(new, params), goto fail);
+  SU_TRY_FAIL(su_smoothpsd_set_params(new, params));
 
   return new;
 
 fail:
   if (new != NULL)
-    su_smoothpsd_destroy(new);
+    SU_DESTROY(su_smoothpsd, new);
 
   return NULL;
 }
 
-SUPRIVATE SUBOOL
-su_smoothpsd_exec_fft(su_smoothpsd_t *self)
+SUPRIVATE 
+SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 {
   unsigned int i;
   SUFLOAT wsizeinv = 1. / self->params.fft_size;
@@ -82,8 +83,8 @@ su_smoothpsd_exec_fft(su_smoothpsd_t *self)
 
   return SU_TRUE;
 }
-SUBOOL
-su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
+
+SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 {
   unsigned int chunk;
   unsigned int i;
@@ -93,7 +94,8 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
   SUBOOL ok = SU_FALSE;
   SUBOOL exec_fft = SU_FALSE;
 
-  SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+  SU_TRYZ(pthread_mutex_lock(&self->mutex));
+
   mutex_acquired = SU_TRUE;
 
   if (self->max_p > 0) {
@@ -124,7 +126,7 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
 
-          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+          SU_TRY(su_smoothpsd_exec_fft(self));
         }
       }
 
@@ -168,7 +170,7 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
               p = 0;
           }
 
-          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+          SU_TRY(su_smoothpsd_exec_fft(self));
         }
       }
     }
@@ -183,10 +185,11 @@ done:
   return ok;
 }
 
-SUBOOL
-su_smoothpsd_set_params(
-    su_smoothpsd_t *self,
-    const struct sigutils_smoothpsd_params *params)
+SU_METHOD(
+  su_smoothpsd,
+  SUBOOL,
+  set_params,
+  const struct sigutils_smoothpsd_params *params)
 {
   unsigned int i;
   void *tmp = NULL;
@@ -242,7 +245,7 @@ su_smoothpsd_set_params(
       goto done;
     }
 
-    SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+    SU_TRYZ(pthread_mutex_lock(&self->mutex));
     mutex_acquired = SU_TRUE;
 
     _SWAP(window_func, self->window_func);
@@ -256,7 +259,7 @@ su_smoothpsd_set_params(
   }
 
   if (!mutex_acquired) {
-    SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+    SU_TRYZ(pthread_mutex_lock(&self->mutex));
     mutex_acquired = SU_TRUE;
   }
 
@@ -339,8 +342,7 @@ done:
   return ok;
 }
 
-void
-su_smoothpsd_destroy(su_smoothpsd_t *self)
+SU_COLLECTOR(su_smoothpsd)
 {
   if (self->mutex_init)
     pthread_mutex_destroy(&self->mutex);

@@ -69,40 +69,44 @@ struct sigutils_smoothpsd {
 
 typedef struct sigutils_smoothpsd su_smoothpsd_t;
 
-SUINLINE SUSCOUNT
-su_smoothpsd_get_iters(const su_smoothpsd_t *self)
+SUINLINE 
+SU_GETTER(su_smoothpsd, SUSCOUNT, get_iters)
 {
   return self->iters;
 }
 
-SUINLINE unsigned int
-su_smoothpsd_get_fft_size(const su_smoothpsd_t *self)
+SUINLINE 
+SU_GETTER(su_smoothpsd, unsigned int, get_fft_size)
 {
   return self->params.fft_size;
 }
 
-
-SUINLINE SUFLOAT *
-su_smoothpsd_get_last_psd(const su_smoothpsd_t *self)
+SUINLINE
+SU_GETTER(su_smoothpsd, SUFLOAT *, get_last_psd)
 {
   return self->realfft;
 }
 
-su_smoothpsd_t *su_smoothpsd_new(
-    const struct sigutils_smoothpsd_params *params,
-    SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
-    void *userdata);
+SU_INSTANCER(
+  su_smoothpsd,
+  const struct sigutils_smoothpsd_params *params,
+  SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
+  void *userdata);
 
-SUBOOL su_smoothpsd_feed(
-    su_smoothpsd_t *self,
-    const SUCOMPLEX *data,
-    SUSCOUNT size);
+SU_COLLECTOR(su_smoothpsd);
 
-SUBOOL su_smoothpsd_set_params(
-    su_smoothpsd_t *self,
-    const struct sigutils_smoothpsd_params *params);
+SU_METHOD(
+  su_smoothpsd,
+  SUBOOL,
+  feed,
+  const SUCOMPLEX *data,
+  SUSCOUNT size);
 
-void su_smoothpsd_destroy(su_smoothpsd_t *self);
+SU_METHOD(
+  su_smoothpsd,
+  SUBOOL,
+  set_params,
+  const struct sigutils_smoothpsd_params *params);
 
 #ifdef __cplusplus
 }
