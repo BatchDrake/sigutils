@@ -126,6 +126,7 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/codec.h
     ${SRCDIR}/coef.h
     ${SRCDIR}/decider.h
+    ${SRCDIR}/defs.h
     ${SRCDIR}/detect.h
     ${SRCDIR}/equalizer.h
     ${SRCDIR}/iir.h
