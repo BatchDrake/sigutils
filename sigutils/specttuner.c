@@ -26,46 +26,48 @@
 #include "taps.h"
 #include "specttuner.h"
 
-SUPRIVATE void
-su_specttuner_channel_destroy(su_specttuner_channel_t *channel)
+SUPRIVATE 
+SU_COLLECTOR(su_specttuner_channel)
 {
-  if (channel->plan[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_destroy_plan) (channel->plan[SU_SPECTTUNER_STATE_EVEN]);
+  if (self->plan[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_destroy_plan) (self->plan[SU_SPECTTUNER_STATE_EVEN]);
 
-  if (channel->plan[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_destroy_plan) (channel->plan[SU_SPECTTUNER_STATE_ODD]);
+  if (self->plan[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_destroy_plan) (self->plan[SU_SPECTTUNER_STATE_ODD]);
 
-  if (channel->ifft[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_free) (channel->ifft[SU_SPECTTUNER_STATE_EVEN]);
+  if (self->ifft[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_free) (self->ifft[SU_SPECTTUNER_STATE_EVEN]);
 
-  if (channel->ifft[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_free) (channel->ifft[SU_SPECTTUNER_STATE_ODD]);
+  if (self->ifft[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_free) (self->ifft[SU_SPECTTUNER_STATE_ODD]);
 
-  if (channel->fft != NULL)
-    SU_FFTW(_free) (channel->fft);
+  if (self->fft != NULL)
+    SU_FFTW(_free) (self->fft);
 
-  if (channel->window != NULL)
-    SU_FFTW(_free) (channel->window);
+  if (self->window != NULL)
+    SU_FFTW(_free) (self->window);
 
-  if (channel->forward != NULL)
-    SU_FFTW(_destroy_plan) (channel->forward);
+  if (self->forward != NULL)
+    SU_FFTW(_destroy_plan) (self->forward);
 
-  if (channel->backward != NULL)
-    SU_FFTW(_destroy_plan) (channel->backward);
+  if (self->backward != NULL)
+    SU_FFTW(_destroy_plan) (self->backward);
 
-  if (channel->h != NULL)
-    SU_FFTW(_free) (channel->h);
+  if (self->h != NULL)
+    SU_FFTW(_free) (self->h);
 
-  free(channel);
+  free(self);
 }
 
-SUPRIVATE void
-su_specttuner_update_channel_filter(
-    const su_specttuner_t *owner,
-    su_specttuner_channel_t *channel)
+SUPRIVATE
+SU_METHOD_CONST(
+  su_specttuner, 
+  void, 
+  update_channel_filter, 
+  su_specttuner_channel_t *channel)
 {
   SUCOMPLEX tmp;
-  unsigned int window_size = owner->params.window_size;
+  unsigned int window_size = self->params.window_size;
   unsigned int window_half = window_size / 2;
   unsigned int i;
 
@@ -101,35 +103,35 @@ su_specttuner_update_channel_filter(
   SU_FFTW(_execute) (channel->forward);
 }
 
-SUPRIVATE SUBOOL
-su_specttuner_init_filter_response(
-    const su_specttuner_t *owner,
-    su_specttuner_channel_t *channel)
+SUPRIVATE
+SU_METHOD_CONST(
+  su_specttuner, 
+  SUBOOL, 
+  init_filter_response, 
+  su_specttuner_channel_t *channel)
 {
   SUBOOL ok = SU_FALSE;
-  unsigned int window_size = owner->params.window_size;
+  unsigned int window_size = self->params.window_size;
 
   /* Backward plan */
-  SU_TRYCATCH(
+  SU_TRY(
       channel->forward = SU_FFTW(_plan_dft_1d)(
           window_size,
           channel->h,
           channel->h,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto done);
+          FFTW_ESTIMATE));
 
   /* Forward plan */
-  SU_TRYCATCH(
+  SU_TRY(
       channel->backward = SU_FFTW(_plan_dft_1d)(
           window_size,
           channel->h,
           channel->h,
           FFTW_BACKWARD,
-          FFTW_ESTIMATE),
-      goto done);
+          FFTW_ESTIMATE));
 
-  su_specttuner_update_channel_filter(owner, channel);
+  su_specttuner_update_channel_filter(self, channel);
 
   ok = SU_TRUE;
 done:
@@ -137,13 +139,14 @@ done:
   return ok;
 }
 
-void
-su_specttuner_set_channel_freq(
-    const su_specttuner_t *st,
-    su_specttuner_channel_t *channel,
-    SUFLOAT f0)
+SU_METHOD_CONST(
+  su_specttuner,
+  void,
+  set_channel_freq,
+  su_specttuner_channel_t *channel,
+  SUFLOAT f0)
 {
-  unsigned int window_size = st->params.window_size;
+  unsigned int window_size = self->params.window_size;
   su_ncqo_t lo = su_ncqo_INITIALIZER;
   SUFLOAT off;
 
@@ -162,17 +165,18 @@ su_specttuner_set_channel_freq(
   }
 }
 
-SUBOOL
-su_specttuner_set_channel_bandwidth(
-    const su_specttuner_t *st,
-    su_specttuner_channel_t *channel,
-    SUFLOAT bw)
+SU_METHOD_CONST(
+  su_specttuner,
+  SUBOOL,
+  set_channel_bandwidth,
+  su_specttuner_channel_t *channel,
+  SUFLOAT bw)
 {
   SUFLOAT k;
   unsigned int min_size;
   unsigned int width;
 
-  unsigned int window_size = st->params.window_size;
+  unsigned int window_size = self->params.window_size;
 
   if (bw > 2 * PI)
     bw = 2 * PI;
@@ -195,13 +199,14 @@ su_specttuner_set_channel_bandwidth(
   channel->width  = width;
   channel->halfw  = channel->width >> 1;
 
-  su_specttuner_update_channel_filter(st, channel);
+  su_specttuner_update_channel_filter(self, channel);
 
   return SU_TRUE;
 }
 
-SUPRIVATE su_specttuner_channel_t *
-su_specttuner_channel_new(
+SUPRIVATE
+SU_INSTANCER(
+    su_specttuner_channel,
     const su_specttuner_t *owner,
     const struct sigutils_specttuner_channel_params *params)
 {
@@ -214,17 +219,18 @@ su_specttuner_channel_new(
   SUFLOAT off;
   SUFLOAT corrbw;
   SUBOOL  full_spectrum = SU_FALSE;
-  SU_TRYCATCH(params->guard >= 1, goto fail);
-  SU_TRYCATCH(params->bw > 0, goto fail);
-  SU_TRYCATCH(params->f0 >= 0 && params->f0 < 2 * PI, goto fail);
+
+  SU_TRY_FAIL(params->guard >= 1);
+  SU_TRY_FAIL(params->bw > 0);
+  SU_TRY_FAIL(params->f0 >= 0 && params->f0 < 2 * PI);
 
   corrbw = params->bw;
 
   if (corrbw > 2 * PI)
     corrbw = 2 * PI;
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_channel_t)), goto fail);
-
+  SU_ALLOCATE_FAIL(new, su_specttuner_channel_t);
+  
   actual_bw = corrbw * params->guard;
 
   if (actual_bw >= 2 * PI) {
@@ -289,21 +295,18 @@ su_specttuner_channel_new(
 
   new->gain   = SU_SQRT(1.f / new->size);
 
-  SU_TRYCATCH(new->width > 0, goto fail);
+  SU_TRY_FAIL(new->width > 0);
 
   /*
    * Window function. We leverage fftw(f)_malloc aligned addresses
    * to attempt some kind of cache efficiency here.
    */
-  SU_TRYCATCH(
-      new->window = SU_FFTW(_malloc)(new->size * sizeof(SUFLOAT)),
-      goto fail);
+  SU_TRY_FAIL(new->window = SU_FFTW(_malloc)(new->size * sizeof(SUFLOAT)));
 
-  SU_TRYCATCH(
-      new->h     = SU_FFTW(_malloc)(window_size * sizeof(SU_FFTW(_complex))),
-      goto fail);
-
-  SU_TRYCATCH(su_specttuner_init_filter_response(owner, new), goto fail);
+  SU_TRY_FAIL(
+    new->h = SU_FFTW(_malloc)(window_size * sizeof(SU_FFTW(_complex))));
+  
+  SU_TRY_FAIL(su_specttuner_init_filter_response(owner, new));
 
   /*
    * Squared cosine window. Seems odd, right? Well, it turns out that
@@ -326,19 +329,16 @@ su_specttuner_channel_new(
   }
 
   /* FFT initialization */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->ifft[SU_SPECTTUNER_STATE_EVEN] =
-          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->ifft[SU_SPECTTUNER_STATE_ODD] =
-          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
-  SU_TRYCATCH(
-      new->fft = SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+  SU_TRY_FAIL(
+      new->fft = SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
   memset(new->fft, 0, new->size * sizeof(SU_FFTW(_complex)));
 
@@ -352,167 +352,159 @@ su_specttuner_channel_new(
       0,
       new->size * sizeof(SU_FFTW(_complex)));
 
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->plan[SU_SPECTTUNER_STATE_EVEN] =
           SU_FFTW(_plan_dft_1d)(
               new->size,
               new->fft,
               new->ifft[SU_SPECTTUNER_STATE_EVEN],
               FFTW_BACKWARD,
-              FFTW_ESTIMATE),
-          goto fail);
+              FFTW_ESTIMATE));
 
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->plan[SU_SPECTTUNER_STATE_ODD] =
           SU_FFTW(_plan_dft_1d)(
               new->size,
               new->fft,
               new->ifft[SU_SPECTTUNER_STATE_ODD],
               FFTW_BACKWARD,
-              FFTW_ESTIMATE),
-          goto fail);
+              FFTW_ESTIMATE));
 
   return new;
 
 fail:
   if (new != NULL)
-    su_specttuner_channel_destroy(new);
+    SU_DESTROY(su_specttuner_channel, new);
 
   return NULL;
 }
 
-void
-su_specttuner_destroy(su_specttuner_t *st)
+SU_COLLECTOR(su_specttuner)
 {
   unsigned int i;
 
-  for (i = 0; i < st->channel_count; ++i)
-    if (st->channel_list[i] != NULL)
-      su_specttuner_close_channel(st, st->channel_list[i]);
+  for (i = 0; i < self->channel_count; ++i)
+    if (self->channel_list[i] != NULL)
+      (void) su_specttuner_close_channel(self, self->channel_list[i]);
 
-  if (st->channel_list != NULL)
-    free(st->channel_list);
+  if (self->channel_list != NULL)
+    free(self->channel_list);
 
-  if (st->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_destroy_plan) (st->plans[SU_SPECTTUNER_STATE_EVEN]);
+  if (self->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_destroy_plan) (self->plans[SU_SPECTTUNER_STATE_EVEN]);
 
-  if (st->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_destroy_plan) (st->plans[SU_SPECTTUNER_STATE_ODD]);
+  if (self->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_destroy_plan) (self->plans[SU_SPECTTUNER_STATE_ODD]);
 
-  if (st->fft != NULL)
-    SU_FFTW(_free) (st->fft);
+  if (self->fft != NULL)
+    SU_FFTW(_free) (self->fft);
 
-  if (st->window != NULL)
-    SU_FFTW(_free) (st->window);
+  if (self->window != NULL)
+    SU_FFTW(_free) (self->window);
 
-  free(st);
+  free(self);
 }
 
-su_specttuner_t *
-su_specttuner_new(const struct sigutils_specttuner_params *params)
+SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 {
   su_specttuner_t *new = NULL;
 
   SU_TRYCATCH((params->window_size & 1) == 0, goto fail);
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_specttuner_t);
 
   new->params = *params;
   new->half_size = params->window_size >> 1;
   new->full_size = 3 * params->window_size;
 
   /* Window is 3/2 the FFT size */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->window = SU_FFTW(_malloc(
-          new->full_size * sizeof(SU_FFTW(_complex)))),
-      goto fail);
+          new->full_size * sizeof(SU_FFTW(_complex)))));
 
   /* FFT is the size provided by params */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->fft = SU_FFTW(_malloc(
-          params->window_size * sizeof(SU_FFTW(_complex)))),
-      goto fail);
+          params->window_size * sizeof(SU_FFTW(_complex)))));
 
   /* Even plan starts at the beginning of the window */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
           params->window_size,
           new->window,
           new->fft,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto fail);
+          FFTW_ESTIMATE));
 
   /* Odd plan stars at window_size / 2 */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
           params->window_size,
           new->window + new->half_size,
           new->fft,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto fail);
+          FFTW_ESTIMATE));
 
   return new;
 
 fail:
   if (new != NULL)
-    su_specttuner_destroy(new);
+    SU_DESTROY(su_specttuner, new);
 
   return NULL;
 }
 
 SUINLINE SUSCOUNT
 __su_specttuner_feed_bulk(
-    su_specttuner_t *st,
+    su_specttuner_t *self,
     const SUCOMPLEX *buf,
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
   SUSDIFF p;
 
-  if (size + st->p > st->params.window_size)
-    size = st->params.window_size - st->p;
+  if (size + self->p > self->params.window_size)
+    size = self->params.window_size - self->p;
 
-  switch (st->state)
+  switch (self->state)
   {
     case SU_SPECTTUNER_STATE_EVEN:
       /* Just copy at the beginning */
-      memcpy(st->window + st->p, buf, size * sizeof(SUCOMPLEX));
+      memcpy(self->window + self->p, buf, size * sizeof(SUCOMPLEX));
       break;
 
     case SU_SPECTTUNER_STATE_ODD:
       /* Copy to the second third */
-      memcpy(st->window + st->p + st->half_size, buf, size * sizeof(SUCOMPLEX));
+      memcpy(self->window + self->p + self->half_size, buf, size * sizeof(SUCOMPLEX));
 
       /* Did this copy populate the last third? */
-      if (st->p + size > st->half_size) {
-        halfsz = st->p + size - st->half_size;
-        p = st->p > st->half_size ? st->p : st->half_size;
+      if (self->p + size > self->half_size) {
+        halfsz = self->p + size - self->half_size;
+        p = self->p > self->half_size ? self->p : self->half_size;
 
         /* Don't take into account data already written */
-        halfsz -= p - st->half_size;
+        halfsz -= p - self->half_size;
 
         /* Copy to the first third */
         if (halfsz > 0)
           memcpy(
-              st->window + p - st->half_size,
-              st->window + p + st->half_size,
+              self->window + p - self->half_size,
+              self->window + p + self->half_size,
               halfsz * sizeof(SUCOMPLEX));
       }
   }
 
-  st->p += size;
+  self->p += size;
 
-  if (st->p == st->params.window_size) {
-    st->p = st->half_size;
+  if (self->p == self->params.window_size) {
+    self->p = self->half_size;
 
     /* Compute FFT */
-    SU_FFTW(_execute) (st->plans[st->state]);
+    SU_FFTW(_execute) (self->plans[self->state]);
 
     /* Toggle state */
-    st->state = !st->state;
-    st->ready = SU_TRUE;
+    self->state = !self->state;
+    self->ready = SU_TRUE;
   }
 
   return size;
@@ -520,12 +512,12 @@ __su_specttuner_feed_bulk(
 
 SUINLINE SUBOOL
 __su_specttuner_feed_channel(
-    const su_specttuner_t *st,
+    const su_specttuner_t *self,
     su_specttuner_channel_t *channel)
 {
   int p;
   int len;
-  int window_size = st->params.window_size;
+  int window_size = self->params.window_size;
   unsigned int i;
   SUCOMPLEX phase;
   SUFLOAT alpha, beta;
@@ -541,14 +533,14 @@ __su_specttuner_feed_channel(
   /* Copy to the end */
   memcpy(
       channel->fft,
-      st->fft + p,
+      self->fft + p,
       len * sizeof(SUCOMPLEX));
 
   /* Copy remaining part */
   if (len < channel->halfw)
     memcpy(
         channel->fft + len,
-        st->fft,
+        self->fft,
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
   /***************************** Lower sideband ******************************/
@@ -560,14 +552,14 @@ __su_specttuner_feed_channel(
   /* Copy higher frequencies */
   memcpy(
       channel->fft + channel->size - len,
-      st->fft + p - len,
+      self->fft + p - len,
       len * sizeof(SUCOMPLEX));
 
   /* Copy remaining part */
   if (len < channel->halfw)
     memcpy(
         channel->fft + channel->size - channel->halfw,
-        st->fft + window_size - (channel->halfw - len),
+        self->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
   /*********************** Apply filter and scaling **************************/
@@ -619,44 +611,46 @@ __su_specttuner_feed_channel(
       channel->halfsz);
 }
 
-SUSDIFF
-su_specttuner_feed_bulk_single(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
-    SUSCOUNT size)
+SU_METHOD(
+  su_specttuner, 
+  SUSDIFF, 
+  feed_bulk_single, 
+  const SUCOMPLEX *buf, 
+  SUSCOUNT size)
 {
   SUSDIFF got;
   SUSCOUNT ok = SU_TRUE;
   unsigned int i;
 
-  if (st->ready)
+  if (self->ready)
     return 0;
 
-  got = __su_specttuner_feed_bulk(st, buf, size);
+  got = __su_specttuner_feed_bulk(self, buf, size);
 
   /* Buffer full, feed channels */
-  if (st->ready)
-    for (i = 0; i < st->channel_count; ++i)
-      if (st->channel_list[i] != NULL)
-        ok = __su_specttuner_feed_channel(st, st->channel_list[i]) && ok;
+  if (self->ready)
+    for (i = 0; i < self->channel_count; ++i)
+      if (self->channel_list[i] != NULL)
+        ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
 
   return ok ? got : -1;
 }
 
-SUBOOL
-su_specttuner_feed_bulk(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
-    SUSCOUNT size)
+SU_METHOD(
+  su_specttuner, 
+  SUBOOL, 
+  feed_bulk, 
+  const SUCOMPLEX *buf, 
+  SUSCOUNT size)
 {
   SUSDIFF got;
   SUBOOL ok = SU_TRUE;
 
   while (size > 0) {
-    got = su_specttuner_feed_bulk_single(st, buf, size);
+    got = su_specttuner_feed_bulk_single(self, buf, size);
 
-    if (su_specttuner_new_data(st))
-      su_specttuner_ack_data(st);
+    if (su_specttuner_new_data(self))
+      su_specttuner_ack_data(self);
 
     if (got == -1)
       ok = SU_FALSE;
@@ -668,23 +662,22 @@ su_specttuner_feed_bulk(
   return ok;
 }
 
-su_specttuner_channel_t *
-su_specttuner_open_channel(
-    su_specttuner_t *st,
-    const struct sigutils_specttuner_channel_params *params)
+SU_METHOD(
+  su_specttuner,
+  su_specttuner_channel_t *,
+  open_channel,
+  const struct sigutils_specttuner_channel_params *params)
 {
   su_specttuner_channel_t *new = NULL;
   int index;
 
-  SU_TRYCATCH(new = su_specttuner_channel_new(st, params), goto fail);
+  SU_MAKE_FAIL(new, su_specttuner_channel, self, params);
 
-  SU_TRYCATCH(
-      (index = PTR_LIST_APPEND_CHECK(st->channel, new)) != -1,
-      goto fail);
+  SU_TRYC_FAIL(index = PTR_LIST_APPEND_CHECK(self->channel, new));
 
   new->index = index;
 
-  ++st->count;
+  ++self->count;
 
   return new;
 
@@ -695,22 +688,23 @@ fail:
   return NULL;
 }
 
-SUBOOL
-su_specttuner_close_channel(
-    su_specttuner_t *st,
-    su_specttuner_channel_t *channel)
+SU_METHOD(
+  su_specttuner,
+  SUBOOL,
+  close_channel,
+  su_specttuner_channel_t *channel)
 {
   SU_TRYCATCH(channel->index >= 0, return SU_FALSE);
 
-  SU_TRYCATCH(channel->index < st->channel_count, return SU_FALSE);
+  SU_TRYCATCH(channel->index < self->channel_count, return SU_FALSE);
 
-  SU_TRYCATCH(st->channel_list[channel->index] == channel, return SU_FALSE);
+  SU_TRYCATCH(self->channel_list[channel->index] == channel, return SU_FALSE);
 
-  st->channel_list[channel->index] = NULL;
+  self->channel_list[channel->index] = NULL;
 
   su_specttuner_channel_destroy(channel);
 
-  --st->count;
+  --self->count;
 
   return SU_TRUE;
 }

@@ -22,6 +22,7 @@
 
 #include "types.h"
 #include "ncqo.h"
+#include "defs.h"
 
 struct sigutils_specttuner_params {
   SUSCOUNT window_size;
@@ -94,23 +95,23 @@ struct sigutils_specttuner_channel {
 
 typedef struct sigutils_specttuner_channel su_specttuner_channel_t;
 
-SUINLINE SUFLOAT
-su_specttuner_channel_get_decimation(const su_specttuner_channel_t *channel)
+SUINLINE 
+SU_GETTER(su_specttuner_channel, SUFLOAT, get_decimation)
 {
-  return channel->decimation;
+  return self->decimation;
 }
 
-SUINLINE SUFLOAT
-su_specttuner_channel_get_bw(const su_specttuner_channel_t *channel)
+SUINLINE 
+SU_GETTER(su_specttuner_channel, SUFLOAT, get_bw)
 {
-  return 2 * PI * (SUFLOAT) channel->width
-      / (SUFLOAT) (channel->size * channel->decimation);
+  return 2 * PI * (SUFLOAT) self->width
+      / (SUFLOAT) (self->size * self->decimation);
 }
 
-SUINLINE SUFLOAT
-su_specttuner_channel_get_f0(const su_specttuner_channel_t *channel)
+SUINLINE 
+SU_GETTER(su_specttuner_channel, SUFLOAT, get_f0)
 {
-  return channel->params.f0;
+  return self->params.f0;
 }
 
 /*
@@ -161,55 +162,65 @@ struct sigutils_specttuner {
 
 typedef struct sigutils_specttuner su_specttuner_t;
 
-SUINLINE unsigned int
-su_specttuner_get_channel_count(const su_specttuner_t *st)
+SUINLINE 
+SU_GETTER(su_specttuner, unsigned int, get_channel_count)
 {
-  return st->count;
+  return self->count;
 }
 
-SUINLINE SUBOOL
-su_specttuner_new_data(const su_specttuner_t *st)
+SUINLINE 
+SU_GETTER(su_specttuner, SUBOOL, new_data)
 {
-  return st->ready;
+  return self->ready;
 }
 
-SUINLINE void
-su_specttuner_ack_data(su_specttuner_t *st)
+SUINLINE 
+SU_METHOD(su_specttuner, void, ack_data)
 {
-  st->ready = SU_FALSE;
+  self->ready = SU_FALSE;
 }
 
-void su_specttuner_destroy(su_specttuner_t *st);
+SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params);
+SU_COLLECTOR(su_specttuner);
 
-su_specttuner_t *su_specttuner_new(
-    const struct sigutils_specttuner_params *params);
+SU_METHOD(
+  su_specttuner, 
+  SUSDIFF, 
+  feed_bulk_single, 
+  const SUCOMPLEX *buf, 
+  SUSCOUNT size);
 
-SUSDIFF su_specttuner_feed_bulk_single(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
-    SUSCOUNT size);
+SU_METHOD(
+  su_specttuner, 
+  SUBOOL, 
+  feed_bulk, 
+  const SUCOMPLEX *buf, 
+  SUSCOUNT size);
 
-SUBOOL su_specttuner_feed_bulk(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
-    SUSCOUNT size);
+SU_METHOD(
+  su_specttuner,
+  su_specttuner_channel_t *,
+  open_channel,
+  const struct sigutils_specttuner_channel_params *params);
 
-su_specttuner_channel_t *su_specttuner_open_channel(
-    su_specttuner_t *st,
-    const struct sigutils_specttuner_channel_params *params);
+SU_METHOD(
+  su_specttuner,
+  SUBOOL,
+  close_channel,
+  su_specttuner_channel_t *channel);
 
-void su_specttuner_set_channel_freq(
-    const su_specttuner_t *st,
-    su_specttuner_channel_t *channel,
-    SUFLOAT f0);
+SU_METHOD_CONST(
+  su_specttuner,
+  void,
+  set_channel_freq,
+  su_specttuner_channel_t *channel,
+  SUFLOAT f0);
 
-SUBOOL su_specttuner_set_channel_bandwidth(
-    const su_specttuner_t *st,
-    su_specttuner_channel_t *channel,
-    SUFLOAT bw);
-
-SUBOOL su_specttuner_close_channel(
-    su_specttuner_t *st,
-    su_specttuner_channel_t *channel);
+SU_METHOD_CONST(
+  su_specttuner,
+  SUBOOL,
+  set_channel_bandwidth,
+  su_specttuner_channel_t *channel,
+  SUFLOAT bw);
 
 #endif /* _SIGUTILS_SPECTTUNER_H */
