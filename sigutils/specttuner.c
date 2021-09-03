@@ -374,7 +374,7 @@ SU_INSTANCER(
 
 fail:
   if (new != NULL)
-    SU_DESTROY(su_specttuner_channel, new);
+    SU_DISPOSE(su_specttuner_channel, new);
 
   return NULL;
 }
@@ -449,7 +449,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 
 fail:
   if (new != NULL)
-    SU_DESTROY(su_specttuner, new);
+    SU_DISPOSE(su_specttuner, new);
 
   return NULL;
 }

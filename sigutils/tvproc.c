@@ -25,32 +25,31 @@
 #include <string.h>
 
 /***************************** Pulse finder ***********************************/
-su_pulse_finder_t *
-su_pulse_finder_new(
-    SUFLOAT base,
-    SUFLOAT peak,
-    SUSCOUNT len,
-    SUFLOAT tolerance)
+SU_INSTANCER(
+  su_pulse_finder,
+  SUFLOAT base,
+  SUFLOAT peak,
+  SUSCOUNT len,
+  SUFLOAT tolerance)
 {
   su_pulse_finder_t *new = NULL;
   SUFLOAT *coef = NULL;
   unsigned int i;
   SUBOOL ok = SU_FALSE;
 
-  SU_TRYCATCH(new  = calloc(1, sizeof(su_pulse_finder_t)), goto fail);
-  SU_TRYCATCH(coef = malloc(sizeof(SUFLOAT) * len), goto fail);
+  SU_ALLOCATE_FAIL(new, su_pulse_finder_t);
+  SU_ALLOCATE_MANY_FAIL(coef, len, SUFLOAT);
 
   for (i = 0; i < len; ++i)
     coef[i] = peak - base;
 
-  SU_TRYCATCH(
-      su_iir_filt_init(
-          &new->corr,
-          0,    /* y_size */
-          NULL, /* y_coef */
-          len,  /* x_size */
-          coef  /* x_coef */),
-      goto fail);
+  SU_CONSTRUCT_FAIL(
+    su_iir_filt, 
+    &new->corr,
+    0,    /* y_size */
+    NULL, /* y_coef */
+    len,  /* x_size */
+    coef  /* x_coef */);
 
   new->base     = base;
   new->peak_thr = (peak - base) * (peak - base) * len * (1 - tolerance);
@@ -63,7 +62,7 @@ su_pulse_finder_new(
 fail:
   if (!ok) {
     if (new != NULL)
-      su_pulse_finder_destroy(new);
+      SU_DISPOSE(su_pulse_finder, new);
     new = NULL;
   }
 
@@ -73,8 +72,7 @@ fail:
   return new;
 }
 
-SUBOOL
-su_pulse_finder_feed(su_pulse_finder_t *self, SUFLOAT x)
+SU_METHOD(su_pulse_finder, SUBOOL, feed, SUFLOAT x)
 {
   SUFLOAT y;
   SUBOOL match;
@@ -83,7 +81,6 @@ su_pulse_finder_feed(su_pulse_finder_t *self, SUFLOAT x)
   x -= self->base;
 
   y = SU_C_REAL(su_iir_filt_feed(&self->corr, x));
-
 
   match = y > self->peak_thr;
 
@@ -110,16 +107,14 @@ su_pulse_finder_feed(su_pulse_finder_t *self, SUFLOAT x)
   return found;
 }
 
-SUFLOAT
-su_pulse_finder_get_pos(const su_pulse_finder_t *self)
+SU_GETTER(su_pulse_finder, SUFLOAT, get_pos)
 {
   return self->rel_pos;
 }
 
-void
-su_pulse_finder_destroy(su_pulse_finder_t *self)
+SU_COLLECTOR(su_pulse_finder)
 {
-  su_iir_filt_finalize(&self->corr);
+  SU_DESTRUCT(su_iir_filt, &self->corr);
 
   free(self);
 }
@@ -199,63 +194,60 @@ su_tv_processor_params_pal(
   self->hsync_slow_track_tau = 1e3;  /* Time constant for horizontal adjustment */
 }
 
-struct sigutils_tv_frame_buffer *
-su_tv_frame_buffer_new(const struct sigutils_tv_processor_params *params)
+SU_INSTANCER(
+  su_tv_frame_buffer, 
+  const struct sigutils_tv_processor_params *params)
 {
-  struct sigutils_tv_frame_buffer *new = NULL;
+  su_tv_frame_buffer_t *new = NULL;
 
-  SU_TRYCATCH(
-      new = calloc(1, sizeof (struct sigutils_tv_frame_buffer)),
-      goto fail);
-
+  SU_ALLOCATE_FAIL(new, su_tv_frame_buffer_t);
+  
   new->width  = SU_CEIL(params->line_len);
   new->height = params->frame_lines;
 
-  SU_TRYCATCH(
-      new->buffer = calloc(sizeof(SUFLOAT), new->width * new->height),
-      goto fail);
+  SU_ALLOCATE_MANY_FAIL(
+    new->buffer, 
+    new->width * new->height, 
+    SUFLOAT);
 
   return new;
 
 fail:
   if (new != NULL)
-    su_tv_frame_buffer_destroy(new);
+    SU_DISPOSE(su_tv_frame_buffer, new);
 
   return NULL;
 }
 
-struct sigutils_tv_frame_buffer *
-su_tv_frame_buffer_dup(const struct sigutils_tv_frame_buffer *dup)
+SU_COPY_INSTANCER(su_tv_frame_buffer)
 {
-  struct sigutils_tv_frame_buffer *new = NULL;
+  su_tv_frame_buffer_t *new = NULL;
 
-  SU_TRYCATCH(
-      new = calloc(1, sizeof (struct sigutils_tv_frame_buffer)),
-      goto fail);
+  SU_ALLOCATE_FAIL(new, su_tv_frame_buffer_t);
 
-  new->width  = dup->width;
-  new->height = dup->height;
+  new->width  = self->width;
+  new->height = self->height;
 
-  SU_TRYCATCH(
-      new->buffer = malloc(sizeof(SUFLOAT) * new->width * new->height),
-      goto fail);
+  SU_ALLOCATE_MANY_FAIL(
+    new->buffer, 
+    new->width * new->height, 
+    SUFLOAT);
 
   memcpy(
       new->buffer,
-      dup->buffer,
+      self->buffer,
       sizeof(SUFLOAT) * new->width * new->height);
 
   return new;
 
 fail:
   if (new != NULL)
-    su_tv_frame_buffer_destroy(new);
+    SU_DISPOSE(su_tv_frame_buffer, new);
 
   return NULL;
 }
 
-void
-su_tv_frame_buffer_destroy(struct sigutils_tv_frame_buffer *self)
+SU_COLLECTOR(su_tv_frame_buffer)
 {
   if (self->buffer != NULL)
     free(self->buffer);
@@ -263,12 +255,14 @@ su_tv_frame_buffer_destroy(struct sigutils_tv_frame_buffer *self)
   free(self);
 }
 
-su_tv_processor_t *
-su_tv_processor_new(const struct sigutils_tv_processor_params *params)
+SU_INSTANCER(
+  su_tv_processor, 
+  const struct sigutils_tv_processor_params *params)
 {
   su_tv_processor_t *new = NULL;
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_tv_processor_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_tv_processor_t);
+
   SU_TRYCATCH(su_tv_processor_set_params(new, params), goto fail);
 
   new->agc_gain = 1;
@@ -282,8 +276,8 @@ fail:
   return NULL;
 }
 
-SUINLINE void
-su_tv_processor_swap_field(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, void, swap_field)
 {
   if (self->params.interlace) {
     self->field_parity = !self->field_parity;
@@ -293,8 +287,8 @@ su_tv_processor_swap_field(su_tv_processor_t *self)
   }
 }
 
-SUINLINE SUSCOUNT
-su_tv_processor_get_line(const su_tv_processor_t *self)
+SUINLINE
+SU_GETTER(su_tv_processor, SUSCOUNT, get_line)
 {
   if (self->params.interlace)
     return 2 * self->field_y + !self->field_parity;
@@ -302,28 +296,28 @@ su_tv_processor_get_line(const su_tv_processor_t *self)
     return self->field_y;
 }
 
-SUBOOL
-su_tv_processor_set_params(
-    su_tv_processor_t *self,
-    const struct sigutils_tv_processor_params *params)
+SU_METHOD(
+  su_tv_processor, 
+  SUBOOL,
+  set_params, 
+  const struct sigutils_tv_processor_params *params)
 {
   SUFLOAT *line_buffer = NULL;
   SUSCOUNT delay_line_len = SU_CEIL(params->line_len);
 
-  SU_TRYCATCH(params->line_len >= 1, goto fail);
-  SU_TRYCATCH(params->frame_lines >= 1, goto fail);
+  SU_TRY_FAIL(params->line_len >= 1);
+  SU_TRY_FAIL(params->frame_lines >= 1);
 
-  SU_TRYCATCH(!params->enable_sync || params->hsync_len >= 1, goto fail);
-  SU_TRYCATCH(!params->enable_sync || params->vsync_len >= 1, goto fail);
+  SU_TRY_FAIL(!params->enable_sync || params->hsync_len >= 1);
+  SU_TRY_FAIL(!params->enable_sync || params->vsync_len >= 1);
 
   /* Reset comb filter */
   self->delay_line_len = delay_line_len;
 
   if (params->enable_comb) {
     if (self->delay_line_len != delay_line_len || line_buffer == NULL) {
-      SU_TRYCATCH(
-          line_buffer = realloc(line_buffer, sizeof(SUFLOAT) * delay_line_len),
-          goto fail);
+      SU_TRY_FAIL(
+          line_buffer = realloc(line_buffer, sizeof(SUFLOAT) * delay_line_len));
 
       if (self->delay_line == NULL) {
         memset(line_buffer, 0, sizeof(SUFLOAT) * delay_line_len);
@@ -438,17 +432,19 @@ fail:
   return SU_FALSE;
 }
 
-SUINLINE SUBOOL
-su_tv_processor_frame_buffer_is_valid(
-    const su_tv_processor_t *self,
-    const struct sigutils_tv_frame_buffer *fb)
+SUINLINE 
+SU_GETTER(
+  su_tv_processor, 
+  SUBOOL, 
+  frame_buffer_is_valid,
+  const struct sigutils_tv_frame_buffer *fb)
 {
   return fb->width == self->delay_line_len
       && fb->height == self->params.frame_lines;
 }
 
-SUINLINE struct sigutils_tv_frame_buffer *
-su_tv_processor_take_from_pool(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, su_tv_frame_buffer_t *, take_from_pool)
 {
   struct sigutils_tv_frame_buffer *this = NULL;
 
@@ -459,24 +455,22 @@ su_tv_processor_take_from_pool(su_tv_processor_t *self)
     if (su_tv_processor_frame_buffer_is_valid(self, this))
       break;
 
-    su_tv_frame_buffer_destroy(this);
+    SU_DISPOSE(su_tv_frame_buffer, this);
     this = NULL;
   }
 
   return this;
 }
 
-SUINLINE void
-su_tv_processor_return_to_pool(
-    su_tv_processor_t *self,
-    struct sigutils_tv_frame_buffer *this)
+SUINLINE
+SU_METHOD(su_tv_processor, void, return_to_pool, su_tv_frame_buffer_t *this)
 {
   this->next = self->free_pool;
   self->free_pool = this;
 }
 
-SUPRIVATE SUBOOL
-su_tv_processor_assert_current_frame(su_tv_processor_t *self)
+SUPRIVATE 
+SU_METHOD(su_tv_processor, SUBOOL, assert_current_frame)
 {
   if (self->current != NULL) {
     if (!su_tv_processor_frame_buffer_is_valid(self, self->current)) {
@@ -496,8 +490,10 @@ su_tv_processor_assert_current_frame(su_tv_processor_t *self)
   return SU_TRUE;
 }
 
-struct sigutils_tv_frame_buffer *
-su_tv_processor_take_frame(su_tv_processor_t *self)
+SU_METHOD(
+  su_tv_processor,
+  su_tv_frame_buffer_t *,
+  take_frame)
 {
   struct sigutils_tv_frame_buffer *curr = self->current;
 
@@ -506,16 +502,17 @@ su_tv_processor_take_frame(su_tv_processor_t *self)
   return curr;
 }
 
-void
-su_tv_processor_return_frame(
-    su_tv_processor_t *self,
-    struct sigutils_tv_frame_buffer *fb)
+SU_METHOD(
+  su_tv_processor,
+  void,
+  return_frame,
+  su_tv_frame_buffer_t *fb)
 {
   su_tv_processor_return_to_pool(self, fb);
 }
 
-SUINLINE SUFLOAT
-su_tv_processor_comb_filter_feed(su_tv_processor_t *self, SUFLOAT x)
+SUINLINE
+SU_METHOD(su_tv_processor, SUFLOAT, comb_filter_feed, SUFLOAT x)
 {
   SUFLOAT prev_x;
 
@@ -538,31 +535,31 @@ su_tv_processor_comb_filter_feed(su_tv_processor_t *self, SUFLOAT x)
   return x;
 }
 
-SUINLINE SUFLOAT
-su_tv_processor_pulse_filter_feed(su_tv_processor_t *self, SUFLOAT x)
+SUINLINE
+SU_METHOD(su_tv_processor, SUFLOAT, pulse_filter_feed, SUFLOAT x)
 {
   self->pulse_x += self->pulse_alpha * (x - self->pulse_x);
 
   return self->pulse_x;
 }
 
-SUINLINE void
-su_tv_processor_line_agc_feed(su_tv_processor_t *self, SUFLOAT x)
+SUINLINE
+SU_METHOD(su_tv_processor, void, line_agc_feed, SUFLOAT x)
 {
   if (x > self->agc_line_max)
     self->agc_line_max = x;
 }
 
-SUINLINE void
-su_tv_processor_line_agc_commit(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, void, line_agc_commit)
 {
   self->agc_accum += self->agc_line_max;
   ++self->agc_lines;
   self->agc_line_max = 0;
 }
 
-SUINLINE void
-su_tv_processor_line_agc_update_gain(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, void, line_agc_update_gain)
 {
   if (self->agc_lines > 10) {
     self->agc_gain
@@ -572,21 +569,21 @@ su_tv_processor_line_agc_update_gain(su_tv_processor_t *self)
   }
 }
 
-SUINLINE SUFLOAT
-su_tv_processor_get_field_x(const su_tv_processor_t *self)
+SUINLINE
+SU_GETTER(su_tv_processor, SUFLOAT, get_field_x)
 {
   return self->field_x + self->field_x_dec;
 }
 
-SUINLINE void
-su_tv_processor_set_field_x(su_tv_processor_t *self, SUFLOAT xf)
+SUINLINE
+SU_METHOD(su_tv_processor, void, set_field_x, SUFLOAT xf)
 {
   self->field_x = SU_FLOOR(xf);
   self->field_x_dec = xf - self->field_x;
 }
 
-SUINLINE void
-su_tv_processor_measure_line_len(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, void, measure_line_len)
 {
   SUSCOUNT new_line_len;
 
@@ -603,8 +600,8 @@ su_tv_processor_measure_line_len(su_tv_processor_t *self)
   self->last_hsync = self->sync_start;
 }
 
-SUINLINE void
-su_tv_processor_estimate_line_len(su_tv_processor_t *self)
+SUINLINE
+SU_METHOD(su_tv_processor, void, estimate_line_len)
 {
   if (self->est_line_len_count > 0 && self->field_parity) {
     self->est_line_len += self->line_len_alpha *
@@ -626,8 +623,8 @@ su_tv_processor_estimate_line_len(su_tv_processor_t *self)
  *    traditional single pole IIR low pass filter in order to achieve
  *    this. We do this only for the first pulse we find.
  */
-SUINLINE void
-su_tv_processor_do_hsync(su_tv_processor_t *self, SUSCOUNT hsync_len)
+SUINLINE
+SU_METHOD(su_tv_processor, void, do_hsync, SUSCOUNT hsync_len)
 {
   SUFLOAT  xf = su_tv_processor_get_field_x(self);
   SUFLOAT  xf_offset =
@@ -677,8 +674,8 @@ su_tv_processor_do_hsync(su_tv_processor_t *self, SUSCOUNT hsync_len)
  * frame as synced.
  */
 
-SUINLINE SUBOOL
-su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
+SUINLINE
+SU_METHOD(su_tv_processor, SUBOOL, do_vsync, SUSCOUNT vsync_len)
 {
   SUSCOUNT last_hsync_age;
   SUSCOUNT last_vsync_age;
@@ -729,12 +726,9 @@ su_tv_processor_do_vsync(su_tv_processor_t *self, SUSCOUNT vsync_len)
   return vsync_forced;
 }
 
-SUINLINE void
-su_tv_processor_sync_feed(
-    su_tv_processor_t *self,
-    SUFLOAT pulse_x)
+SUINLINE
+SU_METHOD(su_tv_processor, void, sync_feed, SUFLOAT pulse_x)
 {
-
   SUBOOL   pulse_trigger_up;
   SUBOOL   pulse_trigger_down;
 
@@ -774,8 +768,8 @@ su_tv_processor_sync_feed(
   }
 }
 
-SUINLINE SUBOOL
-su_tv_processor_frame_feed(su_tv_processor_t *self, SUFLOAT x)
+SUINLINE
+SU_METHOD(su_tv_processor, SUBOOL, frame_feed, SUFLOAT x)
 {
   SUSCOUNT line;
   SUSCOUNT p;
@@ -827,8 +821,7 @@ su_tv_processor_frame_feed(su_tv_processor_t *self, SUFLOAT x)
   return have_line;
 }
 
-SUBOOL
-su_tv_processor_feed(su_tv_processor_t *self, SUFLOAT x)
+SU_METHOD(su_tv_processor, SUBOOL, feed, SUFLOAT x)
 {
   SUBOOL have_frame = SU_FALSE;
   SUFLOAT pulse_x;
@@ -864,16 +857,15 @@ su_tv_processor_feed(su_tv_processor_t *self, SUFLOAT x)
   return have_frame;
 }
 
-void
-su_tv_processor_destroy(su_tv_processor_t *self)
+SU_COLLECTOR(su_tv_processor)
 {
   struct sigutils_tv_frame_buffer *frame = NULL;
 
   while ((frame = su_tv_processor_take_from_pool(self)) != NULL)
-    su_tv_frame_buffer_destroy(frame);
+    SU_DISPOSE(su_tv_frame_buffer, frame);
 
   if (self->current != NULL)
-    su_tv_frame_buffer_destroy(self->current);
+    SU_DISPOSE(su_tv_frame_buffer, self->current);
 
   if (self->delay_line != NULL)
     free(self->delay_line);

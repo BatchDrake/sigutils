@@ -22,6 +22,7 @@
 
 #include "types.h"
 #include "iir.h"
+#include "defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,17 +89,16 @@ struct sigutils_pulse_finder {
 
 typedef struct sigutils_pulse_finder su_pulse_finder_t;
 
-su_pulse_finder_t *su_pulse_finder_new(
+SU_INSTANCER(
+  su_pulse_finder,
     SUFLOAT base,
     SUFLOAT peak,
     SUSCOUNT len,
     SUFLOAT tolerance);
+SU_COLLECTOR(su_pulse_finder);
 
-SUBOOL  su_pulse_finder_feed(su_pulse_finder_t *self, SUFLOAT);
-
-SUFLOAT su_pulse_finder_get_pos(const su_pulse_finder_t *self);
-
-void su_pulse_finder_destroy(su_pulse_finder_t *self);
+SU_METHOD(su_pulse_finder, SUBOOL, feed, SUFLOAT x);
+SU_GETTER(su_pulse_finder, SUFLOAT, get_pos);
 
 struct sigutils_tv_frame_buffer {
   int width, height;
@@ -106,13 +106,14 @@ struct sigutils_tv_frame_buffer {
   struct sigutils_tv_frame_buffer *next;
 };
 
-struct sigutils_tv_frame_buffer *su_tv_frame_buffer_new(
-    const struct sigutils_tv_processor_params *);
+typedef struct sigutils_tv_frame_buffer su_tv_frame_buffer_t;
 
-struct sigutils_tv_frame_buffer *su_tv_frame_buffer_dup(
-    const struct sigutils_tv_frame_buffer *dup);
+SU_INSTANCER(
+  su_tv_frame_buffer, 
+  const struct sigutils_tv_processor_params *params);
 
-void su_tv_frame_buffer_destroy(struct sigutils_tv_frame_buffer *);
+SU_COPY_INSTANCER(su_tv_frame_buffer);
+SU_COLLECTOR(su_tv_frame_buffer);
 
 enum sigutils_tv_processor_state {
   SU_TV_PROCESSOR_SEARCH,
@@ -184,6 +185,11 @@ struct sigutils_tv_processor {
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
 
+SU_INSTANCER(
+  su_tv_processor, 
+  const struct sigutils_tv_processor_params *params);
+SU_COLLECTOR(su_tv_processor);
+
 void su_tv_processor_params_pal(
     struct sigutils_tv_processor_params *self,
     SUFLOAT samp_rate);
@@ -192,25 +198,15 @@ void su_tv_processor_params_ntsc(
     struct sigutils_tv_processor_params *self,
     SUFLOAT samp_rate);
 
-su_tv_processor_t *su_tv_processor_new(
-    const struct sigutils_tv_processor_params *params);
+SU_METHOD(
+  su_tv_processor, 
+  SUBOOL,
+  set_params, 
+  const struct sigutils_tv_processor_params *params);
+SU_METHOD(su_tv_processor, SUBOOL, feed,  SUFLOAT x);
 
-SUBOOL su_tv_processor_set_params(
-    su_tv_processor_t *self,
-    const struct sigutils_tv_processor_params *params);
-
-SUBOOL su_tv_processor_feed(
-    su_tv_processor_t *self,
-    SUFLOAT feed);
-
-struct sigutils_tv_frame_buffer *su_tv_processor_take_frame(
-    su_tv_processor_t *);
-
-void su_tv_processor_return_frame(
-    su_tv_processor_t *self,
-    struct sigutils_tv_frame_buffer *);
-
-void su_tv_processor_destroy(su_tv_processor_t *self);
+SU_METHOD(su_tv_processor, su_tv_frame_buffer_t *, take_frame);
+SU_METHOD(su_tv_processor, void, return_frame, su_tv_frame_buffer_t *);
 
 #ifdef __cplusplus
 }

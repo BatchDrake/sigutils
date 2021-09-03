@@ -53,7 +53,7 @@ SU_INSTANCER(
 
 fail:
   if (new != NULL)
-    SU_DESTROY(su_smoothpsd, new);
+    SU_DISPOSE(su_smoothpsd, new);
 
   return NULL;
 }

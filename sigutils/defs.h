@@ -68,6 +68,13 @@
   SU_TYPENAME(class) *                          \
   SU_METHOD_NAME(class, new) (__VA_ARGS__)
 
+#define SU_COPY_INSTANCER(class, ...)           \
+  SU_METHOD_CONST(                              \
+    class,                                      \
+    SU_TYPENAME(class) *,                       \
+    dup,                                        \
+    ##__VA_ARGS__)
+
 #define SU_COLLECTOR(class)                     \
   void                                          \
   SU_METHOD_NAME(class, destroy) (              \
@@ -107,7 +114,7 @@
   }
 
 #define SU_DESTRUCT(class, dest) JOIN(class, _finalize) (dest)
-#define SU_DESTROY(class, dest)  JOIN(class, _destroy) (dest)
+#define SU_DISPOSE(class, dest)  JOIN(class, _destroy) (dest)
 
 #define SU_TRYCATCH(expr, action)       \
   if (!(expr)) {                        \
