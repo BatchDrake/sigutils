@@ -194,87 +194,93 @@ struct sigutils_channel_detector {
 
 typedef struct sigutils_channel_detector su_channel_detector_t;
 
-SUINLINE void
-su_channel_detector_rewind(su_channel_detector_t *cd)
+SUINLINE
+SU_METHOD(su_channel_detector, void, rewind)
 {
-  cd->ptr = 0;
-  cd->iters = 0;
+  self->ptr = 0;
+  self->iters = 0;
 }
 
-SUINLINE unsigned int
-su_channel_detector_get_iters(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, unsigned int, get_iters)
 {
-  return cd->iters;
+  return self->iters;
 }
 
-SUINLINE SUCOMPLEX
-su_channel_detector_get_dc(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, SUCOMPLEX, get_dc)
 {
-  return cd->dc;
+  return self->dc;
 }
 
-SUINLINE SUSCOUNT
-su_channel_detector_get_fs(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, SUSCOUNT, get_fs)
 {
-  return cd->params.samp_rate;
+  return self->params.samp_rate;
 }
 
-SUINLINE SUBOOL
-su_channel_detector_get_window_ptr(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, SUSCOUNT, get_window_ptr)
 {
-  return cd->ptr;
+  return self->ptr;
 }
 
-SUINLINE SUFLOAT
-su_channel_detector_get_baud(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, SUFLOAT, get_baud)
 {
-  return cd->baud;
+  return self->baud;
 }
 
-SUINLINE SUFLOAT
-su_channel_detector_get_window_size(const su_channel_detector_t *cd)
+SUINLINE
+SU_GETTER(su_channel_detector, SUSCOUNT, get_window_size)
 {
-  return cd->params.window_size;
+  return self->params.window_size;
 }
 
 /**************************** Peak detector API *****************************/
-SUBOOL su_peak_detector_init(
-    su_peak_detector_t *pd,
-    unsigned int size,
-    SUFLOAT thres);
+SU_CONSTRUCTOR(su_peak_detector, unsigned int size, SUFLOAT thres);
+SU_DESTRUCTOR(su_peak_detector);
 
-int su_peak_detector_feed(su_peak_detector_t *pd, SUFLOAT x);
-
-void su_peak_detector_finalize(su_peak_detector_t *pd);
+SU_METHOD(su_peak_detector, int, feed, SUFLOAT x);
 
 /************************** Channel detector API ****************************/
-su_channel_detector_t *su_channel_detector_new(
-    const struct sigutils_channel_detector_params *params);
+SU_INSTANCER(
+  su_channel_detector,
+  const struct sigutils_channel_detector_params *params);
+SU_COLLECTOR(su_channel_detector);
 
-SUBOOL su_channel_detector_set_params(
-    su_channel_detector_t *detector,
-    const struct sigutils_channel_detector_params *params);
+SU_METHOD(
+  su_channel_detector, 
+  SUBOOL, 
+  set_params, 
+  const struct sigutils_channel_detector_params *params);
 
-SUSCOUNT su_channel_detector_get_req_samples(
-    const su_channel_detector_t *detector);
+SU_GETTER(su_channel_detector, SUSCOUNT, get_req_samples);
 
-void su_channel_detector_destroy(su_channel_detector_t *detector);
+SU_METHOD(
+  su_channel_detector,
+  SUBOOL,
+  feed,
+  SUCOMPLEX x);
 
-SUBOOL su_channel_detector_feed(
-    su_channel_detector_t *detector,
-    SUCOMPLEX x);
+SU_METHOD(
+  su_channel_detector,
+  SUSCOUNT,
+  feed_bulk,
+  const SUCOMPLEX *signal,
+  SUSCOUNT size);
 
-SUBOOL su_channel_detector_exec_fft(su_channel_detector_t *detector);
+SU_METHOD(
+  su_channel_detector,
+  SUBOOL,
+  exec_fft);
 
-SUSCOUNT su_channel_detector_feed_bulk(
-    su_channel_detector_t *detector,
-    const SUCOMPLEX *signal,
-    SUSCOUNT size);
-
-void su_channel_detector_get_channel_list(
-    const su_channel_detector_t *detector,
-    struct sigutils_channel ***channel_list,
-    unsigned int *channel_count);
+SU_GETTER(
+  su_channel_detector,
+  void,
+  get_channel_list,
+  struct sigutils_channel ***channel_list,
+  unsigned int *channel_count);
 
 void su_channel_params_adjust(struct sigutils_channel_detector_params *params);
 
@@ -282,17 +288,11 @@ void su_channel_params_adjust_to_channel(
     struct sigutils_channel_detector_params *params,
     const struct sigutils_channel *channel);
 
-struct sigutils_channel *su_channel_dup(const struct sigutils_channel *channel);
+SU_GETTER(su_channel_detector, su_channel_t *, lookup_channel, SUFLOAT fc);
+SU_GETTER(su_channel_detector, su_channel_t *, lookup_valid_channel, SUFLOAT fc);
 
-void su_channel_destroy(struct sigutils_channel *channel);
-
-struct sigutils_channel *su_channel_detector_lookup_channel(
-    const su_channel_detector_t *detector,
-    SUFLOAT fc);
-
-struct sigutils_channel *su_channel_detector_lookup_valid_channel(
-    const su_channel_detector_t *detector,
-    SUFLOAT fc);
+SU_COPY_INSTANCER(su_channel);
+SU_COLLECTOR(su_channel);
 
 #ifdef __cplusplus
 #  ifdef __clang__

@@ -21,6 +21,7 @@
 #define _DECIDER_H
 
 #include "types.h"
+#include "defs.h"
 
 struct sigutils_decider_params {
   SUFLOAT min_val;
@@ -44,10 +45,15 @@ struct sigutils_decider {
 
 typedef struct sigutils_decider su_decider_t;
 
+SU_GETTER(
+  su_decider,
+  const struct sigutils_decider_params *,
+  get_params);
+
 const struct sigutils_decider_params *
-su_decider_get_params(const su_decider_t *decider)
+su_decider_get_params(const su_decider_t *self)
 {
-  return &decider->params;
+  return &self->params;
 }
 
 SUBOOL

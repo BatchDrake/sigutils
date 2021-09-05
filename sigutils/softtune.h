@@ -43,6 +43,8 @@ struct sigutils_channel {
   uint32_t present; /* Is channel present? */
 };
 
+typedef struct sigutils_channel su_channel_t;
+
 struct sigutils_softtuner_params {
   SUSCOUNT samp_rate;
   SUSCOUNT decimation;
