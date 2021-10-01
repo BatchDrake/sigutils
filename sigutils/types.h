@@ -94,19 +94,28 @@
 #endif /* __cplusplus */
 
 #define SU_ASFLOAT(value) SUCAST(SUFLOAT, value)
+#define SUIMM(imm)        SU_ASFLOAT(imm)
 
 #define SU_NOSYMBOL '\0'
 #define SU_EOS      -1
 
+#define SUSINGLE_FMT           "%g"
+#define SUSINGLE_SCANF_FMT     "%f"
+#define SUSINGLE_PRECISION_FMT "%.8f"
+
+#define SUDOUBLE_FMT           "%lg"
+#define SUDOUBLE_SCANF_FMT     "%lf"
+#define SUDOUBLE_PRECISION_FMT "%.16lf"
+
 #ifdef _SU_SINGLE_PRECISION
-#  define SUFLOAT_FMT "%g"
-#  define SUFLOAT_PRECISION_FMT "%.15f"
-#  define SUFLOAT_SCANF_FMT "%f"
+#  define SUFLOAT_FMT           SUSINGLE_FMT
+#  define SUFLOAT_PRECISION_FMT SUSINGLE_PRECISION_FMT
+#  define SUFLOAT_SCANF_FMT     SUSINGLE_SCANF_FMT
 #  define SU_ADDSFX(token) JOIN(token, f)
 #else
-#  define SUFLOAT_FMT "%lg"
-#  define SUFLOAT_PRECISION_FMT "%.15lf"
-#  define SUFLOAT_SCANF_FMT "%lf"
+#  define SUFLOAT_FMT           SUDOUBLE_FMT
+#  define SUFLOAT_PRECISION_FMT SUDOUBLE_PRECISION_FMT
+#  define SUFLOAT_SCANF_FMT     SUDOUBLE_SCANF_FMT
 #  define SU_ADDSFX(token) token
 #endif
 
@@ -133,6 +142,13 @@
 #define SU_FMOD   SU_ADDSFX(fmod)
 #define SU_ATAN2  SU_ADDSFX(atan2)
 #define SU_MODF   SU_ADDSFX(modf)
+
+/* Extended functions with extra precision */
+#define SU_SQRTX(x)   SU_ASFLOAT(sqrt(x))
+#define SU_COSX(x)    SU_ASFLOAT(cos(x))
+#define SU_SINX(x)    SU_ASFLOAT(sin(x))
+
+#define SU_POWX(x, y) pow(x, y)
 
 #ifdef __GNUC__
 #  define SU_SINCOS SU_ADDSFX(sincos)

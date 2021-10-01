@@ -42,6 +42,7 @@ struct sigutils_specttuner_channel;
 
 struct sigutils_specttuner_channel_params {
   SUFLOAT f0;       /* Central frequency (angular frequency) */
+  SUFLOAT delta_f;  /* Frequency correction (angular frequency) */
   SUFLOAT bw;       /* Bandwidth (angular frequency) */
   SUFLOAT guard;    /* Relative extra bandwidth */
   SUBOOL  precise;  /* Precision mode */
@@ -56,6 +57,7 @@ struct sigutils_specttuner_channel_params {
 #define sigutils_specttuner_channel_params_INITIALIZER  \
 {                                                       \
   0,        /* f0 */                                    \
+  0,        /* delta_f */                               \
   0,        /* bw */                                    \
   1,        /* guard */                                 \
   SU_FALSE, /* precise */                               \
@@ -112,6 +114,18 @@ SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_f0)
 {
   return self->params.f0;
+}
+
+SUINLINE
+SU_GETTER(su_specttuner_channel, SUFLOAT, get_delta_f)
+{
+  return self->params.delta_f;
+}
+
+SUINLINE
+SU_GETTER(su_specttuner_channel, SUFLOAT, get_effective_freq)
+{
+  return self->params.f0 + self->params.delta_f;
 }
 
 /*
@@ -215,6 +229,13 @@ SU_METHOD_CONST(
   set_channel_freq,
   su_specttuner_channel_t *channel,
   SUFLOAT f0);
+
+SU_METHOD_CONST(
+  su_specttuner,
+  void,
+  set_channel_delta_f,
+  su_specttuner_channel_t *channel,
+  SUFLOAT delta_f);
 
 SU_METHOD_CONST(
   su_specttuner,

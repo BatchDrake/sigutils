@@ -139,19 +139,20 @@ done:
   return ok;
 }
 
+SUPRIVATE
 SU_METHOD_CONST(
   su_specttuner,
   void,
-  set_channel_freq,
-  su_specttuner_channel_t *channel,
-  SUFLOAT f0)
+  refresh_channel_center,
+  su_specttuner_channel_t *channel)
 {
   unsigned int window_size = self->params.window_size;
   su_ncqo_t lo = su_ncqo_INITIALIZER;
   SUFLOAT off;
+  SUFLOAT ef;
 
-  channel->params.f0 = f0;
-  channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
+  ef = su_specttuner_channel_get_effective_freq(channel);
+  channel->center = 2 * SU_ROUND(ef / (4 * PI) * window_size);
 
   if (channel->center < 0)
     channel->center = 0;
@@ -159,10 +160,32 @@ SU_METHOD_CONST(
     channel->center = window_size - 2;
 
   if (channel->params.precise) {
-    off = channel->center * (2 * PI) / (SUFLOAT) window_size - f0;
+    off = channel->center * (2 * PI) / (SUFLOAT) window_size - ef;
     off *= channel->decimation;
     su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
   }
+}
+
+SU_METHOD_CONST(
+  su_specttuner,
+  void,
+  set_channel_freq,
+  su_specttuner_channel_t *channel,
+  SUFLOAT f0)
+{
+  channel->params.f0 = f0;
+  su_specttuner_refresh_channel_center(self, channel);
+}
+
+SU_METHOD_CONST(
+  su_specttuner,
+  void,
+  set_channel_delta_f,
+  su_specttuner_channel_t *channel,
+  SUFLOAT delta_f)
+{
+  channel->params.delta_f = delta_f;
+  su_specttuner_refresh_channel_center(self, channel);
 }
 
 SU_METHOD_CONST(
@@ -218,11 +241,25 @@ SU_INSTANCER(
   SUFLOAT actual_bw;
   SUFLOAT off;
   SUFLOAT corrbw;
+  SUFLOAT effective_freq;
   SUBOOL  full_spectrum = SU_FALSE;
 
-  SU_TRY_FAIL(params->guard >= 1);
-  SU_TRY_FAIL(params->bw > 0);
-  SU_TRY_FAIL(params->f0 >= 0 && params->f0 < 2 * PI);
+  if (params->guard < 1) {
+    SU_ERROR("Guard bandwidth is smaller than channel bandwidth\n");
+    goto fail;
+  }
+
+  if (params->bw <= 0) {
+    SU_ERROR("Cannot open a zero-bandwidth channel\n");
+    goto fail;
+  }
+  
+  effective_freq = params->f0 + params->delta_f;
+
+  if (effective_freq < 0 || effective_freq >= 2 * PI) {
+    SU_ERROR("Channel center frequency is outside the spectrum\n");
+    goto fail;
+  }
 
   corrbw = params->bw;
 
@@ -255,7 +292,7 @@ SU_INSTANCER(
      *
      * TODO: Look into this ASAP
      */
-    new->center = 2 * SU_ROUND(params->f0 / (4 * PI) * window_size);
+    new->center = 2 * SU_ROUND(effective_freq / (4 * PI) * window_size);
     min_size    = SU_CEIL(new->k * window_size);
 
     /* Find the nearest power of 2 than can hold all these samples */
@@ -268,7 +305,7 @@ SU_INSTANCER(
     new->halfw  = new->width >> 1;
   } else {
     new->k = 1. / (2 * PI / params->bw);
-    new->center = SU_ROUND(params->f0 / (2 * PI) * window_size);
+    new->center = SU_ROUND(effective_freq / (2 * PI) * window_size);
     new->size   = window_size;
     new->width  = SU_CEIL(new->k * window_size);
     if (new->width > window_size)
@@ -285,7 +322,7 @@ SU_INSTANCER(
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
-    off = new->center * (2 * PI) / (SUFLOAT) window_size - params->f0;
+    off = new->center * (2 * PI) / (SUFLOAT) window_size - effective_freq;
     off *= new->decimation;
     su_ncqo_init_fixed(&new->lo, SU_ANG2NORM_FREQ(off));
   }
