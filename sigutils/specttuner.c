@@ -147,12 +147,13 @@ SU_METHOD_CONST(
   su_specttuner_channel_t *channel)
 {
   unsigned int window_size = self->params.window_size;
+  SUFLOAT rbw = 2 * PI / window_size;
   su_ncqo_t lo = su_ncqo_INITIALIZER;
   SUFLOAT off;
   SUFLOAT ef;
 
   ef = su_specttuner_channel_get_effective_freq(channel);
-  channel->center = 2 * SU_ROUND(ef / (4 * PI) * window_size);
+  channel->center = 2 * SU_ROUND(.5 * (ef + .5 * rbw) / (2 * PI) * window_size);
 
   if (channel->center < 0)
     channel->center = 0;
@@ -160,7 +161,7 @@ SU_METHOD_CONST(
     channel->center = window_size - 2;
 
   if (channel->params.precise) {
-    off = channel->center * (2 * PI) / (SUFLOAT) window_size - ef;
+    off = (channel->center - .5) * (2 * PI) / (SUFLOAT) window_size - ef;
     off *= channel->decimation;
     su_ncqo_set_angfreq(&channel->lo, off);
   }
@@ -235,6 +236,7 @@ SU_INSTANCER(
 {
   su_specttuner_channel_t *new = NULL;
   unsigned int window_size = owner->params.window_size;
+  SUFLOAT rbw = 2 * PI / window_size;
   unsigned int n = 1;
   unsigned int i;
   unsigned int min_size;
@@ -292,7 +294,7 @@ SU_INSTANCER(
      *
      * TODO: Look into this ASAP
      */
-    new->center = 2 * SU_ROUND(effective_freq / (4 * PI) * window_size);
+    new->center = 2 * SU_FLOOR(.5 * (effective_freq + .5 * rbw) / (2 * PI) * window_size);
     min_size    = SU_CEIL(new->k * window_size);
 
     /* Find the nearest power of 2 than can hold all these samples */
@@ -305,7 +307,7 @@ SU_INSTANCER(
     new->halfw  = new->width >> 1;
   } else {
     new->k = 1. / (2 * PI / params->bw);
-    new->center = SU_ROUND(effective_freq / (2 * PI) * window_size);
+    new->center = 2 * SU_ROUND(.5 * (effective_freq + .5 * rbw) / (2 * PI) * window_size);
     new->size   = window_size;
     new->width  = SU_CEIL(new->k * window_size);
     if (new->width > window_size)
@@ -322,7 +324,7 @@ SU_INSTANCER(
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
-    off = new->center * (2 * PI) / (SUFLOAT) window_size - effective_freq;
+    off = (new->center - .5) * (2 * PI) / (SUFLOAT) window_size - effective_freq;
     off *= new->decimation;
     su_ncqo_init(&new->lo, SU_ANG2NORM_FREQ(off));
   }
