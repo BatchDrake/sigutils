@@ -72,7 +72,9 @@ struct sigutils_specttuner_channel {
   SUFLOAT k;           /* Scaling factor */
   SUFLOAT gain;        /* Channel gain */
   SUFLOAT decimation;  /* Equivalent decimation */
-  su_ncqo_t lo;        /* Local oscilator to correct imprecise centering */
+  su_ncqo_t lo;        /* Local oscillator to correct imprecise centering */
+  su_ncqo_t old_lo;    /* Copy of the old local oscillator */
+  SUBOOL pending_freq; /* Pending frequency adjustment */
   unsigned int center; /* FFT center bin */
   unsigned int size;   /* FFT bins to allocate */
   unsigned int width;  /* FFT bins to copy (for guard bands, etc) */
@@ -125,7 +127,12 @@ SU_GETTER(su_specttuner_channel, SUFLOAT, get_delta_f)
 SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_effective_freq)
 {
-  return self->params.f0 + self->params.delta_f;
+  SUFLOAT ef = SU_FMOD(self->params.f0 + self->params.delta_f, 2 * M_PI);
+
+  if (ef < 0)
+    ef += 2 * PI;
+
+  return ef;
 }
 
 /*

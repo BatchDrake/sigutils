@@ -148,20 +148,18 @@ SU_METHOD_CONST(
 {
   unsigned int window_size = self->params.window_size;
   SUFLOAT rbw = 2 * PI / window_size;
-  su_ncqo_t lo = su_ncqo_INITIALIZER;
-  SUFLOAT off;
-  SUFLOAT ef;
+  SUFLOAT off, ef;
 
   ef = su_specttuner_channel_get_effective_freq(channel);
-  channel->center = 2 * SU_ROUND(.5 * (ef + .5 * rbw) / (2 * PI) * window_size);
+  channel->center = 2 * SU_FLOOR(.5 * (ef + 1 * rbw) / (2 * PI) * window_size);
 
-  if (channel->center < 0)
+  if (channel->center < 0) {
     channel->center = 0;
-  if (channel->center >= window_size)
+  } if (channel->center >= window_size)
     channel->center = window_size - 2;
 
   if (channel->params.precise) {
-    off = (channel->center - .5) * (2 * PI) / (SUFLOAT) window_size - ef;
+    off = (channel->center) * rbw - ef;
     off *= channel->decimation;
     su_ncqo_set_angfreq(&channel->lo, off);
   }
@@ -175,7 +173,7 @@ SU_METHOD_CONST(
   SUFLOAT f0)
 {
   channel->params.f0 = f0;
-  su_specttuner_refresh_channel_center(self, channel);
+  channel->pending_freq = SU_TRUE;
 }
 
 SU_METHOD_CONST(
@@ -186,7 +184,7 @@ SU_METHOD_CONST(
   SUFLOAT delta_f)
 {
   channel->params.delta_f = delta_f;
-  su_specttuner_refresh_channel_center(self, channel);
+  channel->pending_freq = SU_TRUE;
 }
 
 SU_METHOD_CONST(
@@ -294,7 +292,8 @@ SU_INSTANCER(
      *
      * TODO: Look into this ASAP
      */
-    new->center = 2 * SU_FLOOR(.5 * (effective_freq + .5 * rbw) / (2 * PI) * window_size);
+
+    new->center = 2 * SU_FLOOR(.5 * (effective_freq + 1 * rbw) / (2 * PI) * window_size);
     min_size    = SU_CEIL(new->k * window_size);
 
     /* Find the nearest power of 2 than can hold all these samples */
@@ -307,7 +306,7 @@ SU_INSTANCER(
     new->halfw  = new->width >> 1;
   } else {
     new->k = 1. / (2 * PI / params->bw);
-    new->center = 2 * SU_ROUND(.5 * (effective_freq + .5 * rbw) / (2 * PI) * window_size);
+    new->center = 2 * SU_FLOOR(.5 * (effective_freq + 1 * rbw) / (2 * PI) * window_size);
     new->size   = window_size;
     new->width  = SU_CEIL(new->k * window_size);
     if (new->width > window_size)
@@ -324,7 +323,7 @@ SU_INSTANCER(
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
-    off = (new->center - .5) * (2 * PI) / (SUFLOAT) window_size - effective_freq;
+    off = new->center * (2 * PI) / (SUFLOAT) window_size - effective_freq;
     off *= new->decimation;
     su_ncqo_init(&new->lo, SU_ANG2NORM_FREQ(off));
   }
@@ -554,15 +553,41 @@ __su_specttuner_feed_channel(
     const su_specttuner_t *self,
     su_specttuner_channel_t *channel)
 {
-  int p;
+  int p, prev_p;
   int len;
   int window_size = self->params.window_size;
   unsigned int i;
-  SUCOMPLEX phase;
+  SUCOMPLEX phase, phold;
   SUFLOAT alpha, beta;
+  SUBOOL changing_freqs = SU_FALSE;
+  int a_sign, b_sign;
   SUCOMPLEX *prev, *curr;
 
+  /* 
+   * This is how the phase continuity trick works: as soon as a new
+   * center frequency is signaled, we make a copy of the current
+   * LO state. Next, during overlapping, the previous buffer is 
+   * adjusted by the old LO, while the most recent buffer is
+   * adjusted by the new LO. Also, phase continuity between bins is
+   * ensured, as all bins refer to frequencies multiple of 2pi.
+   */
+
+  prev_p = channel->center;
+  b_sign = 1 - (channel->center & 2);
+  
+  if (!channel->state && channel->pending_freq) {
+    channel->pending_freq = SU_FALSE;
+    su_ncqo_init(&channel->old_lo, su_ncqo_get_freq(&channel->lo));
+    su_ncqo_set_phase(&channel->old_lo, su_ncqo_get_phase(&channel->lo));
+
+    su_specttuner_refresh_channel_center(self, channel);
+
+    changing_freqs = SU_TRUE;
+  }
+  
   p = channel->center;
+  a_sign = 1 - (channel->center & 2);
+
 
   /***************************** Upper sideband ******************************/
   len = channel->halfw;
@@ -623,18 +648,29 @@ __su_specttuner_feed_channel(
 
   /* Glue buffers */
   if (channel->params.precise) {
-    for (i = 0; i < channel->halfsz; ++i) {
-      alpha = channel->window[i]; /* Positive slope */
-      beta  = channel->window[i + channel->halfsz]; /* Negative slope */
-
-      phase = su_ncqo_read(&channel->lo);
-
-      curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+    if (changing_freqs) {
+      /* Do this only when switching frequencies */
+      for (i = 0; i < channel->halfsz; ++i) {
+        alpha = channel->window[i];
+        beta  = channel->window[i + channel->halfsz];
+        
+        phold = su_ncqo_read(&channel->old_lo);
+        phase = su_ncqo_read(&channel->lo);
+        curr[i] = channel->gain * (phase * alpha * curr[i] + phold * beta * prev[i]);
+      }
+    } else {
+      for (i = 0; i < channel->halfsz; ++i) {
+        alpha = channel->window[i]; /* Positive slope */
+        beta  = channel->window[i + channel->halfsz]; /* Negative slope */
+      
+        phase = su_ncqo_read(&channel->lo);
+        curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+      }
     }
   } else {
     for (i = 0; i < channel->halfsz; ++i) {
-      alpha = channel->window[i]; /* Positive slope */
-      beta  = channel->window[i + channel->halfsz]; /* Negative slope */
+      alpha = a_sign * channel->window[i]; /* Positive slope */
+      beta  = b_sign * channel->window[i + channel->halfsz]; /* Negative slope */
 
       curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
     }
