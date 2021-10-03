@@ -162,7 +162,7 @@ SU_METHOD_CONST(
   if (channel->params.precise) {
     off = channel->center * (2 * PI) / (SUFLOAT) window_size - ef;
     off *= channel->decimation;
-    su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
+    su_ncqo_set_angfreq(&channel->lo, off);
   }
 }
 
@@ -324,7 +324,7 @@ SU_INSTANCER(
   if (params->precise) {
     off = new->center * (2 * PI) / (SUFLOAT) window_size - effective_freq;
     off *= new->decimation;
-    su_ncqo_init_fixed(&new->lo, SU_ANG2NORM_FREQ(off));
+    su_ncqo_init(&new->lo, SU_ANG2NORM_FREQ(off));
   }
 
   new->halfsz = new->size >> 1;
