@@ -161,6 +161,9 @@ SU_CONSTRUCTOR_TYPED(void, su_ncqo, SUFLOAT frel);
 /* NCQO constructor for fixed frequency */
 SU_METHOD(su_ncqo, void, init_fixed, SUFLOAT fnor);
 
+/* Init ncqo from existing ncqo */
+SU_METHOD(su_ncqo, void, copy, const su_ncqo_t *ncqo);
+
 /* Compute next step */
 SUINLINE
 SU_METHOD(su_ncqo, void, step)

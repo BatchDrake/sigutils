@@ -19,6 +19,7 @@
 
 #define _GNU_SOURCE
 #include <math.h>
+#include <string.h>
 
 #define SU_LOG_DOMAIN "ncqo"
 
@@ -48,6 +49,29 @@ SU_METHOD(su_ncqo, void, init_fixed, SUFLOAT fnor)
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   self->pre_c = SU_TRUE;
   __su_ncqo_populate_precalc_buffer(self);
+#endif /* SU_NCQO_USE_PRECALC_BUFFER */
+}
+
+SU_METHOD(su_ncqo, void, copy, const su_ncqo_t *ncqo)
+{
+#ifdef SU_NCQO_USE_PRECALC_BUFFER
+  if (self->pre_c) {
+    /* We need all the info here */
+    memcpy(self, ncqo, sizeof(su_ncqo_t));
+  } else {
+#endif /* SU_NCQO_USE_PRECALC_BUFFER */
+    /* Copy only the relevant fields */
+    self->phi = ncqo->phi;
+    self->omega = ncqo->omega;
+    self->fnor = ncqo->fnor;
+
+    self->sin_updated = ncqo->sin_updated;
+    self->sin = ncqo->sin;
+
+    self->cos_updated = ncqo->cos_updated;
+    self->cos = ncqo->cos;
+#ifdef SU_NCQO_USE_PRECALC_BUFFER
+  }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
 

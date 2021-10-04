@@ -577,8 +577,8 @@ __su_specttuner_feed_channel(
   
   if (!channel->state && channel->pending_freq) {
     channel->pending_freq = SU_FALSE;
-    su_ncqo_init(&channel->old_lo, su_ncqo_get_freq(&channel->lo));
-    su_ncqo_set_phase(&channel->old_lo, su_ncqo_get_phase(&channel->lo));
+
+    su_ncqo_copy(&channel->old_lo, &channel->lo);
 
     su_specttuner_refresh_channel_center(self, channel);
 
