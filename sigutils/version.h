@@ -38,7 +38,7 @@ extern "C" {
 
 /* API version macros */
 #define SIGUTILS_VERSION_MAJOR 0
-#define SIGUTILS_VERSION_MINOR 2
+#define SIGUTILS_VERSION_MINOR 3
 #define SIGUTILS_VERSION_PATCH 0
 
 /* ABI version macros */
