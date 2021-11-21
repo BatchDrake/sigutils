@@ -152,8 +152,8 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
 void
 su_iir_filt_feed_bulk(
     su_iir_filt_t *filt,
-    const SUCOMPLEX *x,
-    SUCOMPLEX *y,
+    const SUCOMPLEX *__restrict x,
+    SUCOMPLEX *__restrict y,
     SUSCOUNT len)
 {
   SUCOMPLEX tmp_y = 0;
@@ -192,9 +192,9 @@ SUBOOL
 __su_iir_filt_init(
     su_iir_filt_t *filt,
     SUSCOUNT y_size,
-    SUFLOAT *a,
+    SUFLOAT *__restrict a,
     SUSCOUNT x_size,
-    SUFLOAT *b,
+    SUFLOAT *__restrict b,
     SUBOOL copy_coef)
 {
   SUCOMPLEX *x = NULL;
@@ -284,9 +284,9 @@ SUBOOL
 su_iir_filt_init(
     su_iir_filt_t *filt,
     SUSCOUNT y_size,
-    const SUFLOAT *a,
+    const SUFLOAT *__restrict a,
     SUSCOUNT x_size,
-    const SUFLOAT *b)
+    const SUFLOAT *__restrict b)
 {
   return __su_iir_filt_init(
       filt,

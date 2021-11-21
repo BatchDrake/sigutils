@@ -65,8 +65,8 @@ SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
 /* Push a bunch of samples to filter */
 void su_iir_filt_feed_bulk(
     su_iir_filt_t *filt,
-    const SUCOMPLEX *x,
-    SUCOMPLEX *y,
+    const SUCOMPLEX *__restrict x,
+    SUCOMPLEX *__restrict y,
     SUSCOUNT len);
 
 /* Get last output */
@@ -78,17 +78,17 @@ void su_iir_filt_reset(su_iir_filt_t *filt);
 SUBOOL su_iir_filt_init(
     su_iir_filt_t *filt,
     SUSCOUNT y_size,
-    const SUFLOAT *a,
+    const SUFLOAT *__restrict a,
     SUSCOUNT x_size,
-    const SUFLOAT *b);
+    const SUFLOAT *__restrict b);
 
 /* Initialize filter (internal) */
 SUBOOL __su_iir_filt_init(
     su_iir_filt_t *filt,
     SUSCOUNT y_size,
-    SUFLOAT *a,
+    SUFLOAT *__restrict a,
     SUSCOUNT x_size,
-    SUFLOAT *b,
+    SUFLOAT *__restrict b,
     SUBOOL copy_coef);
 
 /* Set output gain */

@@ -495,7 +495,7 @@ fail:
 SUINLINE SUSCOUNT
 __su_specttuner_feed_bulk(
     su_specttuner_t *self,
-    const SUCOMPLEX *buf,
+    const SUCOMPLEX *__restrict buf,
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
@@ -687,10 +687,25 @@ __su_specttuner_feed_channel(
 }
 
 SU_METHOD(
+  su_specttuner,
+  SUBOOL,
+  feed_all_channels)
+{
+  unsigned int i;
+  SUBOOL ok = SU_TRUE;
+
+  for (i = 0; i < self->channel_count; ++i)
+    if (self->channel_list[i] != NULL)
+      ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
+
+  return ok;
+}
+
+SU_METHOD(
   su_specttuner, 
   SUSDIFF, 
   feed_bulk_single, 
-  const SUCOMPLEX *buf, 
+  const SUCOMPLEX *__restrict buf, 
   SUSCOUNT size)
 {
   SUSDIFF got;
@@ -715,7 +730,7 @@ SU_METHOD(
   su_specttuner, 
   SUBOOL, 
   feed_bulk, 
-  const SUCOMPLEX *buf, 
+  const SUCOMPLEX *__restrict buf, 
   SUSCOUNT size)
 {
   SUSDIFF got;

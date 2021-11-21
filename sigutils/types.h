@@ -37,6 +37,16 @@
 #  define SU_USE_CPP_COMPLEX_API
 #endif
 
+#if __STDC_VERSION__ >= 199901L
+#  define SU_ENABLE_C99
+#endif /* __STDC_VERSION__ */
+
+#if defined(SU_ENABLE_C99)
+#  define __restrict restrict
+#elif !defined(__GNUC__)
+#  define __restrict
+#endif
+
 #ifdef SU_USE_CPP_COMPLEX_API
 #  ifdef I
 #    undef I

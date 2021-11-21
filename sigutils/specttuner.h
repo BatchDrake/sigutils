@@ -201,6 +201,49 @@ SU_METHOD(su_specttuner, void, ack_data)
   self->ready = SU_FALSE;
 }
 
+
+/* Internal */
+SU_METHOD(su_specttuner, SUBOOL, feed_all_channels);
+
+SUINLINE
+SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
+{
+  SUSDIFF halfsz = self->half_size;
+  SUSDIFF p = self->p;
+  SUBOOL  ready = SU_FALSE;
+
+  switch (self->state) {
+    case SU_SPECTTUNER_STATE_EVEN:
+      /* Just copy at the beginning */
+      self->window[p] = x;
+      break;
+
+    case SU_SPECTTUNER_STATE_ODD:
+      /* Copy to the second third */
+      self->window[p + halfsz] = x;
+
+      /* Are we populating the last third too? */
+      if (p >= halfsz)
+        self->window[p - halfsz] = x;
+  }
+
+  if (++p < self->params.window_size) {
+    self->p = p;
+  } else {
+    self->p = halfsz;
+
+    /* Compute FFT */
+    SU_FFTW(_execute) (self->plans[self->state]);
+
+    /* Toggle state */
+    self->state = !self->state;
+    
+    ready = SU_TRUE;
+  }
+
+  return ready;
+}
+
 SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params);
 SU_COLLECTOR(su_specttuner);
 
@@ -208,14 +251,14 @@ SU_METHOD(
   su_specttuner, 
   SUSDIFF, 
   feed_bulk_single, 
-  const SUCOMPLEX *buf, 
+  const SUCOMPLEX *__restrict buf, 
   SUSCOUNT size);
 
 SU_METHOD(
   su_specttuner, 
   SUBOOL, 
   feed_bulk, 
-  const SUCOMPLEX *buf, 
+  const SUCOMPLEX *__restrict buf, 
   SUSCOUNT size);
 
 SU_METHOD(
