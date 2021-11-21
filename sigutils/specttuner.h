@@ -201,7 +201,7 @@ SU_METHOD(su_specttuner, void, ack_data)
   self->ready = SU_FALSE;
 }
 
-
+#ifndef __cplusplus
 /* Internal */
 SU_METHOD(su_specttuner, SUBOOL, feed_all_channels);
 
@@ -243,6 +243,7 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
 
   return ready;
 }
+#endif /* __cplusplus */
 
 SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params);
 SU_COLLECTOR(su_specttuner);
