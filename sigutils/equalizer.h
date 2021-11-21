@@ -21,7 +21,7 @@
 #define _SIGUTILS_EQUALIZER_H
 
 enum sigutils_equalizer_algorithm {
-  SU_EQUALIZER_ALGORITHM_CMA /* Default */
+  SU_EQUALIZER_ALGORITHM_CMA, /* Default */
 };
 
 struct sigutils_equalizer_params {

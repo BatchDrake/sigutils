@@ -156,7 +156,7 @@ su_iir_filt_feed_bulk(
     SUCOMPLEX *y,
     SUSCOUNT len)
 {
-  SUCOMPLEX tmp_y;
+  SUCOMPLEX tmp_y = 0;
 
   while (len-- != 0) {
     __su_iir_filt_push_x(filt, *x++);

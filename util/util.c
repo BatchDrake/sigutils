@@ -60,7 +60,9 @@ is_asciiz(const char *buf, int lbound, int ubound)
 char *
 vstrbuild(const char *fmt, va_list ap)
 {
-  char *out;
+  char *out = NULL, *tmp = NULL;
+  char *result = NULL;
+
   int size, zeroindex;
   int last;
   va_list copy;
@@ -69,9 +71,8 @@ vstrbuild(const char *fmt, va_list ap)
   
   if (fmt != NULL) {
     if (!*fmt) {
-      out = malloc(1);
-      out[0] = '\0';
-      return out;
+      result = strdup("");
+      goto done;
     }
     
     va_copy(copy, ap);
@@ -79,7 +80,7 @@ vstrbuild(const char *fmt, va_list ap)
     va_end(copy);
     
     if ((out = malloc(size)) == NULL)
-      return NULL;
+      goto done;
     
     va_copy(copy, ap);
     vsnprintf(out, size, fmt, copy);
@@ -92,17 +93,26 @@ vstrbuild(const char *fmt, va_list ap)
       last = size;
       size += STRBUILD_BSIZ;
       
-      out = realloc(out, size); /* Reasignamos */
+      tmp = realloc(out, size); /* Reasignamos */
+      if (tmp == NULL)
+        goto done;
+      
+      out = tmp;
       
       va_copy (copy, ap);
       vsnprintf(out, size, fmt, copy);
       va_end (copy);
     }
-  }
-  else
+
+    result = out;
     out = NULL;
-  
-  return out;
+  }
+
+done:
+  if (out != NULL)
+    free(out);
+
+  return result;
 }
 
 

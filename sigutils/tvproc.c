@@ -303,7 +303,10 @@ SU_METHOD(
   const struct sigutils_tv_processor_params *params)
 {
   SUFLOAT *line_buffer = NULL;
+  SUFLOAT *tmp = NULL;
+
   SUSCOUNT delay_line_len = SU_CEIL(params->line_len);
+  SUBOOL ok = SU_FALSE;
 
   SU_TRY_FAIL(params->line_len >= 1);
   SU_TRY_FAIL(params->frame_lines >= 1);
@@ -317,7 +320,9 @@ SU_METHOD(
   if (params->enable_comb) {
     if (self->delay_line_len != delay_line_len || line_buffer == NULL) {
       SU_TRY_FAIL(
-          line_buffer = realloc(line_buffer, sizeof(SUFLOAT) * delay_line_len));
+          tmp = realloc(line_buffer, sizeof(SUFLOAT) * delay_line_len));
+
+      line_buffer = tmp;
 
       if (self->delay_line == NULL) {
         memset(line_buffer, 0, sizeof(SUFLOAT) * delay_line_len);
@@ -425,11 +430,13 @@ SU_METHOD(
   self->hsync_fast_track_alpha = SU_SPLPF_ALPHA(params->hsync_fast_track_tau);
   self->line_len_alpha         = SU_SPLPF_ALPHA(params->line_len_tau);
 
-  return SU_TRUE;
+  ok = SU_TRUE;
 
 fail:
-
-  return SU_FALSE;
+  if (line_buffer != NULL)
+    free(line_buffer);
+    
+  return ok;
 }
 
 SUINLINE 

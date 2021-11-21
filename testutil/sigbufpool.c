@@ -239,7 +239,7 @@ void
 su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
+  unsigned int i = 0;
   size_t allocation = 0;
   size_t total = 0;
 
@@ -250,7 +250,7 @@ su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
     allocation = this->size *
         (this->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT));
     SU_INFO("[%2d] %-10s %-7s %8d %8d bytes\n",
-            i,
+            ++i,
             this->name,
             this->is_complex ? "COMPLEX" : "FLOAT",
             this->size,
