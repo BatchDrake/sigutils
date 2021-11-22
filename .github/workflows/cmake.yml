@@ -6,7 +6,12 @@ on:
   pull_request:
     branches: [ develop ]
   workflow_dispatch:
-  
+    inputs:
+    debug_enabled:
+      description: 'Build and run interactive shell'     
+      required: false
+      default: false
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
@@ -14,10 +19,14 @@ env:
 jobs:
   # Installation of dependencies is too OS-dependent now, we don't
   # miss that much by particularizing this in a per-OS basis.
-  
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
+    - name: Setup interactive shell session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
     - name: Install sndfile
       run: sudo apt-get install libsndfile1-dev
 
@@ -26,6 +35,32 @@ jobs:
 
     - name: Install FFTW3
       run: sudo apt-get install libfftw3-dev
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Setup interactive shell session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+      
+    - name: Install sndfile
+      run: brew install libsndfile
+
+    - name: Install Volk
+      run: brew install volk
+
+    - name: Install FFTW3
+      run: brew install fftw
 
     - name: Checkout
       uses: actions/checkout@v2
