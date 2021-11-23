@@ -160,7 +160,9 @@
 
 #define SU_POWX(x, y) pow(x, y)
 
-#ifdef __GNUC__
+#ifdef __APPLE__
+#  define SU_SINCOS SU_ADDSFX(__sincos)
+#elif defined(__GNUC__)
 #  define SU_SINCOS SU_ADDSFX(sincos)
 #else
 #  define SU_SINCOS(phi, sinptr, cosptr) \
@@ -168,7 +170,7 @@
     *(sinptr) = SU_SIN(phi);              \
     *(cosptr) = SU_COS(phi);              \
   } while(0)
-#endif /* __GNUC__ */
+#endif /* __APPLE__ */
 
 #define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
 #define SU_SPLPF_FEED(y, x, alpha) y += (alpha) * ((x) - (y))
