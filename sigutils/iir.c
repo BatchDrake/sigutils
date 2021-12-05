@@ -31,6 +31,28 @@
 #  include <volk/volk.h>
 #endif
 
+#ifdef SU_USE_VOLK
+#  define calloc su_volk_calloc
+#  define malloc su_volk_malloc
+#  define free   volk_free
+SUINLINE void *
+su_volk_malloc(size_t size)
+{
+  return volk_malloc(size, volk_get_alignment());
+}
+
+SUINLINE void *
+su_volk_calloc(size_t nmemb, size_t size)
+{
+  void *result = su_volk_malloc(nmemb * size);
+
+  if (result != NULL)
+    memset(result, 0, nmemb * size);
+
+  return result;
+}
+#endif /* SU_USE_VOLK */
+
 SUINLINE void
 __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 {
