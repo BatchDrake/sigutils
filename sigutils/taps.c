@@ -218,7 +218,7 @@ su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size)
   SUFLOAT t = 0;
 
   for (i = 0; i < size; ++i) {
-    t = i - size / 2.;
+    t = i - (size >> 1);
     h[i] = fc * su_sinc(fc * t);
   }
 
