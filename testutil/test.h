@@ -25,7 +25,7 @@
 #include <sigutils/types.h>
 #include <sigutils/log.h>
 
-#include <sys/time.h>
+#include <util/compat-time.h>
 
 #define SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT 8000
 
