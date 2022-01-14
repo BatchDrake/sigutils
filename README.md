@@ -159,3 +159,25 @@ Once we are done using the modem object, it must be released using the `su_modem
 ```
 su_modem_destroy(modem);
 ```
+
+## Building and installing sigutils under Windows
+Under MSYS2 MinGW64
+First, you must create a build directory and configure it with:
+
+```
+% mkdir build
+% cd build
+% cmake -G "MSYS Makefiles" ..
+```
+
+If the previous commands were successful, you can start the build by typing:
+
+```
+% cmake --build .
+```
+
+And proceed to install the library in your system by running as root:
+
+```
+# make install
+```
