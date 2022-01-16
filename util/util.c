@@ -612,7 +612,7 @@ rtrim (const char *str)
   
   copy = xstrdup (str);
   
-  for (tail = copy + strlen (copy) - 1; (unsigned long) copy <= (unsigned long) tail; tail--)
+  for (tail = copy + strlen (copy) - 1; (uintptr_t) copy <= (uintptr_t) tail; tail--)
   {
     if (!isspace (*tail))
       break;
@@ -637,7 +637,7 @@ trim (const char *str)
         
   copy = xstrdup (str);
   
-  for (tail = copy + strlen (copy) - 1; (unsigned long) copy <= (unsigned long) tail; tail--)
+  for (tail = copy + strlen (copy) - 1; (uintptr_t) copy <= (uintptr_t) tail; tail--)
   {
     if (!isspace (*tail))
       break;
