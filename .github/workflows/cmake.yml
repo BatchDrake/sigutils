@@ -70,4 +70,25 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-cc
+      - name: Install sndfile
+        run: pacman -S mingw-w64-x86_64-libsndfile
+      
+      - name: Install FFTW3
+        run: pacman -S mingw-w64-x86_64-fftw
+        
+      - name: Install volk
+        run: pacman -S mingw-w64-x86_64-volk
+    
       
