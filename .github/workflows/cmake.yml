@@ -84,9 +84,9 @@ jobs:
           install: git mingw-w64-x86_64-cc mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
           
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -G"MSYS Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        run: C:\msys64\mingw64\bin\cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: C:\msys64\mingw64\bin\cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
     
       
