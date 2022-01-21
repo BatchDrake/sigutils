@@ -26,7 +26,15 @@
 #include "coef.h"
 #include "taps.h"
 
-#if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
+/*
+  Somehow the Volk enhancement of IIR filters corrupts the
+  heap in Win32 systems. The reason is not well understood.
+
+  We temptatively disable it in these targets until we figure
+  out what the heck is going on.
+*/
+
+#if !defined(_WIN32) && defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
 #  define SU_USE_VOLK
 #  include <volk/volk.h>
 #endif

@@ -1,5 +1,3 @@
-/* Source: https://github.com/klauspost/mman-win32 (unlicensed) */
-
 /*
 
   Copyright (C) 2012 Klaus Post
@@ -18,6 +16,8 @@
   <http://www.gnu.org/licenses/>
   
 */
+
+/* Source: https://github.com/klauspost/mman-win32 (unlicensed) */
 
 #include <windows.h>
 #include <errno.h>
