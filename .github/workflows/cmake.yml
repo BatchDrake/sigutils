@@ -81,7 +81,7 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: git mingw-w64-x86_64-cc mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+          install: git mingw-w64-x86_64-cc mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
           
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
