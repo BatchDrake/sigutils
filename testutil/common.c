@@ -20,6 +20,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <util/compat-time.h>
 #include "test.h"
 
 void

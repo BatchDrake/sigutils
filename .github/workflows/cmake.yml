@@ -70,4 +70,23 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+          
+      - name: Configure CMake
+        run: C:\\msys64\\mingw64\\bin\\cmake -B /d/a/sigutils/sigutils/build -G"MinGW Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=C:\\msys64\\mingw64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        
+      - name: Build
+        run: C:\\msys64\\mingw64\\bin\\cmake --build /d/a/sigutils/sigutils/build --config ${{env.BUILD_TYPE}}
+    
       

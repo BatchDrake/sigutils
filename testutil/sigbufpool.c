@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <time.h>
-#include <sys/stat.h>
+#include <util/compat-stat.h>
 #include "test.h"
 
 SUPRIVATE void

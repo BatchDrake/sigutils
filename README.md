@@ -159,3 +159,32 @@ Once we are done using the modem object, it must be released using the `su_modem
 ```
 su_modem_destroy(modem);
 ```
+
+## Building and installing sigutils under Windows
+Under MSYS2 MinGW64
+First, install dependencies:
+
+```
+pacman -S git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+```
+
+Then, clone the repos, create build directory and configure cmake:
+
+```
+% git clone --branch develop https://github.com/arf20/sigutils.git
+% mkdir build
+% cd build
+% /msys64/mingw64/bin/cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=/msys64/mingw64 -DCMAKE_BUILD_TYPE=Release ..
+```
+
+If the previous commands were successful, you can start the build by typing:
+
+```
+% /msys64/mingw64/bin/cmake --build . --config Release
+```
+
+And proceed to install the library in your system by running as root:
+
+```
+# make install
+```
