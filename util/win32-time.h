@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-void timersub(struct timeval *a, struct timeval *b,
+void timersub(const struct timeval *a, const struct timeval *b,
 							struct timeval *res);
 				
 #endif /* _UTIL_TIME_H */
