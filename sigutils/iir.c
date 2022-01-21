@@ -159,7 +159,7 @@ su_iir_filt_finalize(su_iir_filt_t *filt)
     free(filt->b);
 
   if (filt->x != NULL)
-      free(filt->x);
+    free(filt->x);
 
   if (filt->y != NULL)
     free(filt->y);
@@ -207,9 +207,11 @@ su_iir_filt_get(const su_iir_filt_t *filt)
 void
 su_iir_filt_reset(su_iir_filt_t *filt)
 {
-  memset(filt->x, 0, sizeof(SUCOMPLEX) * filt->x_size);
-  memset(filt->y, 0, sizeof(SUCOMPLEX) * filt->y_size);
+  memset(filt->x, 0, sizeof(SUCOMPLEX) * filt->x_alloc);
+  memset(filt->y, 0, sizeof(SUCOMPLEX) * filt->y_alloc);
   filt->curr_y = 0;
+  filt->x_ptr = 0;
+  filt->y_ptr = 0;
 }
 
 void
