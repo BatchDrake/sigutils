@@ -23,7 +23,15 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 void timersub(const struct timeval *a, const struct timeval *b,
 							struct timeval *res);
-				
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif /* _UTIL_TIME_H */
