@@ -12,13 +12,25 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#include "win32-unistd.h"
+#include <windows.h>
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+long
+sysconf(int name){
+	switch (name) {
+		case _SC_NPROCESSORS_ONLN: {
+			SYSTEM_INFO si;
+			GetSystemInfo(&si);
+			return si.dwNumberOfProcessors;
+		} break;
+		default: return 0;
+	}
+	return 0;
+}
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+int
+getpagesize() {
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	return sysInfo.dwPageSize;
+}

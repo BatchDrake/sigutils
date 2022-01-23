@@ -12,13 +12,25 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#include "win32-pwd.h"
+#include <Shlobj.h>
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+// WARN: VERY ADHOC: dummy function lol
+uid_t getuid() {
+	return 0;
+}
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+// WARN: VERY ADHOC: ignores uid, only populates pw_dir
+struct passwd *getpwuid(uid_t uid) {
+	struct passwd *pw = malloc(sizeof(struct passwd));
+	memset(pw, 0, sizeof(struct passwd));
+
+	char *homeDirStr = malloc(MAX_PATH);
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, homeDirStr))) {
+		pw->pw_dir = homeDirStr;
+	} else {
+		return NULL;
+	}
+	
+	return pw;
+}

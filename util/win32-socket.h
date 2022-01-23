@@ -12,13 +12,18 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#ifndef _UTIL_SOCKET_H
+#define _UTIL_SOCKET_H
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+#define getsockopt(sockfd, level, optname, optval, optLen)		getsockopt(sockfd, level, optname, (char*)optval, optLen)
+#define setsockopt(sockfd, level, optname, optval, optLen)		setsockopt(sockfd, level, optname, (const char*)optval, optLen)
+#define send(sockfd, buf, len, flags) 							send(sockfd, (const char*)buf, len, flags)
+
+#ifdef interface
+# undef interface
+#endif /* interface */
+
+#endif /* _UTIL_SOCKET_H */

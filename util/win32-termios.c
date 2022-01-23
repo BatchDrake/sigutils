@@ -12,13 +12,24 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#include "win32-termios.h"
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+#include <conio.h>
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+ssize_t read_noecho_noicanon(int fd, void *buf, size_t count) {
+	char *buff = (char*)buf;
+	for (int i = 0; i < count; i++) {
+		buff[i] = (char)_getch();
+		buff++;
+	}
+	return count;
+}
+
+int tcgetattr(int fd, struct termios *termios_p) {
+	return 0;
+}
+
+int tcsetattr(int fd, int optional_actions, const struct termios *termios_p) {
+	return 0;
+}
+

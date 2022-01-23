@@ -12,13 +12,13 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#ifndef _UTIL_COMPAT_INET_H
+#define _UTIL_COMPAT_INET_H
 
 #  ifdef _WIN32
-#    include "win32-mman.h"
+#    include "win32-inet.h"
 #  else
-#    include <sys/mman.h>
+#    include <arpa/inet.h>
 #  endif /* _WIN32 */
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+#endif /* _UTIL_COMPAT_INET_H */

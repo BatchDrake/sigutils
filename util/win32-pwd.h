@@ -12,13 +12,28 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#ifndef _PWD_H_
+#define _PWD_H_
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+#include <time.h>
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+typedef int uid_t;
+typedef int gid_t;
+
+struct passwd {
+	char	*pw_name;		/* user name */
+	char	*pw_passwd;		/* encrypted password */
+	uid_t	pw_uid;			/* user uid */
+	gid_t	pw_gid;			/* user gid */
+	time_t	pw_change;		/* password change time */
+	char	*pw_class;		/* user access class */
+	char	*pw_gecos;		/* Honeywell login info */
+	char	*pw_dir;		/* home directory */
+	char	*pw_shell;		/* default shell */
+	time_t	pw_expire;		/* account expiration */
+};
+
+uid_t getuid();
+struct passwd *getpwuid(uid_t uid);
+
+#endif /* _PWD_H_ */
