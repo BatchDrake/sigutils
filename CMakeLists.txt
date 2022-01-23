@@ -284,7 +284,7 @@ install(
   DESTINATION include/sigutils/sigutils/specific)
 
 install(
-  FILES ${SIGUTILS_UTIL_HEADERS} 
+  FILES ${SIGUTILS_UTIL_HEADERS} ${SIGUTILS_COMPAT_HEADERS}
   DESTINATION include/sigutils/util)
 
 install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
