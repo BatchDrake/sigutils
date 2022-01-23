@@ -113,47 +113,54 @@ install(
 ########################## Sigutils library build #############################
 set(SIGUTILS_UTIL_HEADERS ${UTILDIR}/util.h)
 set(SIGUTILS_UTIL_SOURCES ${UTILDIR}/util.c)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-mman.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-time.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-stat.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-fcntl.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-in.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-inet.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-netdb.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-poll.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-pwd.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-select.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-socket.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-statvfs.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-stdlib.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-termios.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-unistd.h)
-set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/compat-windows.h)
+
+set(SIGUTILS_COMPAT_SOURCES "")
+set(SIGUTILS_COMPAT_HEADERS
+   ${UTILDIR}/compat-mman.h
+   ${UTILDIR}/compat-time.h
+   ${UTILDIR}/compat-stat.h
+   ${UTILDIR}/compat-fcntl.h
+   ${UTILDIR}/compat-in.h
+   ${UTILDIR}/compat-inet.h
+   ${UTILDIR}/compat-netdb.h
+   ${UTILDIR}/compat-poll.h
+   ${UTILDIR}/compat-pwd.h
+   ${UTILDIR}/compat-select.h
+   ${UTILDIR}/compat-socket.h
+   ${UTILDIR}/compat-statvfs.h
+   ${UTILDIR}/compat-stdlib.h
+   ${UTILDIR}/compat-termios.h
+   ${UTILDIR}/compat-unistd.h)
 
 if(WIN32)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-mman.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-mman.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-time.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-time.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-stat.h)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-fcntl.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-fcntl.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-in.h)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-inet.h)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-netdb.h)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-poll.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-poll.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-pwd.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-pwd.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-socket.h)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-statvfs.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-statvfs.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-stdlib.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-stdlib.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-termios.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-termios.c)
-  set(SIGUTILS_UTIL_HEADERS ${SIGUTILS_UTIL_HEADERS} ${UTILDIR}/win32-unistd.h)
-  set(SIGUTILS_UTIL_SOURCES ${SIGUTILS_UTIL_SOURCES} ${UTILDIR}/win32-unistd.c)
+  set(SIGUTILS_COMPAT_HEADERS
+    ${SIGUTILS_COMPAT_HEADERS}
+    ${UTILDIR}/win32-mman.h
+    ${UTILDIR}/win32-time.h
+    ${UTILDIR}/win32-stat.h
+    ${UTILDIR}/win32-fcntl.h
+    ${UTILDIR}/win32-in.h
+    ${UTILDIR}/win32-inet.h
+    ${UTILDIR}/win32-netdb.h
+    ${UTILDIR}/win32-poll.h
+    ${UTILDIR}/win32-pwd.h
+    ${UTILDIR}/win32-socket.h
+    ${UTILDIR}/win32-statvfs.h
+    ${UTILDIR}/win32-stdlib.h
+    ${UTILDIR}/win32-termios.h
+    ${UTILDIR}/win32-unistd.h)
+
+  set(SIGUTILS_COMPAT_SOURCES
+    ${SIGUTILS_COMPAT_SOURCES}
+    ${UTILDIR}/win32-fcntl.c
+    ${UTILDIR}/win32-mman.c
+    ${UTILDIR}/win32-time.c
+    ${UTILDIR}/win32-poll.c
+    ${UTILDIR}/win32-pwd.c
+    ${UTILDIR}/win32-statvfs.c
+    ${UTILDIR}/win32-stdlib.c
+    ${UTILDIR}/win32-termios.c
+    ${UTILDIR}/win32-unistd.c)
 endif()
 
 set(SIGUTILS_SPECIFIC_HEADERS
@@ -229,6 +236,8 @@ link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_D
  
 add_library(
   sigutils SHARED
+  ${SIGUTILS_COMPAT_SOURCES}
+  ${SIGUTILS_COMPAT_HEADERS}
   ${SIGUTILS_UTIL_SOURCES}
   ${SIGUTILS_UTIL_HEADERS}
   ${SIGUTILS_LIB_SOURCES}
@@ -254,7 +263,10 @@ target_link_libraries(sigutils ${FFTW3_LIBRARIES})
 target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(sigutils m)
 
-target_link_libraries(sigutils ws2_32)
+if(WIN32)
+  # In Windows systems, winsock is required
+  target_link_libraries(sigutils ws2_32)
+endif()
 
 # Optional dependencies
 if(VOLK_FOUND)
