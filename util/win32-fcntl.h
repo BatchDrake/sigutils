@@ -12,13 +12,18 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#ifndef _UTIL_FCNTL_H
+#define _UTIL_FCNTL_H
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+#define	_O_BINARY	0x8000	/* Input and output is not translated. */
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+#define	F_GETFL		3	    /* Get file flags */
+#define	F_SETFL		4	    /* Set file flags */
+
+#define	O_NONBLOCK	0x4000  /* non blocking I/O (POSIX style) */
+
+#include <stdarg.h>
+
+int fcntl(int fd, int cmd, ... /* arg */ );
+
+#endif /* _UTIL_FCNTL_H */

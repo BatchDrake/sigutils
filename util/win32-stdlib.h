@@ -12,13 +12,18 @@
   <http://www.gnu.org/licenses/>
 */
 
-#ifndef _UTIL_COMPAT_MMAN_H
-#define _UTIL_COMPAT_MMAN_H
+#ifndef _UTIL_STDLIB_H
+#define _UTIL_STDLIB_H
 
-#  ifdef _WIN32
-#    include "win32-mman.h"
-#  else
-#    include <sys/mman.h>
-#  endif /* _WIN32 */
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-#endif /* _UTIL_COMPAT_MMAN_H */
+int setenv(const char *name, const char *value, int overwrite);
+int unsetenv(const char *name);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* _UTIL_STDLIB_H */
