@@ -61,7 +61,11 @@ struct sigutils_ncqo {
 
 typedef struct sigutils_ncqo su_ncqo_t;
 
-#define su_ncqo_INITIALIZER {0, 0, 0, 0, 0}
+#ifdef SU_NCQO_USE_PRECALC_BUFFER
+#  define su_ncqo_INITIALIZER {{0.}, {0.}, {0.}, SU_FALSE, 0, 0., 0., 0., SU_FALSE, 0., SU_FALSE, 0.}
+#else
+#  define su_ncqo_INITIALIZER {0., 0., 0., SU_FALSE, 0., SU_FALSE, 0.}
+#endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
 /* Methods */
 SUINLINE SUFLOAT

@@ -245,7 +245,9 @@ SU_INSTANCER(
   SUBOOL  full_spectrum = SU_FALSE;
 
   if (params->guard < 1) {
-    SU_ERROR("Guard bandwidth is smaller than channel bandwidth\n");
+    SU_ERROR(
+      "Guard bandwidth is smaller than channel bandwidth (guard = %g < 1)\n",
+      params->guard);
     goto fail;
   }
 

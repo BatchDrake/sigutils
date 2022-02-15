@@ -25,6 +25,14 @@
 #include "ncqo.h"
 #include "defs.h"
 
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
+
 #define SU_PLL_ORDER_DEFAULT 5
 #define SU_COSTAS_FIR_ORDER_THRESHOLD 20
 
@@ -96,5 +104,12 @@ SU_DESTRUCTOR(su_costas);
 SU_METHOD(su_costas, void,      set_kind, enum sigutils_costas_kind kind);
 SU_METHOD(su_costas, void,      set_loop_gain, SUFLOAT gain);
 SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_PLL_H */

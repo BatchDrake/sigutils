@@ -24,6 +24,14 @@
 #include "ncqo.h"
 #include "defs.h"
 
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
+
 struct sigutils_specttuner_params {
   SUSCOUNT window_size;
 };
@@ -294,5 +302,12 @@ SU_METHOD_CONST(
   set_channel_bandwidth,
   su_specttuner_channel_t *channel,
   SUFLOAT bw);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_SPECTTUNER_H */

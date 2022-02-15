@@ -23,6 +23,14 @@
 #include "types.h"
 #include "defs.h"
 
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif // __clang__
+extern "C" {
+#endif /* __cplusplus */
+
 /*
  * This Hang AGC implementation is essentially inspired in GQRX's
  */
@@ -92,5 +100,12 @@ SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params);
 SU_DESTRUCTOR (su_agc);
 
 SU_METHOD     (su_agc, SUCOMPLEX, feed, SUCOMPLEX x);
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_AGC_H */
