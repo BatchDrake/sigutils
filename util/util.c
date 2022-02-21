@@ -607,7 +607,6 @@ ltrim (const char *str)
 char *
 rtrim (const char *str)
 {
-  int i;
   char *copy;
   char *tail;
   
@@ -626,7 +625,6 @@ rtrim (const char *str)
 char *
 trim (const char *str)
 {
-  int i;
   char *copy;
   char *tail;
 

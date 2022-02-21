@@ -41,7 +41,6 @@ su_test_pll(su_test_context_t *ctx)
   SUFLOAT *phierr = NULL;
   SUFLOAT *lock = NULL;
 
-  SUFLOAT t;
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   su_pll_t pll = su_pll_INITIALIZER;
   unsigned int p = 0;

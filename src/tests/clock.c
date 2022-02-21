@@ -59,19 +59,16 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   unsigned int msgbuf;
 
   unsigned int rx_delay;
-  unsigned int rx_buf = 0;
 
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   su_costas_t costas = su_costas_INITIALIZER;
   su_iir_filt_t mf = su_iir_filt_INITIALIZER;
   su_clock_detector_t cd = su_clock_detector_INITIALIZER;
   unsigned int p = 0;
-  unsigned int t = 0;
   unsigned int sym;
   unsigned int n = 0;
   unsigned int rx_count = 0;
   unsigned int rx_size;
-  int permutations = 0;
 
   SU_TEST_START_TICKLESS(ctx);
 

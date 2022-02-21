@@ -121,7 +121,7 @@ SUPRIVATE struct option long_options[] = {
 extern int optind;
 
 int
-main (int argc, char *argv[], char *envp[])
+main (int argc, char *argv[])
 {
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
   unsigned int test_start = 0;

@@ -439,7 +439,6 @@ SUBOOL
 su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta)
 {
   SUFLOAT *b = NULL;
-  unsigned int i;
 
   if (n < 1)
     goto fail;
@@ -465,7 +464,6 @@ SUBOOL
 su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n)
 {
   SUFLOAT *b = NULL;
-  unsigned int i;
 
   if (n < 1)
     goto fail;
@@ -495,7 +493,6 @@ su_iir_brickwall_bp_init(
     SUFLOAT ifnor)
 {
   SUFLOAT *b = NULL;
-  unsigned int i;
 
   if (n < 1)
     goto fail;
@@ -521,7 +518,6 @@ SUBOOL
 su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 {
   SUFLOAT *b = NULL;
-  unsigned int i;
 
   if (n < 1)
     goto fail;

@@ -187,7 +187,6 @@ su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size)
   SUFLOAT dem;
   SUFLOAT num;
   SUFLOAT f;
-  SUFLOAT norm = 0;
 
   for (i = 0; i < size; ++i) {
     r_t = (i - size / 2.) / T;

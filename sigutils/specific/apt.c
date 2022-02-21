@@ -258,9 +258,8 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
   SUFLOAT snr;
   SUSCOUNT line_len;
   SUSCOUNT next_search;
-  unsigned int expected_lines, expected_sync;
+  unsigned int expected_sync;
   unsigned int search_start, search_end;
-  SUSDIFF last_sync_pos = self->last_sync - self->samp_epoch;
   SUBOOL  have_line = SU_FALSE;
   SUFLOAT delta;
   SUBOOL  ok = SU_FALSE;
@@ -369,7 +368,7 @@ su_apt_decoder_feed(
   const SUCOMPLEX *buffer,
   SUSCOUNT count)
 {
-  SUSCOUNT i, elapsed;
+  SUSCOUNT i;
   SUCOMPLEX x;
   SUFLOAT pwr;
   SUFLOAT snr;

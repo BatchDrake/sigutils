@@ -128,8 +128,6 @@ su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size)
 SUFLOAT
 su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
 {
-  SUFLOAT size_inv = 1. / size;
-  SUFLOAT result = 0.;
   SUFLOAT min = INFINITY;
   SUFLOAT max = -INFINITY;
 

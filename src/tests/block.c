@@ -88,7 +88,6 @@ su_test_block_plugging(su_test_context_t *ctx)
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
   SUCOMPLEX *rx = NULL;
-  SUFLOAT real = 0;
   int i;
   unsigned int j = 0;
   SUSDIFF got;
@@ -328,7 +327,6 @@ su_test_tuner(su_test_context_t *ctx)
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
   SUCOMPLEX *rx = NULL;
-  SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
   SUSDIFF got;
@@ -428,7 +426,6 @@ su_test_costas_block(su_test_context_t *ctx)
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
   SUCOMPLEX *rx = NULL;
   SUFLOAT *freq = NULL;
-  SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
   SUSDIFF got;
@@ -442,8 +439,6 @@ su_test_costas_block(su_test_context_t *ctx)
   /* Block properties */
   int *samp_rate;
   SUFLOAT *f;
-
-  unsigned int *size;
 
   SU_TEST_START(ctx);
 
@@ -558,7 +553,6 @@ su_test_rrc_block(su_test_context_t *ctx)
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
   SUCOMPLEX *rx = NULL;
   SUFLOAT *freq = NULL;
-  SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
   SUSDIFF got;
@@ -573,7 +567,6 @@ su_test_rrc_block(su_test_context_t *ctx)
   int *samp_rate;
   SUFLOAT *f;
   SUFLOAT *gain;
-  unsigned int *size;
 
   SU_TEST_START(ctx);
 
@@ -709,7 +702,6 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   su_block_port_t port = su_block_port_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
   SUCOMPLEX buffer[17]; /* Prime number on purpose */
-  SUFLOAT samp = 0;
   SUFLOAT *freq = NULL;
   SUCOMPLEX *rx = NULL;
   int i;
@@ -914,7 +906,6 @@ su_test_cdr_block(su_test_context_t *ctx)
   SUCOMPLEX *rx = NULL;
   SUFLOAT *freq = NULL;
   SUFLOAT *unc = NULL;
-  SUFLOAT samp = 0;
   int i;
   unsigned int j = 0;
   SUSCOUNT uncp = 0;
@@ -933,7 +924,6 @@ su_test_cdr_block(su_test_context_t *ctx)
   SUFLOAT *f;
   SUFLOAT *gain;
   SUFLOAT *bmax, *bmin, *beta, *alpha, *bnor;
-  unsigned int *size;
 
   SU_TEST_START(ctx);
 

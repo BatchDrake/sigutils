@@ -225,7 +225,6 @@ su_sigbuf_pool_helper_dump_wav(
   SF_INFO info;
   SUSCOUNT samples = 0;
   SUSCOUNT written = 0;
-  unsigned int i;
 
   info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
   info.channels = is_complex ? 2 : 1;

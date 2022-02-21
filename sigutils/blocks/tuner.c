@@ -151,7 +151,6 @@ su_block_tuner_ctor(struct sigutils_block *block, void **private, va_list ap)
   SUFLOAT bw;
   SUFLOAT if_off;
   unsigned int size;
-  unsigned int d;
 
   fc     = va_arg(ap, double);
   bw     = va_arg(ap, double);

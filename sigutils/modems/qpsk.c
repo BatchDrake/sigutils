@@ -123,7 +123,6 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 {
   struct qpsk_modem *new = NULL;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
-  const su_modem_property_t *prop;
   SUFLOAT *rrc_gain = NULL;
   SUFLOAT *cdr_alpha = NULL;
   SUFLOAT *cdr_beta = NULL;
@@ -290,7 +289,6 @@ su_qpsk_modem_read_sample(su_modem_t *modem, void *private)
   struct qpsk_modem *qpsk_modem = (struct qpsk_modem *) private;
   SUSDIFF got = 0;
   SUCOMPLEX sample;
-  SUSYMBOL sym = 0;
 
   if ((got = su_block_port_read(&qpsk_modem->port, &sample, 1)) == 0)
     return nan("nosym");
