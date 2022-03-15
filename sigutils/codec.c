@@ -23,7 +23,7 @@
 #include "log.h"
 #include "codec.h"
 
-PTR_LIST_CONST(SUPRIVATE struct sigutils_codec_class, class);
+PTR_LIST_PRIVATE_CONST(struct sigutils_codec_class, class);
 
 const struct sigutils_codec_class *
 su_codec_class_lookup(const char *name)

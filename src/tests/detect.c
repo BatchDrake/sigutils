@@ -61,7 +61,6 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   unsigned int p = 0;
   unsigned int sym;
   unsigned int n = 0;
-  unsigned int i;
   struct sigutils_channel *channel;
 
   SU_TEST_START_TICKLESS(ctx);

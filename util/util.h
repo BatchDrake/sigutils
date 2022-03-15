@@ -68,6 +68,10 @@
   const type **name ## _list;                        \
   unsigned int name ## _count;
 
+#define PTR_LIST_PRIVATE_CONST(type, name)                   \
+  SUPRIVATE const type **name ## _list;                        \
+  SUPRIVATE unsigned int name ## _count;
+
 #define PTR_LIST_LOCAL(type, name)                   \
   type       **name ## _list = NULL;                 \
   unsigned int name ## _count = 0;

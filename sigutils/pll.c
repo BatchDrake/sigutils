@@ -47,11 +47,6 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
   su_ncqo_init(&self->ncqo, fhint);
 
   return SU_TRUE;
-
-fail:
-  su_pll_finalize(self);
-
-  return SU_FALSE;
 }
 
 SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x)

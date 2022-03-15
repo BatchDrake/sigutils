@@ -57,7 +57,6 @@ su_equalizer_update_weights(su_equalizer_t *eq, SUCOMPLEX y)
   int p;
   SUCOMPLEX y2;
   SUCOMPLEX err;
-  SUFLOAT err_i, err_q;
 
   y2 = y * SU_C_CONJ(y);
   err = y * (y2 - 1.);

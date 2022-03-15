@@ -105,8 +105,8 @@
     action;                                                 \
   }
 
-#define SU_CONSTRUCT_CATCH(class, dest, action, ...)        \
-  if (!JOIN(class, _init)(dest, __VA_ARGS__)) {             \
+#define SU_CONSTRUCT_CATCH(class, dest, action, arg...)     \
+  if (!JOIN(class, _init)(dest, ##arg)) {                   \
     SU_ERROR(                                               \
       "failed to call constructor of class \"%s\"\n",       \
       STRINGIFY(class));                                    \
@@ -140,8 +140,8 @@
 #define SU_MAKE(dest, class, ...)              \
   SU_MAKE_CATCH(dest, class, goto done, __VA_ARGS__)
 
-#define SU_CONSTRUCT(class, dest, ...)         \
-  SU_CONSTRUCT_CATCH(class, dest, goto done, __VA_ARGS__)
+#define SU_CONSTRUCT(class, dest, arg...)      \
+  SU_CONSTRUCT_CATCH(class, dest, goto done, ##arg)
 
 /* Macros for "goto fail" style error recovery */
 #define SU_TRY_FAIL(expr)   SU_TRYCATCH(expr, goto fail)
@@ -157,7 +157,7 @@
 #define SU_MAKE_FAIL(dest, class, ...)         \
   SU_MAKE_CATCH(dest, class, goto fail, __VA_ARGS__)
 
-#define SU_CONSTRUCT_FAIL(class, dest, ...)    \
-  SU_CONSTRUCT_CATCH(class, dest, goto fail, __VA_ARGS__)
+#define SU_CONSTRUCT_FAIL(class, dest, arg...)    \
+  SU_CONSTRUCT_CATCH(class, dest, goto fail, ##arg)
 
 #endif /* _SIGUTILS_DEFS_H */

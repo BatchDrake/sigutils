@@ -100,7 +100,6 @@ su_sigbuf_resize(su_sigbuf_t *sbuf, SUSCOUNT size)
 void
 su_sigbuf_pool_destroy(su_sigbuf_pool_t *pool)
 {
-  unsigned int i;
   su_sigbuf_t *this;
 
   FOR_EACH_PTR(this, pool, sigbuf)
@@ -140,7 +139,6 @@ fail:
 su_sigbuf_t *
 su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name)
 {
-  unsigned int i;
   su_sigbuf_t *this;
 
   FOR_EACH_PTR(this, pool, sigbuf)

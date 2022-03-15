@@ -89,10 +89,8 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
   unsigned int chunk;
   unsigned int i;
   unsigned int p;
-  SUFLOAT wsizeinv;
   SUBOOL mutex_acquired = SU_FALSE;
   SUBOOL ok = SU_FALSE;
-  SUBOOL exec_fft = SU_FALSE;
 
   SU_TRYZ(pthread_mutex_lock(&self->mutex));
 
@@ -159,7 +157,6 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 
         /* Time to trigger FFT! */
         if (self->fft_p >= self->max_p) {
-          wsizeinv = 1. / self->params.fft_size;
           self->fft_p = 0;
           p = self->p;
 

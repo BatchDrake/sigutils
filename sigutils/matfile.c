@@ -126,7 +126,6 @@ su_mat_matrix_t *
 su_mat_matrix_new(const char *name, int rows, int cols)
 {
   su_mat_matrix_t *new = NULL;
-  int i;
 
   SU_TRYCATCH(rows > 0, goto fail);
   SU_TRYCATCH(new = calloc(1, sizeof(su_mat_matrix_t)), goto fail);
@@ -204,7 +203,6 @@ su_mat_matrix_write_col(su_mat_matrix_t *self, ...)
 
   ok = su_mat_matrix_write_col_va(self, ap);
 
-done:
   va_end(ap);
 
   return ok;
@@ -213,7 +211,6 @@ done:
 SUBOOL
 su_mat_matrix_write_col_array(su_mat_matrix_t *self, const SUFLOAT *x)
 {
-  int i;
   int ptr = self->col_ptr;
 
   if (ptr >= self->cols)
@@ -374,7 +371,6 @@ su_mat_file_stream_col(su_mat_file_t *self, ...)
 
   ok = su_mat_matrix_write_col_va(self->sm, ap);
 
-done:
   va_end(ap);
 
   return ok;
@@ -651,10 +647,9 @@ su_mat_file_flush(su_mat_file_t *self)
   off_t last_off;
   uint32_t extra_size;
   uint64_t pad = 0;
-  struct sigutils_mat_tag tag;
   uint32_t metadata_size = sizeof(struct sigutils_mat_tag) * 6;
   uint32_t matrix_size;
-  int total_cols;
+  uint64_t total_cols;
 
   SU_TRYCATCH(self->fp != NULL, goto done);
 

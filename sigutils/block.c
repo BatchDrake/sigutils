@@ -32,7 +32,7 @@ static unsigned int      class_count;
 /****************************** su_stream API ********************************/
 SU_CONSTRUCTOR(su_stream, SUSCOUNT size)
 {
-  int i = 0;
+  SUSCOUNT i = 0;
 
   memset(self, 0, sizeof(su_stream_t));
 
@@ -432,7 +432,6 @@ void
 su_block_destroy(su_block_t *block)
 {
   unsigned int i;
-  su_property_t *prop;
 
   if (block->privdata != NULL)
     block->classname->dtor(block->privdata);

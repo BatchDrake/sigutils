@@ -43,7 +43,6 @@ su_test_costas_lock(su_test_context_t *ctx)
   SUFLOAT *omgerr = NULL;
   SUFLOAT *lock = NULL;
   SUFLOAT N0;
-  SUFLOAT t;
   SUFLOAT Ef = 0;
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   su_costas_t costas = su_costas_INITIALIZER;
@@ -154,9 +153,7 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   unsigned int t = 0;
   unsigned int bit;
   unsigned int rx_count = 0;
-  unsigned int tx_count = 0;
   unsigned int rx_size;
-  unsigned int tx_size;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -168,7 +165,6 @@ su_test_costas_bpsk(su_test_context_t *ctx)
   rx_delay      = filter_period + sync_period;
   rx_size       = SU_CEIL((SUFLOAT) (ctx->params->buffer_size - rx_delay)
                             / symbol_period);
-  tx_size       = SU_CEIL((SUFLOAT) ctx->params->buffer_size / symbol_period);
   N0            = .1; /* Noise amplitude */
   phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
@@ -304,7 +300,6 @@ su_test_rotcompare(uint32_t original, uint32_t recv)
 {
   unsigned char msgsym[16];
   unsigned char map[4] = {0, 1, 2, 3};
-  unsigned char tmp;
   unsigned int n;
   unsigned int i, j, k;
   int count = 0;
@@ -364,8 +359,6 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   SUCOMPLEX *tx = NULL;
   SUCOMPLEX *data = NULL;
   SUCOMPLEX bbs = 1;
-  SUCOMPLEX symsamp = 0;
-  SUFLOAT mean_baud = 0;
   SUCOMPLEX symbols[] = {1, I, -1, -I};
   SUCOMPLEX phi0 = 1;
 

@@ -148,7 +148,6 @@ su_block_wavfile_acquire(
   SUSDIFF got;
   unsigned int i;
   SUCOMPLEX *start;
-  SUCOMPLEX samp;
 
   /* Get the number of complex samples to write */
   size = su_stream_get_contiguous(out, &start, SU_MIN(wav->size, out->size));

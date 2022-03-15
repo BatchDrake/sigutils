@@ -191,7 +191,7 @@ xalloc_die (void)
 int
 ptr_list_append_check (void ***list, unsigned int *count, void *new)
 {
-  int i;
+  unsigned int i;
   void **reallocd_list;
   
   for (i = 0; i < *count; i++)
@@ -223,7 +223,7 @@ ptr_list_append (void ***list, unsigned int *count, void *new)
 int
 ptr_list_remove_first (void ***list, unsigned int *count, void *ptr)
 {
-  int i;
+  unsigned int i;
   int found;
   
   found = 0;
@@ -355,7 +355,7 @@ strlist_walk (struct strlist *list,
               void *data,
               void (*walk) (const char *, void *))
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -365,7 +365,7 @@ strlist_walk (struct strlist *list,
 void
 strlist_destroy (struct strlist *list)
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -380,7 +380,7 @@ strlist_destroy (struct strlist *list)
 int
 strlist_have_element (const struct strlist *list, const char *string)
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -393,7 +393,7 @@ strlist_have_element (const struct strlist *list, const char *string)
 void
 strlist_cat (struct strlist *dest, const struct strlist *list)
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -403,7 +403,7 @@ strlist_cat (struct strlist *dest, const struct strlist *list)
 void
 strlist_union (struct strlist *dest, const struct strlist *list)
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -414,7 +414,7 @@ strlist_union (struct strlist *dest, const struct strlist *list)
 void
 strlist_debug (const struct strlist *list)
 {
-  int i;
+  unsigned int i;
   
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
@@ -463,7 +463,7 @@ free_al (arg_list_t* al)
 static arg_list_t * 
 __split_command (const char *line, char *separators, int fixed_sep_size)
 {
-  int p, i;
+  size_t i;
 
   int split_flag;
   int escape_flag;
@@ -607,7 +607,6 @@ ltrim (const char *str)
 char *
 rtrim (const char *str)
 {
-  int i;
   char *copy;
   char *tail;
   
@@ -626,7 +625,6 @@ rtrim (const char *str)
 char *
 trim (const char *str)
 {
-  int i;
   char *copy;
   char *tail;
 
@@ -813,7 +811,7 @@ done:
 ssize_t
 grow_buf_read(grow_buf_t *buf, void *data, size_t size)
 {
-  ssize_t avail = grow_buf_avail(buf);
+  size_t avail = grow_buf_avail(buf);
 
   if (size > avail)
     size = avail;
@@ -913,7 +911,7 @@ grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
       return -1;
   }
 
-  if (new_off < 0 || new_off > buf->size) {
+  if (new_off < 0 || (size_t) new_off > buf->size) {
     errno = EINVAL;
     return -1;
   }

@@ -696,7 +696,6 @@ su_modem_expose_state_property(
     void *ptr)
 {
   su_property_t *state_property = NULL;
-  uint64_t old;
 
   if ((state_property = __su_property_set_assert_property(
       &modem->state_properties,

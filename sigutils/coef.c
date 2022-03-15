@@ -490,7 +490,7 @@ su_ccof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 SUFLOAT
 su_sf_bwlp(int n, SUFLOAT fcf)
 {
-  int m, k;     
+  int k;     
   SUFLOAT omega;   
   SUFLOAT fomega;  
   SUFLOAT parg0;   
@@ -500,7 +500,6 @@ su_sf_bwlp(int n, SUFLOAT fcf)
   fomega = SU_SIN(omega);
   parg0 = M_PI / (SUFLOAT) (2 * n);
 
-  m = n / 2;
   sf = 1.0;
   for (k = 0; k < n / 2; ++k)
     sf *= 1.0 + fomega * SU_SIN((SUFLOAT) (2 * k + 1) * parg0);
@@ -525,7 +524,7 @@ su_sf_bwlp(int n, SUFLOAT fcf)
 SUFLOAT
 su_sf_bwhp(int n, SUFLOAT fcf)
 {
-  int m, k;     
+  int k;     
   SUFLOAT omega;   
   SUFLOAT fomega;  
   SUFLOAT parg0;   
@@ -535,7 +534,6 @@ su_sf_bwhp(int n, SUFLOAT fcf)
   fomega = SU_SIN(omega);
   parg0 = M_PI / (SUFLOAT) (2 * n);
 
-  m = n / 2;
   sf = 1.0;
 
   for (k = 0; k < n / 2; ++k)

@@ -84,8 +84,8 @@ SUINLINE SUBITS
 su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
 {
   SUBITS F = 0;
-  int i;
-  int n = lfsr->p;
+  uint64_t i;
+  uint64_t n = lfsr->p;
 
   for (i = 1; i < lfsr->order; ++i) {
     if (++n == lfsr->order)

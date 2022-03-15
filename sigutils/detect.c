@@ -579,7 +579,6 @@ SU_METHOD(su_channel_detector, SUBOOL, find_channels)
   SUFLOAT squelch;
   struct sigutils_channel new_channel = sigutils_channel_INITIALIZER;
   SUBOOL  c = SU_FALSE;  /* Channel flag */
-  SUBOOL ok = SU_FALSE;
 
   squelch = self->params.snr * self->N0;
 
@@ -636,10 +635,7 @@ SU_METHOD(su_channel_detector, SUBOOL, find_channels)
     }
   }
 
-  ok = SU_TRUE;
-
-done:
-  return ok;
+  return SU_TRUE;
 }
 
 void
@@ -711,9 +707,7 @@ SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
   unsigned int N; /* FFT size */
   unsigned int valid; /* valid FFT bins */
   unsigned int min_pwr_bin; /* bin of the stpectrogram where the min power is */
-  SUFLOAT alpha;
   SUFLOAT beta;
-  SUFLOAT gamma;
   SUFLOAT min_pwr; /* minimum power density */
   SUFLOAT psd; /* current power density */
   SUFLOAT N0; /* Noise level */
@@ -739,10 +733,8 @@ SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
   } else {
     /* Next runs */
 
-    alpha = self->params.alpha;
     beta  = self->params.beta;
-    gamma = self->params.gamma;
-
+    
     detector_enabled = self->req_samples == 0;
     N0 = 0;
     valid = 0;

@@ -140,7 +140,7 @@ struct sigutils_block_port {
 
 typedef struct sigutils_block_port su_block_port_t;
 
-#define su_block_port_INITIALIZER {0, NULL, NULL, SU_FALSE}
+#define su_block_port_INITIALIZER {0, NULL, NULL, 0, SU_FALSE}
 
 struct sigutils_block_class {
   const char *name;

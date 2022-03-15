@@ -195,7 +195,6 @@ SU_METHOD_CONST(
   SUFLOAT bw)
 {
   SUFLOAT k;
-  unsigned int min_size;
   unsigned int width;
 
   unsigned int window_size = self->params.window_size;
@@ -555,7 +554,7 @@ __su_specttuner_feed_channel(
     const su_specttuner_t *self,
     su_specttuner_channel_t *channel)
 {
-  int p, prev_p;
+  int p;
   int len;
   int window_size = self->params.window_size;
   unsigned int i;
@@ -574,7 +573,6 @@ __su_specttuner_feed_channel(
    * ensured, as all bins refer to frequencies multiple of 2pi.
    */
 
-  prev_p = channel->center;
   b_sign = 1 - (channel->center & 2);
   
   if (!channel->state && channel->pending_freq) {
