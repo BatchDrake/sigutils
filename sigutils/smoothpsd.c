@@ -301,7 +301,7 @@ SU_METHOD(
          * never happen either
          */
         SU_WARNING("Unsupported window function %d\n", self->params.window);
-        return SU_FALSE;
+        goto done;
     }
   }
 
