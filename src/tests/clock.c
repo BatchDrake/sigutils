@@ -17,40 +17,38 @@
 
 */
 
+#include <sigutils/agc.h>
+#include <sigutils/clock.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/pll.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <sigutils/sampling.h>
-#include <sigutils/ncqo.h>
-#include <sigutils/iir.h>
-#include <sigutils/agc.h>
-#include <sigutils/pll.h>
-#include <sigutils/clock.h>
-#include <sigutils/sigutils.h>
-
 #include "test_list.h"
 #include "test_param.h"
 
-SUPRIVATE SUBOOL
-__su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
+SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 {
-  SUBOOL ok = SU_FALSE;
-  SUCOMPLEX *input = NULL;
-  SUCOMPLEX *carrier = NULL;
-  SUFLOAT *omgerr = NULL;
-  SUCOMPLEX *output = NULL;
-  SUCOMPLEX *rx = NULL;
-  SUFLOAT *lock = NULL;
-  SUCOMPLEX *baud = NULL;
-  SUFLOAT N0 = 0;
-  SUCOMPLEX *tx = NULL;
-  SUCOMPLEX *data = NULL;
-  SUCOMPLEX bbs = 1;
-  SUCOMPLEX symsamp = 0;
-  SUFLOAT mean_baud = 0;
-  SUCOMPLEX symbols[] = {1, I, -1, -I};
-  SUCOMPLEX phi0 = 1;
+  SUBOOL     ok        = SU_FALSE;
+  SUCOMPLEX *input     = NULL;
+  SUCOMPLEX *carrier   = NULL;
+  SUFLOAT   *omgerr    = NULL;
+  SUCOMPLEX *output    = NULL;
+  SUCOMPLEX *rx        = NULL;
+  SUFLOAT   *lock      = NULL;
+  SUCOMPLEX *baud      = NULL;
+  SUFLOAT    N0        = 0;
+  SUCOMPLEX *tx        = NULL;
+  SUCOMPLEX *data      = NULL;
+  SUCOMPLEX  bbs       = 1;
+  SUCOMPLEX  symsamp   = 0;
+  SUFLOAT    mean_baud = 0;
+  SUCOMPLEX  symbols[] = {1, I, -1, -I};
+  SUCOMPLEX  phi0      = 1;
 
   unsigned int filter_period;
   unsigned int symbol_period;
@@ -60,15 +58,15 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 
   unsigned int rx_delay;
 
-  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
-  su_costas_t costas = su_costas_INITIALIZER;
-  su_iir_filt_t mf = su_iir_filt_INITIALIZER;
-  su_clock_detector_t cd = su_clock_detector_INITIALIZER;
-  unsigned int p = 0;
-  unsigned int sym;
-  unsigned int n = 0;
-  unsigned int rx_count = 0;
-  unsigned int rx_size;
+  su_ncqo_t           ncqo   = su_ncqo_INITIALIZER;
+  su_costas_t         costas = su_costas_INITIALIZER;
+  su_iir_filt_t       mf     = su_iir_filt_INITIALIZER;
+  su_clock_detector_t cd     = su_clock_detector_INITIALIZER;
+  unsigned int        p      = 0;
+  unsigned int        sym;
+  unsigned int        n        = 0;
+  unsigned int        rx_count = 0;
+  unsigned int        rx_size;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -78,26 +76,26 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
   message       = 0x414c4f48; /* Some greeting message */
   rx_delay      = filter_period + sync_period - symbol_period / 2;
-  rx_size       = SU_CEIL((SUFLOAT) (ctx->params->buffer_size - rx_delay)
-                          / symbol_period);
+  rx_size =
+      SU_CEIL((SUFLOAT)(ctx->params->buffer_size - rx_delay) / symbol_period);
 
   if (noisy)
-    N0          = SU_MAG_RAW(-56) * symbol_period * 4;
+    N0 = SU_MAG_RAW(-56) * symbol_period * 4;
   else
-    N0          = SU_MAG_RAW(-70) * symbol_period * 4;
+    N0 = SU_MAG_RAW(-70) * symbol_period * 4;
 
-  phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
+  phi0 = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
   /* Initialize buffers */
-  SU_TEST_ASSERT(input   = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(input = su_test_ctx_getc(ctx, "x"));
   SU_TEST_ASSERT(carrier = su_test_ctx_getc(ctx, "carrier"));
-  SU_TEST_ASSERT(omgerr  = su_test_ctx_getf(ctx, "oe"));
-  SU_TEST_ASSERT(output  = su_test_ctx_getc(ctx, "y"));
-  SU_TEST_ASSERT(lock    = su_test_ctx_getf(ctx, "lock"));
-  SU_TEST_ASSERT(rx      = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
-  SU_TEST_ASSERT(baud    = su_test_ctx_getc(ctx, "baud"));
-  SU_TEST_ASSERT(data    = su_test_ctx_getc(ctx, "data"));
-  SU_TEST_ASSERT(tx      = su_test_ctx_getc(ctx, "tx"));
+  SU_TEST_ASSERT(omgerr = su_test_ctx_getf(ctx, "oe"));
+  SU_TEST_ASSERT(output = su_test_ctx_getc(ctx, "y"));
+  SU_TEST_ASSERT(lock = su_test_ctx_getf(ctx, "lock"));
+  SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", rx_size));
+  SU_TEST_ASSERT(baud = su_test_ctx_getc(ctx, "baud"));
+  SU_TEST_ASSERT(data = su_test_ctx_getc(ctx, "data"));
+  SU_TEST_ASSERT(tx = su_test_ctx_getc(ctx, "tx"));
 
   /*
    * In noisy test we assume we are on lock, we just want to retrieve
@@ -106,9 +104,8 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   SU_TEST_ASSERT(su_costas_init(
       &costas,
       SU_COSTAS_KIND_QPSK,
-      noisy ?
-          SU_TEST_COSTAS_SIGNAL_FREQ :
-          SU_TEST_COSTAS_SIGNAL_FREQ + .05 * SU_TEST_COSTAS_BANDWIDTH,
+      noisy ? SU_TEST_COSTAS_SIGNAL_FREQ
+            : SU_TEST_COSTAS_SIGNAL_FREQ + .05 * SU_TEST_COSTAS_BANDWIDTH,
       6 * SU_TEST_COSTAS_BANDWIDTH,
       3,
       2e-1 * SU_TEST_COSTAS_BANDWIDTH));
@@ -118,18 +115,10 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   SU_INFO("Initial frequency error: %lg\n", costas.ncqo.fnor - ncqo.fnor);
 
 #ifndef SU_TEST_COSTAS_USE_RRC
-  SU_TEST_ASSERT(
-      su_iir_rrc_init(
-          &mf,
-          filter_period,
-          symbol_period,
-          1));
+  SU_TEST_ASSERT(su_iir_rrc_init(&mf, filter_period, symbol_period, 1));
 #else
   SU_TEST_ASSERT(
-      su_iir_brickwall_init(
-          &mf,
-          filter_period,
-          SU_TEST_COSTAS_BANDWIDTH));
+      su_iir_brickwall_init(&mf, filter_period, SU_TEST_COSTAS_BANDWIDTH));
 #endif
 
   /* Send data */
@@ -139,23 +128,23 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   for (p = 0; p < ctx->params->buffer_size; ++p) {
     if (p >= sync_period) {
       if (p % symbol_period == 0) {
-          if (n == 32)
-            n = 0;
-          msgbuf = message >> n;
-          sym = msgbuf & 3;
-          n += 2;
-          bbs = symbol_period * symbols[sym];
-        } else {
-          bbs = 0;
-        }
+        if (n == 32)
+          n = 0;
+        msgbuf = message >> n;
+        sym    = msgbuf & 3;
+        n += 2;
+        bbs = symbol_period * symbols[sym];
       } else {
-        /* Send first symbol to synchronize */
-        bbs = symbols[1];
+        bbs = 0;
       }
+    } else {
+      /* Send first symbol to synchronize */
+      bbs = symbols[1];
+    }
 
-    data[p] = bbs;
+    data[p]  = bbs;
     input[p] = su_iir_filt_feed(&mf, data[p]);
-    tx[p] = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
+    tx[p]    = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
   /* Restart NCQO */
@@ -164,18 +153,14 @@ __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
   SU_TEST_TICK(ctx);
 
   SU_TEST_ASSERT(
-      su_clock_detector_init(
-          &cd,
-          1,
-          1.2 / (SU_TEST_COSTAS_SYMBOL_PERIOD),
-          15));
+      su_clock_detector_init(&cd, 1, 1.2 / (SU_TEST_COSTAS_SYMBOL_PERIOD), 15));
 
   SU_INFO("Symbol period hint: %lg\n", 1. / cd.bnor);
 
   /* Feed the loop and perform demodulation */
   for (p = 0; p < ctx->params->buffer_size; ++p) {
-    (void) su_ncqo_step(&ncqo);
-    su_costas_feed(&costas,  tx[p]);
+    (void)su_ncqo_step(&ncqo);
+    su_costas_feed(&costas, tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
     output[p]  = su_iir_filt_feed(&mf, costas.y);
     lock[p]    = costas.lock;

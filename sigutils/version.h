@@ -1,5 +1,4 @@
 /*
-
   Copyright (C) 2020 Gonzalo José Carracedo Carballal
 
   This program is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@
   You should have received a copy of the GNU Lesser General Public
   License along with this program.  If not, see
   <http://www.gnu.org/licenses/>
-
 */
 
 #ifndef _SIGUTILS_VERSION
@@ -42,11 +40,10 @@ extern "C" {
 #define SIGUTILS_VERSION_PATCH 0
 
 /* ABI version macros */
-#define SIGUTILS_ABI_VERSION   1
-
+#define SIGUTILS_ABI_VERSION 1
 
 /* Utility macros */
-#define __SU_VN(num, shift) ((uint32_t) ((uint8_t) (num)) << (shift))
+#define __SU_VN(num, shift) ((uint32_t)((uint8_t)(num)) << (shift))
 
 #define SU_VER(major, minor, patch) \
   (__SU_VN(major, 16) | __SU_VN(minor, 8) | __SU_VN(patch, 0))
@@ -57,11 +54,9 @@ extern "C" {
 #define SIGUTILS_API_VERSION \
   SU_VER(SIGUTILS_VERSION_MAJOR, SIGUTILS_VERSION_MINOR, 0)
 
-#define SIGUTILS_VERSION_STRING        \
-  STRINGIFY(SIGUTILS_VERSION_MAJOR) "." \
-  STRINGIFY(SIGUTILS_VERSION_MINOR) "." \
-  STRINGIFY(SIGUTILS_VERSION_PATCH)
-
+#define SIGUTILS_VERSION_STRING     \
+  STRINGIFY(SIGUTILS_VERSION_MAJOR) \
+  "." STRINGIFY(SIGUTILS_VERSION_MINOR) "." STRINGIFY(SIGUTILS_VERSION_PATCH)
 
 unsigned int sigutils_abi_version(void);
 const char  *sigutils_api_version(void);
@@ -76,4 +71,3 @@ void sigutils_abi_check(unsigned int);
 #endif /* __cplusplus */
 
 #endif /* _SIGUTILS_VERSION */
-

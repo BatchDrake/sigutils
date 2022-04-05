@@ -1,5 +1,4 @@
 /*
-
   Copyright (C) 2020 Gonzalo José Carracedo Carballal
 
   This program is free software: you can redistribute it and/or modify
@@ -14,15 +13,14 @@
   You should have received a copy of the GNU Lesser General Public
   License along with this program.  If not, see
   <http://www.gnu.org/licenses/>
-
 */
 
 #ifndef _SIGUTILS_TVPROC_H
 #define _SIGUTILS_TVPROC_H
 
-#include "types.h"
-#include "iir.h"
 #include "defs.h"
+#include "iir.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,18 +28,18 @@ extern "C" {
 
 struct sigutils_tv_processor_params {
   /* Flags */
-  SUBOOL   enable_sync;
-  SUBOOL   reverse;
-  SUBOOL   interlace;
-  SUBOOL   enable_agc;
-  SUFLOAT  x_off;
+  SUBOOL  enable_sync;
+  SUBOOL  reverse;
+  SUBOOL  interlace;
+  SUBOOL  enable_agc;
+  SUFLOAT x_off;
 
   /* Geometry */
   SUSCOUNT frame_lines;
 
   /* Filtering */
-  SUBOOL   enable_comb;
-  SUBOOL   comb_reverse;
+  SUBOOL enable_comb;
+  SUBOOL comb_reverse;
 
   /* Timing */
   SUFLOAT  hsync_len;
@@ -51,23 +49,22 @@ struct sigutils_tv_processor_params {
   SUBOOL   dominance;
 
   /* Tolerances */
-  SUFLOAT  t_tol; /* Timing tolerance */
-  SUFLOAT  l_tol; /* Level tolerance */
-  SUFLOAT  g_tol; /* Geometry tolerance. */
+  SUFLOAT t_tol; /* Timing tolerance */
+  SUFLOAT l_tol; /* Level tolerance */
+  SUFLOAT g_tol; /* Geometry tolerance. */
 
   /* Error triggers */
-  SUFLOAT  hsync_huge_err; /* .25 */
-  SUFLOAT  hsync_max_err; /* .15 */
-  SUFLOAT  hsync_min_err; /* .1 */
+  SUFLOAT hsync_huge_err; /* .25 */
+  SUFLOAT hsync_max_err;  /* .15 */
+  SUFLOAT hsync_min_err;  /* .1 */
 
   /* Time constants */
-  SUFLOAT  hsync_len_tau; /* 9.5 */
-  SUFLOAT  hsync_fast_track_tau; /* 9.5 */
-  SUFLOAT  hsync_slow_track_tau;
-  SUFLOAT  line_len_tau; /* 9.5 */
+  SUFLOAT hsync_len_tau;        /* 9.5 */
+  SUFLOAT hsync_fast_track_tau; /* 9.5 */
+  SUFLOAT hsync_slow_track_tau;
+  SUFLOAT line_len_tau; /* 9.5 */
 
-  SUFLOAT  agc_tau; /* 3 */
-
+  SUFLOAT agc_tau; /* 3 */
 };
 
 struct sigutils_pulse_finder {
@@ -77,40 +74,38 @@ struct sigutils_pulse_finder {
   SUFLOAT  level_tolerance;
   SUFLOAT  time_tolerance;
 
-  SUFLOAT  last_y;
+  SUFLOAT last_y;
 
   su_iir_filt_t corr;
-  SUBOOL  present;
-  SUFLOAT accum;
-  SUFLOAT w_accum;
-  SUFLOAT duration;
-  SUFLOAT rel_pos;
+  SUBOOL        present;
+  SUFLOAT       accum;
+  SUFLOAT       w_accum;
+  SUFLOAT       duration;
+  SUFLOAT       rel_pos;
 };
 
 typedef struct sigutils_pulse_finder su_pulse_finder_t;
 
-SU_INSTANCER(
-  su_pulse_finder,
-    SUFLOAT base,
-    SUFLOAT peak,
-    SUSCOUNT len,
-    SUFLOAT tolerance);
+SU_INSTANCER(su_pulse_finder,
+             SUFLOAT  base,
+             SUFLOAT  peak,
+             SUSCOUNT len,
+             SUFLOAT  tolerance);
 SU_COLLECTOR(su_pulse_finder);
 
 SU_METHOD(su_pulse_finder, SUBOOL, feed, SUFLOAT x);
 SU_GETTER(su_pulse_finder, SUFLOAT, get_pos);
 
 struct sigutils_tv_frame_buffer {
-  int width, height;
-  SUFLOAT *buffer;
+  int                              width, height;
+  SUFLOAT                         *buffer;
   struct sigutils_tv_frame_buffer *next;
 };
 
 typedef struct sigutils_tv_frame_buffer su_tv_frame_buffer_t;
 
-SU_INSTANCER(
-  su_tv_frame_buffer, 
-  const struct sigutils_tv_processor_params *params);
+SU_INSTANCER(su_tv_frame_buffer,
+             const struct sigutils_tv_processor_params *params);
 
 SU_COPY_INSTANCER(su_tv_frame_buffer);
 SU_COLLECTOR(su_tv_frame_buffer);
@@ -122,7 +117,7 @@ enum sigutils_tv_processor_state {
 
 struct sigutils_tv_processor {
   struct sigutils_tv_processor_params params;
-  enum sigutils_tv_processor_state state;
+  enum sigutils_tv_processor_state    state;
 
   struct sigutils_tv_frame_buffer *free_pool;
   struct sigutils_tv_frame_buffer *current;
@@ -159,7 +154,7 @@ struct sigutils_tv_processor {
   SUSCOUNT agc_lines;
 
   /* Pulse output */
-  SUFLOAT  pulse_x;
+  SUFLOAT pulse_x;
 
   /* Sync pulse detection */
   SUBOOL   sync_found;
@@ -185,25 +180,21 @@ struct sigutils_tv_processor {
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
 
-SU_INSTANCER(
-  su_tv_processor, 
-  const struct sigutils_tv_processor_params *params);
+SU_INSTANCER(su_tv_processor,
+             const struct sigutils_tv_processor_params *params);
 SU_COLLECTOR(su_tv_processor);
 
-void su_tv_processor_params_pal(
-    struct sigutils_tv_processor_params *self,
-    SUFLOAT samp_rate);
+void su_tv_processor_params_pal(struct sigutils_tv_processor_params *self,
+                                SUFLOAT                              samp_rate);
 
-void su_tv_processor_params_ntsc(
-    struct sigutils_tv_processor_params *self,
-    SUFLOAT samp_rate);
+void su_tv_processor_params_ntsc(struct sigutils_tv_processor_params *self,
+                                 SUFLOAT samp_rate);
 
-SU_METHOD(
-  su_tv_processor, 
-  SUBOOL,
-  set_params, 
-  const struct sigutils_tv_processor_params *params);
-SU_METHOD(su_tv_processor, SUBOOL, feed,  SUFLOAT x);
+SU_METHOD(su_tv_processor,
+          SUBOOL,
+          set_params,
+          const struct sigutils_tv_processor_params *params);
+SU_METHOD(su_tv_processor, SUBOOL, feed, SUFLOAT x);
 
 SU_METHOD(su_tv_processor, su_tv_frame_buffer_t *, take_frame);
 SU_METHOD(su_tv_processor, void, return_frame, su_tv_frame_buffer_t *);

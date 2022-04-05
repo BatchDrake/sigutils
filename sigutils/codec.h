@@ -28,10 +28,10 @@ struct sigutils_codec;
 
 struct sigutils_codec_class {
   const char *name;
-  SUBOOL   (*ctor) (struct sigutils_codec *, void **, va_list);
-  SUSYMBOL (*encode) (struct sigutils_codec *, void *, SUSYMBOL);
-  SUSYMBOL (*decode) (struct sigutils_codec *, void *, SUSYMBOL);
-  void     (*dtor) (void *);
+  SUBOOL (*ctor)(struct sigutils_codec *, void **, va_list);
+  SUSYMBOL (*encode)(struct sigutils_codec *, void *, SUSYMBOL);
+  SUSYMBOL (*decode)(struct sigutils_codec *, void *, SUSYMBOL);
+  void (*dtor)(void *);
 };
 
 enum su_codec_direction {
@@ -40,11 +40,11 @@ enum su_codec_direction {
 };
 
 struct sigutils_codec {
-  enum su_codec_direction direction;
+  enum su_codec_direction            direction;
   const struct sigutils_codec_class *classptr;
-  unsigned int bits;
-  unsigned int output_bits;
-  void *privdata;
+  unsigned int                       bits;
+  unsigned int                       output_bits;
+  void                              *privdata;
 };
 
 typedef struct sigutils_codec su_codec_t;
@@ -55,9 +55,7 @@ su_codec_t *su_codec_new(const char *classname, unsigned int bits, ...);
 
 unsigned int su_codec_get_output_bits(const su_codec_t *codec);
 
-void su_codec_set_direction(
-    su_codec_t *codec,
-    enum su_codec_direction dir);
+void su_codec_set_direction(su_codec_t *codec, enum su_codec_direction dir);
 
 SUSYMBOL su_codec_feed(su_codec_t *codec, SUSYMBOL x);
 

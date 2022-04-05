@@ -17,17 +17,15 @@
 
 */
 
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <sigutils/sigutils.h>
-
 #include "test_list.h"
 #include "test_param.h"
 
-SUPRIVATE char
-su_test_symbol_to_char(SUSYMBOL sym)
+SUPRIVATE char su_test_symbol_to_char(SUSYMBOL sym)
 {
   switch (sym) {
     case SU_NOSYMBOL:
@@ -42,16 +40,15 @@ su_test_symbol_to_char(SUSYMBOL sym)
 }
 
 SUBOOL
-su_test_diff_codec_generic(
-    su_test_context_t *ctx,
-    unsigned int bits,
-    SUBOOL sign)
+su_test_diff_codec_generic(su_test_context_t *ctx,
+                           unsigned int       bits,
+                           SUBOOL             sign)
 {
-  su_codec_t *encoder = NULL;
-  su_codec_t *decoder = NULL;
-  SUSYMBOL syms[SU_TEST_ENCODER_NUM_SYMS + 1] = {};
-  SUSYMBOL encoded, decoded;
-  SUSCOUNT len;
+  su_codec_t  *encoder                            = NULL;
+  su_codec_t  *decoder                            = NULL;
+  SUSYMBOL     syms[SU_TEST_ENCODER_NUM_SYMS + 1] = {};
+  SUSYMBOL     encoded, decoded;
+  SUSCOUNT     len;
   unsigned int i;
 
   SUBOOL ok = SU_FALSE;
@@ -76,11 +73,10 @@ su_test_diff_codec_generic(
     encoded = su_codec_feed(encoder, syms[i]);
     decoded = su_codec_feed(decoder, encoded);
 
-    SU_INFO(
-        "'%c' --> ENCODER --> '%c' --> DECODER --> '%c'\n",
-        su_test_symbol_to_char(syms[i]),
-        su_test_symbol_to_char(encoded),
-        su_test_symbol_to_char(decoded));
+    SU_INFO("'%c' --> ENCODER --> '%c' --> DECODER --> '%c'\n",
+            su_test_symbol_to_char(syms[i]),
+            su_test_symbol_to_char(encoded),
+            su_test_symbol_to_char(decoded));
 
     if (i > 0)
       SU_TEST_ASSERT(syms[i] == decoded);
@@ -110,4 +106,3 @@ su_test_diff_codec_quaternary(su_test_context_t *ctx)
 {
   return su_test_diff_codec_generic(ctx, 2, SU_FALSE);
 }
-

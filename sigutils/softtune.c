@@ -25,10 +25,9 @@
 #include "sampling.h"
 #include "softtune.h"
 
-void
-su_softtuner_params_adjust_to_channel(
+void su_softtuner_params_adjust_to_channel(
     struct sigutils_softtuner_params *params,
-    const struct sigutils_channel *channel)
+    const struct sigutils_channel    *channel)
 {
   SUFLOAT width;
 
@@ -42,34 +41,30 @@ su_softtuner_params_adjust_to_channel(
 }
 
 SUBOOL
-su_softtuner_init(
-    su_softtuner_t *tuner,
-    const struct sigutils_softtuner_params *params)
+su_softtuner_init(su_softtuner_t                         *tuner,
+                  const struct sigutils_softtuner_params *params)
 {
   assert(params->samp_rate > 0);
   assert(params->decimation > 0);
 
-  memset(tuner, 0, sizeof (su_softtuner_t));
+  memset(tuner, 0, sizeof(su_softtuner_t));
 
   tuner->params = *params;
   tuner->avginv = 1. / params->decimation;
 
-  SU_TRYCATCH(
-      su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
-      goto fail);
+  SU_TRYCATCH(su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
+              goto fail);
 
-  su_ncqo_init_fixed(
-      &tuner->lo,
-      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
+  su_ncqo_init_fixed(&tuner->lo,
+                     SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
 
   if (params->bw > 0.0) {
     SU_TRYCATCH(
-        su_iir_bwlpf_init(
-            &tuner->antialias,
-            SU_SOFTTUNER_ANTIALIAS_ORDER,
-            .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
-               * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
-         goto fail);
+        su_iir_bwlpf_init(&tuner->antialias,
+                          SU_SOFTTUNER_ANTIALIAS_ORDER,
+                          .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw) *
+                              SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
+        goto fail);
     tuner->filtered = SU_TRUE;
   }
 
@@ -82,21 +77,17 @@ fail:
 }
 
 SUSCOUNT
-su_softtuner_feed(
-    su_softtuner_t *tuner,
-    const SUCOMPLEX *input,
-    SUSCOUNT size)
+su_softtuner_feed(su_softtuner_t *tuner, const SUCOMPLEX *input, SUSCOUNT size)
 {
-  SUSCOUNT  i = 0;
-  SUCOMPLEX x;
-  SUSCOUNT avail;
+  SUSCOUNT   i = 0;
+  SUCOMPLEX  x;
+  SUSCOUNT   avail;
   SUCOMPLEX *buf;
-  SUSCOUNT n = 0;
+  SUSCOUNT   n = 0;
 
-  avail = su_stream_get_contiguous(
-      &tuner->output,
-      &buf,
-      SU_BLOCK_STREAM_BUFFER_SIZE);
+  avail = su_stream_get_contiguous(&tuner->output,
+                                   &buf,
+                                   SU_BLOCK_STREAM_BUFFER_SIZE);
 
   SU_TRYCATCH(avail > 0, return 0);
 
@@ -145,13 +136,12 @@ su_softtuner_read(su_softtuner_t *tuner, SUCOMPLEX *out, SUSCOUNT size)
   return result;
 }
 
-void
-su_softtuner_finalize(su_softtuner_t *tuner)
+void su_softtuner_finalize(su_softtuner_t *tuner)
 {
   if (tuner->filtered)
     su_iir_filt_finalize(&tuner->antialias);
 
   su_stream_finalize(&tuner->output);
 
-  memset(tuner, 0, sizeof (su_softtuner_t));
+  memset(tuner, 0, sizeof(su_softtuner_t));
 }

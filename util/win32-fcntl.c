@@ -17,19 +17,21 @@
 #include "win32-socket.h"
 
 /* WARN: EXTREMELY ADHOC */
-int fcntl(int fd, int cmd, ... /* arg */ ) {
-	switch (cmd) {
-		case F_GETFL: {
-			/* Assume suscan just wants whatever flags the fd has and add O_NONBLOCK to them, so it doesn't matter what this returns */
-			return 0;
-		} break;
-		case F_SETFL: {
-			/* Assume suscan always wants to set fd to non blocking mode */
-			u_long iMode = 0;
-			int iResult = ioctlsocket(fd, FIONBIO, &iMode);
-			if (iResult != NO_ERROR)
-				return -1;
-		} break;
-	}
-	return 0;
+int fcntl(int fd, int cmd, ... /* arg */)
+{
+  switch (cmd) {
+    case F_GETFL: {
+      /* Assume suscan just wants whatever flags the fd has and add O_NONBLOCK
+       * to them, so it doesn't matter what this returns */
+      return 0;
+    } break;
+    case F_SETFL: {
+      /* Assume suscan always wants to set fd to non blocking mode */
+      u_long iMode   = 0;
+      int    iResult = ioctlsocket(fd, FIONBIO, &iMode);
+      if (iResult != NO_ERROR)
+        return -1;
+    } break;
+  }
+  return 0;
 }

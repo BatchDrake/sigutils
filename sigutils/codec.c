@@ -19,14 +19,15 @@
 
 #define SU_LOG_DOMAIN "codec"
 
-#include <string.h>
-#include "log.h"
 #include "codec.h"
+
+#include <string.h>
+
+#include "log.h"
 
 PTR_LIST_PRIVATE_CONST(struct sigutils_codec_class, class);
 
-const struct sigutils_codec_class *
-su_codec_class_lookup(const char *name)
+const struct sigutils_codec_class *su_codec_class_lookup(const char *name)
 {
   unsigned int i;
 
@@ -40,22 +41,20 @@ su_codec_class_lookup(const char *name)
 SUBOOL
 su_codec_class_register(const struct sigutils_codec_class *class)
 {
-  SU_TRYCATCH(class->name   != NULL, return SU_FALSE);
-  SU_TRYCATCH(class->ctor   != NULL, return SU_FALSE);
+  SU_TRYCATCH(class->name != NULL, return SU_FALSE);
+  SU_TRYCATCH(class->ctor != NULL, return SU_FALSE);
   SU_TRYCATCH(class->encode != NULL, return SU_FALSE);
   SU_TRYCATCH(class->decode != NULL, return SU_FALSE);
-  SU_TRYCATCH(class->dtor   != NULL, return SU_FALSE);
+  SU_TRYCATCH(class->dtor != NULL, return SU_FALSE);
 
   SU_TRYCATCH(su_codec_class_lookup(class->name) == NULL, return SU_FALSE);
-  SU_TRYCATCH(
-      PTR_LIST_APPEND_CHECK(class, (void *) class) != -1,
-      return SU_FALSE);
+  SU_TRYCATCH(PTR_LIST_APPEND_CHECK(class, (void *)class) != -1,
+              return SU_FALSE);
 
   return SU_TRUE;
 }
 
-void
-su_codec_destroy(su_codec_t *codec)
+void su_codec_destroy(su_codec_t *codec)
 {
   if (codec->classptr != NULL)
     (codec->classptr->dtor)(codec->privdata);
@@ -63,8 +62,7 @@ su_codec_destroy(su_codec_t *codec)
   free(codec);
 }
 
-void
-su_codec_set_direction(su_codec_t *codec, enum su_codec_direction dir)
+void su_codec_set_direction(su_codec_t *codec, enum su_codec_direction dir)
 {
   codec->direction = dir;
 }
@@ -74,22 +72,20 @@ su_codec_feed(su_codec_t *codec, SUSYMBOL x)
 {
   switch (codec->direction) {
     case SU_CODEC_DIRECTION_FORWARDS:
-      return (codec->classptr->encode) (codec, codec->privdata, x);
+      return (codec->classptr->encode)(codec, codec->privdata, x);
     case SU_CODEC_DIRECTION_BACKWARDS:
-      return (codec->classptr->decode) (codec, codec->privdata, x);
+      return (codec->classptr->decode)(codec, codec->privdata, x);
   }
 
   return SU_NOSYMBOL;
 }
 
-unsigned int
-su_codec_get_output_bits(const su_codec_t *codec)
+unsigned int su_codec_get_output_bits(const su_codec_t *codec)
 {
   return codec->output_bits;
 }
 
-su_codec_t *
-su_codec_new(const char *classname, unsigned int bits, ...)
+su_codec_t *su_codec_new(const char *classname, unsigned int bits, ...)
 {
   su_codec_t *new = NULL;
   va_list ap;
@@ -98,8 +94,8 @@ su_codec_new(const char *classname, unsigned int bits, ...)
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_codec_t)), goto fail);
 
-  new->direction = SU_CODEC_DIRECTION_FORWARDS;
-  new->bits = bits;
+  new->direction   = SU_CODEC_DIRECTION_FORWARDS;
+  new->bits        = bits;
   new->output_bits = bits; /* Can be modified by ctor */
 
   if ((new->classptr = su_codec_class_lookup(classname)) == NULL) {
@@ -107,7 +103,7 @@ su_codec_new(const char *classname, unsigned int bits, ...)
     goto fail;
   }
 
-  if (!(new->classptr->ctor) (new, &new->privdata, ap)) {
+  if (!(new->classptr->ctor)(new, &new->privdata, ap)) {
     SU_ERROR("Failed to construct `%s'\n", classname);
     goto fail;
   }

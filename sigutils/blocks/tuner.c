@@ -21,20 +21,20 @@
 
 #define SU_LOG_LEVEL "tuner-block"
 
-#include "log.h"
 #include "block.h"
-#include "ncqo.h"
 #include "iir.h"
+#include "log.h"
+#include "ncqo.h"
 #include "taps.h"
 
 /* A tuner is just a NCQO + Low pass filter */
 struct sigutils_tuner {
-  su_iir_filt_t bpf;   /* Bandpass filter */
-  su_ncqo_t  lo;       /* Local oscillator */
-  SUFLOAT    if_off;   /* Intermediate frequency offset */
+  su_iir_filt_t bpf;    /* Bandpass filter */
+  su_ncqo_t     lo;     /* Local oscillator */
+  SUFLOAT       if_off; /* Intermediate frequency offset */
 
   /* Filter params */
-  SUFLOAT bw;          /* Bandwidth */
+  SUFLOAT      bw;     /* Bandwidth */
   unsigned int h_size; /* Filter size */
 
   /* Configurable params */
@@ -46,44 +46,36 @@ struct sigutils_tuner {
 
 typedef struct sigutils_tuner su_tuner_t;
 
-SUPRIVATE SUBOOL
-su_tuner_filter_has_changed(su_tuner_t *tu)
+SUPRIVATE SUBOOL su_tuner_filter_has_changed(su_tuner_t *tu)
 {
-  return
-      tu->rq_bw != tu->bw         ||
-      tu->rq_if_off != tu->if_off ||
-      tu->rq_h_size != tu->h_size;
+  return tu->rq_bw != tu->bw || tu->rq_if_off != tu->if_off ||
+         tu->rq_h_size != tu->h_size;
 }
 
-SUPRIVATE SUBOOL
-su_tuner_lo_has_changed(su_tuner_t *tu)
+SUPRIVATE SUBOOL su_tuner_lo_has_changed(su_tuner_t *tu)
 {
   return su_ncqo_get_freq(&tu->lo) != tu->if_off - tu->rq_fc;
 }
 
-SUPRIVATE SUCOMPLEX
-su_tuner_feed(su_tuner_t *tu, SUCOMPLEX samp)
+SUPRIVATE SUCOMPLEX su_tuner_feed(su_tuner_t *tu, SUCOMPLEX samp)
 {
   return su_iir_filt_feed(&tu->bpf, samp * su_ncqo_read(&tu->lo));
 }
 
-SUPRIVATE SUCOMPLEX
-su_tuner_get(const su_tuner_t *tu)
+SUPRIVATE SUCOMPLEX su_tuner_get(const su_tuner_t *tu)
 {
   return su_iir_filt_get(&tu->bpf);
 }
 
-SUPRIVATE SUBOOL
-su_tuner_update_filter(su_tuner_t *tu)
+SUPRIVATE SUBOOL su_tuner_update_filter(su_tuner_t *tu)
 {
   su_iir_filt_t bpf_new = su_iir_filt_INITIALIZER;
 
   /* If baudrate has changed, we must change the LPF */
-  if (!su_iir_brickwall_bp_init(
-      &bpf_new,
-      tu->rq_h_size,
-      tu->rq_bw,
-      tu->rq_if_off))
+  if (!su_iir_brickwall_bp_init(&bpf_new,
+                                tu->rq_h_size,
+                                tu->rq_bw,
+                                tu->rq_if_off))
     goto fail;
 
   tu->bw     = tu->rq_bw;
@@ -101,25 +93,22 @@ fail:
   return SU_FALSE;
 }
 
-SUPRIVATE void
-su_tuner_update_lo(su_tuner_t *tu)
+SUPRIVATE void su_tuner_update_lo(su_tuner_t *tu)
 {
   su_ncqo_set_freq(&tu->lo, tu->if_off - tu->rq_fc);
 }
 
-void
-su_tuner_destroy(su_tuner_t *tu)
+void su_tuner_destroy(su_tuner_t *tu)
 {
   su_iir_filt_finalize(&tu->bpf);
   free(tu);
 }
 
-su_tuner_t *
-su_tuner_new(SUFLOAT fc, SUFLOAT bw, SUFLOAT if_off, SUSCOUNT size)
+su_tuner_t *su_tuner_new(SUFLOAT fc, SUFLOAT bw, SUFLOAT if_off, SUSCOUNT size)
 {
   su_tuner_t *new;
 
-  if ((new = calloc(1, sizeof (su_tuner_t))) == NULL)
+  if ((new = calloc(1, sizeof(su_tuner_t))) == NULL)
     goto fail;
 
   new->rq_fc     = fc;
@@ -142,14 +131,15 @@ fail:
 }
 
 /* Tuner constructor */
-SUPRIVATE SUBOOL
-su_block_tuner_ctor(struct sigutils_block *block, void **private, va_list ap)
+SUPRIVATE SUBOOL su_block_tuner_ctor(struct sigutils_block *block,
+                                     void **private,
+                                     va_list ap)
 {
-  su_tuner_t *tu = NULL;
-  SUBOOL ok = SU_FALSE;
-  SUFLOAT fc;
-  SUFLOAT bw;
-  SUFLOAT if_off;
+  su_tuner_t  *tu = NULL;
+  SUBOOL       ok = SU_FALSE;
+  SUFLOAT      fc;
+  SUFLOAT      bw;
+  SUFLOAT      if_off;
   unsigned int size;
 
   fc     = va_arg(ap, double);
@@ -163,52 +153,45 @@ su_block_tuner_ctor(struct sigutils_block *block, void **private, va_list ap)
   ok = SU_TRUE;
 
   /* Set configurable properties */
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "bw",
-      &tu->rq_bw);
+  ok = ok && su_block_set_property_ref(block,
+                                       SU_PROPERTY_TYPE_FLOAT,
+                                       "bw",
+                                       &tu->rq_bw);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "fc",
-      &tu->rq_fc);
+  ok = ok && su_block_set_property_ref(block,
+                                       SU_PROPERTY_TYPE_FLOAT,
+                                       "fc",
+                                       &tu->rq_fc);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "if",
-      &tu->rq_if_off);
+  ok = ok && su_block_set_property_ref(block,
+                                       SU_PROPERTY_TYPE_FLOAT,
+                                       "if",
+                                       &tu->rq_if_off);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_INTEGER,
-      "size",
-      &tu->rq_h_size);
+  ok = ok && su_block_set_property_ref(block,
+                                       SU_PROPERTY_TYPE_INTEGER,
+                                       "size",
+                                       &tu->rq_h_size);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "taps",
-      tu->bpf.b);
+  ok = ok && su_block_set_property_ref(block,
+                                       SU_PROPERTY_TYPE_FLOAT,
+                                       "taps",
+                                       tu->bpf.b);
 
 done:
   if (!ok) {
     if (tu != NULL)
       su_tuner_destroy(tu);
-  }
-  else
+  } else
     *private = tu;
 
   return ok;
 }
 
 /* Tuner destructor */
-SUPRIVATE void
-su_block_tuner_dtor(void *private)
+SUPRIVATE void su_block_tuner_dtor(void *private)
 {
-  su_tuner_t *tu = (su_tuner_t *) private;
+  su_tuner_t *tu = (su_tuner_t *)private;
 
   if (tu != NULL) {
     su_tuner_destroy(tu);
@@ -216,21 +199,19 @@ su_block_tuner_dtor(void *private)
 }
 
 /* Acquire */
-SUPRIVATE SUSDIFF
-su_block_tuner_acquire(
-    void *priv,
-    su_stream_t *out,
-    unsigned int port_id,
-    su_block_port_t *in)
+SUPRIVATE SUSDIFF su_block_tuner_acquire(void            *priv,
+                                         su_stream_t     *out,
+                                         unsigned int     port_id,
+                                         su_block_port_t *in)
 {
   su_tuner_t *tu;
-  SUSDIFF size;
-  SUSDIFF got;
-  int i = 0;
+  SUSDIFF     size;
+  SUSDIFF     got;
+  int         i = 0;
 
   SUCOMPLEX *start;
 
-  tu  = (su_tuner_t *) priv;
+  tu = (su_tuner_t *)priv;
 
   size = su_stream_get_contiguous(out, &start, out->size);
 
@@ -261,11 +242,10 @@ su_block_tuner_acquire(
 }
 
 struct sigutils_block_class su_block_class_TUNER = {
-    "tuner", /* name */
-    1,       /* in_size */
-    1,       /* out_size */
-    su_block_tuner_ctor,    /* constructor */
-    su_block_tuner_dtor,    /* destructor */
-    su_block_tuner_acquire  /* acquire */
+    "tuner",               /* name */
+    1,                     /* in_size */
+    1,                     /* out_size */
+    su_block_tuner_ctor,   /* constructor */
+    su_block_tuner_dtor,   /* destructor */
+    su_block_tuner_acquire /* acquire */
 };
-

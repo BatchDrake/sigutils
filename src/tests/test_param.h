@@ -22,7 +22,7 @@
 
 /* Block-related params */
 #define SU_TEST_BLOCK_SAWTOOTH_WIDTH 119
-#define SU_TEST_BLOCK_READ_WAIT_MS   25
+#define SU_TEST_BLOCK_READ_WAIT_MS 25
 
 /* Preferred matched filter span (in symbol periods) */
 #define SU_TEST_MF_SYMBOL_SPAN 6
@@ -42,27 +42,27 @@
 
 /* PLL params */
 #define SU_TEST_PLL_SIGNAL_FREQ 0.025
-#define SU_TEST_PLL_BANDWIDTH   (1e-4)
+#define SU_TEST_PLL_BANDWIDTH (1e-4)
 
 /* Channel detector params */
 #define SU_TEST_USE_ACTUAL_CAPTURE
 
 #ifdef SU_TEST_USE_ACTUAL_CAPTURE
-#define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
-  "gqrx_20170219_185002_1545346100_250000_fc.raw"
+#  define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
+    "gqrx_20170219_185002_1545346100_250000_fc.raw"
 #else
-#define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
-  "su_test_channel_detector_qpsk/tx-complex.raw"
+#  define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
+    "su_test_channel_detector_qpsk/tx-complex.raw"
 #endif
 
 /* Encoder parameters */
 #define SU_TEST_ENCODER_NUM_SYMS 32
 
 /* Spectral tuner */
-#define SU_TEST_SPECTTUNER_FREQ1     200.
-#define SU_TEST_SPECTTUNER_FREQ2     1000.
+#define SU_TEST_SPECTTUNER_FREQ1 200.
+#define SU_TEST_SPECTTUNER_FREQ2 1000.
 
 #define SU_TEST_SPECTTUNER_SAMP_RATE 8000.
-#define SU_TEST_SPECTTUNER_N0        2e-2
+#define SU_TEST_SPECTTUNER_N0 2e-2
 
 #endif /* _SRC_TEST_PARAM */

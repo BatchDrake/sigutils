@@ -17,16 +17,15 @@
 
 */
 
-
 #include <sigutils/matfile.h>
 
-#include "test_param.h"
 #include "test_list.h"
+#include "test_param.h"
 
 SUBOOL
 su_test_mat_file_regular(su_test_context_t *ctx)
 {
-  su_mat_file_t *mf = NULL;
+  su_mat_file_t   *mf  = NULL;
   su_mat_matrix_t *mtx = NULL;
 
   SUBOOL ok = SU_FALSE;
@@ -60,7 +59,7 @@ done:
 SUBOOL
 su_test_mat_file_streaming(su_test_context_t *ctx)
 {
-  su_mat_file_t *mf = NULL;
+  su_mat_file_t   *mf  = NULL;
   su_mat_matrix_t *mtx = NULL;
 
   SUBOOL ok = SU_FALSE;
@@ -75,9 +74,8 @@ su_test_mat_file_streaming(su_test_context_t *ctx)
 
   SU_TRYCATCH(su_mat_file_dump(mf, "streaming.mat"), goto done);
 
-  SU_TRYCATCH(
-      mtx = su_mat_file_make_streaming_matrix(mf, "H1", 3, 0),
-      goto done);
+  SU_TRYCATCH(mtx = su_mat_file_make_streaming_matrix(mf, "H1", 3, 0),
+              goto done);
   SU_TRYCATCH(su_mat_file_stream_col(mf, 1., 1., 1.), goto done);
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
   SU_TRYCATCH(su_mat_file_stream_col(mf, 2., 2., 2.), goto done);
@@ -86,9 +84,8 @@ su_test_mat_file_streaming(su_test_context_t *ctx)
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
 
-  SU_TRYCATCH(
-      mtx = su_mat_file_make_streaming_matrix(mf, "H1Long", 3, 0),
-      goto done);
+  SU_TRYCATCH(mtx = su_mat_file_make_streaming_matrix(mf, "H1Long", 3, 0),
+              goto done);
   SU_TRYCATCH(su_mat_file_stream_col(mf, 1., 2., 3.), goto done);
   SU_TRYCATCH(su_mat_file_flush(mf), goto done);
 

@@ -20,46 +20,42 @@
 #ifndef _DECIDER_H
 #define _DECIDER_H
 
-#include "types.h"
 #include "defs.h"
+#include "types.h"
 
 struct sigutils_decider_params {
-  SUFLOAT min_val;
-  SUFLOAT max_val;
+  SUFLOAT      min_val;
+  SUFLOAT      max_val;
   unsigned int bits;
 };
 
-#define sigutils_decider_params_INITIALIZER     \
-{                                               \
-  -PI, /* min_val */                            \
-  PI, /* max_val */                             \
-  1, /* bits */                                 \
-}
+#define sigutils_decider_params_INITIALIZER \
+  {                                         \
+    -PI,    /* min_val */                   \
+        PI, /* max_val */                   \
+        1,  /* bits */                      \
+  }
 
 struct sigutils_decider {
   struct sigutils_decider_params params;
-  SUFLOAT width;
-  SUFLOAT h_inv; /* 2 ^ bits / width */
-  SUBITS  mask;
+  SUFLOAT                        width;
+  SUFLOAT                        h_inv; /* 2 ^ bits / width */
+  SUBITS                         mask;
 };
 
 typedef struct sigutils_decider su_decider_t;
 
-SU_GETTER(
-  su_decider,
-  const struct sigutils_decider_params *,
-  get_params);
+SU_GETTER(su_decider, const struct sigutils_decider_params *, get_params);
 
-const struct sigutils_decider_params *
-su_decider_get_params(const su_decider_t *self)
+const struct sigutils_decider_params *su_decider_get_params(
+    const su_decider_t *self)
 {
   return &self->params;
 }
 
 SUBOOL
-su_decider_init(
-    su_decider_t *decider,
-    const struct sigutils_decider_params *params)
+su_decider_init(su_decider_t                         *decider,
+                const struct sigutils_decider_params *params)
 {
   if (params->bits > 8)
     return SU_FALSE;
@@ -68,15 +64,14 @@ su_decider_init(
     return SU_FALSE;
 
   decider->params = *params;
-  decider->width = params->max_val - params->min_val;
-  decider->mask = (1 << params->bits) - 1;
-  decider->h_inv = (1 << params->bits) / decider->width;
+  decider->width  = params->max_val - params->min_val;
+  decider->mask   = (1 << params->bits) - 1;
+  decider->h_inv  = (1 << params->bits) / decider->width;
 
   return SU_TRUE;
 }
 
-SUINLINE SUBITS
-su_decider_decide(const su_decider_t *decider, SUFLOAT x)
+SUINLINE SUBITS su_decider_decide(const su_decider_t *decider, SUFLOAT x)
 {
   x -= decider->params.min_val;
 
@@ -85,15 +80,14 @@ su_decider_decide(const su_decider_t *decider, SUFLOAT x)
   else if (x >= decider->width)
     return decider->mask;
   else
-    return (SUBITS) SU_FLOOR(x * decider->h_inv);
+    return (SUBITS)SU_FLOOR(x * decider->h_inv);
 }
 
-SUINLINE SUBITS
-su_decider_decide_cyclic(const su_decider_t *decider, SUFLOAT x)
+SUINLINE SUBITS su_decider_decide_cyclic(const su_decider_t *decider, SUFLOAT x)
 {
   x -= decider->params.min_val;
 
-  return decider->mask & (SUBITS) SU_FLOOR(x * decider->h_inv);
+  return decider->mask & (SUBITS)SU_FLOOR(x * decider->h_inv);
 }
 
 #endif /* _DECIDER_H */

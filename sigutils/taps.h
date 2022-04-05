@@ -23,7 +23,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-  
+
 #define SU_HAMMING_ALPHA 0.54
 #define SU_MAMMING_BETA (1 - SU_HAMMING_ALPHA)
 
@@ -40,7 +40,6 @@ extern "C" {
 #define SU_BLACKMANN_HARRIS_A1 0.48829
 #define SU_BLACKMANN_HARRIS_A2 0.14128
 #define SU_BLACKMANN_HARRIS_A3 0.01168
-
 
 /* Window functions */
 void su_taps_apply_hamming(SUFLOAT *h, SUSCOUNT size);
@@ -63,7 +62,10 @@ void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);
 
 void su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size);
 
-void su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size);
+void su_taps_brickwall_bp_init(SUFLOAT *h,
+                               SUFLOAT  bw,
+                               SUFLOAT  if_nor,
+                               SUSCOUNT size);
 
 #ifdef __cplusplus
 }

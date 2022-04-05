@@ -1,0 +1,42 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+
+# Alignment
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+
+# Avoid one-liners
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
+
+# Pointer alignment
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+# Braces and function styles
+BreakBeforeBraces: Linux
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+PenaltyReturnTypeOnItsOwnLine: 999
+
+# Ident preprocessor directives
+IndentPPDirectives: AfterHash
+
+#IndentCaseLabels: true
+#IndentWidth: 2
+#ContinuationIndentWidth: 4
+#AlwaysBreakAfterReturnType: AllDefinitions
+#AlwaysBreakBeforeMultilineStrings: true
+#AlignAfterOpenBracket: AlwaysBreak
+#BreakStringLiterals: true
+#SpaceAfterCStyleCast: true
+#SpacesInContainerLiterals: false
+#IncludeBlocks: Regroup

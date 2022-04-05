@@ -17,13 +17,13 @@
 
 */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SU_LOG_LEVEL "diff-codec"
 
-#include "log.h"
 #include "../codec.h"
+#include "log.h"
 
 struct su_diff_codec_state {
   SUSYMBOL prev;
@@ -31,14 +31,14 @@ struct su_diff_codec_state {
   SUBITS   mask;
 };
 
-SUPRIVATE SUBOOL
-su_diff_codec_ctor(su_codec_t *codec, void **private, va_list ap)
+SUPRIVATE SUBOOL su_diff_codec_ctor(su_codec_t *codec,
+                                    void **private,
+                                    va_list ap)
 {
   struct su_diff_codec_state *new;
 
-  SU_TRYCATCH(
-      new = malloc(sizeof (struct su_diff_codec_state)),
-      return SU_FALSE);
+  SU_TRYCATCH(new = malloc(sizeof(struct su_diff_codec_state)),
+              return SU_FALSE);
 
   new->sign = va_arg(ap, SUBOOL);
   new->prev = SU_NOSYMBOL;
@@ -49,8 +49,9 @@ su_diff_codec_ctor(su_codec_t *codec, void **private, va_list ap)
   return SU_TRUE;
 }
 
-SUINLINE SUBITS
-su_diff_codec_int(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
+SUINLINE SUBITS su_diff_codec_int(const struct su_diff_codec_state *s,
+                                  SUBITS                            a,
+                                  SUBITS                            b)
 {
   if (s->sign)
     return s->mask & (a + b);
@@ -58,8 +59,9 @@ su_diff_codec_int(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
     return s->mask & (a - b);
 }
 
-SUINLINE SUBITS
-su_diff_codec_diff(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
+SUINLINE SUBITS su_diff_codec_diff(const struct su_diff_codec_state *s,
+                                   SUBITS                            a,
+                                   SUBITS                            b)
 {
   if (s->sign)
     return s->mask & (b - a);
@@ -67,20 +69,19 @@ su_diff_codec_diff(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
     return s->mask & (a - b);
 }
 
-SUPRIVATE SUSYMBOL
-su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
+SUPRIVATE SUSYMBOL su_diff_codec_encode(su_codec_t *codec,
+                                        void *private,
+                                        SUSYMBOL x)
 {
-  struct su_diff_codec_state *state =
-      (struct su_diff_codec_state *) private;
-  SUSYMBOL y;
+  struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
+  SUSYMBOL                    y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
       y = SU_TOSYM(
-            su_diff_codec_int(
-                state, /* Encode == Ambiguously integrate */
-                SU_FROMSYM(state->prev),
-                SU_FROMSYM(x)));
+          su_diff_codec_int(state, /* Encode == Ambiguously integrate */
+                            SU_FROMSYM(state->prev),
+                            SU_FROMSYM(x)));
 
     } else {
       y = x;
@@ -88,27 +89,26 @@ su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
     state->prev = y;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
-    y = x;
+    y           = x;
     state->prev = SU_NOSYMBOL;
   }
 
   return y;
 }
 
-SUPRIVATE SUSYMBOL
-su_diff_codec_decode(su_codec_t *codec, void *private, SUSYMBOL x)
+SUPRIVATE SUSYMBOL su_diff_codec_decode(su_codec_t *codec,
+                                        void *private,
+                                        SUSYMBOL x)
 {
-  struct su_diff_codec_state *state =
-      (struct su_diff_codec_state *) private;
-  SUSYMBOL y;
+  struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
+  SUSYMBOL                    y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
       y = SU_TOSYM(
-            su_diff_codec_diff(
-                state, /* Decode == Unambiguously differentiate */
-                SU_FROMSYM(state->prev),
-                SU_FROMSYM(x)));
+          su_diff_codec_diff(state, /* Decode == Unambiguously differentiate */
+                             SU_FROMSYM(state->prev),
+                             SU_FROMSYM(x)));
     } else {
       y = SU_NOSYMBOL;
     }
@@ -116,15 +116,14 @@ su_diff_codec_decode(su_codec_t *codec, void *private, SUSYMBOL x)
     state->prev = x;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
-    y = x;
+    y           = x;
     state->prev = SU_NOSYMBOL;
   }
 
   return y;
 }
 
-SUPRIVATE void
-su_diff_codec_dtor(void *private)
+SUPRIVATE void su_diff_codec_dtor(void *private)
 {
   free(private);
 }

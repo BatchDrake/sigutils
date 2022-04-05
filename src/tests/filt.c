@@ -17,30 +17,28 @@
 
 */
 
+#include <sigutils/agc.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/pll.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <sigutils/sampling.h>
-#include <sigutils/ncqo.h>
-#include <sigutils/iir.h>
-#include <sigutils/agc.h>
-#include <sigutils/pll.h>
-
-#include <sigutils/sigutils.h>
-
-#include "test_param.h"
 #include "test_list.h"
+#include "test_param.h"
 
 SUBOOL
 su_test_butterworth_lpf(su_test_context_t *ctx)
 {
-  SUBOOL ok = SU_FALSE;
-  SUFLOAT *hi = NULL;
-  SUFLOAT *lo = NULL;
-  unsigned int p = 0;
-  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
-  su_iir_filt_t lpf = su_iir_filt_INITIALIZER;
+  SUBOOL        ok   = SU_FALSE;
+  SUFLOAT      *hi   = NULL;
+  SUFLOAT      *lo   = NULL;
+  unsigned int  p    = 0;
+  su_ncqo_t     ncqo = su_ncqo_INITIALIZER;
+  su_iir_filt_t lpf  = su_iir_filt_INITIALIZER;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -54,27 +52,29 @@ su_test_butterworth_lpf(su_test_context_t *ctx)
   su_ncqo_init(&ncqo, 1);
 
   for (p = 0; p < ctx->params->buffer_size; ++p)
-    hi[p] = SU_C_REAL(su_iir_filt_feed(
-        &lpf,
-        su_ncqo_read(&ncqo)));
+    hi[p] = SU_C_REAL(su_iir_filt_feed(&lpf, su_ncqo_read(&ncqo)));
 
   if (ctx->params->dump_fmt) {
-    printf(" hi pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" hi mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" hi std: " SUFLOAT_FMT "\n", su_test_buffer_std(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi pp: " SUFLOAT_FMT "\n",
+           su_test_buffer_pp(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi mean: " SUFLOAT_FMT "\n",
+           su_test_buffer_mean(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" hi std: " SUFLOAT_FMT "\n",
+           su_test_buffer_std(hi, SU_TEST_SIGNAL_BUFFER_SIZE));
   }
 
   su_ncqo_set_freq(&ncqo, .125);
 
   for (p = 0; p < ctx->params->buffer_size; ++p)
-    lo[p] = SU_C_REAL(su_iir_filt_feed(
-        &lpf,
-        su_ncqo_read(&ncqo)));
+    lo[p] = SU_C_REAL(su_iir_filt_feed(&lpf, su_ncqo_read(&ncqo)));
 
   if (ctx->params->dump_fmt) {
-    printf(" lo pp: " SUFLOAT_FMT "\n", su_test_buffer_pp(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" lo mean: " SUFLOAT_FMT "\n", su_test_buffer_mean(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
-    printf(" lo std: " SUFLOAT_FMT "\n", su_test_buffer_std(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo pp: " SUFLOAT_FMT "\n",
+           su_test_buffer_pp(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo mean: " SUFLOAT_FMT "\n",
+           su_test_buffer_mean(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
+    printf(" lo std: " SUFLOAT_FMT "\n",
+           su_test_buffer_std(lo, SU_TEST_SIGNAL_BUFFER_SIZE));
   }
 
   ok = SU_TRUE;
@@ -86,5 +86,3 @@ done:
 
   return ok;
 }
-
-

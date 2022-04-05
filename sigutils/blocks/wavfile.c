@@ -16,13 +16,13 @@
   <http://www.gnu.org/licenses/>
 
 */
-#include <stdlib.h>
 #include <sndfile.h>
+#include <stdlib.h>
 
 #define SU_LOG_LEVEL "wavfile-block"
 
-#include "log.h"
 #include "block.h"
+#include "log.h"
 
 #ifdef _SU_SINGLE_PRECISION
 #  define sf_read sf_read_float
@@ -31,15 +31,15 @@
 #endif
 
 struct su_wavfile {
-  SF_INFO info;
+  SF_INFO  info;
   SNDFILE *sf;
   uint64_t samp_rate;
   SUFLOAT *buffer;
-  SUSCOUNT size; /* Number of samples PER CHANNEL, buffer size is size * chans */
+  SUSCOUNT
+  size; /* Number of samples PER CHANNEL, buffer size is size * chans */
 };
 
-SUPRIVATE void
-su_wavfile_close(struct su_wavfile *wav)
+SUPRIVATE void su_wavfile_close(struct su_wavfile *wav)
 {
   if (wav->sf != NULL)
     sf_close(wav->sf);
@@ -50,13 +50,12 @@ su_wavfile_close(struct su_wavfile *wav)
   free(wav);
 }
 
-SUPRIVATE struct su_wavfile *
-su_wavfile_open(const char *path)
+SUPRIVATE struct su_wavfile *su_wavfile_open(const char *path)
 {
   struct su_wavfile *wav = NULL;
-  SUBOOL ok = SU_FALSE;
+  SUBOOL             ok  = SU_FALSE;
 
-  if ((wav = calloc(1, sizeof (struct su_wavfile))) == NULL) {
+  if ((wav = calloc(1, sizeof(struct su_wavfile))) == NULL) {
     SU_ERROR("Cannot allocate su_wav\n");
     goto done;
   }
@@ -67,16 +66,15 @@ su_wavfile_open(const char *path)
   }
 
   if (wav->info.channels > 2) {
-    SU_ERROR(
-        "Cannot open `%s': too many channels (%d)\n",
-        path,
-        wav->info.channels);
+    SU_ERROR("Cannot open `%s': too many channels (%d)\n",
+             path,
+             wav->info.channels);
     goto done;
   }
 
   wav->size = SU_BLOCK_STREAM_BUFFER_SIZE;
-  if ((wav->buffer = malloc(wav->size * wav->info.channels * sizeof (SUFLOAT)))
-      == NULL) {
+  if ((wav->buffer =
+           malloc(wav->size * wav->info.channels * sizeof(SUFLOAT))) == NULL) {
     SU_ERROR("Cannot allocate sample buffer\n");
     goto done;
   }
@@ -92,11 +90,12 @@ done:
   return wav;
 }
 
-SUPRIVATE SUBOOL
-su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
+SUPRIVATE SUBOOL su_block_wavfile_ctor(struct sigutils_block *block,
+                                       void **private,
+                                       va_list ap)
 {
-  struct su_wavfile *wav = NULL;
-  const char *path = NULL;
+  struct su_wavfile *wav  = NULL;
+  const char        *path = NULL;
 
   path = va_arg(ap, const char *);
 
@@ -107,55 +106,47 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   wav->samp_rate = wav->info.samplerate;
 
-  if (!su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_INTEGER,
-      "samp_rate",
-      &wav->samp_rate) ||
-      !su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_INTEGER,
-      "channels",
-      &wav->info.channels)) {
+  if (!su_block_set_property_ref(block,
+                                 SU_PROPERTY_TYPE_INTEGER,
+                                 "samp_rate",
+                                 &wav->samp_rate) ||
+      !su_block_set_property_ref(block,
+                                 SU_PROPERTY_TYPE_INTEGER,
+                                 "channels",
+                                 &wav->info.channels)) {
     su_wavfile_close(wav);
     return SU_FALSE;
   }
 
-  *private = (void *) wav;
+  *private = (void *)wav;
 
   return SU_TRUE;
 }
 
-SUPRIVATE void
-su_block_wavfile_dtor(void *private)
+SUPRIVATE void su_block_wavfile_dtor(void *private)
 {
-  su_wavfile_close((struct su_wavfile *) private);
+  su_wavfile_close((struct su_wavfile *)private);
 }
 
 /*
  * We process wav files as I/Q data. Left channel contains I data and
  * right channel contains Q data.
  */
-SUPRIVATE SUSDIFF
-su_block_wavfile_acquire(
-    void *priv,
-    su_stream_t *out,
-    unsigned int port_id,
-    su_block_port_t *in)
+SUPRIVATE SUSDIFF su_block_wavfile_acquire(void            *priv,
+                                           su_stream_t     *out,
+                                           unsigned int     port_id,
+                                           su_block_port_t *in)
 {
-  struct su_wavfile *wav = (struct su_wavfile *) priv;
-  SUSDIFF size;
-  SUSDIFF got;
-  unsigned int i;
-  SUCOMPLEX *start;
+  struct su_wavfile *wav = (struct su_wavfile *)priv;
+  SUSDIFF            size;
+  SUSDIFF            got;
+  unsigned int       i;
+  SUCOMPLEX         *start;
 
   /* Get the number of complex samples to write */
   size = su_stream_get_contiguous(out, &start, SU_MIN(wav->size, out->size));
 
-  if ((got = sf_read(
-      wav->sf,
-      wav->buffer,
-      size * wav->info.channels)) > 0) {
+  if ((got = sf_read(wav->sf, wav->buffer, size * wav->info.channels)) > 0) {
     if (wav->info.channels == 1) {
       /* One channel: assume real data */
       for (i = 0; i < got; ++i)
@@ -185,10 +176,10 @@ su_block_wavfile_acquire(
 }
 
 struct sigutils_block_class su_block_class_WAVFILE = {
-    "wavfile", /* name */
-    0,         /* in_size */
-    1,         /* out_size */
-    su_block_wavfile_ctor,     /* constructor */
-    su_block_wavfile_dtor,     /* destructor */
+    "wavfile",                /* name */
+    0,                        /* in_size */
+    1,                        /* out_size */
+    su_block_wavfile_ctor,    /* constructor */
+    su_block_wavfile_dtor,    /* destructor */
     su_block_wavfile_acquire, /* acquire */
 };

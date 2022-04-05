@@ -20,14 +20,14 @@
 #ifndef _SIGUTILS_AGC_H
 #define _SIGUTILS_AGC_H
 
-#include "types.h"
 #include "defs.h"
+#include "types.h"
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif // __clang__
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -37,16 +37,15 @@ extern "C" {
 
 #define SU_AGC_RESCALE 0.7
 
-
 struct sigutils_agc {
-  SUBOOL  enabled;
+  SUBOOL enabled;
 
   /* AGC parameters */
-  SUFLOAT knee;          /* AGC Knee in dBs */
-  SUFLOAT gain_slope;    /* Gain slope in dBs (0..10) */
-  SUFLOAT fixed_gain;    /* Gain below knee */
-  unsigned int hang_max; /* Hang time in number of samples */
-  unsigned int hang_n;   /* Hang timer */
+  SUFLOAT      knee;       /* AGC Knee in dBs */
+  SUFLOAT      gain_slope; /* Gain slope in dBs (0..10) */
+  SUFLOAT      fixed_gain; /* Gain below knee */
+  unsigned int hang_max;   /* Hang time in number of samples */
+  unsigned int hang_n;     /* Hang timer */
 
   /* AGC memory - delay line */
   SUCOMPLEX   *delay_line;
@@ -58,7 +57,7 @@ struct sigutils_agc {
   unsigned int mag_history_size;
   unsigned int mag_history_ptr;
 
-  SUFLOAT peak;         /* Current peak value in history */
+  SUFLOAT peak; /* Current peak value in history */
 
   /* Used to correct transitional spikes */
   SUFLOAT fast_alpha_rise;
@@ -73,13 +72,14 @@ struct sigutils_agc {
 
 typedef struct sigutils_agc su_agc_t;
 
-#define su_agc_INITIALIZER \
-  {0, 0., 0., 0., 0, 0, NULL, 0, 0, NULL, 0, 0, \
-   0., 0., 0., 0., 0., 0., 0.}
+#define su_agc_INITIALIZER                                                  \
+  {                                                                         \
+    0, 0., 0., 0., 0, 0, NULL, 0, 0, NULL, 0, 0, 0., 0., 0., 0., 0., 0., 0. \
+  }
 
 struct su_agc_params {
-  SUFLOAT threshold;
-  SUFLOAT slope_factor;
+  SUFLOAT      threshold;
+  SUFLOAT      slope_factor;
   unsigned int hang_max;
   unsigned int delay_line_size;
   unsigned int mag_history_size;
@@ -93,18 +93,20 @@ struct su_agc_params {
   SUFLOAT slow_fall_t;
 };
 
-#define su_agc_params_INITIALIZER \
-  { -100, 6, 100, 20, 20, 2, 4, 20, 40 }
+#define su_agc_params_INITIALIZER      \
+  {                                    \
+    -100, 6, 100, 20, 20, 2, 4, 20, 40 \
+  }
 
 SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params);
-SU_DESTRUCTOR (su_agc);
+SU_DESTRUCTOR(su_agc);
 
-SU_METHOD     (su_agc, SUCOMPLEX, feed, SUCOMPLEX x);
+SU_METHOD(su_agc, SUCOMPLEX, feed, SUCOMPLEX x);
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
-#  endif // __clang__
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

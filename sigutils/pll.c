@@ -17,17 +17,18 @@
 
 */
 
-#include <string.h>
-#include "sampling.h"
-#include "log.h"
-#include "types.h"
 #include "pll.h"
-#include "taps.h"
+
+#include <string.h>
+
 #include "coef.h"
+#include "log.h"
+#include "sampling.h"
+#include "taps.h"
+#include "types.h"
 
 SU_DESTRUCTOR(su_pll)
 {
-
 }
 
 SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
@@ -51,13 +52,13 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
 
 SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x)
 {
-  SUCOMPLEX ref = su_ncqo_read(&self->ncqo);
-  SUCOMPLEX mix = x * SU_C_CONJ(ref);
+  SUCOMPLEX ref   = su_ncqo_read(&self->ncqo);
+  SUCOMPLEX mix   = x * SU_C_CONJ(ref);
   SUFLOAT   phase = su_ncqo_get_phase(&self->ncqo);
   SUFLOAT   error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
 
   su_ncqo_inc_angfreq(&self->ncqo, self->alpha * error);
-  su_ncqo_inc_phase  (&self->ncqo, self->beta  * error);
+  su_ncqo_inc_phase(&self->ncqo, self->beta * error);
 
   return mix;
 }
@@ -72,7 +73,7 @@ SU_METHOD(su_pll, void, feed, SUFLOAT x)
   s = su_ncqo_read(&self->ncqo);
 
   err = -x * SU_C_IMAG(s); /* Error signal: projection against Q */
-  lck =  x * SU_C_REAL(s); /* Lock: projection against I */
+  lck = x * SU_C_REAL(s);  /* Lock: projection against I */
 
   self->lock += self->beta * (2 * lck - self->lock);
 
@@ -89,27 +90,26 @@ SU_DESTRUCTOR(su_costas)
   SU_DESTRUCT(su_iir_filt, &self->af);
 }
 
-SU_CONSTRUCTOR(
-    su_costas,
-    enum sigutils_costas_kind kind,
-    SUFLOAT fhint,
-    SUFLOAT arm_bw,
-    unsigned int arm_order,
-    SUFLOAT loop_bw)
+SU_CONSTRUCTOR(su_costas,
+               enum sigutils_costas_kind kind,
+               SUFLOAT                   fhint,
+               SUFLOAT                   arm_bw,
+               unsigned int              arm_order,
+               SUFLOAT                   loop_bw)
 {
-  SUFLOAT *b = NULL;
-  SUFLOAT *a = NULL;
-  SUFLOAT scaling;
+  SUFLOAT     *b = NULL;
+  SUFLOAT     *a = NULL;
+  SUFLOAT      scaling;
   unsigned int i = 0;
 
   memset(self, 0, sizeof(su_costas_t));
 
   /* Make LPF filter critically damped (Eric Hagemann) */
-  self->a = SU_NORM2ANG_FREQ(loop_bw);
-  self->b = .5 * self->a * self->a;
+  self->a       = SU_NORM2ANG_FREQ(loop_bw);
+  self->b       = .5 * self->a * self->a;
   self->y_alpha = 1;
-  self->kind = kind;
-  self->gain = 1;
+  self->kind    = kind;
+  self->gain    = 1;
 
   su_ncqo_init(&self->ncqo, fhint);
 
@@ -119,7 +119,7 @@ SU_CONSTRUCTOR(
 
   if (arm_order == 1 || arm_order >= SU_COSTAS_FIR_ORDER_THRESHOLD) {
     SU_ALLOCATE_MANY_FAIL(b, arm_order, SUFLOAT);
-    
+
     if (arm_order == 1)
       b[0] = 1; /* No filtering */
     else
@@ -135,13 +135,12 @@ SU_CONSTRUCTOR(
       b[i] *= scaling;
   }
 
-  SU_TRY_FAIL(__su_iir_filt_init(
-      &self->af,
-      a == NULL ? 0 : arm_order,
-      a,
-      arm_order,
-      b,
-      SU_FALSE));
+  SU_TRY_FAIL(__su_iir_filt_init(&self->af,
+                                 a == NULL ? 0 : arm_order,
+                                 a,
+                                 arm_order,
+                                 b,
+                                 SU_FALSE));
 
   b = NULL;
   a = NULL;
@@ -169,7 +168,7 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
 {
   SUCOMPLEX s;
   SUCOMPLEX L;
-  SUFLOAT e = 0;
+  SUFLOAT   e = 0;
 
   s = su_ncqo_read(&self->ncqo);
   /*
@@ -196,8 +195,7 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
        * Error signal taken from Maarten Tytgat's paper "Time Domain Model
        * for Costas Loop Based QPSK Receiver.
        */
-      e =  SU_C_REAL(L) * SU_C_IMAG(self->z)
-          -SU_C_IMAG(L) * SU_C_REAL(self->z);
+      e = SU_C_REAL(L) * SU_C_IMAG(self->z) - SU_C_IMAG(L) * SU_C_REAL(self->z);
       break;
 
     case SU_COSTAS_KIND_8PSK:
@@ -225,11 +223,11 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
       L = SU_C_SGN(self->z);
 
       if (SU_ABS(SU_C_REAL(self->z)) >= SU_ABS(SU_C_IMAG(self->z)))
-        e =  SU_C_REAL(L) * SU_C_IMAG(self->z)
-            -SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z) -
+            SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
       else
-        e =  SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1)
-            -SU_C_IMAG(L) * SU_C_REAL(self->z);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1) -
+            SU_C_IMAG(L) * SU_C_REAL(self->z);
       break;
 
     default:

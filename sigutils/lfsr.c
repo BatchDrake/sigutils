@@ -19,23 +19,20 @@
 
 #define SU_LOG_LEVEL "lfsr"
 
+#include "lfsr.h"
+
 #include <string.h>
 
 #include "log.h"
-#include "lfsr.h"
 
 SUBOOL
 su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order)
 {
   memset(lfsr, 0, sizeof(su_lfsr_t));
 
-  SU_TRYCATCH(
-      lfsr->coef = malloc(order * sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->coef = malloc(order * sizeof(SUBITS)), goto fail);
 
-  SU_TRYCATCH(
-      lfsr->buffer = calloc(order, sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->buffer = calloc(order, sizeof(SUBITS)), goto fail);
 
   memcpy(lfsr->coef, coef, order * sizeof(SUBITS));
   lfsr->order = order;
@@ -48,8 +45,7 @@ fail:
   return SU_FALSE;
 }
 
-void
-su_lfsr_finalize(su_lfsr_t *lfsr)
+void su_lfsr_finalize(su_lfsr_t *lfsr)
 {
   if (lfsr->coef != NULL)
     free(lfsr->coef);
@@ -58,12 +54,10 @@ su_lfsr_finalize(su_lfsr_t *lfsr)
     free(lfsr->buffer);
 }
 
-void
-su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
+void su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
 {
   lfsr->mode = mode;
 }
-
 
 /*
  * There is a common part for both additive and multiplicative
@@ -80,10 +74,9 @@ su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
  *   y = F(P, x) ^ x
  *
  */
-SUINLINE SUBITS
-su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
+SUINLINE SUBITS su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
 {
-  SUBITS F = 0;
+  SUBITS   F = 0;
   uint64_t i;
   uint64_t n = lfsr->p;
 
@@ -100,13 +93,12 @@ su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
    * n = (p + order - 1) % order = (p - 1) % order
    */
   lfsr->buffer[lfsr->p] = x;
-  lfsr->p = n;
+  lfsr->p               = n;
 
   return F;
 }
 
-void
-su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
+void su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
 {
   unsigned int i;
 
@@ -114,7 +106,6 @@ su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
     lfsr->buffer[lfsr->order - i - 1] = seq[i];
   lfsr->p = lfsr->order - 1;
 }
-
 
 SUBITS
 su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
@@ -125,7 +116,7 @@ su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
   switch (lfsr->mode) {
     case SU_LFSR_MODE_ADDITIVE:
       lfsr->F_prev = su_lfsr_transfer(lfsr, lfsr->F_prev);
-      y = lfsr->F_prev ^ x;
+      y            = lfsr->F_prev ^ x;
       break;
 
     case SU_LFSR_MODE_MULTIPLICATIVE:
@@ -139,8 +130,7 @@ su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
   return y;
 }
 
-void
-su_lfsr_blind_sync_reset(su_lfsr_t *lfsr)
+void su_lfsr_blind_sync_reset(su_lfsr_t *lfsr)
 {
   lfsr->zeroes = 0;
   su_lfsr_set_mode(lfsr, SU_LFSR_MODE_MULTIPLICATIVE);

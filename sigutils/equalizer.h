@@ -26,16 +26,16 @@ enum sigutils_equalizer_algorithm {
 
 struct sigutils_equalizer_params {
   enum sigutils_equalizer_algorithm algorithm;
-  SUSCOUNT length;
-  SUFLOAT mu;
+  SUSCOUNT                          length;
+  SUFLOAT                           mu;
 };
 
 #define sigutils_equalizer_params_INITIALIZER   \
-{                                               \
-  SU_EQUALIZER_ALGORITHM_CMA, /* algorithm */   \
-  10,   /* length */                            \
-  0.2,  /* mu */                                \
-}
+  {                                             \
+    SU_EQUALIZER_ALGORITHM_CMA, /* algorithm */ \
+        10,                     /* length */    \
+        0.2,                    /* mu */        \
+  }
 
 /*
  * A signal equalizer is basically an adaptive filter, so we can leverage
@@ -44,24 +44,23 @@ struct sigutils_equalizer_params {
 
 struct sigutils_equalizer {
   struct sigutils_equalizer_params params;
-  SUCOMPLEX *w;
-  SUCOMPLEX *x;
-  SUSCOUNT ptr;
+  SUCOMPLEX                       *w;
+  SUCOMPLEX                       *x;
+  SUSCOUNT                         ptr;
 };
 
 typedef struct sigutils_equalizer su_equalizer_t;
 
 #define su_equalizer_INITIALIZER                        \
-{                                                       \
-  sigutils_equalizer_params_INITIALIZER, /* params */   \
-  NULL, /* w */                                         \
-  NULL, /* x */                                         \
-  0, /* ptr */                                          \
-}
+  {                                                     \
+    sigutils_equalizer_params_INITIALIZER, /* params */ \
+        NULL,                              /* w */      \
+        NULL,                              /* x */      \
+        0,                                 /* ptr */    \
+  }
 
-SUBOOL su_equalizer_init(
-    su_equalizer_t *eq,
-    const struct sigutils_equalizer_params *params);
+SUBOOL su_equalizer_init(su_equalizer_t                         *eq,
+                         const struct sigutils_equalizer_params *params);
 
 void su_equalizer_reset(su_equalizer_t *eq);
 

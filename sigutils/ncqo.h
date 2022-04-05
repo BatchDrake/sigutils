@@ -20,18 +20,17 @@
 #ifndef _SIGUTILS_NCQO_H
 #define _SIGUTILS_NCQO_H
 
-#include "types.h"
-#include "sampling.h"
 #include "defs.h"
+#include "sampling.h"
+#include "types.h"
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif // __clang__
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
-
 
 #define SU_NCQO_USE_PRECALC_BUFFER
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -41,12 +40,12 @@ extern "C" {
 /* The numerically-controlled quadruature oscillator definition */
 struct sigutils_ncqo {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  SUFLOAT phi_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUFLOAT sin_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUFLOAT cos_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUBOOL  pre_c;
+  SUFLOAT      phi_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUFLOAT      sin_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUFLOAT      cos_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
+  SUBOOL       pre_c;
   unsigned int p; /* Pointer in precalc buffer */
-#endif /* SU_NCQO_USE_PRECALC_BUFFER */
+#endif            /* SU_NCQO_USE_PRECALC_BUFFER */
 
   SUFLOAT phi;
   SUFLOAT omega; /* Normalized angular frequency */
@@ -62,32 +61,35 @@ struct sigutils_ncqo {
 typedef struct sigutils_ncqo su_ncqo_t;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-#  define su_ncqo_INITIALIZER {{0.}, {0.}, {0.}, SU_FALSE, 0, 0., 0., 0., SU_FALSE, 0., SU_FALSE, 0.}
+#  define su_ncqo_INITIALIZER                                               \
+    {                                                                       \
+      {0.}, {0.}, {0.}, SU_FALSE, 0, 0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
+    }
 #else
-#  define su_ncqo_INITIALIZER {0., 0., 0., SU_FALSE, 0., SU_FALSE, 0.}
+#  define su_ncqo_INITIALIZER                \
+    {                                        \
+      0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
+    }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
 /* Methods */
-SUINLINE SUFLOAT
-su_phase_adjust(SUFLOAT phi)
+SUINLINE SUFLOAT su_phase_adjust(SUFLOAT phi)
 {
   return phi - 2 * PI * SU_FLOOR(phi / (2 * PI));
 }
 
-SUINLINE SUFLOAT
-su_phase_adjust_one_cycle(SUFLOAT phi)
+SUINLINE SUFLOAT su_phase_adjust_one_cycle(SUFLOAT phi)
 {
   if (phi > PI)
     return phi - 2 * PI;
 
-  if (phi < - PI)
+  if (phi < -PI)
     return phi + 2 * PI;
 
   return phi;
 }
 
-SUINLINE void
-__su_ncqo_step(su_ncqo_t *ncqo)
+SUINLINE void __su_ncqo_step(su_ncqo_t *ncqo)
 {
   ncqo->phi += ncqo->omega;
 
@@ -101,7 +103,7 @@ __su_ncqo_step(su_ncqo_t *ncqo)
 #if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
 #  define SU_USE_VOLK
 #  define SU_VOLK_CALL_STRIDE_BITS 5
-#  define SU_VOLK_CALL_STRIDE      (1 << SU_VOLK_CALL_STRIDE_BITS)
+#  define SU_VOLK_CALL_STRIDE (1 << SU_VOLK_CALL_STRIDE_BITS)
 #  define SU_VOLK_CALL_STRIDE_MASK (SU_VOLK_CALL_STRIDE - 1)
 #  ifdef __cplusplus
 }
@@ -113,42 +115,38 @@ extern "C" {
 #endif
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-SUINLINE void
-__su_ncqo_populate_precalc_buffer(su_ncqo_t *ncqo)
+SUINLINE void __su_ncqo_populate_precalc_buffer(su_ncqo_t *ncqo)
 {
   unsigned int i;
-#ifdef SU_USE_VOLK
+#  ifdef SU_USE_VOLK
   unsigned int p;
-#endif /* SU_USE_VOLK */
+#  endif /* SU_USE_VOLK */
   /* Precalculate phase buffer */
   for (i = 0; i < SU_NCQO_PRECALC_BUFFER_LEN; ++i) {
     ncqo->phi_buffer[i] = ncqo->phi;
 #  ifndef SU_USE_VOLK
 #    ifdef HAVE_SINCOS
     SU_SINCOS(ncqo->phi, ncqo->sin_buffer + i, ncqo->cos_buffer + i);
-#    else /* HAVE_SINCOS */
+#    else  /* HAVE_SINCOS */
     ncqo->sin_buffer[i] = SU_SIN(ncqo->phi);
     ncqo->cos_buffer[i] = SU_COS(ncqo->phi);
 #    endif /* HAVE_SINCOS */
 #  else
     if ((i & SU_VOLK_CALL_STRIDE_MASK) == SU_VOLK_CALL_STRIDE_MASK) {
       p = i & ~SU_VOLK_CALL_STRIDE_MASK;
-      volk_32f_sin_32f(
-          ncqo->sin_buffer + p,
-          ncqo->phi_buffer + p,
-          SU_VOLK_CALL_STRIDE);
-      volk_32f_cos_32f(
-          ncqo->cos_buffer + p,
-          ncqo->phi_buffer + p,
-          SU_VOLK_CALL_STRIDE);
+      volk_32f_sin_32f(ncqo->sin_buffer + p,
+                       ncqo->phi_buffer + p,
+                       SU_VOLK_CALL_STRIDE);
+      volk_32f_cos_32f(ncqo->cos_buffer + p,
+                       ncqo->phi_buffer + p,
+                       SU_VOLK_CALL_STRIDE);
     }
 #  endif /* SU_USE_VOLK */
     __su_ncqo_step(ncqo);
   }
 }
 
-SUINLINE void
-__su_ncqo_step_precalc(su_ncqo_t *ncqo)
+SUINLINE void __su_ncqo_step_precalc(su_ncqo_t *ncqo)
 {
   if (++ncqo->p == SU_NCQO_PRECALC_BUFFER_LEN) {
     ncqo->p = 0;
@@ -186,7 +184,6 @@ SU_METHOD(su_ncqo, void, step)
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
-
 
 /* Force phase */
 SU_METHOD(su_ncqo, void, set_phase, SUFLOAT phi);
@@ -261,7 +258,7 @@ SU_GETTER(su_ncqo, SUFLOAT, get_freq);
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
-#  endif // __clang__
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 
