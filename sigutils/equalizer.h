@@ -20,7 +20,10 @@
 #ifndef _SIGUTILS_EQUALIZER_H
 #define _SIGUTILS_EQUALIZER_H
 
-enum sigutils_equalizer_algorithm {
+#include "types.h"
+
+enum sigutils_equalizer_algorithm
+{
   SU_EQUALIZER_ALGORITHM_CMA, /* Default */
 };
 

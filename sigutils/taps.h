@@ -20,6 +20,8 @@
 #ifndef _SIGUTILS_TAPS_H
 #define _SIGUTILS_TAPS_H
 
+#include "types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
