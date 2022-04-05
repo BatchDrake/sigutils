@@ -21,6 +21,7 @@
 #define _SIGUTILS_NCQO_H
 
 #include "defs.h"
+#include "log.h"
 #include "sampling.h"
 #include "types.h"
 
