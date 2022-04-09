@@ -87,12 +87,13 @@ SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x);
 SU_METHOD(su_pll, void, feed, SUFLOAT x);
 
 /* QPSK costas loops are way more complex than that */
-SU_CONSTRUCTOR(su_costas,
-               enum sigutils_costas_kind kind,
-               SUFLOAT fhint,
-               SUFLOAT arm_bw,
-               unsigned int arm_order,
-               SUFLOAT loop_bw);
+SU_CONSTRUCTOR(
+    su_costas,
+    enum sigutils_costas_kind kind,
+    SUFLOAT fhint,
+    SUFLOAT arm_bw,
+    unsigned int arm_order,
+    SUFLOAT loop_bw);
 SU_DESTRUCTOR(su_costas);
 
 SU_METHOD(su_costas, void, set_kind, enum sigutils_costas_kind kind);

@@ -58,12 +58,13 @@ su_test_costas_lock(su_test_context_t *ctx)
 
   N0 = 5e-1;
 
-  SU_TEST_ASSERT(su_costas_init(&costas,
-                                SU_COSTAS_KIND_BPSK,
-                                0, /* fhint */
-                                1,
-                                1, /* Disable arm filter */
-                                1e-2));
+  SU_TEST_ASSERT(su_costas_init(
+      &costas,
+      SU_COSTAS_KIND_BPSK,
+      0, /* fhint */
+      1,
+      1, /* Disable arm filter */
+      1e-2));
 
   su_ncqo_init(&ncqo, SU_TEST_COSTAS_SIGNAL_FREQ);
 
@@ -237,10 +238,11 @@ su_test_costas_bpsk(su_test_context_t *ctx)
     }
   }
 
-  SU_INFO("RX: 0x%08x = ~0x%08x in %d samples\n",
-          rx_buf,
-          ~rx_buf,
-          ctx->params->buffer_size);
+  SU_INFO(
+      "RX: 0x%08x = ~0x%08x in %d samples\n",
+      rx_buf,
+      ~rx_buf,
+      ctx->params->buffer_size);
 
   SU_TEST_ASSERT(rx_buf == message || rx_buf == ~message);
 

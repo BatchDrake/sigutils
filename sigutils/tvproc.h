@@ -86,11 +86,12 @@ struct sigutils_pulse_finder {
 
 typedef struct sigutils_pulse_finder su_pulse_finder_t;
 
-SU_INSTANCER(su_pulse_finder,
-             SUFLOAT base,
-             SUFLOAT peak,
-             SUSCOUNT len,
-             SUFLOAT tolerance);
+SU_INSTANCER(
+    su_pulse_finder,
+    SUFLOAT base,
+    SUFLOAT peak,
+    SUSCOUNT len,
+    SUFLOAT tolerance);
 SU_COLLECTOR(su_pulse_finder);
 
 SU_METHOD(su_pulse_finder, SUBOOL, feed, SUFLOAT x);
@@ -104,8 +105,9 @@ struct sigutils_tv_frame_buffer {
 
 typedef struct sigutils_tv_frame_buffer su_tv_frame_buffer_t;
 
-SU_INSTANCER(su_tv_frame_buffer,
-             const struct sigutils_tv_processor_params *params);
+SU_INSTANCER(
+    su_tv_frame_buffer,
+    const struct sigutils_tv_processor_params *params);
 
 SU_COPY_INSTANCER(su_tv_frame_buffer);
 SU_COLLECTOR(su_tv_frame_buffer);
@@ -180,20 +182,24 @@ struct sigutils_tv_processor {
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
 
-SU_INSTANCER(su_tv_processor,
-             const struct sigutils_tv_processor_params *params);
+SU_INSTANCER(
+    su_tv_processor,
+    const struct sigutils_tv_processor_params *params);
 SU_COLLECTOR(su_tv_processor);
 
-void su_tv_processor_params_pal(struct sigutils_tv_processor_params *self,
-                                SUFLOAT samp_rate);
+void su_tv_processor_params_pal(
+    struct sigutils_tv_processor_params *self,
+    SUFLOAT samp_rate);
 
-void su_tv_processor_params_ntsc(struct sigutils_tv_processor_params *self,
-                                 SUFLOAT samp_rate);
+void su_tv_processor_params_ntsc(
+    struct sigutils_tv_processor_params *self,
+    SUFLOAT samp_rate);
 
-SU_METHOD(su_tv_processor,
-          SUBOOL,
-          set_params,
-          const struct sigutils_tv_processor_params *params);
+SU_METHOD(
+    su_tv_processor,
+    SUBOOL,
+    set_params,
+    const struct sigutils_tv_processor_params *params);
 SU_METHOD(su_tv_processor, SUBOOL, feed, SUFLOAT x);
 
 SU_METHOD(su_tv_processor, su_tv_frame_buffer_t *, take_frame);

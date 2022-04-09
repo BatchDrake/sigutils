@@ -77,10 +77,11 @@ su_tuner_update_filter(su_tuner_t *tu)
   su_iir_filt_t bpf_new = su_iir_filt_INITIALIZER;
 
   /* If baudrate has changed, we must change the LPF */
-  if (!su_iir_brickwall_bp_init(&bpf_new,
-                                tu->rq_h_size,
-                                tu->rq_bw,
-                                tu->rq_if_off))
+  if (!su_iir_brickwall_bp_init(
+          &bpf_new,
+          tu->rq_h_size,
+          tu->rq_bw,
+          tu->rq_if_off))
     goto fail;
 
   tu->bw = tu->rq_bw;
@@ -161,34 +162,39 @@ su_block_tuner_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   /* Set configurable properties */
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "bw",
-                                    &tu->rq_bw);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bw",
+           &tu->rq_bw);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "fc",
-                                    &tu->rq_fc);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "fc",
+           &tu->rq_fc);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "if",
-                                    &tu->rq_if_off);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "if",
+           &tu->rq_if_off);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_INTEGER,
-                                    "size",
-                                    &tu->rq_h_size);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_INTEGER,
+           "size",
+           &tu->rq_h_size);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "taps",
-                                    tu->bpf.b);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "taps",
+           tu->bpf.b);
 
 done:
   if (!ok) {
@@ -213,10 +219,11 @@ su_block_tuner_dtor(void *private)
 
 /* Acquire */
 SUPRIVATE SUSDIFF
-su_block_tuner_acquire(void *priv,
-                       su_stream_t *out,
-                       unsigned int port_id,
-                       su_block_port_t *in)
+su_block_tuner_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_tuner_t *tu;
   SUSDIFF size;

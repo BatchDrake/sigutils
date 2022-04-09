@@ -141,12 +141,13 @@ SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size)
   return size;
 }
 
-SU_GETTER(su_stream,
-          SUSDIFF,
-          read,
-          su_off_t off,
-          SUCOMPLEX *data,
-          SUSCOUNT size)
+SU_GETTER(
+    su_stream,
+    SUSDIFF,
+    read,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size)
 {
   SUSCOUNT avail;
   su_off_t readpos = su_stream_tell(self);
@@ -203,9 +204,10 @@ su_flow_controller_finalize(su_flow_controller_t *fc)
 }
 
 SUBOOL
-su_flow_controller_init(su_flow_controller_t *fc,
-                        enum sigutils_flow_controller_kind kind,
-                        SUSCOUNT size)
+su_flow_controller_init(
+    su_flow_controller_t *fc,
+    enum sigutils_flow_controller_kind kind,
+    SUSCOUNT size)
 {
   SUBOOL result = SU_FALSE;
 
@@ -303,8 +305,9 @@ su_flow_controller_remove_consumer(su_flow_controller_t *fc, SUBOOL pend)
 }
 
 SUPRIVATE SUBOOL
-su_flow_controller_set_kind(su_flow_controller_t *fc,
-                            enum sigutils_flow_controller_kind kind)
+su_flow_controller_set_kind(
+    su_flow_controller_t *fc,
+    enum sigutils_flow_controller_kind kind)
 {
   /* Cannot set flow control twice */
   if (fc->kind != SU_FLOW_CONTROL_KIND_NONE)
@@ -316,11 +319,12 @@ su_flow_controller_set_kind(su_flow_controller_t *fc,
 }
 
 SUPRIVATE SUSDIFF
-su_flow_controller_read_unsafe(su_flow_controller_t *fc,
-                               struct sigutils_block_port *reader,
-                               su_off_t off,
-                               SUCOMPLEX *data,
-                               SUSCOUNT size)
+su_flow_controller_read_unsafe(
+    su_flow_controller_t *fc,
+    struct sigutils_block_port *reader,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size)
 {
   SUSDIFF result;
 
@@ -445,9 +449,10 @@ su_block_lookup_property(const su_block_t *block, const char *name)
 }
 
 void *
-su_block_get_property_ref(const su_block_t *block,
-                          su_property_type_t type,
-                          const char *name)
+su_block_get_property_ref(
+    const su_block_t *block,
+    su_property_type_t type,
+    const char *name)
 {
   const su_property_t *prop;
 
@@ -461,10 +466,11 @@ su_block_get_property_ref(const su_block_t *block,
 }
 
 SUBOOL
-su_block_set_property_ref(su_block_t *block,
-                          su_property_type_t type,
-                          const char *name,
-                          void *ptr)
+su_block_set_property_ref(
+    su_block_t *block,
+    su_property_type_t type,
+    const char *name,
+    void *ptr)
 {
   su_property_t *prop;
 
@@ -587,9 +593,10 @@ su_block_force_eos(const su_block_t *block, unsigned int id)
 }
 
 SUBOOL
-su_block_set_flow_controller(su_block_t *block,
-                             unsigned int port_id,
-                             enum sigutils_flow_controller_kind kind)
+su_block_set_flow_controller(
+    su_block_t *block,
+    unsigned int port_id,
+    enum sigutils_flow_controller_kind kind)
 {
   su_flow_controller_t *fc;
 
@@ -600,9 +607,10 @@ su_block_set_flow_controller(su_block_t *block,
 }
 
 SUBOOL
-su_block_set_master_port(su_block_t *block,
-                         unsigned int port_id,
-                         const su_block_port_t *port)
+su_block_set_master_port(
+    su_block_t *block,
+    unsigned int port_id,
+    const su_block_port_t *port)
 {
   su_flow_controller_t *fc;
 
@@ -618,17 +626,19 @@ su_block_set_master_port(su_block_t *block,
 }
 
 SUBOOL
-su_block_plug(su_block_t *source,
-              unsigned int out_id,
-              unsigned int in_id,
-              su_block_t *sink)
+su_block_plug(
+    su_block_t *source,
+    unsigned int out_id,
+    unsigned int in_id,
+    su_block_t *sink)
 {
   su_block_port_t *input;
 
   if ((input = su_block_get_port(sink, in_id)) == NULL) {
-    SU_ERROR("Block `%s' doesn't have input port #%d\n",
-             sink->classname->name,
-             in_id);
+    SU_ERROR(
+        "Block `%s' doesn't have input port #%d\n",
+        sink->classname->name,
+        in_id);
     return SU_FALSE;
   }
 
@@ -643,13 +653,15 @@ su_block_port_is_plugged(const su_block_port_t *port)
 }
 
 SUBOOL
-su_block_port_plug(su_block_port_t *port,
-                   struct sigutils_block *block,
-                   unsigned int portid)
+su_block_port_plug(
+    su_block_port_t *port,
+    struct sigutils_block *block,
+    unsigned int portid)
 {
   if (su_block_port_is_plugged(port)) {
-    SU_ERROR("Port already plugged to block `%s'\n",
-             port->block->classname->name);
+    SU_ERROR(
+        "Port already plugged to block `%s'\n",
+        port->block->classname->name);
     return SU_FALSE;
   }
 

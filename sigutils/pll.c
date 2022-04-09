@@ -90,12 +90,13 @@ SU_DESTRUCTOR(su_costas)
   SU_DESTRUCT(su_iir_filt, &self->af);
 }
 
-SU_CONSTRUCTOR(su_costas,
-               enum sigutils_costas_kind kind,
-               SUFLOAT fhint,
-               SUFLOAT arm_bw,
-               unsigned int arm_order,
-               SUFLOAT loop_bw)
+SU_CONSTRUCTOR(
+    su_costas,
+    enum sigutils_costas_kind kind,
+    SUFLOAT fhint,
+    SUFLOAT arm_bw,
+    unsigned int arm_order,
+    SUFLOAT loop_bw)
 {
   SUFLOAT *b = NULL;
   SUFLOAT *a = NULL;
@@ -135,12 +136,13 @@ SU_CONSTRUCTOR(su_costas,
       b[i] *= scaling;
   }
 
-  SU_TRY_FAIL(__su_iir_filt_init(&self->af,
-                                 a == NULL ? 0 : arm_order,
-                                 a,
-                                 arm_order,
-                                 b,
-                                 SU_FALSE));
+  SU_TRY_FAIL(__su_iir_filt_init(
+      &self->af,
+      a == NULL ? 0 : arm_order,
+      a,
+      arm_order,
+      b,
+      SU_FALSE));
 
   b = NULL;
   a = NULL;

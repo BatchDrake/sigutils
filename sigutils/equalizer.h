@@ -61,8 +61,9 @@ typedef struct sigutils_equalizer su_equalizer_t;
         0,                                 /* ptr */    \
   }
 
-SUBOOL su_equalizer_init(su_equalizer_t *eq,
-                         const struct sigutils_equalizer_params *params);
+SUBOOL su_equalizer_init(
+    su_equalizer_t *eq,
+    const struct sigutils_equalizer_params *params);
 
 void su_equalizer_reset(su_equalizer_t *eq);
 

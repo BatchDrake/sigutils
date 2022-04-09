@@ -27,11 +27,12 @@
 #include "sampling.h"
 
 /***************************** Pulse finder ***********************************/
-SU_INSTANCER(su_pulse_finder,
-             SUFLOAT base,
-             SUFLOAT peak,
-             SUSCOUNT len,
-             SUFLOAT tolerance)
+SU_INSTANCER(
+    su_pulse_finder,
+    SUFLOAT base,
+    SUFLOAT peak,
+    SUSCOUNT len,
+    SUFLOAT tolerance)
 {
   su_pulse_finder_t *new = NULL;
   SUFLOAT *coef = NULL;
@@ -44,12 +45,13 @@ SU_INSTANCER(su_pulse_finder,
   for (i = 0; i < len; ++i)
     coef[i] = peak - base;
 
-  SU_CONSTRUCT_FAIL(su_iir_filt,
-                    &new->corr,
-                    0,    /* y_size */
-                    NULL, /* y_coef */
-                    len,  /* x_size */
-                    coef /* x_coef */);
+  SU_CONSTRUCT_FAIL(
+      su_iir_filt,
+      &new->corr,
+      0,    /* y_size */
+      NULL, /* y_coef */
+      len,  /* x_size */
+      coef /* x_coef */);
 
   new->base = base;
   new->peak_thr = (peak - base) * (peak - base) * len *(1 - tolerance);
@@ -121,8 +123,9 @@ SU_COLLECTOR(su_pulse_finder)
 
 /***************************** TV Processor ***********************************/
 void
-su_tv_processor_params_ntsc(struct sigutils_tv_processor_params *self,
-                            SUFLOAT samp_rate)
+su_tv_processor_params_ntsc(
+    struct sigutils_tv_processor_params *self,
+    SUFLOAT samp_rate)
 {
   self->enable_sync = SU_TRUE;
   self->reverse = SU_FALSE;
@@ -159,8 +162,9 @@ su_tv_processor_params_ntsc(struct sigutils_tv_processor_params *self,
 }
 
 void
-su_tv_processor_params_pal(struct sigutils_tv_processor_params *self,
-                           SUFLOAT samp_rate)
+su_tv_processor_params_pal(
+    struct sigutils_tv_processor_params *self,
+    SUFLOAT samp_rate)
 {
   self->enable_sync = SU_TRUE;
   self->reverse = SU_FALSE;
@@ -196,8 +200,9 @@ su_tv_processor_params_pal(struct sigutils_tv_processor_params *self,
       1e3; /* Time constant for horizontal adjustment */
 }
 
-SU_INSTANCER(su_tv_frame_buffer,
-             const struct sigutils_tv_processor_params *params)
+SU_INSTANCER(
+    su_tv_frame_buffer,
+    const struct sigutils_tv_processor_params *params)
 {
   su_tv_frame_buffer_t *new = NULL;
 
@@ -286,10 +291,11 @@ SU_GETTER(su_tv_processor, SUSCOUNT, get_line)
     return self->field_y;
 }
 
-SU_METHOD(su_tv_processor,
-          SUBOOL,
-          set_params,
-          const struct sigutils_tv_processor_params *params)
+SU_METHOD(
+    su_tv_processor,
+    SUBOOL,
+    set_params,
+    const struct sigutils_tv_processor_params *params)
 {
   SUFLOAT *line_buffer = NULL;
   SUFLOAT *tmp = NULL;
@@ -315,9 +321,10 @@ SU_METHOD(su_tv_processor,
       if (self->delay_line == NULL) {
         memset(line_buffer, 0, sizeof(SUFLOAT) * delay_line_len);
       } else if (delay_line_len > self->delay_line_len) {
-        memset(line_buffer + self->delay_line_len,
-               0,
-               sizeof(SUFLOAT) * (delay_line_len - self->delay_line_len));
+        memset(
+            line_buffer + self->delay_line_len,
+            0,
+            sizeof(SUFLOAT) * (delay_line_len - self->delay_line_len));
       }
     } else {
       line_buffer = self->delay_line;
@@ -427,10 +434,11 @@ fail:
 }
 
 SUINLINE
-SU_GETTER(su_tv_processor,
-          SUBOOL,
-          frame_buffer_is_valid,
-          const struct sigutils_tv_frame_buffer *fb)
+SU_GETTER(
+    su_tv_processor,
+    SUBOOL,
+    frame_buffer_is_valid,
+    const struct sigutils_tv_frame_buffer *fb)
 {
   return fb->width == self->delay_line_len
          && fb->height == self->params.frame_lines;
@@ -474,8 +482,9 @@ SU_METHOD(su_tv_processor, SUBOOL, assert_current_frame)
 
   if (self->current == NULL) {
     if ((self->current = su_tv_processor_take_from_pool(self)) == NULL) {
-      SU_TRYCATCH(self->current = su_tv_frame_buffer_new(&self->params),
-                  return SU_FALSE);
+      SU_TRYCATCH(
+          self->current = su_tv_frame_buffer_new(&self->params),
+          return SU_FALSE);
     }
   }
 
@@ -680,10 +689,9 @@ SU_METHOD(su_tv_processor, SUBOOL, do_vsync, SUSCOUNT vsync_len)
      * This marks the beginning of a vsync pulse train
      */
     self->vsync_counter = 1;
-  } else if (sufreleq(last_vsync_age,
-                      self->est_line_len / 2,
-                      2 * self->params.t_tol)
-             && self->vsync_counter > 0) {
+  } else if (
+      sufreleq(last_vsync_age, self->est_line_len / 2, 2 * self->params.t_tol)
+      && self->vsync_counter > 0) {
     /*
      * Last vsync found half a line ago, and we stared counting. Increase
      * the counter.

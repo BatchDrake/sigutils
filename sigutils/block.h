@@ -73,18 +73,20 @@ SU_DESTRUCTOR(su_stream);
 
 SU_METHOD(su_stream, void, write, const SUCOMPLEX *data, SUSCOUNT size);
 SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size);
-SU_GETTER(su_stream,
-          SUSCOUNT,
-          get_contiguous,
-          SUCOMPLEX **start,
-          SUSCOUNT size);
+SU_GETTER(
+    su_stream,
+    SUSCOUNT,
+    get_contiguous,
+    SUCOMPLEX **start,
+    SUSCOUNT size);
 SU_GETTER(su_stream, su_off_t, tell);
-SU_GETTER(su_stream,
-          SUSDIFF,
-          read,
-          su_off_t off,
-          SUCOMPLEX *data,
-          SUSCOUNT size);
+SU_GETTER(
+    su_stream,
+    SUSDIFF,
+    read,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size);
 
 /**************************** DEPRECATED API ********************************/
 struct sigutils_block;
@@ -191,22 +193,26 @@ su_block_port_t *su_block_get_port(const su_block_t *, unsigned int);
 
 su_stream_t *su_block_get_stream(const su_block_t *, unsigned int);
 
-SUBOOL su_block_plug(su_block_t *source,
-                     unsigned int out_id,
-                     unsigned int in_id,
-                     su_block_t *sink);
+SUBOOL su_block_plug(
+    su_block_t *source,
+    unsigned int out_id,
+    unsigned int in_id,
+    su_block_t *sink);
 
-su_property_t *su_block_lookup_property(const su_block_t *block,
-                                        const char *name);
+su_property_t *su_block_lookup_property(
+    const su_block_t *block,
+    const char *name);
 
-void *su_block_get_property_ref(const su_block_t *block,
-                                su_property_type_t type,
-                                const char *name);
+void *su_block_get_property_ref(
+    const su_block_t *block,
+    su_property_type_t type,
+    const char *name);
 
-SUBOOL su_block_set_property_ref(su_block_t *block,
-                                 su_property_type_t type,
-                                 const char *name,
-                                 void *ptr);
+SUBOOL su_block_set_property_ref(
+    su_block_t *block,
+    su_property_type_t type,
+    const char *name,
+    void *ptr);
 
 void su_block_destroy(su_block_t *);
 
@@ -228,13 +234,15 @@ void su_block_port_unplug(su_block_port_t *port);
 
 SUBOOL su_block_force_eos(const su_block_t *block, unsigned int id);
 
-SUBOOL su_block_set_flow_controller(su_block_t *block,
-                                    unsigned int port_id,
-                                    enum sigutils_flow_controller_kind kind);
+SUBOOL su_block_set_flow_controller(
+    su_block_t *block,
+    unsigned int port_id,
+    enum sigutils_flow_controller_kind kind);
 
-SUBOOL su_block_set_master_port(su_block_t *block,
-                                unsigned int port_id,
-                                const su_block_port_t *port);
+SUBOOL su_block_set_master_port(
+    su_block_t *block,
+    unsigned int port_id,
+    const su_block_port_t *port);
 
 /* su_block_class operations */
 SUBOOL su_block_class_register(struct sigutils_block_class *classname);

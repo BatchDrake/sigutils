@@ -64,26 +64,30 @@ typedef struct sigutils_property_set su_property_set_t;
 const char *su_property_type_to_string(su_property_type_t type);
 
 /* Property API */
-su_property_t *su_property_new(const char *name,
-                               su_property_type_t type,
-                               SUBOOL mandatory,
-                               void *p);
+su_property_t *su_property_new(
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory,
+    void *p);
 
 /* Property set API */
 void su_property_set_init(su_property_set_t *set);
-su_property_t *su_property_set_lookup(const su_property_set_t *set,
-                                      const char *name);
-su_property_t *su_property_set_assert_property(su_property_set_t *set,
-                                               const char *name,
-                                               su_property_type_t type);
+su_property_t *su_property_set_lookup(
+    const su_property_set_t *set,
+    const char *name);
+su_property_t *su_property_set_assert_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type);
 su_property_t *su_property_set_assert_mandatory_property(
     su_property_set_t *set,
     const char *name,
     su_property_type_t type);
-su_property_t *__su_property_set_assert_property(su_property_set_t *set,
-                                                 const char *name,
-                                                 su_property_type_t type,
-                                                 SUBOOL mandatory);
+su_property_t *__su_property_set_assert_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory);
 
 void su_property_set_finalize(su_property_set_t *set);
 

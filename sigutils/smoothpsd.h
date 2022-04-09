@@ -87,21 +87,21 @@ SU_GETTER(su_smoothpsd, SUFLOAT *, get_last_psd)
   return self->realfft;
 }
 
-SU_INSTANCER(su_smoothpsd,
-             const struct sigutils_smoothpsd_params *params,
-             SUBOOL (*psd_func)(void *userdata,
-                                const SUFLOAT *psd,
-                                unsigned int size),
-             void *userdata);
+SU_INSTANCER(
+    su_smoothpsd,
+    const struct sigutils_smoothpsd_params *params,
+    SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size),
+    void *userdata);
 
 SU_COLLECTOR(su_smoothpsd);
 
 SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size);
 
-SU_METHOD(su_smoothpsd,
-          SUBOOL,
-          set_params,
-          const struct sigutils_smoothpsd_params *params);
+SU_METHOD(
+    su_smoothpsd,
+    SUBOOL,
+    set_params,
+    const struct sigutils_smoothpsd_params *params);
 
 #ifdef __cplusplus
 }

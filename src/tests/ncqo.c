@@ -48,9 +48,9 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_i(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
-                    0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
       SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));
@@ -59,9 +59,9 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_q(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
-                    0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
       SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
@@ -73,9 +73,9 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_i(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
-                    0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
       SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
@@ -84,9 +84,9 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_q(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
-                    0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
       SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));

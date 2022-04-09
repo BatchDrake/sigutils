@@ -139,12 +139,14 @@ __su_ncqo_populate_precalc_buffer(su_ncqo_t *ncqo)
 #else
     if ((i & SU_VOLK_CALL_STRIDE_MASK) == SU_VOLK_CALL_STRIDE_MASK) {
       p = i & ~SU_VOLK_CALL_STRIDE_MASK;
-      volk_32f_sin_32f(ncqo->sin_buffer + p,
-                       ncqo->phi_buffer + p,
-                       SU_VOLK_CALL_STRIDE);
-      volk_32f_cos_32f(ncqo->cos_buffer + p,
-                       ncqo->phi_buffer + p,
-                       SU_VOLK_CALL_STRIDE);
+      volk_32f_sin_32f(
+          ncqo->sin_buffer + p,
+          ncqo->phi_buffer + p,
+          SU_VOLK_CALL_STRIDE);
+      volk_32f_cos_32f(
+          ncqo->cos_buffer + p,
+          ncqo->phi_buffer + p,
+          SU_VOLK_CALL_STRIDE);
     }
 #endif /* SU_USE_VOLK */
     __su_ncqo_step(ncqo);

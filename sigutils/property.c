@@ -111,31 +111,35 @@ su_property_type_to_string(su_property_type_t type)
 }
 
 su_property_t *
-__su_property_set_assert_property(su_property_set_t *set,
-                                  const char *name,
-                                  su_property_type_t type,
-                                  SUBOOL mandatory)
+__su_property_set_assert_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory)
 {
   su_property_t *prop = NULL;
 
   if ((prop = su_property_set_lookup(set, name)) == NULL) {
     if ((prop = su_property_new(name, type, mandatory, NULL)) == NULL) {
-      SU_ERROR("failed to create new %s property",
-               su_property_type_to_string(type));
+      SU_ERROR(
+          "failed to create new %s property",
+          su_property_type_to_string(type));
       return NULL;
     }
 
     if (PTR_LIST_APPEND_CHECK(set->property, prop) == -1) {
-      SU_ERROR("failed to append new %s property",
-               su_property_type_to_string(type));
+      SU_ERROR(
+          "failed to append new %s property",
+          su_property_type_to_string(type));
       su_property_destroy(prop);
       return NULL;
     }
   } else if (prop->type != type) {
-    SU_ERROR("property `%s' found, mismatching type (req: %s, found: %s)\n",
-             name,
-             su_property_type_to_string(type),
-             su_property_type_to_string(prop->type));
+    SU_ERROR(
+        "property `%s' found, mismatching type (req: %s, found: %s)\n",
+        name,
+        su_property_type_to_string(type),
+        su_property_type_to_string(prop->type));
     return NULL;
   }
 
@@ -143,17 +147,19 @@ __su_property_set_assert_property(su_property_set_t *set,
 }
 
 su_property_t *
-su_property_set_assert_property(su_property_set_t *set,
-                                const char *name,
-                                su_property_type_t type)
+su_property_set_assert_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type)
 {
   return __su_property_set_assert_property(set, name, type, SU_FALSE);
 }
 
 su_property_t *
-su_property_set_assert_mandatory_property(su_property_set_t *set,
-                                          const char *name,
-                                          su_property_type_t type)
+su_property_set_assert_mandatory_property(
+    su_property_set_t *set,
+    const char *name,
+    su_property_type_t type)
 {
   return __su_property_set_assert_property(set, name, type, SU_TRUE);
 }

@@ -257,45 +257,52 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
 SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params);
 SU_COLLECTOR(su_specttuner);
 
-SU_METHOD(su_specttuner,
-          SUSDIFF,
-          feed_bulk_single,
-          const SUCOMPLEX *__restrict buf,
-          SUSCOUNT size);
+SU_METHOD(
+    su_specttuner,
+    SUSDIFF,
+    feed_bulk_single,
+    const SUCOMPLEX *__restrict buf,
+    SUSCOUNT size);
 
-SU_METHOD(su_specttuner,
-          SUBOOL,
-          feed_bulk,
-          const SUCOMPLEX *__restrict buf,
-          SUSCOUNT size);
+SU_METHOD(
+    su_specttuner,
+    SUBOOL,
+    feed_bulk,
+    const SUCOMPLEX *__restrict buf,
+    SUSCOUNT size);
 
-SU_METHOD(su_specttuner,
-          su_specttuner_channel_t *,
-          open_channel,
-          const struct sigutils_specttuner_channel_params *params);
+SU_METHOD(
+    su_specttuner,
+    su_specttuner_channel_t *,
+    open_channel,
+    const struct sigutils_specttuner_channel_params *params);
 
-SU_METHOD(su_specttuner,
-          SUBOOL,
-          close_channel,
-          su_specttuner_channel_t *channel);
+SU_METHOD(
+    su_specttuner,
+    SUBOOL,
+    close_channel,
+    su_specttuner_channel_t *channel);
 
-SU_METHOD_CONST(su_specttuner,
-                void,
-                set_channel_freq,
-                su_specttuner_channel_t *channel,
-                SUFLOAT f0);
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    set_channel_freq,
+    su_specttuner_channel_t *channel,
+    SUFLOAT f0);
 
-SU_METHOD_CONST(su_specttuner,
-                void,
-                set_channel_delta_f,
-                su_specttuner_channel_t *channel,
-                SUFLOAT delta_f);
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    set_channel_delta_f,
+    su_specttuner_channel_t *channel,
+    SUFLOAT delta_f);
 
-SU_METHOD_CONST(su_specttuner,
-                SUBOOL,
-                set_channel_bandwidth,
-                su_specttuner_channel_t *channel,
-                SUFLOAT bw);
+SU_METHOD_CONST(
+    su_specttuner,
+    SUBOOL,
+    set_channel_bandwidth,
+    su_specttuner_channel_t *channel,
+    SUFLOAT bw);
 
 #ifdef __cplusplus
 #ifdef __clang__

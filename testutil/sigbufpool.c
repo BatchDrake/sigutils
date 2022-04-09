@@ -150,10 +150,11 @@ su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name)
 }
 
 SUPRIVATE void *
-su_sigbuf_pool_get(su_sigbuf_pool_t *pool,
-                   const char *name,
-                   SUSCOUNT size,
-                   SUBOOL is_complex)
+su_sigbuf_pool_get(
+    su_sigbuf_pool_t *pool,
+    const char *name,
+    SUSCOUNT size,
+    SUBOOL is_complex)
 {
   su_sigbuf_t *this;
   su_sigbuf_t *new = NULL;
@@ -204,17 +205,19 @@ su_sigbuf_pool_get_fs(const su_sigbuf_pool_t *pool)
 }
 
 SUFLOAT *
-su_sigbuf_pool_get_float(su_sigbuf_pool_t *pool,
-                         const char *name,
-                         SUSCOUNT size)
+su_sigbuf_pool_get_float(
+    su_sigbuf_pool_t *pool,
+    const char *name,
+    SUSCOUNT size)
 {
   return (SUFLOAT *)su_sigbuf_pool_get(pool, name, size, SU_FALSE);
 }
 
 SUCOMPLEX *
-su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool,
-                           const char *name,
-                           SUSCOUNT size)
+su_sigbuf_pool_get_complex(
+    su_sigbuf_pool_t *pool,
+    const char *name,
+    SUSCOUNT size)
 {
   return (SUCOMPLEX *)su_sigbuf_pool_get(pool, name, size, SU_TRUE);
 }
@@ -252,12 +255,13 @@ su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
   {
     allocation =
         this->size * (this->is_complex ? sizeof(SUCOMPLEX) : sizeof(SUFLOAT));
-    SU_INFO("[%2d] %-10s %-7s %8d %8d bytes\n",
-            ++i,
-            this->name,
-            this->is_complex ? "COMPLEX" : "FLOAT",
-            this->size,
-            allocation);
+    SU_INFO(
+        "[%2d] %-10s %-7s %8d %8d bytes\n",
+        ++i,
+        this->name,
+        this->is_complex ? "COMPLEX" : "FLOAT",
+        this->size,
+        allocation);
 
     total += allocation;
   }

@@ -52,40 +52,46 @@ su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
   ok = SU_TRUE;
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "bnor",
-                                    &clock_detector->bnor);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bnor",
+           &clock_detector->bnor);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "bmax",
-                                    &clock_detector->bmax);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bmax",
+           &clock_detector->bmax);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "bmin",
-                                    &clock_detector->bmin);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bmin",
+           &clock_detector->bmin);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "alpha",
-                                    &clock_detector->alpha);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "alpha",
+           &clock_detector->alpha);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "beta",
-                                    &clock_detector->beta);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "beta",
+           &clock_detector->beta);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "gain",
-                                    &clock_detector->gain);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "gain",
+           &clock_detector->gain);
 
 done:
   if (!ok) {
@@ -113,10 +119,11 @@ su_block_cdr_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_cdr_acquire(void *priv,
-                     su_stream_t *out,
-                     unsigned int port_id,
-                     su_block_port_t *in)
+su_block_cdr_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_clock_detector_t *clock_detector;
   SUSDIFF size;

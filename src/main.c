@@ -62,25 +62,33 @@ help(const char *argv0)
       "to run. If neither test_start nor test_end is passed, all tests will\n"
       "be executed\n\n");
   fprintf(stderr, "Options:\n\n");
-  fprintf(stderr,
-          "     -d, --dump            Dump tests results as MATLAB files\n");
-  fprintf(stderr,
-          "     -w, --wav             Dump tests results as WAV files\n");
-  fprintf(stderr,
-          "     -R, --raw             Dump tests results as raw (I/Q) files\n");
-  fprintf(stderr,
-          "     -c, --count           Print number of tests and exit\n");
-  fprintf(stderr,
-          "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
-  fprintf(stderr,
-          "                           tests. Default is %d samples\n",
-          SU_TEST_SIGNAL_BUFFER_SIZE);
-  fprintf(stderr,
-          "     -r, --sample-rate=r   For WAV files, set the sampling "
-          "frequency.\n");
-  fprintf(stderr,
-          "                           Default is %d samples per second\n",
-          SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
+  fprintf(
+      stderr,
+      "     -d, --dump            Dump tests results as MATLAB files\n");
+  fprintf(
+      stderr,
+      "     -w, --wav             Dump tests results as WAV files\n");
+  fprintf(
+      stderr,
+      "     -R, --raw             Dump tests results as raw (I/Q) files\n");
+  fprintf(
+      stderr,
+      "     -c, --count           Print number of tests and exit\n");
+  fprintf(
+      stderr,
+      "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
+  fprintf(
+      stderr,
+      "                           tests. Default is %d samples\n",
+      SU_TEST_SIGNAL_BUFFER_SIZE);
+  fprintf(
+      stderr,
+      "     -r, --sample-rate=r   For WAV files, set the sampling "
+      "frequency.\n");
+  fprintf(
+      stderr,
+      "                           Default is %d samples per second\n",
+      SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
   fprintf(
       stderr,
       "     -l, --list            Provides a list of available unit tests\n");
@@ -99,9 +107,10 @@ version(void)
   fprintf(stderr, "pkgversion: %s\n\n", sigutils_pkgversion());
 
   fprintf(stderr, "Copyright © 2020 Gonzalo José Carracedo Carballal\n");
-  fprintf(stderr,
-          "License GPLv3+: GNU GPL version 3 or later "
-          "<http://gnu.org/licenses/gpl.html>\n");
+  fprintf(
+      stderr,
+      "License GPLv3+: GNU GPL version 3 or later "
+      "<http://gnu.org/licenses/gpl.html>\n");
 }
 
 SUPRIVATE void
@@ -207,10 +216,11 @@ main(int argc, char *argv[])
 
   if (argc - optind >= 1) {
     if (sscanf(argv[optind++], "%u", &test_start) < 1) {
-      fprintf(stderr,
-              "%s: invalid test start `%s'\n",
-              argv[0],
-              argv[optind - 1]);
+      fprintf(
+          stderr,
+          "%s: invalid test start `%s'\n",
+          argv[0],
+          argv[optind - 1]);
       exit(EXIT_FAILURE);
     }
 
@@ -230,11 +240,12 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  result = su_test_run(test_list,
-                       test_count,
-                       SU_MIN(test_start, test_count - 1),
-                       SU_MIN(test_end, test_count - 1),
-                       &params);
+  result = su_test_run(
+      test_list,
+      test_count,
+      SU_MIN(test_start, test_count - 1),
+      SU_MIN(test_end, test_count - 1),
+      &params);
 
   return !result;
 }

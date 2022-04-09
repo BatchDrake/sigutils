@@ -36,8 +36,9 @@ su_diff_codec_ctor(su_codec_t *codec, void **private, va_list ap)
 {
   struct su_diff_codec_state *new;
 
-  SU_TRYCATCH(new = malloc(sizeof(struct su_diff_codec_state)),
-              return SU_FALSE);
+  SU_TRYCATCH(
+      new = malloc(sizeof(struct su_diff_codec_state)),
+      return SU_FALSE);
 
   new->sign = va_arg(ap, SUBOOL);
   new->prev = SU_NOSYMBOL;
@@ -74,10 +75,10 @@ su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
-      y = SU_TOSYM(
-          su_diff_codec_int(state, /* Encode == Ambiguously integrate */
-                            SU_FROMSYM(state->prev),
-                            SU_FROMSYM(x)));
+      y = SU_TOSYM(su_diff_codec_int(
+          state, /* Encode == Ambiguously integrate */
+          SU_FROMSYM(state->prev),
+          SU_FROMSYM(x)));
 
     } else {
       y = x;
@@ -100,10 +101,10 @@ su_diff_codec_decode(su_codec_t *codec, void *private, SUSYMBOL x)
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
-      y = SU_TOSYM(
-          su_diff_codec_diff(state, /* Decode == Unambiguously differentiate */
-                             SU_FROMSYM(state->prev),
-                             SU_FROMSYM(x)));
+      y = SU_TOSYM(su_diff_codec_diff(
+          state, /* Decode == Unambiguously differentiate */
+          SU_FROMSYM(state->prev),
+          SU_FROMSYM(x)));
     } else {
       y = SU_NOSYMBOL;
     }

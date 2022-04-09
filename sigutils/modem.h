@@ -101,16 +101,19 @@ su_modem_property_t *su_modem_property_set_assert_property(
     const char *name,
     su_property_type_t type);
 
-ssize_t su_modem_property_set_marshall(const su_modem_property_set_t *set,
-                                       void *buffer,
-                                       size_t buffer_size);
+ssize_t su_modem_property_set_marshall(
+    const su_modem_property_set_t *set,
+    void *buffer,
+    size_t buffer_size);
 
-ssize_t su_modem_property_set_unmarshall(su_modem_property_set_t *dest,
-                                         const void *buffer,
-                                         size_t buffer_size);
+ssize_t su_modem_property_set_unmarshall(
+    su_modem_property_set_t *dest,
+    const void *buffer,
+    size_t buffer_size);
 
-SUBOOL su_modem_property_set_copy(su_modem_property_set_t *dest,
-                                  const su_modem_property_set_t *src);
+SUBOOL su_modem_property_set_copy(
+    su_modem_property_set_t *dest,
+    const su_modem_property_set_t *src);
 
 void su_modem_property_set_finalize(su_modem_property_set_t *set);
 
@@ -125,18 +128,21 @@ SUBOOL su_modem_register_block(su_modem_t *modem, su_block_t *block);
 
 SUBOOL su_modem_plug_to_source(su_modem_t *modem, su_block_t *first);
 
-SUBOOL su_modem_expose_state_property(su_modem_t *modem,
-                                      const char *name,
-                                      su_property_type_t type,
-                                      SUBOOL mandatory,
-                                      void *ptr);
+SUBOOL su_modem_expose_state_property(
+    su_modem_t *modem,
+    const char *name,
+    su_property_type_t type,
+    SUBOOL mandatory,
+    void *ptr);
 
-void *su_modem_get_state_property_ref(const su_modem_t *modem,
-                                      const char *name,
-                                      su_property_type_t type);
+void *su_modem_get_state_property_ref(
+    const su_modem_t *modem,
+    const char *name,
+    su_property_type_t type);
 
-SUBOOL su_modem_load_state_property(su_modem_t *modem,
-                                    const su_modem_property_t *prop);
+SUBOOL su_modem_load_state_property(
+    su_modem_t *modem,
+    const su_modem_property_t *prop);
 SUBOOL su_modem_load_all_state_properties(su_modem_t *modem);
 SUBOOL su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val);
 SUBOOL su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val);
@@ -144,19 +150,22 @@ SUBOOL su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val);
 SUBOOL su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val);
 SUBOOL su_modem_set_ptr(su_modem_t *modem, const char *name, void *);
 
-const su_modem_property_t *su_modem_property_lookup(const su_modem_t *modem,
-                                                    const char *name);
+const su_modem_property_t *su_modem_property_lookup(
+    const su_modem_t *modem,
+    const char *name);
 
 const su_modem_property_t *su_modem_property_lookup_typed(
     const su_modem_t *modem,
     const char *name,
     su_property_type_t type);
 
-SUBOOL su_modem_set_properties(su_modem_t *modem,
-                               const su_modem_property_set_t *set);
+SUBOOL su_modem_set_properties(
+    su_modem_t *modem,
+    const su_modem_property_set_t *set);
 
-SUBOOL su_modem_get_properties(const su_modem_t *modem,
-                               su_modem_property_set_t *set);
+SUBOOL su_modem_get_properties(
+    const su_modem_t *modem,
+    su_modem_property_set_t *set);
 
 SUBOOL su_modem_start(su_modem_t *modem);
 

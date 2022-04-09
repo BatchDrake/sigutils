@@ -129,11 +129,12 @@ su_log_severity_to_string(enum sigutils_log_severity sev)
 }
 
 void
-su_log(enum sigutils_log_severity sev,
-       const char *domain,
-       const char *function,
-       unsigned int line,
-       const char *message)
+su_log(
+    enum sigutils_log_severity sev,
+    const char *domain,
+    const char *function,
+    unsigned int line,
+    const char *message)
 {
   struct sigutils_log_message msg = sigutils_log_message_INITIALIZER;
 
@@ -158,12 +159,13 @@ su_log(enum sigutils_log_severity sev,
 }
 
 void
-su_logvprintf(enum sigutils_log_severity sev,
-              const char *domain,
-              const char *function,
-              unsigned int line,
-              const char *msgfmt,
-              va_list ap)
+su_logvprintf(
+    enum sigutils_log_severity sev,
+    const char *domain,
+    const char *function,
+    unsigned int line,
+    const char *msgfmt,
+    va_list ap)
 {
   char *msg = NULL;
 
@@ -184,12 +186,13 @@ done:
 }
 
 void
-su_logprintf(enum sigutils_log_severity sev,
-             const char *domain,
-             const char *function,
-             unsigned int line,
-             const char *msgfmt,
-             ...)
+su_logprintf(
+    enum sigutils_log_severity sev,
+    const char *domain,
+    const char *function,
+    unsigned int line,
+    const char *msgfmt,
+    ...)
 {
   va_list ap;
 

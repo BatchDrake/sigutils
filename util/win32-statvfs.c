@@ -28,11 +28,12 @@ statvfs(const char *restrict path, struct statvfs *restrict buf)
   DWORD BytesPerSector = 0;
   DWORD NumberOfFreeClusters = 0;
   DWORD TotalNumberOfClusters = 0;
-  int r = GetDiskFreeSpaceA(path,
-                            &SectorsPerCluster,
-                            &BytesPerSector,
-                            &NumberOfFreeClusters,
-                            &TotalNumberOfClusters);
+  int r = GetDiskFreeSpaceA(
+      path,
+      &SectorsPerCluster,
+      &BytesPerSector,
+      &NumberOfFreeClusters,
+      &TotalNumberOfClusters);
 
   buf->f_frsize = BytesPerSector * SectorsPerCluster;
   buf->f_bsize = buf->f_frsize;

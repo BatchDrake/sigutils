@@ -39,9 +39,10 @@
 #define SU_METHOD(class, ret, name, ...) \
   ret SU_METHOD_NAME(class, name)(SU_TYPENAME(class) * self, ##__VA_ARGS__)
 
-#define SU_METHOD_CONST(class, ret, name, ...)                     \
-  ret SU_METHOD_NAME(class, name)(const SU_TYPENAME(class) * self, \
-                                  ##__VA_ARGS__)
+#define SU_METHOD_CONST(class, ret, name, ...) \
+  ret SU_METHOD_NAME(class, name)(             \
+      const SU_TYPENAME(class) * self,         \
+      ##__VA_ARGS__)
 
 #define SU_GETTER SU_METHOD_CONST
 
@@ -63,19 +64,21 @@
 #define SU_COLLECTOR(class) \
   void SU_METHOD_NAME(class, destroy)(SU_TYPENAME(class) * self)
 
-#define SU_ALLOCATE_MANY_CATCH(dest, len, type, action)        \
-  if ((dest = su_calloc(len, sizeof(type))) == NULL) {         \
-    SU_ERROR("failed to allocate %d objects of type \"%s\"\n", \
-             len,                                              \
-             STRINGIFY(type));                                 \
-    action;                                                    \
+#define SU_ALLOCATE_MANY_CATCH(dest, len, type, action)   \
+  if ((dest = su_calloc(len, sizeof(type))) == NULL) {    \
+    SU_ERROR(                                             \
+        "failed to allocate %d objects of type \"%s\"\n", \
+        len,                                              \
+        STRINGIFY(type));                                 \
+    action;                                               \
   }
 
-#define SU_ALLOCATE_CATCH(dest, type, action)                  \
-  if ((dest = su_calloc(1, sizeof(type))) == NULL) {           \
-    SU_ERROR("failed to allocate one object of type \"%s\"\n", \
-             STRINGIFY(type));                                 \
-    action;                                                    \
+#define SU_ALLOCATE_CATCH(dest, type, action)             \
+  if ((dest = su_calloc(1, sizeof(type))) == NULL) {      \
+    SU_ERROR(                                             \
+        "failed to allocate one object of type \"%s\"\n", \
+        STRINGIFY(type));                                 \
+    action;                                               \
   }
 
 #define SU_MAKE_CATCH(dest, class, action, ...)                                \
@@ -84,23 +87,25 @@
     action;                                                                    \
   }
 
-#define SU_CONSTRUCT_CATCH(class, dest, action, arg...)      \
-  if (!JOIN(class, _init)(dest, ##arg)) {                    \
-    SU_ERROR("failed to call constructor of class \"%s\"\n", \
-             STRINGIFY(class));                              \
-    action;                                                  \
+#define SU_CONSTRUCT_CATCH(class, dest, action, arg...) \
+  if (!JOIN(class, _init)(dest, ##arg)) {               \
+    SU_ERROR(                                           \
+        "failed to call constructor of class \"%s\"\n", \
+        STRINGIFY(class));                              \
+    action;                                             \
   }
 
 #define SU_DESTRUCT(class, dest) JOIN(class, _finalize)(dest)
 #define SU_DISPOSE(class, dest) JOIN(class, _destroy)(dest)
 
-#define SU_TRYCATCH(expr, action)             \
-  if (!(expr)) {                              \
-    SU_ERROR("exception in \"%s\" (%s:%d)\n", \
-             STRINGIFY(expr),                 \
-             __FILENAME__,                    \
-             __LINE__);                       \
-    action;                                   \
+#define SU_TRYCATCH(expr, action)        \
+  if (!(expr)) {                         \
+    SU_ERROR(                            \
+        "exception in \"%s\" (%s:%d)\n", \
+        STRINGIFY(expr),                 \
+        __FILENAME__,                    \
+        __LINE__);                       \
+    action;                              \
   }
 
 /* Macros for "goto done" style error recovery */

@@ -143,9 +143,10 @@ su_apt_decoder_t *su_apt_decoder_new(
     SUFLOAT fs,
     const struct sigutils_apt_decoder_callbacks *);
 
-SUBOOL su_apt_decoder_feed(su_apt_decoder_t *self,
-                           const SUCOMPLEX *buffer,
-                           SUSCOUNT count);
+SUBOOL su_apt_decoder_feed(
+    su_apt_decoder_t *self,
+    const SUCOMPLEX *buffer,
+    SUSCOUNT count);
 
 void su_apt_decoder_clear_image(su_apt_decoder_t *self);
 

@@ -127,10 +127,11 @@ __su_iir_filt_eval(const su_iir_filt_t *filt)
 
   if (filt->y_size > 0) {
 #ifdef SU_USE_VOLK
-    volk_32fc_32f_dot_prod_32fc(&y_tmp,
-                                filt->y + filt->y_ptr,
-                                filt->a + 1,
-                                filt->y_size - 1);
+    volk_32fc_32f_dot_prod_32fc(
+        &y_tmp,
+        filt->y + filt->y_ptr,
+        filt->a + 1,
+        filt->y_size - 1);
 
     y -= y_tmp;
 
@@ -180,10 +181,11 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
 }
 
 void
-su_iir_filt_feed_bulk(su_iir_filt_t *filt,
-                      const SUCOMPLEX *__restrict x,
-                      SUCOMPLEX *__restrict y,
-                      SUSCOUNT len)
+su_iir_filt_feed_bulk(
+    su_iir_filt_t *filt,
+    const SUCOMPLEX *__restrict x,
+    SUCOMPLEX *__restrict y,
+    SUSCOUNT len)
 {
   SUCOMPLEX tmp_y = 0;
 
@@ -220,12 +222,13 @@ su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
 }
 
 SUBOOL
-__su_iir_filt_init(su_iir_filt_t *filt,
-                   SUSCOUNT y_size,
-                   SUFLOAT *__restrict a,
-                   SUSCOUNT x_size,
-                   SUFLOAT *__restrict b,
-                   SUBOOL copy_coef)
+__su_iir_filt_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT y_size,
+    SUFLOAT *__restrict a,
+    SUSCOUNT x_size,
+    SUFLOAT *__restrict b,
+    SUBOOL copy_coef)
 {
   SUCOMPLEX *x = NULL;
   SUCOMPLEX *y = NULL;
@@ -311,18 +314,20 @@ fail:
 }
 
 SUBOOL
-su_iir_filt_init(su_iir_filt_t *filt,
-                 SUSCOUNT y_size,
-                 const SUFLOAT *__restrict a,
-                 SUSCOUNT x_size,
-                 const SUFLOAT *__restrict b)
+su_iir_filt_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT y_size,
+    const SUFLOAT *__restrict a,
+    SUSCOUNT x_size,
+    const SUFLOAT *__restrict b)
 {
-  return __su_iir_filt_init(filt,
-                            y_size,
-                            (SUFLOAT *)a,
-                            x_size,
-                            (SUFLOAT *)b,
-                            SU_TRUE);
+  return __su_iir_filt_init(
+      filt,
+      y_size,
+      (SUFLOAT *)a,
+      x_size,
+      (SUFLOAT *)b,
+      SU_TRUE);
 }
 
 SUBOOL
@@ -482,10 +487,11 @@ fail:
 }
 
 SUBOOL
-su_iir_brickwall_bp_init(su_iir_filt_t *filt,
-                         SUSCOUNT n,
-                         SUFLOAT bw,
-                         SUFLOAT ifnor)
+su_iir_brickwall_bp_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor)
 {
   SUFLOAT *b = NULL;
 

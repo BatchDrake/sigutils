@@ -328,15 +328,17 @@ strlist_new(void)
 void
 strlist_append_string(struct strlist *list, const char *string)
 {
-  ptr_list_append((void ***)&list->strings_list,
-                  &list->strings_count,
-                  xstrdup(string));
+  ptr_list_append(
+      (void ***)&list->strings_list,
+      &list->strings_count,
+      xstrdup(string));
 }
 
 void
-strlist_walk(struct strlist *list,
-             void *data,
-             void (*walk)(const char *, void *))
+strlist_walk(
+    struct strlist *list,
+    void *data,
+    void (*walk)(const char *, void *))
 {
   unsigned int i;
 
@@ -420,8 +422,9 @@ al_append_argument(arg_list_t *al, const char *arg)
 
   ptr = (char *)xstrdup(arg);
 
-  argl = (char **)xrealloc((void *)al->al_argv,
-                           sizeof(char *) * (al->al_argc + 1));
+  argl = (char **)xrealloc(
+      (void *)al->al_argv,
+      sizeof(char *) * (al->al_argc + 1));
 
   argl[al->al_argc++] = ptr;
   al->al_argv = argl;

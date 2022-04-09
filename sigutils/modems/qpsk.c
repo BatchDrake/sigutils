@@ -80,31 +80,34 @@ su_qpsk_modem_dtor(void *private)
   }
 
 #define SU_QPSK_MODEM_INT_PROPERTY(dest, name)                               \
-  if (!su_modem_expose_state_property(modem,                                 \
-                                      name,                                  \
-                                      SU_PROPERTY_TYPE_INTEGER,              \
-                                      SU_TRUE,                               \
-                                      &dest)) {                              \
+  if (!su_modem_expose_state_property(                                       \
+          modem,                                                             \
+          name,                                                              \
+          SU_PROPERTY_TYPE_INTEGER,                                          \
+          SU_TRUE,                                                           \
+          &dest)) {                                                          \
     SU_ERROR("cannot initialize modem: can't expose `%s' property\n", name); \
     goto fail;                                                               \
   }
 
 #define SU_QPSK_MODEM_FLOAT_PROPERTY(dest, name)                             \
-  if (!su_modem_expose_state_property(modem,                                 \
-                                      name,                                  \
-                                      SU_PROPERTY_TYPE_FLOAT,                \
-                                      SU_TRUE,                               \
-                                      &dest)) {                              \
+  if (!su_modem_expose_state_property(                                       \
+          modem,                                                             \
+          name,                                                              \
+          SU_PROPERTY_TYPE_FLOAT,                                            \
+          SU_TRUE,                                                           \
+          &dest)) {                                                          \
     SU_ERROR("cannot initialize modem: can't expose `%s' property\n", name); \
     goto fail;                                                               \
   }
 
 #define SU_QPSK_MODEM_BOOL_PROPERTY(dest, name)                              \
-  if (!su_modem_expose_state_property(modem,                                 \
-                                      name,                                  \
-                                      SU_PROPERTY_TYPE_BOOL,                 \
-                                      SU_TRUE,                               \
-                                      &dest)) {                              \
+  if (!su_modem_expose_state_property(                                       \
+          modem,                                                             \
+          name,                                                              \
+          SU_PROPERTY_TYPE_BOOL,                                             \
+          SU_TRUE,                                                           \
+          &dest)) {                                                          \
     SU_ERROR("cannot initialize modem: can't expose `%s' property\n", name); \
     goto fail;                                                               \
   }
@@ -157,12 +160,13 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 
   SU_QPSK_MODEM_CREATE_BLOCK(
       new->costas_block,
-      su_block_new("costas",
-                   SU_COSTAS_KIND_QPSK,
-                   SU_ABS2NORM_FREQ(new->fs, new->fc),
-                   SU_ABS2NORM_FREQ(new->fs, new->arm_bw),
-                   SU_QPSK_MODEM_COSTAS_LOOP_ARM_FILTER_ORDER,
-                   SU_ABS2NORM_FREQ(new->fs, new->loop_bw)));
+      su_block_new(
+          "costas",
+          SU_COSTAS_KIND_QPSK,
+          SU_ABS2NORM_FREQ(new->fs, new->fc),
+          SU_ABS2NORM_FREQ(new->fs, new->arm_bw),
+          SU_QPSK_MODEM_COSTAS_LOOP_ARM_FILTER_ORDER,
+          SU_ABS2NORM_FREQ(new->fs, new->loop_bw)));
 
   SU_QPSK_MODEM_CREATE_BLOCK(
       new->rrc_block,
@@ -172,49 +176,56 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
           SU_T2N_FLOAT(new->fs, 1. / new->baud),
           new->rolloff));
 
-  SU_QPSK_MODEM_CREATE_BLOCK(new->cdr_block,
-                             su_block_new("cdr",
-                                          (SUFLOAT)1.,
-                                          SU_ABS2NORM_BAUD(new->fs, new->baud),
-                                          SU_QPSK_MODEM_SYMBOL_QUEUE_SIZE));
+  SU_QPSK_MODEM_CREATE_BLOCK(
+      new->cdr_block,
+      su_block_new(
+          "cdr",
+          (SUFLOAT)1.,
+          SU_ABS2NORM_BAUD(new->fs, new->baud),
+          SU_QPSK_MODEM_SYMBOL_QUEUE_SIZE));
 
   /* Expose some properties */
-  if ((new->fc_ref = su_block_get_property_ref(new->costas_block,
-                                               SU_PROPERTY_TYPE_FLOAT,
-                                               "f"))
+  if ((new->fc_ref = su_block_get_property_ref(
+           new->costas_block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "f"))
       == NULL) {
     SU_ERROR("Cannot find f property in Costas block\n");
     goto fail;
   }
 
   /* Tweak others properties */
-  if ((rrc_gain = su_block_get_property_ref(new->rrc_block,
-                                            SU_PROPERTY_TYPE_FLOAT,
-                                            "gain"))
+  if ((rrc_gain = su_block_get_property_ref(
+           new->rrc_block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "gain"))
       == NULL) {
     SU_ERROR("Cannot find gain property in RRC block\n");
     goto fail;
   }
 
-  if ((cdr_alpha = su_block_get_property_ref(new->cdr_block,
-                                             SU_PROPERTY_TYPE_FLOAT,
-                                             "alpha"))
+  if ((cdr_alpha = su_block_get_property_ref(
+           new->cdr_block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "alpha"))
       == NULL) {
     SU_ERROR("Cannot find alpha property in CDR block\n");
     goto fail;
   }
 
-  if ((cdr_beta = su_block_get_property_ref(new->cdr_block,
-                                            SU_PROPERTY_TYPE_FLOAT,
-                                            "beta"))
+  if ((cdr_beta = su_block_get_property_ref(
+           new->cdr_block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "beta"))
       == NULL) {
     SU_ERROR("Cannot find beta property in CDR block\n");
     goto fail;
   }
 
-  if ((costas_beta = su_block_get_property_ref(new->costas_block,
-                                               SU_PROPERTY_TYPE_FLOAT,
-                                               "beta"))
+  if ((costas_beta = su_block_get_property_ref(
+           new->costas_block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "beta"))
       == NULL) {
     SU_ERROR("Cannot find beta property in Costas block\n");
     goto fail;

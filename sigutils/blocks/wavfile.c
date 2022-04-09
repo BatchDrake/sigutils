@@ -68,9 +68,10 @@ su_wavfile_open(const char *path)
   }
 
   if (wav->info.channels > 2) {
-    SU_ERROR("Cannot open `%s': too many channels (%d)\n",
-             path,
-             wav->info.channels);
+    SU_ERROR(
+        "Cannot open `%s': too many channels (%d)\n",
+        path,
+        wav->info.channels);
     goto done;
   }
 
@@ -107,14 +108,16 @@ su_block_wavfile_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   wav->samp_rate = wav->info.samplerate;
 
-  if (!su_block_set_property_ref(block,
-                                 SU_PROPERTY_TYPE_INTEGER,
-                                 "samp_rate",
-                                 &wav->samp_rate)
-      || !su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_INTEGER,
-                                    "channels",
-                                    &wav->info.channels)) {
+  if (!su_block_set_property_ref(
+          block,
+          SU_PROPERTY_TYPE_INTEGER,
+          "samp_rate",
+          &wav->samp_rate)
+      || !su_block_set_property_ref(
+          block,
+          SU_PROPERTY_TYPE_INTEGER,
+          "channels",
+          &wav->info.channels)) {
     su_wavfile_close(wav);
     return SU_FALSE;
   }
@@ -135,10 +138,11 @@ su_block_wavfile_dtor(void *private)
  * right channel contains Q data.
  */
 SUPRIVATE SUSDIFF
-su_block_wavfile_acquire(void *priv,
-                         su_stream_t *out,
-                         unsigned int port_id,
-                         su_block_port_t *in)
+su_block_wavfile_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   struct su_wavfile *wav = (struct su_wavfile *)priv;
   SUSDIFF size;

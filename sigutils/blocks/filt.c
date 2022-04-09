@@ -48,10 +48,11 @@ su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
     goto done;
   }
 
-  ok = su_block_set_property_ref(block,
-                                 SU_PROPERTY_TYPE_FLOAT,
-                                 "gain",
-                                 &filt->gain);
+  ok = su_block_set_property_ref(
+      block,
+      SU_PROPERTY_TYPE_FLOAT,
+      "gain",
+      &filt->gain);
 
 done:
   if (!ok) {
@@ -79,10 +80,11 @@ su_block_rrc_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_rrc_acquire(void *priv,
-                     su_stream_t *out,
-                     unsigned int port_id,
-                     su_block_port_t *in)
+su_block_rrc_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_iir_filt_t *filt;
   SUSDIFF size;

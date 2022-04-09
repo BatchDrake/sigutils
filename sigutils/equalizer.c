@@ -72,8 +72,9 @@ su_equalizer_update_weights(su_equalizer_t *eq, SUCOMPLEX y)
 }
 
 SUBOOL
-su_equalizer_init(su_equalizer_t *eq,
-                  const struct sigutils_equalizer_params *params)
+su_equalizer_init(
+    su_equalizer_t *eq,
+    const struct sigutils_equalizer_params *params)
 {
   memset(eq, 0, sizeof(su_equalizer_t));
 

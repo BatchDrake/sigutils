@@ -168,10 +168,11 @@ su_block_siggen_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_siggen_acquire(void *priv,
-                        su_stream_t *out,
-                        unsigned int port_id,
-                        su_block_port_t *in)
+su_block_siggen_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   struct su_siggen_state *state = (struct su_siggen_state *)priv;
   SUSDIFF size;

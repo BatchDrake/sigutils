@@ -85,10 +85,11 @@ SU_DESTRUCTOR(su_clock_detector)
   su_stream_finalize(&self->sym_stream);
 }
 
-SU_CONSTRUCTOR(su_clock_detector,
-               SUFLOAT loop_gain,
-               SUFLOAT bhint,
-               SUSCOUNT bufsiz)
+SU_CONSTRUCTOR(
+    su_clock_detector,
+    SUFLOAT loop_gain,
+    SUFLOAT bhint,
+    SUSCOUNT bufsiz)
 {
   memset(self, 0, sizeof(su_clock_detector_t));
 

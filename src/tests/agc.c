@@ -31,12 +31,13 @@
 #include "test_param.h"
 
 SUPRIVATE SUBOOL
-su_test_check_peak(const su_test_context_t *ctx,
-                   const SUFLOAT *buffer,
-                   unsigned int size,
-                   unsigned int window,
-                   SUFLOAT peak_low,
-                   SUFLOAT peak_high)
+su_test_check_peak(
+    const su_test_context_t *ctx,
+    const SUFLOAT *buffer,
+    unsigned int size,
+    unsigned int window,
+    SUFLOAT peak_low,
+    SUFLOAT peak_high)
 {
   unsigned int i, j;
   SUFLOAT peak = 0;
@@ -99,10 +100,11 @@ su_test_agc_transient(su_test_context_t *ctx)
   }
 
   if (ctx->params->dump_fmt) {
-    SU_TEST_ASSERT(su_test_buffer_dump_matlab(buffer,
-                                              SU_TEST_SIGNAL_BUFFER_SIZE,
-                                              "spike.m",
-                                              "spike"));
+    SU_TEST_ASSERT(su_test_buffer_dump_matlab(
+        buffer,
+        SU_TEST_SIGNAL_BUFFER_SIZE,
+        "spike.m",
+        "spike"));
   }
 
   SU_TEST_TICK(ctx);
@@ -121,10 +123,11 @@ done:
 
   if (buffer != NULL) {
     if (ctx->params->dump_fmt) {
-      SU_TEST_ASSERT(su_test_buffer_dump_matlab(buffer,
-                                                SU_TEST_SIGNAL_BUFFER_SIZE,
-                                                "corrected.m",
-                                                "corrected"));
+      SU_TEST_ASSERT(su_test_buffer_dump_matlab(
+          buffer,
+          SU_TEST_SIGNAL_BUFFER_SIZE,
+          "corrected.m",
+          "corrected"));
     }
 
     free(buffer);
@@ -172,10 +175,11 @@ su_test_agc_steady_rising(su_test_context_t *ctx)
   }
 
   if (ctx->params->dump_fmt) {
-    SU_TEST_ASSERT(su_test_buffer_dump_matlab(buffer,
-                                              SU_TEST_SIGNAL_BUFFER_SIZE,
-                                              "steady.m",
-                                              "steady"));
+    SU_TEST_ASSERT(su_test_buffer_dump_matlab(
+        buffer,
+        SU_TEST_SIGNAL_BUFFER_SIZE,
+        "steady.m",
+        "steady"));
   }
 
   SU_TEST_TICK(ctx);
@@ -186,12 +190,13 @@ su_test_agc_steady_rising(su_test_context_t *ctx)
   }
 
   /* TODO: Improve levels */
-  SU_TEST_ASSERT(su_test_check_peak(ctx,
-                                    buffer,
-                                    SU_TEST_SIGNAL_BUFFER_SIZE,
-                                    2 * SU_TEST_AGC_WINDOW,
-                                    SU_AGC_RESCALE * 0.9,
-                                    SU_AGC_RESCALE * 1.1));
+  SU_TEST_ASSERT(su_test_check_peak(
+      ctx,
+      buffer,
+      SU_TEST_SIGNAL_BUFFER_SIZE,
+      2 * SU_TEST_AGC_WINDOW,
+      SU_AGC_RESCALE * 0.9,
+      SU_AGC_RESCALE * 1.1));
 
   ok = SU_TRUE;
 
@@ -202,10 +207,11 @@ done:
 
   if (buffer != NULL) {
     if (ctx->params->dump_fmt) {
-      SU_TEST_ASSERT(su_test_buffer_dump_matlab(buffer,
-                                                SU_TEST_SIGNAL_BUFFER_SIZE,
-                                                "corrected.m",
-                                                "corrected"));
+      SU_TEST_ASSERT(su_test_buffer_dump_matlab(
+          buffer,
+          SU_TEST_SIGNAL_BUFFER_SIZE,
+          "corrected.m",
+          "corrected"));
     }
 
     free(buffer);
@@ -262,12 +268,13 @@ su_test_agc_steady_falling(su_test_context_t *ctx)
   }
 
   /* TODO: Improve levels */
-  SU_TEST_ASSERT(su_test_check_peak(ctx,
-                                    input,
-                                    ctx->params->buffer_size,
-                                    2 * SU_TEST_AGC_WINDOW,
-                                    SU_AGC_RESCALE * 0.9,
-                                    SU_AGC_RESCALE * 1.1));
+  SU_TEST_ASSERT(su_test_check_peak(
+      ctx,
+      input,
+      ctx->params->buffer_size,
+      2 * SU_TEST_AGC_WINDOW,
+      SU_AGC_RESCALE * 0.9,
+      SU_AGC_RESCALE * 1.1));
 
   ok = SU_TRUE;
 

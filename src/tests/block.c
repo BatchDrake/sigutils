@@ -61,8 +61,8 @@ su_test_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_block_port_plug(&port, block, 0));
 
   /* Try to read (this must fail) */
-  SU_TEST_ASSERT(su_block_port_read(&port, &samp, 1)
-                 == SU_BLOCK_PORT_READ_ERROR_ACQUIRE);
+  SU_TEST_ASSERT(
+      su_block_port_read(&port, &samp, 1) == SU_BLOCK_PORT_READ_ERROR_ACQUIRE);
 
   ok = SU_TRUE;
 done:
@@ -221,22 +221,24 @@ su_test_block_flow_control(su_test_context_t *ctx)
   SU_TEST_ASSERT(readbuf_2 = su_test_ctx_getc(ctx, "thread2_buf"));
 
   /* Casts are mandatory here */
-  siggen_block = su_block_new("siggen",
-                              "sawtooth",
-                              (SUFLOAT)SU_TEST_BLOCK_SAWTOOTH_WIDTH,
-                              (SUSCOUNT)SU_TEST_BLOCK_SAWTOOTH_WIDTH,
-                              (SUSCOUNT)0,
-                              "null",
-                              (SUFLOAT)0,
-                              (SUSCOUNT)0,
-                              (SUSCOUNT)0);
+  siggen_block = su_block_new(
+      "siggen",
+      "sawtooth",
+      (SUFLOAT)SU_TEST_BLOCK_SAWTOOTH_WIDTH,
+      (SUSCOUNT)SU_TEST_BLOCK_SAWTOOTH_WIDTH,
+      (SUSCOUNT)0,
+      "null",
+      (SUFLOAT)0,
+      (SUSCOUNT)0,
+      (SUSCOUNT)0);
 
   SU_TEST_ASSERT(siggen_block != NULL);
 
   /* Set barrier flow controller in its only port */
-  SU_TEST_ASSERT(su_block_set_flow_controller(siggen_block,
-                                              0,
-                                              SU_FLOW_CONTROL_KIND_BARRIER));
+  SU_TEST_ASSERT(su_block_set_flow_controller(
+      siggen_block,
+      0,
+      SU_FLOW_CONTROL_KIND_BARRIER));
 
   /* Plug ports to siggen */
   SU_TEST_ASSERT(su_block_port_plug(&port_1, siggen_block, 0));
@@ -256,18 +258,22 @@ su_test_block_flow_control(su_test_context_t *ctx)
   thread_2_params.oddity = SU_TRUE;
 
   /* Spawn both threads */
-  SU_TEST_ASSERT(pthread_create(&thread_1,
-                                NULL,
-                                su_test_block_flow_control_reader_thread,
-                                &thread_1_params)
-                 != -1);
+  SU_TEST_ASSERT(
+      pthread_create(
+          &thread_1,
+          NULL,
+          su_test_block_flow_control_reader_thread,
+          &thread_1_params)
+      != -1);
   thread_1_running = SU_TRUE;
 
-  SU_TEST_ASSERT(pthread_create(&thread_2,
-                                NULL,
-                                su_test_block_flow_control_reader_thread,
-                                &thread_2_params)
-                 != -1);
+  SU_TEST_ASSERT(
+      pthread_create(
+          &thread_2,
+          NULL,
+          su_test_block_flow_control_reader_thread,
+          &thread_2_params)
+      != -1);
   thread_2_running = SU_TRUE;
 
   pthread_join(thread_1, NULL);
@@ -344,9 +350,10 @@ su_test_tuner(su_test_context_t *ctx)
   wav_block = su_block_new("wavfile", "test.wav");
   SU_TEST_ASSERT(wav_block != NULL);
 
-  samp_rate = su_block_get_property_ref(wav_block,
-                                        SU_PROPERTY_TYPE_INTEGER,
-                                        "samp_rate");
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
 
@@ -451,9 +458,10 @@ su_test_costas_block(su_test_context_t *ctx)
   wav_block = su_block_new("wavfile", "test.wav");
   SU_TEST_ASSERT(wav_block != NULL);
 
-  samp_rate = su_block_get_property_ref(wav_block,
-                                        SU_PROPERTY_TYPE_INTEGER,
-                                        "samp_rate");
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
 
@@ -462,18 +470,20 @@ su_test_costas_block(su_test_context_t *ctx)
   agc_block = su_block_new("agc", &agc_params);
   SU_TEST_ASSERT(agc_block != NULL);
 
-  costas_block = su_block_new("costas",
-                              SU_COSTAS_KIND_QPSK,
-                              SU_ABS2NORM_FREQ(*samp_rate, 900),
-                              SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
-                              arm_order,
-                              SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
+  costas_block = su_block_new(
+      "costas",
+      SU_COSTAS_KIND_QPSK,
+      SU_ABS2NORM_FREQ(*samp_rate, 900),
+      SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
+      arm_order,
+      SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
   SU_TEST_ASSERT(costas_block != NULL);
 
   f = su_block_get_property_ref(costas_block, SU_PROPERTY_TYPE_FLOAT, "f");
   SU_TEST_ASSERT(f != NULL);
-  SU_INFO("Costas loop created, initial frequency: %lg Hz\n",
-          SU_NORM2ABS_FREQ(*samp_rate, *f));
+  SU_INFO(
+      "Costas loop created, initial frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(*samp_rate, *f));
 
   /* Plug wav file directly to AGC (there should be a tuner before this) */
   SU_TEST_ASSERT(su_block_plug(wav_block, 0, 0, agc_block));
@@ -501,8 +511,9 @@ su_test_costas_block(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
-                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(
+      SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+      && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 
@@ -573,9 +584,10 @@ su_test_rrc_block(su_test_context_t *ctx)
   wav_block = su_block_new("wavfile", "test.wav");
   SU_TEST_ASSERT(wav_block != NULL);
 
-  samp_rate = su_block_get_property_ref(wav_block,
-                                        SU_PROPERTY_TYPE_INTEGER,
-                                        "samp_rate");
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
 
@@ -584,18 +596,20 @@ su_test_rrc_block(su_test_context_t *ctx)
   agc_block = su_block_new("agc", &agc_params);
   SU_TEST_ASSERT(agc_block != NULL);
 
-  rrc_block = su_block_new("rrc",
-                           (unsigned int)(4. * 8000. / (SUFLOAT)baud),
-                           SU_T2N_FLOAT(8000, 1. / 468),
-                           0.75);
+  rrc_block = su_block_new(
+      "rrc",
+      (unsigned int)(4. * 8000. / (SUFLOAT)baud),
+      SU_T2N_FLOAT(8000, 1. / 468),
+      0.75);
   SU_TEST_ASSERT(rrc_block != NULL);
 
-  costas_block = su_block_new("costas",
-                              SU_COSTAS_KIND_QPSK,
-                              SU_ABS2NORM_FREQ(*samp_rate, 900),
-                              SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
-                              arm_order,
-                              SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
+  costas_block = su_block_new(
+      "costas",
+      SU_COSTAS_KIND_QPSK,
+      SU_ABS2NORM_FREQ(*samp_rate, 900),
+      SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
+      arm_order,
+      SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
   SU_TEST_ASSERT(costas_block != NULL);
 
   f = su_block_get_property_ref(costas_block, SU_PROPERTY_TYPE_FLOAT, "f");
@@ -604,8 +618,9 @@ su_test_rrc_block(su_test_context_t *ctx)
   gain = su_block_get_property_ref(rrc_block, SU_PROPERTY_TYPE_FLOAT, "gain");
   SU_TEST_ASSERT(gain != NULL);
 
-  SU_INFO("Costas loop created, initial frequency: %lg Hz\n",
-          SU_NORM2ABS_FREQ(*samp_rate, *f));
+  SU_INFO(
+      "Costas loop created, initial frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(*samp_rate, *f));
 
   SU_INFO("RRC filter gain: %lg\n", *gain);
 
@@ -638,8 +653,9 @@ su_test_rrc_block(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
-                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(
+      SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+      && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 
@@ -718,9 +734,10 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   wav_block = su_block_new("wavfile", "test.wav");
   SU_TEST_ASSERT(wav_block != NULL);
 
-  samp_rate = su_block_get_property_ref(wav_block,
-                                        SU_PROPERTY_TYPE_INTEGER,
-                                        "samp_rate");
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
 
@@ -744,30 +761,32 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   agc_block = su_block_new("agc", &agc_params);
   SU_TEST_ASSERT(agc_block != NULL);
 
-  costas_block = su_block_new("costas",
-                              SU_COSTAS_KIND_QPSK,
-                              SU_ABS2NORM_FREQ(*samp_rate, if_off),
-                              SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
-                              arm_order,
-                              SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
+  costas_block = su_block_new(
+      "costas",
+      SU_COSTAS_KIND_QPSK,
+      SU_ABS2NORM_FREQ(*samp_rate, if_off),
+      SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
+      arm_order,
+      SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
   SU_TEST_ASSERT(costas_block != NULL);
 
   f = su_block_get_property_ref(costas_block, SU_PROPERTY_TYPE_FLOAT, "f");
   SU_TEST_ASSERT(f != NULL);
 
-  rrc_block =
-      su_block_new("rrc",
-                   (unsigned int)(6 * SU_T2N_FLOAT(*samp_rate, 1. / baud)),
-                   SU_T2N_FLOAT(*samp_rate, 1. / baud),
-                   1);
+  rrc_block = su_block_new(
+      "rrc",
+      (unsigned int)(6 * SU_T2N_FLOAT(*samp_rate, 1. / baud)),
+      SU_T2N_FLOAT(*samp_rate, 1. / baud),
+      1);
   SU_TEST_ASSERT(rrc_block != NULL);
 
   gain = su_block_get_property_ref(rrc_block, SU_PROPERTY_TYPE_FLOAT, "gain");
   SU_TEST_ASSERT(gain != NULL);
 
   *gain = .707;
-  SU_INFO("Costas loop created, initial frequency: %lg Hz\n",
-          SU_NORM2ABS_FREQ(*samp_rate, *f));
+  SU_INFO(
+      "Costas loop created, initial frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(*samp_rate, *f));
 
   SU_INFO("RRC filter gain: %lg\n", *gain);
 
@@ -803,8 +822,9 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) < 1.01 * if_off
-                 && SU_NORM2ABS_FREQ(*samp_rate, *f) > 0.99 * if_off);
+  SU_TEST_ASSERT(
+      SU_NORM2ABS_FREQ(*samp_rate, *f) < 1.01 * if_off
+      && SU_NORM2ABS_FREQ(*samp_rate, *f) > 0.99 * if_off);
 
   ok = SU_TRUE;
 
@@ -887,10 +907,11 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_TEST_START(ctx);
 
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
-  SU_TEST_ASSERT(unc = su_test_ctx_getf_w_size(
-                     ctx,
-                     "unc",
-                     SU_CEIL(sample_count / (SUFLOAT)unc_measure_size)));
+  SU_TEST_ASSERT(
+      unc = su_test_ctx_getf_w_size(
+          ctx,
+          "unc",
+          SU_CEIL(sample_count / (SUFLOAT)unc_measure_size)));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
   agc_params.delay_line_size = 10;
@@ -909,9 +930,10 @@ su_test_cdr_block(su_test_context_t *ctx)
   wav_block = su_block_new("wavfile", "test.wav");
   SU_TEST_ASSERT(wav_block != NULL);
 
-  samp_rate = su_block_get_property_ref(wav_block,
-                                        SU_PROPERTY_TYPE_INTEGER,
-                                        "samp_rate");
+  samp_rate = su_block_get_property_ref(
+      wav_block,
+      SU_PROPERTY_TYPE_INTEGER,
+      "samp_rate");
   SU_TEST_ASSERT(samp_rate != NULL);
   SU_TEST_ASSERT(*samp_rate == 8000);
 
@@ -920,24 +942,27 @@ su_test_cdr_block(su_test_context_t *ctx)
   agc_block = su_block_new("agc", &agc_params);
   SU_TEST_ASSERT(agc_block != NULL);
 
-  rrc_block = su_block_new("rrc",
-                           (unsigned int)(4. * 8000. / (SUFLOAT)baud),
-                           SU_T2N_FLOAT(8000, 1. / baud),
-                           0.25);
+  rrc_block = su_block_new(
+      "rrc",
+      (unsigned int)(4. * 8000. / (SUFLOAT)baud),
+      SU_T2N_FLOAT(8000, 1. / baud),
+      0.25);
   SU_TEST_ASSERT(rrc_block != NULL);
 
-  costas_block = su_block_new("costas",
-                              SU_COSTAS_KIND_QPSK,
-                              SU_ABS2NORM_FREQ(*samp_rate, 910),
-                              SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
-                              arm_order,
-                              SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
+  costas_block = su_block_new(
+      "costas",
+      SU_COSTAS_KIND_QPSK,
+      SU_ABS2NORM_FREQ(*samp_rate, 910),
+      SU_ABS2NORM_FREQ(*samp_rate, arm_bw),
+      arm_order,
+      SU_ABS2NORM_FREQ(*samp_rate, loop_bw));
   SU_TEST_ASSERT(costas_block != NULL);
 
-  cdr_block = su_block_new("cdr",
-                           (SUFLOAT)1.,
-                           SU_ABS2NORM_BAUD(*samp_rate, baud),
-                           (SUSCOUNT)15);
+  cdr_block = su_block_new(
+      "cdr",
+      (SUFLOAT)1.,
+      SU_ABS2NORM_BAUD(*samp_rate, baud),
+      (SUSCOUNT)15);
   SU_TEST_ASSERT(costas_block != NULL);
 
   beta = su_block_get_property_ref(cdr_block, SU_PROPERTY_TYPE_FLOAT, "beta");
@@ -968,8 +993,9 @@ su_test_cdr_block(su_test_context_t *ctx)
   *bmin = SU_ABS2NORM_BAUD(*samp_rate, baud - 10);
   *bmax = SU_ABS2NORM_BAUD(*samp_rate, baud + 10);
 
-  SU_INFO("Costas loop created, initial frequency: %lg Hz\n",
-          SU_NORM2ABS_FREQ(*samp_rate, *f));
+  SU_INFO(
+      "Costas loop created, initial frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(*samp_rate, *f));
 
   SU_INFO("RRC filter gain: %lg\n", *gain);
 
@@ -1006,9 +1032,10 @@ su_test_cdr_block(su_test_context_t *ctx)
       }
 
     if ((j % (17 * 25)) == 0)
-      SU_INFO("L: %5.2lf Hz, B: %5.2lf baud\r",
-              SU_NORM2ABS_FREQ(*samp_rate, *f),
-              SU_NORM2ABS_FREQ(*samp_rate, *bnor));
+      SU_INFO(
+          "L: %5.2lf Hz, B: %5.2lf baud\r",
+          SU_NORM2ABS_FREQ(*samp_rate, *f),
+          SU_NORM2ABS_FREQ(*samp_rate, *bnor));
     j += got;
   }
 
@@ -1017,8 +1044,9 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "freq", j));
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "unc", uncp + 1));
 
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
-                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(
+      SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+      && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 

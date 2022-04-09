@@ -29,12 +29,11 @@
   a = b;            \
   b = tmp;
 
-SU_INSTANCER(su_smoothpsd,
-             const struct sigutils_smoothpsd_params *params,
-             SUBOOL (*psd_func)(void *userdata,
-                                const SUFLOAT *psd,
-                                unsigned int size),
-             void *userdata)
+SU_INSTANCER(
+    su_smoothpsd,
+    const struct sigutils_smoothpsd_params *params,
+    SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size),
+    void *userdata)
 {
   su_smoothpsd_t *new = NULL;
 
@@ -178,10 +177,11 @@ done:
   return ok;
 }
 
-SU_METHOD(su_smoothpsd,
-          SUBOOL,
-          set_params,
-          const struct sigutils_smoothpsd_params *params)
+SU_METHOD(
+    su_smoothpsd,
+    SUBOOL,
+    set_params,
+    const struct sigutils_smoothpsd_params *params)
 {
   unsigned int i;
   void *tmp = NULL;
@@ -227,11 +227,12 @@ SU_METHOD(su_smoothpsd,
     memset(fftbuf, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
     /* Direct FFT plan */
-    if ((fft_plan = SU_FFTW(_plan_dft_1d)(params->fft_size,
-                                          fftbuf,
-                                          fftbuf,
-                                          FFTW_FORWARD,
-                                          FFTW_ESTIMATE))
+    if ((fft_plan = SU_FFTW(_plan_dft_1d)(
+             params->fft_size,
+             fftbuf,
+             fftbuf,
+             FFTW_FORWARD,
+             FFTW_ESTIMATE))
         == NULL) {
       SU_ERROR("failed to create FFT plan\n");
       goto done;
@@ -275,13 +276,15 @@ SU_METHOD(su_smoothpsd,
         break;
 
       case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
-        su_taps_apply_flat_top_complex(self->window_func,
-                                       self->params.fft_size);
+        su_taps_apply_flat_top_complex(
+            self->window_func,
+            self->params.fft_size);
         break;
 
       case SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS:
-        su_taps_apply_blackmann_harris_complex(self->window_func,
-                                               self->params.fft_size);
+        su_taps_apply_blackmann_harris_complex(
+            self->window_func,
+            self->params.fft_size);
         break;
 
       default:

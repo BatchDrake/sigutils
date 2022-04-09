@@ -26,8 +26,9 @@
 #include "softtune.h"
 
 void
-su_softtuner_params_adjust_to_channel(struct sigutils_softtuner_params *params,
-                                      const struct sigutils_channel *channel)
+su_softtuner_params_adjust_to_channel(
+    struct sigutils_softtuner_params *params,
+    const struct sigutils_channel *channel)
 {
   SUFLOAT width;
 
@@ -41,8 +42,9 @@ su_softtuner_params_adjust_to_channel(struct sigutils_softtuner_params *params,
 }
 
 SUBOOL
-su_softtuner_init(su_softtuner_t *tuner,
-                  const struct sigutils_softtuner_params *params)
+su_softtuner_init(
+    su_softtuner_t *tuner,
+    const struct sigutils_softtuner_params *params)
 {
   assert(params->samp_rate > 0);
   assert(params->decimation > 0);
@@ -52,18 +54,21 @@ su_softtuner_init(su_softtuner_t *tuner,
   tuner->params = *params;
   tuner->avginv = 1. / params->decimation;
 
-  SU_TRYCATCH(su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
-              goto fail);
+  SU_TRYCATCH(
+      su_stream_init(&tuner->output, SU_BLOCK_STREAM_BUFFER_SIZE),
+      goto fail);
 
-  su_ncqo_init_fixed(&tuner->lo,
-                     SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
+  su_ncqo_init_fixed(
+      &tuner->lo,
+      SU_ABS2NORM_FREQ(params->samp_rate, params->fc));
 
   if (params->bw > 0.0) {
     SU_TRYCATCH(
-        su_iir_bwlpf_init(&tuner->antialias,
-                          SU_SOFTTUNER_ANTIALIAS_ORDER,
-                          .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
-                              * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
+        su_iir_bwlpf_init(
+            &tuner->antialias,
+            SU_SOFTTUNER_ANTIALIAS_ORDER,
+            .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
+                * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
         goto fail);
     tuner->filtered = SU_TRUE;
   }
@@ -85,9 +90,10 @@ su_softtuner_feed(su_softtuner_t *tuner, const SUCOMPLEX *input, SUSCOUNT size)
   SUCOMPLEX *buf;
   SUSCOUNT n = 0;
 
-  avail = su_stream_get_contiguous(&tuner->output,
-                                   &buf,
-                                   SU_BLOCK_STREAM_BUFFER_SIZE);
+  avail = su_stream_get_contiguous(
+      &tuner->output,
+      &buf,
+      SU_BLOCK_STREAM_BUFFER_SIZE);
 
   SU_TRYCATCH(avail > 0, return 0);
 

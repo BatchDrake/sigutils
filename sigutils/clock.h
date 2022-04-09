@@ -259,10 +259,11 @@ typedef struct sigutils_clock_detector su_clock_detector_t;
         0,                            /* prev */           \
   }
 
-SU_CONSTRUCTOR(su_clock_detector,
-               SUFLOAT loop_gain,
-               SUFLOAT bhint,
-               SUSCOUNT bufsiz);
+SU_CONSTRUCTOR(
+    su_clock_detector,
+    SUFLOAT loop_gain,
+    SUFLOAT bhint,
+    SUSCOUNT bufsiz);
 SU_DESTRUCTOR(su_clock_detector);
 
 SU_METHOD(su_clock_detector, void, set_baud, SUFLOAT bnor);

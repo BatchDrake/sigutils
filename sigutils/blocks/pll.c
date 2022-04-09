@@ -56,22 +56,25 @@ su_block_costas_ctor(struct sigutils_block *block, void **private, va_list ap)
   ok = SU_TRUE;
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "f",
-                                    &costas->ncqo.fnor);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "f",
+           &costas->ncqo.fnor);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "lock",
-                                    &costas->lock);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "lock",
+           &costas->lock);
 
   ok = ok
-       && su_block_set_property_ref(block,
-                                    SU_PROPERTY_TYPE_FLOAT,
-                                    "beta",
-                                    &costas->b);
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "beta",
+           &costas->b);
 
 done:
   if (!ok) {
@@ -99,10 +102,11 @@ su_block_costas_dtor(void *private)
 }
 
 SUPRIVATE SUSDIFF
-su_block_costas_acquire(void *priv,
-                        su_stream_t *out,
-                        unsigned int port_id,
-                        su_block_port_t *in)
+su_block_costas_acquire(
+    void *priv,
+    su_stream_t *out,
+    unsigned int port_id,
+    su_block_port_t *in)
 {
   su_costas_t *costas;
   SUSDIFF size;

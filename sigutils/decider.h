@@ -54,8 +54,9 @@ su_decider_get_params(const su_decider_t *self)
 }
 
 SUBOOL
-su_decider_init(su_decider_t *decider,
-                const struct sigutils_decider_params *params)
+su_decider_init(
+    su_decider_t *decider,
+    const struct sigutils_decider_params *params)
 {
   if (params->bits > 8)
     return SU_FALSE;

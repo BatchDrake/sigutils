@@ -67,10 +67,11 @@ typedef struct sigutils_iir_filt su_iir_filt_t;
 SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
 
 /* Push a bunch of samples to filter */
-void su_iir_filt_feed_bulk(su_iir_filt_t *filt,
-                           const SUCOMPLEX *__restrict x,
-                           SUCOMPLEX *__restrict y,
-                           SUSCOUNT len);
+void su_iir_filt_feed_bulk(
+    su_iir_filt_t *filt,
+    const SUCOMPLEX *__restrict x,
+    SUCOMPLEX *__restrict y,
+    SUSCOUNT len);
 
 /* Get last output */
 SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
@@ -78,19 +79,21 @@ SUCOMPLEX su_iir_filt_get(const su_iir_filt_t *filt);
 void su_iir_filt_reset(su_iir_filt_t *filt);
 
 /* Initialize filter */
-SUBOOL su_iir_filt_init(su_iir_filt_t *filt,
-                        SUSCOUNT y_size,
-                        const SUFLOAT *__restrict a,
-                        SUSCOUNT x_size,
-                        const SUFLOAT *__restrict b);
+SUBOOL su_iir_filt_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT y_size,
+    const SUFLOAT *__restrict a,
+    SUSCOUNT x_size,
+    const SUFLOAT *__restrict b);
 
 /* Initialize filter (internal) */
-SUBOOL __su_iir_filt_init(su_iir_filt_t *filt,
-                          SUSCOUNT y_size,
-                          SUFLOAT *__restrict a,
-                          SUSCOUNT x_size,
-                          SUFLOAT *__restrict b,
-                          SUBOOL copy_coef);
+SUBOOL __su_iir_filt_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT y_size,
+    SUFLOAT *__restrict a,
+    SUSCOUNT x_size,
+    SUFLOAT *__restrict b,
+    SUBOOL copy_coef);
 
 /* Set output gain */
 void su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain);
@@ -116,10 +119,11 @@ SUBOOL su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n);
 SUBOOL su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 
 /* Initialize brickwall BPF filter */
-SUBOOL su_iir_brickwall_bp_init(su_iir_filt_t *filt,
-                                SUSCOUNT n,
-                                SUFLOAT bw,
-                                SUFLOAT ifnor);
+SUBOOL su_iir_brickwall_bp_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor);
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);

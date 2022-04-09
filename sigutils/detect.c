@@ -210,8 +210,9 @@ SU_GETTER(su_channel_detector, su_channel_t *, lookup_valid_channel, SUFLOAT fc)
 }
 
 SUPRIVATE SUBOOL
-su_channel_detector_assert_channel(su_channel_detector_t *self,
-                                   const struct sigutils_channel *new)
+su_channel_detector_assert_channel(
+    su_channel_detector_t *self,
+    const struct sigutils_channel *new)
 {
   su_channel_t *chan = NULL, *owned = NULL;
   SUFLOAT k = .5;
@@ -296,20 +297,22 @@ SU_COLLECTOR(su_channel_detector)
   free(self);
 }
 
-SU_GETTER(su_channel_detector,
-          void,
-          get_channel_list,
-          struct sigutils_channel ***channel_list,
-          unsigned int *channel_count)
+SU_GETTER(
+    su_channel_detector,
+    void,
+    get_channel_list,
+    struct sigutils_channel ***channel_list,
+    unsigned int *channel_count)
 {
   *channel_list = self->channel_list;
   *channel_count = self->channel_count;
 }
 
-SU_METHOD(su_channel_detector,
-          SUBOOL,
-          set_params,
-          const struct sigutils_channel_detector_params *params)
+SU_METHOD(
+    su_channel_detector,
+    SUBOOL,
+    set_params,
+    const struct sigutils_channel_detector_params *params)
 {
   SU_TRYCATCH(params->alpha > .0, return SU_FALSE);
   SU_TRYCATCH(params->samp_rate > 0, return SU_FALSE);
@@ -364,8 +367,9 @@ SU_METHOD(su_channel_detector, SUBOOL, init_window_func)
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_HAMMING:
-      su_taps_apply_hamming_complex(self->window_func,
-                                    self->params.window_size);
+      su_taps_apply_hamming_complex(
+          self->window_func,
+          self->params.window_size);
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_HANN:
@@ -373,13 +377,15 @@ SU_METHOD(su_channel_detector, SUBOOL, init_window_func)
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
-      su_taps_apply_flat_top_complex(self->window_func,
-                                     self->params.window_size);
+      su_taps_apply_flat_top_complex(
+          self->window_func,
+          self->params.window_size);
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS:
-      su_taps_apply_blackmann_harris_complex(self->window_func,
-                                             self->params.window_size);
+      su_taps_apply_blackmann_harris_complex(
+          self->window_func,
+          self->params.window_size);
       break;
 
     default:
@@ -394,8 +400,9 @@ SU_METHOD(su_channel_detector, SUBOOL, init_window_func)
   return SU_TRUE;
 }
 
-SU_INSTANCER(su_channel_detector,
-             const struct sigutils_channel_detector_params *params)
+SU_INSTANCER(
+    su_channel_detector,
+    const struct sigutils_channel_detector_params *params)
 {
   su_channel_detector_t *new = NULL;
   struct sigutils_softtuner_params tuner_params =
@@ -444,11 +451,12 @@ SU_INSTANCER(su_channel_detector,
   SU_ALLOCATE_MANY_FAIL(new->_r_alloc, params->window_size, SUFLOAT);
 
   /* Direct FFT plan */
-  if ((new->fft_plan = SU_FFTW(_plan_dft_1d)(params->window_size,
-                                             new->window,
-                                             new->fft,
-                                             FFTW_FORWARD,
-                                             FFTW_ESTIMATE))
+  if ((new->fft_plan = SU_FFTW(_plan_dft_1d)(
+           params->window_size,
+           new->window,
+           new->fft,
+           FFTW_FORWARD,
+           FFTW_ESTIMATE))
       == NULL) {
     SU_ERROR("failed to create FFT plan\n");
     goto fail;
@@ -475,8 +483,8 @@ SU_INSTANCER(su_channel_detector,
 
     case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
       /* For inverse FFT */
-      if ((new->ifft = SU_FFTW(_malloc)(params->window_size
-                                        * sizeof(SU_FFTW(_complex))))
+      if ((new->ifft = SU_FFTW(_malloc)(
+               params->window_size * sizeof(SU_FFTW(_complex))))
           == NULL) {
         SU_ERROR("cannot allocate memory for IFFT\n");
         goto fail;
@@ -484,11 +492,12 @@ SU_INSTANCER(su_channel_detector,
 
       memset(new->ifft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
-      if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(params->window_size,
-                                                     new->fft,
-                                                     new->ifft,
-                                                     FFTW_BACKWARD,
-                                                     FFTW_ESTIMATE))
+      if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(
+               params->window_size,
+               new->fft,
+               new->ifft,
+               FFTW_BACKWARD,
+               FFTW_ESTIMATE))
           == NULL) {
         SU_ERROR("failed to create FFT plan\n");
         goto fail;
@@ -507,9 +516,10 @@ SU_INSTANCER(su_channel_detector,
 
   /* Initialize tuner (if enabled) */
   if (params->tune) {
-    SU_ALLOCATE_MANY_FAIL(new->tuner_buf,
-                          SU_BLOCK_STREAM_BUFFER_SIZE,
-                          SUCOMPLEX);
+    SU_ALLOCATE_MANY_FAIL(
+        new->tuner_buf,
+        SU_BLOCK_STREAM_BUFFER_SIZE,
+        SUCOMPLEX);
 
     memset(new->tuner_buf, 0, SU_BLOCK_STREAM_BUFFER_SIZE * sizeof(SUCOMPLEX));
 
@@ -810,12 +820,13 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_from_acorr)
 }
 
 SUPRIVATE
-SU_METHOD(su_channel_detector,
-          SUBOOL,
-          guess_baudrate,
-          SUFLOAT equiv_fs,
-          int bin,
-          SUFLOAT signif)
+SU_METHOD(
+    su_channel_detector,
+    SUBOOL,
+    guess_baudrate,
+    SUFLOAT equiv_fs,
+    int bin,
+    SUFLOAT signif)
 {
   int N;
   int j;
@@ -909,10 +920,11 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
 
   /* Peak found. Verify if its significance is big enough */
   if (max_idx != -1)
-    if (su_channel_detector_guess_baudrate(self,
-                                           equiv_fs,
-                                           max_idx,
-                                           self->params.pd_signif))
+    if (su_channel_detector_guess_baudrate(
+            self,
+            equiv_fs,
+            max_idx,
+            self->params.pd_signif))
       return SU_TRUE;
 
   /* Previous method failed. Fall back to the old way */
@@ -932,10 +944,11 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
 
   while (i < N / 2) {
     if (su_peak_detector_feed(&self->pd, SU_DB(self->spect[i])) > 0)
-      if (su_channel_detector_guess_baudrate(self,
-                                             equiv_fs,
-                                             i,
-                                             self->params.pd_signif))
+      if (su_channel_detector_guess_baudrate(
+              self,
+              equiv_fs,
+              i,
+              self->params.pd_signif))
         break;
     ++i;
   }
@@ -1026,8 +1039,9 @@ SU_METHOD(su_channel_detector, SUBOOL, exec_fft)
        * of the signal. This will introduce a train of pulses on every
        * non-equal symbol transition.
        */
-      su_taps_apply_blackmann_harris_complex(self->window,
-                                             self->params.window_size);
+      su_taps_apply_blackmann_harris_complex(
+          self->window,
+          self->params.window_size);
 
       SU_FFTW(_execute(self->fft_plan));
 
@@ -1076,11 +1090,12 @@ SU_METHOD(su_channel_detector, SUBOOL, feed_internal, SUCOMPLEX x)
   return SU_TRUE;
 }
 
-SU_METHOD(su_channel_detector,
-          SUSCOUNT,
-          feed_bulk,
-          const SUCOMPLEX *signal,
-          SUSCOUNT size)
+SU_METHOD(
+    su_channel_detector,
+    SUSCOUNT,
+    feed_bulk,
+    const SUCOMPLEX *signal,
+    SUSCOUNT size)
 {
   unsigned int i;
   const SUCOMPLEX *tuned_signal;
@@ -1090,9 +1105,10 @@ SU_METHOD(su_channel_detector,
   if (self->params.tune) {
     su_softtuner_feed(&self->tuner, signal, size);
 
-    result = su_softtuner_read(&self->tuner,
-                               self->tuner_buf,
-                               SU_BLOCK_STREAM_BUFFER_SIZE);
+    result = su_softtuner_read(
+        &self->tuner,
+        self->tuner_buf,
+        SU_BLOCK_STREAM_BUFFER_SIZE);
 
     tuned_signal = self->tuner_buf;
     tuned_size = result;

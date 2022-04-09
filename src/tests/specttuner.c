@@ -33,11 +33,12 @@ struct su_specttuner_context {
 };
 
 SUPRIVATE SUBOOL
-su_specttuner_append(const su_specttuner_channel_t *channel,
-                     void *private,
-                     const SUCOMPLEX *data, /* This pointer remains valid until
-                                               the next call to feed */
-                     SUSCOUNT size)
+su_specttuner_append(
+    const su_specttuner_channel_t *channel,
+    void *private,
+    const SUCOMPLEX *data, /* This pointer remains valid until
+                              the next call to feed */
+    SUSCOUNT size)
 {
   struct su_specttuner_context *ctx = (struct su_specttuner_context *)private;
 
@@ -50,10 +51,11 @@ su_specttuner_append(const su_specttuner_channel_t *channel,
 }
 
 SUBOOL
-su_test_ctx_dumpc(su_test_context_t *ctx,
-                  const char *name,
-                  const SUCOMPLEX *data,
-                  SUSCOUNT size);
+su_test_ctx_dumpc(
+    su_test_context_t *ctx,
+    const char *name,
+    const SUCOMPLEX *data,
+    SUSCOUNT size);
 
 SUBOOL
 su_test_specttuner_two_tones(su_test_context_t *ctx)
@@ -89,9 +91,10 @@ su_test_specttuner_two_tones(su_test_context_t *ctx)
       SU_ABS2NORM_FREQ(SU_TEST_SPECTTUNER_SAMP_RATE, SU_TEST_SPECTTUNER_FREQ2));
 
   /* Populate buffer */
-  SU_INFO("Transmitting two tones at %lg Hz and %lg Hz\n",
-          SU_TEST_SPECTTUNER_FREQ1,
-          SU_TEST_SPECTTUNER_FREQ2);
+  SU_INFO(
+      "Transmitting two tones at %lg Hz and %lg Hz\n",
+      SU_TEST_SPECTTUNER_FREQ1,
+      SU_TEST_SPECTTUNER_FREQ2);
   SU_INFO("  AWGN amplitude: %lg dBFS\n", SU_DB_RAW(SU_TEST_SPECTTUNER_N0));
 
   for (p = 0; p < ctx->params->buffer_size; ++p)

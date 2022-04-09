@@ -145,9 +145,10 @@ su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
 }
 
 SUBOOL
-su_test_complex_buffer_dump_raw(const SUCOMPLEX *buffer,
-                                unsigned int size,
-                                const char *file)
+su_test_complex_buffer_dump_raw(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file)
 {
   FILE *fp = NULL;
   float val;
@@ -177,9 +178,10 @@ fail:
 }
 
 SUBOOL
-su_test_buffer_dump_raw(const SUFLOAT *buffer,
-                        unsigned int size,
-                        const char *file)
+su_test_buffer_dump_raw(
+    const SUFLOAT *buffer,
+    unsigned int size,
+    const char *file)
 {
   FILE *fp = NULL;
   float val;
@@ -206,10 +208,11 @@ fail:
 }
 
 SUBOOL
-su_test_complex_buffer_dump_matlab(const SUCOMPLEX *buffer,
-                                   unsigned int size,
-                                   const char *file,
-                                   const char *arrname)
+su_test_complex_buffer_dump_matlab(
+    const SUCOMPLEX *buffer,
+    unsigned int size,
+    const char *file,
+    const char *arrname)
 {
   FILE *fp = NULL;
   unsigned int i;
@@ -225,10 +228,11 @@ su_test_complex_buffer_dump_matlab(const SUCOMPLEX *buffer,
       if (fprintf(fp, ";\n") < 0)
         goto fail;
 
-    if (fprintf(fp,
-                SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
-                SU_C_REAL(buffer[i]),
-                SU_C_IMAG(buffer[i]))
+    if (fprintf(
+            fp,
+            SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
+            SU_C_REAL(buffer[i]),
+            SU_C_IMAG(buffer[i]))
         < 0)
       goto fail;
   }
@@ -248,10 +252,11 @@ fail:
 }
 
 SUBOOL
-su_test_buffer_dump_matlab(const SUFLOAT *buffer,
-                           unsigned int size,
-                           const char *file,
-                           const char *arrname)
+su_test_buffer_dump_matlab(
+    const SUFLOAT *buffer,
+    unsigned int size,
+    const char *file,
+    const char *arrname)
 {
   FILE *fp = NULL;
   unsigned int i;
@@ -321,29 +326,33 @@ su_test_ctx_resize_buf(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 }
 
 SUBOOL
-su_test_ctx_dumpf(su_test_context_t *ctx,
-                  const char *name,
-                  const SUFLOAT *data,
-                  SUSCOUNT size)
+su_test_ctx_dumpf(
+    su_test_context_t *ctx,
+    const char *name,
+    const SUFLOAT *data,
+    SUSCOUNT size)
 {
-  return su_sigbuf_pool_helper_dump_matlab(data,
-                                           size,
-                                           SU_FALSE,
-                                           ctx->entry->name,
-                                           name);
+  return su_sigbuf_pool_helper_dump_matlab(
+      data,
+      size,
+      SU_FALSE,
+      ctx->entry->name,
+      name);
 }
 
 SUBOOL
-su_test_ctx_dumpc(su_test_context_t *ctx,
-                  const char *name,
-                  const SUCOMPLEX *data,
-                  SUSCOUNT size)
+su_test_ctx_dumpc(
+    su_test_context_t *ctx,
+    const char *name,
+    const SUCOMPLEX *data,
+    SUSCOUNT size)
 {
-  return su_sigbuf_pool_helper_dump_matlab(data,
-                                           size,
-                                           SU_TRUE,
-                                           ctx->entry->name,
-                                           name);
+  return su_sigbuf_pool_helper_dump_matlab(
+      data,
+      size,
+      SU_TRUE,
+      ctx->entry->name,
+      name);
 }
 
 SUPRIVATE void
@@ -379,11 +388,12 @@ su_test_dump_format_to_string(enum sigutils_dump_format fmt)
 }
 
 SUBOOL
-su_test_run(const su_test_entry_t *test_list,
-            unsigned int test_count,
-            unsigned int range_start,
-            unsigned int range_end,
-            const struct su_test_run_params *params)
+su_test_run(
+    const su_test_entry_t *test_list,
+    unsigned int test_count,
+    unsigned int range_start,
+    unsigned int range_end,
+    const struct su_test_run_params *params)
 {
   su_test_context_t ctx = su_test_context_INITIALIZER;
   unsigned int i;
@@ -402,8 +412,9 @@ su_test_run(const su_test_entry_t *test_list,
   SU_INFO("  Size of SUFLOAT: %d bits\n", sizeof(SUFLOAT) << 3);
 
   if (params->dump_fmt)
-    SU_INFO("  Dump format: %s\n",
-            su_test_dump_format_to_string(params->dump_fmt));
+    SU_INFO(
+        "  Dump format: %s\n",
+        su_test_dump_format_to_string(params->dump_fmt));
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;

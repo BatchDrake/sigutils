@@ -85,8 +85,9 @@ void su_softtuner_params_adjust_to_channel(
     struct sigutils_softtuner_params *params,
     const struct sigutils_channel *channel);
 
-SUBOOL su_softtuner_init(su_softtuner_t *tuner,
-                         const struct sigutils_softtuner_params *params);
+SUBOOL su_softtuner_init(
+    su_softtuner_t *tuner,
+    const struct sigutils_softtuner_params *params);
 
 SUSCOUNT
 su_softtuner_feed(su_softtuner_t *tuner, const SUCOMPLEX *input, SUSCOUNT size);

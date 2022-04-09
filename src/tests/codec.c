@@ -41,9 +41,10 @@ su_test_symbol_to_char(SUSYMBOL sym)
 }
 
 SUBOOL
-su_test_diff_codec_generic(su_test_context_t *ctx,
-                           unsigned int bits,
-                           SUBOOL sign)
+su_test_diff_codec_generic(
+    su_test_context_t *ctx,
+    unsigned int bits,
+    SUBOOL sign)
 {
   su_codec_t *encoder = NULL;
   su_codec_t *decoder = NULL;
@@ -74,10 +75,11 @@ su_test_diff_codec_generic(su_test_context_t *ctx,
     encoded = su_codec_feed(encoder, syms[i]);
     decoded = su_codec_feed(decoder, encoded);
 
-    SU_INFO("'%c' --> ENCODER --> '%c' --> DECODER --> '%c'\n",
-            su_test_symbol_to_char(syms[i]),
-            su_test_symbol_to_char(encoded),
-            su_test_symbol_to_char(decoded));
+    SU_INFO(
+        "'%c' --> ENCODER --> '%c' --> DECODER --> '%c'\n",
+        su_test_symbol_to_char(syms[i]),
+        su_test_symbol_to_char(encoded),
+        su_test_symbol_to_char(decoded));
 
     if (i > 0)
       SU_TEST_ASSERT(syms[i] == decoded);

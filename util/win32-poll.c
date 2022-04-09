@@ -52,11 +52,12 @@ is_socket(int fd)
 }
 
 static int
-compute_select_revents(int fd,
-                       short events,
-                       fd_set *rfds,
-                       fd_set *wfds,
-                       fd_set *efds)
+compute_select_revents(
+    int fd,
+    short events,
+    fd_set *rfds,
+    fd_set *wfds,
+    fd_set *efds)
 {
   int rc = 0;
 
@@ -304,17 +305,19 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
       continue;
 
     if (is_socket(pfds[i].fd)) {
-      pfds[i].revents = compute_select_revents(pfds[i].fd,
-                                               pfds[i].events,
-                                               &rfds,
-                                               &wfds,
-                                               &efds);
+      pfds[i].revents = compute_select_revents(
+          pfds[i].fd,
+          pfds[i].events,
+          &rfds,
+          &wfds,
+          &efds);
 
     } else {
-      pfds[i].revents = compute_wait_revents(handles[num_handles],
-                                             pfds[i].events,
-                                             num_handles,
-                                             wait_rc);
+      pfds[i].revents = compute_wait_revents(
+          handles[num_handles],
+          pfds[i].events,
+          num_handles,
+          wait_rc);
       num_handles++;
     }
 

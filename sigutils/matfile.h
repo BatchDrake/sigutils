@@ -91,15 +91,17 @@ su_mat_matrix_t *su_mat_file_lookup_matrix(const su_mat_file_t *, const char *);
 SUBOOL su_mat_file_give_matrix(su_mat_file_t *, su_mat_matrix_t *);
 SUBOOL su_mat_file_give_streaming_matrix(su_mat_file_t *, su_mat_matrix_t *);
 
-su_mat_matrix_t *su_mat_file_make_matrix(su_mat_file_t *self,
-                                         const char *name,
-                                         int cols,
-                                         int rows);
+su_mat_matrix_t *su_mat_file_make_matrix(
+    su_mat_file_t *self,
+    const char *name,
+    int cols,
+    int rows);
 
-su_mat_matrix_t *su_mat_file_make_streaming_matrix(su_mat_file_t *self,
-                                                   const char *name,
-                                                   int cols,
-                                                   int rows);
+su_mat_matrix_t *su_mat_file_make_streaming_matrix(
+    su_mat_file_t *self,
+    const char *name,
+    int cols,
+    int rows);
 
 SUBOOL su_mat_file_stream_col(su_mat_file_t *, ...);
 

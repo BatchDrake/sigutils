@@ -49,8 +49,9 @@ su_codec_class_register(const struct sigutils_codec_class *class)
   SU_TRYCATCH(class->dtor != NULL, return SU_FALSE);
 
   SU_TRYCATCH(su_codec_class_lookup(class->name) == NULL, return SU_FALSE);
-  SU_TRYCATCH(PTR_LIST_APPEND_CHECK(class, (void *)class) != -1,
-              return SU_FALSE);
+  SU_TRYCATCH(
+      PTR_LIST_APPEND_CHECK(class, (void *)class) != -1,
+      return SU_FALSE);
 
   return SU_TRUE;
 }
