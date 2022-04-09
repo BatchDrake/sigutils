@@ -78,6 +78,7 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortLoopsOnASingleLine: false
+AlignAfterOpenBracket: AlwaysBreak
 
 # 11. Variable names in declarations are not aligned, unless it improves
 # readability.
