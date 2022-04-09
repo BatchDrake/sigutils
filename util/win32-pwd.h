@@ -24,19 +24,19 @@ typedef int uid_t;
 typedef int gid_t;
 
 struct passwd {
-  char  *pw_name;   /* user name */
-  char  *pw_passwd; /* encrypted password */
-  uid_t  pw_uid;    /* user uid */
-  gid_t  pw_gid;    /* user gid */
+  char *pw_name;    /* user name */
+  char *pw_passwd;  /* encrypted password */
+  uid_t pw_uid;     /* user uid */
+  gid_t pw_gid;     /* user gid */
   time_t pw_change; /* password change time */
-  char  *pw_class;  /* user access class */
-  char  *pw_gecos;  /* Honeywell login info */
-  char  *pw_dir;    /* home directory */
-  char  *pw_shell;  /* default shell */
+  char *pw_class;   /* user access class */
+  char *pw_gecos;   /* Honeywell login info */
+  char *pw_dir;     /* home directory */
+  char *pw_shell;   /* default shell */
   time_t pw_expire; /* account expiration */
 };
 
-uid_t          getuid();
+uid_t getuid();
 struct passwd *getpwuid(uid_t uid);
 
 #endif /* _PWD_H_ */

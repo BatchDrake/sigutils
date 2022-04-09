@@ -28,25 +28,29 @@
 #include "types.h"
 
 SUPRIVATE struct sigutils_log_config log_config;
-SUPRIVATE uint32_t                   log_mask;
-SUPRIVATE pthread_mutex_t            log_mutex = PTHREAD_MUTEX_INITIALIZER;
+SUPRIVATE uint32_t log_mask;
+SUPRIVATE pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void su_log_mask_severity(enum sigutils_log_severity sev)
+void
+su_log_mask_severity(enum sigutils_log_severity sev)
 {
   log_mask |= (1 << sev);
 }
 
-void su_log_unmask_severity(enum sigutils_log_severity sev)
+void
+su_log_unmask_severity(enum sigutils_log_severity sev)
 {
   log_mask &= ~(1 << sev);
 }
 
-uint32_t su_log_get_mask(void)
+uint32_t
+su_log_get_mask(void)
 {
   return log_mask;
 }
 
-void su_log_set_mask(uint32_t mask)
+void
+su_log_set_mask(uint32_t mask)
 {
   log_mask = mask;
 }
@@ -57,7 +61,8 @@ su_log_is_masked(enum sigutils_log_severity sev)
   return !!(log_mask & (1 << sev));
 }
 
-void sigutils_log_message_destroy(struct sigutils_log_message *msg)
+void
+sigutils_log_message_destroy(struct sigutils_log_message *msg)
 {
   if (msg->domain != NULL)
     free((void *)msg->domain);
@@ -71,8 +76,8 @@ void sigutils_log_message_destroy(struct sigutils_log_message *msg)
   free(msg);
 }
 
-struct sigutils_log_message *sigutils_log_message_dup(
-    const struct sigutils_log_message *msg)
+struct sigutils_log_message *
+sigutils_log_message_dup(const struct sigutils_log_message *msg)
 {
   struct sigutils_log_message *dup = NULL;
 
@@ -88,9 +93,9 @@ struct sigutils_log_message *sigutils_log_message_dup(
   if ((dup->message = strdup(msg->message)) == NULL)
     goto fail;
 
-  dup->line     = msg->line;
+  dup->line = msg->line;
   dup->severity = msg->severity;
-  dup->time     = msg->time;
+  dup->time = msg->time;
 
   return dup;
 
@@ -100,7 +105,8 @@ fail:
   return NULL;
 }
 
-const char *su_log_severity_to_string(enum sigutils_log_severity sev)
+const char *
+su_log_severity_to_string(enum sigutils_log_severity sev)
 {
   switch (sev) {
     case SU_LOG_SEVERITY_CRITICAL:
@@ -122,11 +128,12 @@ const char *su_log_severity_to_string(enum sigutils_log_severity sev)
   return "Unknown";
 }
 
-void su_log(enum sigutils_log_severity sev,
-            const char                *domain,
-            const char                *function,
-            unsigned int               line,
-            const char                *message)
+void
+su_log(enum sigutils_log_severity sev,
+       const char *domain,
+       const char *function,
+       unsigned int line,
+       const char *message)
 {
   struct sigutils_log_message msg = sigutils_log_message_INITIALIZER;
 
@@ -134,10 +141,10 @@ void su_log(enum sigutils_log_severity sev,
     gettimeofday(&msg.time, NULL);
 
     msg.severity = sev;
-    msg.domain   = domain;
+    msg.domain = domain;
     msg.function = function;
-    msg.line     = line;
-    msg.message  = message;
+    msg.line = line;
+    msg.message = message;
 
     if (log_config.exclusive)
       if (pthread_mutex_lock(&log_mutex) == -1) /* Too dangerous to log */
@@ -150,12 +157,13 @@ void su_log(enum sigutils_log_severity sev,
   }
 }
 
-void su_logvprintf(enum sigutils_log_severity sev,
-                   const char                *domain,
-                   const char                *function,
-                   unsigned int               line,
-                   const char                *msgfmt,
-                   va_list                    ap)
+void
+su_logvprintf(enum sigutils_log_severity sev,
+              const char *domain,
+              const char *function,
+              unsigned int line,
+              const char *msgfmt,
+              va_list ap)
 {
   char *msg = NULL;
 
@@ -175,12 +183,13 @@ done:
     free(msg);
 }
 
-void su_logprintf(enum sigutils_log_severity sev,
-                  const char                *domain,
-                  const char                *function,
-                  unsigned int               line,
-                  const char                *msgfmt,
-                  ...)
+void
+su_logprintf(enum sigutils_log_severity sev,
+             const char *domain,
+             const char *function,
+             unsigned int line,
+             const char *msgfmt,
+             ...)
 {
   va_list ap;
 
@@ -193,7 +202,8 @@ void su_logprintf(enum sigutils_log_severity sev,
   }
 }
 
-void su_log_init(const struct sigutils_log_config *config)
+void
+su_log_init(const struct sigutils_log_config *config)
 {
   log_config = *config;
 }

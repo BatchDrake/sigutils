@@ -24,12 +24,11 @@
 #include "block.h"
 #include "log.h"
 
-SUPRIVATE SUBOOL su_block_agc_ctor(struct sigutils_block *block,
-                                   void **private,
-                                   va_list ap)
+SUPRIVATE SUBOOL
+su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
 {
-  SUBOOL                      ok  = SU_FALSE;
-  su_agc_t                   *agc = NULL;
+  SUBOOL ok = SU_FALSE;
+  su_agc_t *agc = NULL;
   const struct su_agc_params *agc_params;
 
   if ((agc = calloc(1, sizeof(su_agc_t))) == NULL) {
@@ -46,15 +45,17 @@ SUPRIVATE SUBOOL su_block_agc_ctor(struct sigutils_block *block,
 
   ok = SU_TRUE;
 
-  ok = ok && su_block_set_property_ref(block,
-                                       SU_PROPERTY_TYPE_FLOAT,
-                                       "peak",
-                                       &agc->peak);
+  ok = ok
+       && su_block_set_property_ref(block,
+                                    SU_PROPERTY_TYPE_FLOAT,
+                                    "peak",
+                                    &agc->peak);
 
-  ok = ok && su_block_set_property_ref(block,
-                                       SU_PROPERTY_TYPE_BOOL,
-                                       "enabled",
-                                       &agc->enabled);
+  ok = ok
+       && su_block_set_property_ref(block,
+                                    SU_PROPERTY_TYPE_BOOL,
+                                    "enabled",
+                                    &agc->enabled);
 
 done:
   if (!ok) {
@@ -68,7 +69,8 @@ done:
   return ok;
 }
 
-SUPRIVATE void su_block_agc_dtor(void *private)
+SUPRIVATE void
+su_block_agc_dtor(void *private)
 {
   su_agc_t *agc;
 
@@ -80,15 +82,16 @@ SUPRIVATE void su_block_agc_dtor(void *private)
   }
 }
 
-SUPRIVATE SUSDIFF su_block_agc_acquire(void            *priv,
-                                       su_stream_t     *out,
-                                       unsigned int     port_id,
-                                       su_block_port_t *in)
+SUPRIVATE SUSDIFF
+su_block_agc_acquire(void *priv,
+                     su_stream_t *out,
+                     unsigned int port_id,
+                     su_block_port_t *in)
 {
   su_agc_t *agc;
-  SUSDIFF   size;
-  SUSDIFF   got;
-  int       i = 0;
+  SUSDIFF size;
+  SUSDIFF got;
+  int i = 0;
 
   SUCOMPLEX *start;
 

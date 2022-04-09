@@ -28,11 +28,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct sigutils_sampler {
-  SUFLOAT   bnor;
-  SUFLOAT   period;
-  SUFLOAT   phase;
-  SUFLOAT   phase0_rel;
-  SUFLOAT   phase0;
+  SUFLOAT bnor;
+  SUFLOAT period;
+  SUFLOAT phase;
+  SUFLOAT phase0_rel;
+  SUFLOAT phase0;
   SUCOMPLEX prev;
 };
 
@@ -48,14 +48,14 @@ SUINLINE
 SU_METHOD(su_sampler, void, set_phase_addend, SUFLOAT addend)
 {
   self->phase0_rel = SU_FLOOR(addend);
-  self->phase      = self->period * self->phase0_rel;
+  self->phase = self->period * self->phase0_rel;
 }
 
 SUINLINE
 SU_METHOD(su_sampler, SUBOOL, feed, SUCOMPLEX *sample)
 {
-  SUBOOL    sampled = SU_FALSE;
-  SUFLOAT   alpha;
+  SUBOOL sampled = SU_FALSE;
+  SUFLOAT alpha;
   SUCOMPLEX output = *sample, result;
 
   if (self->period >= 1.) {
@@ -65,8 +65,8 @@ SU_METHOD(su_sampler, SUBOOL, feed, SUCOMPLEX *sample)
 
       /* Interpolate with previous sample for improved accuracy */
       if (SU_FLOOR(self->phase) == 0) {
-        alpha   = self->phase - SU_FLOOR(self->phase);
-        result  = (1 - alpha) * self->prev + alpha * output;
+        alpha = self->phase - SU_FLOOR(self->phase);
+        result = (1 - alpha) * self->prev + alpha * output;
         *sample = result;
         sampled = SU_TRUE;
       }
@@ -223,17 +223,17 @@ enum sigutils_clock_detector_algorithm {
 
 struct sigutils_clock_detector {
   enum sigutils_clock_detector_algorithm algo;
-  SUFLOAT                                alpha; /* Damping factor for phase */
-  SUFLOAT     beta;           /* Damping factor for frequency */
-  SUFLOAT     bnor;           /* Normalized baud rate */
-  SUFLOAT     bmin;           /* Minimum baud rate */
-  SUFLOAT     bmax;           /* Maximum baud rate */
-  SUFLOAT     phi;            /* Symbol phase [0, 1/2)  */
-  SUFLOAT     gain;           /* Loop gain */
-  SUFLOAT     e;              /* Current error signal (debugging) */
-  su_stream_t sym_stream;     /* Resampled signal */
-  su_off_t    sym_stream_pos; /* Read position in the symbol stream */
-  SUBOOL      halfcycle;      /* True if setting halfcycle */
+  SUFLOAT alpha;           /* Damping factor for phase */
+  SUFLOAT beta;            /* Damping factor for frequency */
+  SUFLOAT bnor;            /* Normalized baud rate */
+  SUFLOAT bmin;            /* Minimum baud rate */
+  SUFLOAT bmax;            /* Maximum baud rate */
+  SUFLOAT phi;             /* Symbol phase [0, 1/2)  */
+  SUFLOAT gain;            /* Loop gain */
+  SUFLOAT e;               /* Current error signal (debugging) */
+  su_stream_t sym_stream;  /* Resampled signal */
+  su_off_t sym_stream_pos; /* Read position in the symbol stream */
+  SUBOOL halfcycle;        /* True if setting halfcycle */
 
   SUCOMPLEX x[3]; /* Previous symbol */
   SUCOMPLEX prev; /* Previous sample, for interpolation */
@@ -260,8 +260,8 @@ typedef struct sigutils_clock_detector su_clock_detector_t;
   }
 
 SU_CONSTRUCTOR(su_clock_detector,
-               SUFLOAT  loop_gain,
-               SUFLOAT  bhint,
+               SUFLOAT loop_gain,
+               SUFLOAT bhint,
                SUSCOUNT bufsiz);
 SU_DESTRUCTOR(su_clock_detector);
 

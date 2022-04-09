@@ -26,21 +26,21 @@
 #include "test.h"
 
 #ifdef _SU_SINGLE_PRECISION
-#  define sf_write sf_write_float
-#  define SU_REAL_TYPE_STR "float"
+#define sf_write sf_write_float
+#define SU_REAL_TYPE_STR "float"
 #else
-#  define sf_write sf_write_double
-#  define SU_REAL_TYPE_STR "double"
+#define sf_write sf_write_double
+#define SU_REAL_TYPE_STR "double"
 #endif
 
 SUBOOL
 su_sigbuf_pool_helper_dump_matlab(const void *data,
-                                  SUSCOUNT    size,
-                                  SUBOOL      is_complex,
+                                  SUSCOUNT size,
+                                  SUBOOL is_complex,
                                   const char *directory,
                                   const char *name)
 {
-  char  *filename = NULL;
+  char *filename = NULL;
   SUBOOL result;
 
   filename = strbuild("%s/%s.m", directory, name);
@@ -73,8 +73,8 @@ SUBOOL
 su_sigbuf_pool_dump_matlab(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  char  *filename = NULL;
-  FILE  *fp       = NULL;
+  char *filename = NULL;
+  FILE *fp = NULL;
   time_t now;
 
   if ((filename = strbuild("%s.m", pool->name)) == NULL) {
@@ -133,12 +133,12 @@ fail:
 
 SUBOOL
 su_sigbuf_pool_helper_dump_raw(const void *data,
-                               SUSCOUNT    size,
-                               SUBOOL      is_complex,
+                               SUSCOUNT size,
+                               SUBOOL is_complex,
                                const char *directory,
                                const char *name)
 {
-  char  *filename = NULL;
+  char *filename = NULL;
   SUBOOL result;
 
   filename = strbuild("%s/%s-%s.raw",
@@ -191,20 +191,20 @@ fail:
 
 SUBOOL
 su_sigbuf_pool_helper_dump_wav(const void *data,
-                               SUSCOUNT    size,
-                               SUSCOUNT    fs,
-                               SUBOOL      is_complex,
+                               SUSCOUNT size,
+                               SUSCOUNT fs,
+                               SUBOOL is_complex,
                                const char *directory,
                                const char *name)
 {
-  SNDFILE *sf       = NULL;
-  char    *filename = NULL;
-  SF_INFO  info;
+  SNDFILE *sf = NULL;
+  char *filename = NULL;
+  SF_INFO info;
   SUSCOUNT samples = 0;
   SUSCOUNT written = 0;
 
-  info.format     = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
-  info.channels   = is_complex ? 2 : 1;
+  info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
+  info.channels = is_complex ? 2 : 1;
   info.samplerate = fs;
 
   filename = strbuild("%s/%s.wav", directory, name);

@@ -26,7 +26,7 @@
   getsockopt(sockfd, level, optname, (char *)optval, optLen)
 
 #ifdef interface
-#  undef interface
+#undef interface
 #endif /* interface */
 
 #endif /* _UTIL_INET_H */

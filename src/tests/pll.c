@@ -33,15 +33,15 @@
 SUBOOL
 su_test_pll(su_test_context_t *ctx)
 {
-  SUBOOL   ok     = SU_FALSE;
-  SUFLOAT *input  = NULL;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *input = NULL;
   SUFLOAT *omgerr = NULL;
   SUFLOAT *phierr = NULL;
-  SUFLOAT *lock   = NULL;
+  SUFLOAT *lock = NULL;
 
-  su_ncqo_t    ncqo = su_ncqo_INITIALIZER;
-  su_pll_t     pll  = su_pll_INITIALIZER;
-  unsigned int p    = 0;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_pll_t pll = su_pll_INITIALIZER;
+  unsigned int p = 0;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -71,9 +71,9 @@ su_test_pll(su_test_context_t *ctx)
   for (p = 0; p < ctx->params->buffer_size; ++p) {
     (void)su_ncqo_read_i(&ncqo); /* Used to compute phase errors */
     su_pll_feed(&pll, input[p]);
-    input[p]  = su_ncqo_get_i(&pll.ncqo);
+    input[p] = su_ncqo_get_i(&pll.ncqo);
     phierr[p] = su_ncqo_get_phase(&pll.ncqo) - su_ncqo_get_phase(&ncqo);
-    lock[p]   = pll.lock;
+    lock[p] = pll.lock;
 
     if (phierr[p] < 0 || phierr[p] > 2 * PI) {
       phierr[p] -= 2 * PI * floor(phierr[p] / (2 * PI));

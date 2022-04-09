@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_SELECT_H
 
 #ifdef _WIN32
-#  include "win32-time.h"
+#include "win32-time.h"
 #else
-#  include <sys/select.h>
+#include <sys/select.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_SELECT_H */

@@ -50,7 +50,8 @@ SUPRIVATE su_test_entry_t test_list[] = {
     SU_TEST_ENTRY(su_test_mat_file_streaming),
 };
 
-SUPRIVATE void help(const char *argv0)
+SUPRIVATE void
+help(const char *argv0)
 {
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "  %s [options] [test_start [test_end]]\n\n", argv0);
@@ -91,7 +92,8 @@ SUPRIVATE void help(const char *argv0)
   fprintf(stderr, "(c) 2020 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
 }
 
-SUPRIVATE void version(void)
+SUPRIVATE void
+version(void)
 {
   fprintf(stderr, "sigutils " SIGUTILS_VERSION_STRING "\n");
   fprintf(stderr, "pkgversion: %s\n\n", sigutils_pkgversion());
@@ -102,7 +104,8 @@ SUPRIVATE void version(void)
           "<http://gnu.org/licenses/gpl.html>\n");
 }
 
-SUPRIVATE void list(const char *argv0)
+SUPRIVATE void
+list(const char *argv0)
 {
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
   unsigned int i;
@@ -128,18 +131,19 @@ SUPRIVATE struct option long_options[] = {
 
 extern int optind;
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  unsigned int test_count          = sizeof(test_list) / sizeof(test_list[0]);
-  unsigned int test_start          = 0;
-  unsigned int test_end            = test_count - 1;
+  unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
+  unsigned int test_start = 0;
+  unsigned int test_end = test_count - 1;
   struct su_test_run_params params = su_test_run_params_INITIALIZER;
-  SUBOOL                    result;
-  int                       c;
-  int                       index;
+  SUBOOL result;
+  int c;
+  int index;
 
-  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index)) !=
-         -1) {
+  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index))
+         != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);

@@ -48,7 +48,7 @@ extern "C" {
 typedef uint64_t su_off_t;
 
 struct sigutils_stream {
-  SUCOMPLEX   *buffer;
+  SUCOMPLEX *buffer;
   unsigned int size;  /* Stream size */
   unsigned int ptr;   /* Buffer pointer */
   unsigned int avail; /* Samples available for reading */
@@ -77,14 +77,14 @@ SU_GETTER(su_stream,
           SUSCOUNT,
           get_contiguous,
           SUCOMPLEX **start,
-          SUSCOUNT    size);
+          SUSCOUNT size);
 SU_GETTER(su_stream, su_off_t, tell);
 SU_GETTER(su_stream,
           SUSDIFF,
           read,
-          su_off_t   off,
+          su_off_t off,
           SUCOMPLEX *data,
-          SUSCOUNT   size);
+          SUSCOUNT size);
 
 /**************************** DEPRECATED API ********************************/
 struct sigutils_block;
@@ -125,10 +125,10 @@ struct sigutils_block_port;
  */
 struct sigutils_flow_controller {
   enum sigutils_flow_controller_kind kind;
-  SUBOOL                             eos;
-  pthread_mutex_t                    acquire_lock;
-  pthread_cond_t                     acquire_cond;
-  su_stream_t                        output; /* Output stream */
+  SUBOOL eos;
+  pthread_mutex_t acquire_lock;
+  pthread_cond_t acquire_cond;
+  su_stream_t output;     /* Output stream */
   unsigned int consumers; /* Number of ports plugged to this flow controller */
   unsigned int pending;   /* Number of ports waiting for new data */
   const struct sigutils_block_port *master; /* Master port */
@@ -141,11 +141,11 @@ typedef struct sigutils_flow_controller su_flow_controller_t;
  * are not. Don't attempt to use the same block port in different threads.
  */
 struct sigutils_block_port {
-  su_off_t               pos;   /* Current reading position in this port */
-  su_flow_controller_t  *fc;    /* Flow controller */
+  su_off_t pos;                 /* Current reading position in this port */
+  su_flow_controller_t *fc;     /* Flow controller */
   struct sigutils_block *block; /* Input block */
-  unsigned int           port_id;
-  SUBOOL                 reading;
+  unsigned int port_id;
+  SUBOOL reading;
 };
 
 typedef struct sigutils_block_port su_block_port_t;
@@ -156,7 +156,7 @@ typedef struct sigutils_block_port su_block_port_t;
   }
 
 struct sigutils_block_class {
-  const char  *name;
+  const char *name;
   unsigned int in_size;
   unsigned int out_size;
 
@@ -174,12 +174,12 @@ struct sigutils_block {
   /* Block overall configuration */
   su_block_class_t *classname;
   su_property_set_t properties;
-  void             *privdata;
+  void *privdata;
 
   /* Architectural properties */
-  su_block_port_t      *in;         /* Input ports */
-  su_flow_controller_t *out;        /* Output streams */
-  SUSCOUNT              decimation; /* Block decimation */
+  su_block_port_t *in;       /* Input ports */
+  su_flow_controller_t *out; /* Output streams */
+  SUSCOUNT decimation;       /* Block decimation */
 };
 
 typedef struct sigutils_block su_block_t;
@@ -191,28 +191,28 @@ su_block_port_t *su_block_get_port(const su_block_t *, unsigned int);
 
 su_stream_t *su_block_get_stream(const su_block_t *, unsigned int);
 
-SUBOOL su_block_plug(su_block_t  *source,
+SUBOOL su_block_plug(su_block_t *source,
                      unsigned int out_id,
                      unsigned int in_id,
-                     su_block_t  *sink);
+                     su_block_t *sink);
 
 su_property_t *su_block_lookup_property(const su_block_t *block,
-                                        const char       *name);
+                                        const char *name);
 
-void *su_block_get_property_ref(const su_block_t  *block,
+void *su_block_get_property_ref(const su_block_t *block,
                                 su_property_type_t type,
-                                const char        *name);
+                                const char *name);
 
-SUBOOL su_block_set_property_ref(su_block_t        *block,
+SUBOOL su_block_set_property_ref(su_block_t *block,
                                  su_property_type_t type,
-                                 const char        *name,
-                                 void              *ptr);
+                                 const char *name,
+                                 void *ptr);
 
 void su_block_destroy(su_block_t *);
 
 /* su_block_port operations */
 SUBOOL su_block_port_plug(
-    su_block_port_t       *port,
+    su_block_port_t *port,
     struct sigutils_block *block,
     unsigned int portid); /* Position initialized with current stream pos */
 
@@ -228,12 +228,12 @@ void su_block_port_unplug(su_block_port_t *port);
 
 SUBOOL su_block_force_eos(const su_block_t *block, unsigned int id);
 
-SUBOOL su_block_set_flow_controller(su_block_t                        *block,
-                                    unsigned int                       port_id,
+SUBOOL su_block_set_flow_controller(su_block_t *block,
+                                    unsigned int port_id,
                                     enum sigutils_flow_controller_kind kind);
 
-SUBOOL su_block_set_master_port(su_block_t            *block,
-                                unsigned int           port_id,
+SUBOOL su_block_set_master_port(su_block_t *block,
+                                unsigned int port_id,
                                 const su_block_port_t *port);
 
 /* su_block_class operations */

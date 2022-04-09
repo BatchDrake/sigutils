@@ -24,7 +24,8 @@
 
 #include "test.h"
 
-void su_test_context_update_times(su_test_context_t *ctx)
+void
+su_test_context_update_times(su_test_context_t *ctx)
 {
   struct timeval diff;
 
@@ -33,23 +34,24 @@ void su_test_context_update_times(su_test_context_t *ctx)
   /* Hours */
   if (diff.tv_sec >= 3600) {
     ctx->elapsed_time = (diff.tv_sec + 1e-6 * diff.tv_usec) / 3600;
-    ctx->time_units   = SU_TIME_UNITS_HOUR;
+    ctx->time_units = SU_TIME_UNITS_HOUR;
   } else if (diff.tv_sec >= 60) {
     ctx->elapsed_time = (diff.tv_sec + 1e-6 * diff.tv_usec) / 60;
-    ctx->time_units   = SU_TIME_UNITS_MIN;
+    ctx->time_units = SU_TIME_UNITS_MIN;
   } else if (diff.tv_sec >= 1) {
     ctx->elapsed_time = diff.tv_sec + 1e-6 * diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_SEC;
+    ctx->time_units = SU_TIME_UNITS_SEC;
   } else if (diff.tv_usec >= 1000) {
     ctx->elapsed_time = 1e-3 * diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_MSEC;
+    ctx->time_units = SU_TIME_UNITS_MSEC;
   } else {
     ctx->elapsed_time = diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_USEC;
+    ctx->time_units = SU_TIME_UNITS_USEC;
   }
 }
 
-const char *su_test_context_time_units(const su_test_context_t *ctx)
+const char *
+su_test_context_time_units(const su_test_context_t *ctx)
 {
   switch (ctx->time_units) {
     case SU_TIME_UNITS_HOUR:
@@ -74,12 +76,14 @@ const char *su_test_context_time_units(const su_test_context_t *ctx)
   return "??";
 }
 
-SUFLOAT *su_test_buffer_new(unsigned int size)
+SUFLOAT *
+su_test_buffer_new(unsigned int size)
 {
   return calloc(size, sizeof(SUFLOAT));
 }
 
-SUCOMPLEX *su_test_complex_buffer_new(unsigned int size)
+SUCOMPLEX *
+su_test_complex_buffer_new(unsigned int size)
 {
   return calloc(size, sizeof(SUCOMPLEX));
 }
@@ -88,7 +92,7 @@ SUFLOAT
 su_test_buffer_mean(const SUFLOAT *buffer, unsigned int size)
 {
   SUFLOAT size_inv = 1. / size;
-  SUFLOAT result   = 0.;
+  SUFLOAT result = 0.;
 
   while (size--)
     result += size_inv * buffer[size];
@@ -100,7 +104,7 @@ SUFLOAT
 su_test_buffer_std(const SUFLOAT *buffer, unsigned int size)
 {
   SUFLOAT size_inv = 1. / size;
-  SUFLOAT result   = 0.;
+  SUFLOAT result = 0.;
   SUFLOAT mean;
 
   mean = su_test_buffer_mean(buffer, size);
@@ -142,11 +146,11 @@ su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
 
 SUBOOL
 su_test_complex_buffer_dump_raw(const SUCOMPLEX *buffer,
-                                unsigned int     size,
-                                const char      *file)
+                                unsigned int size,
+                                const char *file)
 {
-  FILE        *fp = NULL;
-  float        val;
+  FILE *fp = NULL;
+  float val;
   unsigned int i;
 
   if ((fp = fopen(file, "wb")) == NULL)
@@ -174,11 +178,11 @@ fail:
 
 SUBOOL
 su_test_buffer_dump_raw(const SUFLOAT *buffer,
-                        unsigned int   size,
-                        const char    *file)
+                        unsigned int size,
+                        const char *file)
 {
-  FILE        *fp = NULL;
-  float        val;
+  FILE *fp = NULL;
+  float val;
   unsigned int i;
 
   if ((fp = fopen(file, "wb")) == NULL)
@@ -203,11 +207,11 @@ fail:
 
 SUBOOL
 su_test_complex_buffer_dump_matlab(const SUCOMPLEX *buffer,
-                                   unsigned int     size,
-                                   const char      *file,
-                                   const char      *arrname)
+                                   unsigned int size,
+                                   const char *file,
+                                   const char *arrname)
 {
-  FILE        *fp = NULL;
+  FILE *fp = NULL;
   unsigned int i;
 
   if ((fp = fopen(file, "w")) == NULL)
@@ -224,7 +228,8 @@ su_test_complex_buffer_dump_matlab(const SUCOMPLEX *buffer,
     if (fprintf(fp,
                 SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
                 SU_C_REAL(buffer[i]),
-                SU_C_IMAG(buffer[i])) < 0)
+                SU_C_IMAG(buffer[i]))
+        < 0)
       goto fail;
   }
 
@@ -244,11 +249,11 @@ fail:
 
 SUBOOL
 su_test_buffer_dump_matlab(const SUFLOAT *buffer,
-                           unsigned int   size,
-                           const char    *file,
-                           const char    *arrname)
+                           unsigned int size,
+                           const char *file,
+                           const char *arrname)
 {
-  FILE        *fp = NULL;
+  FILE *fp = NULL;
   unsigned int i;
 
   if ((fp = fopen(file, "w")) == NULL)
@@ -280,26 +285,26 @@ fail:
   return SU_FALSE;
 }
 
-SUFLOAT *su_test_ctx_getf_w_size(su_test_context_t *ctx,
-                                 const char        *name,
-                                 SUSCOUNT           size)
+SUFLOAT *
+su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 {
   return su_sigbuf_pool_get_float(ctx->pool, name, size);
 }
 
-SUCOMPLEX *su_test_ctx_getc_w_size(su_test_context_t *ctx,
-                                   const char        *name,
-                                   SUSCOUNT           size)
+SUCOMPLEX *
+su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 {
   return su_sigbuf_pool_get_complex(ctx->pool, name, size);
 }
 
-SUFLOAT *su_test_ctx_getf(su_test_context_t *ctx, const char *name)
+SUFLOAT *
+su_test_ctx_getf(su_test_context_t *ctx, const char *name)
 {
   return su_test_ctx_getf_w_size(ctx, name, ctx->params->buffer_size);
 }
 
-SUCOMPLEX *su_test_ctx_getc(su_test_context_t *ctx, const char *name)
+SUCOMPLEX *
+su_test_ctx_getc(su_test_context_t *ctx, const char *name)
 {
   return su_test_ctx_getc_w_size(ctx, name, ctx->params->buffer_size);
 }
@@ -317,9 +322,9 @@ su_test_ctx_resize_buf(su_test_context_t *ctx, const char *name, SUSCOUNT size)
 
 SUBOOL
 su_test_ctx_dumpf(su_test_context_t *ctx,
-                  const char        *name,
-                  const SUFLOAT     *data,
-                  SUSCOUNT           size)
+                  const char *name,
+                  const SUFLOAT *data,
+                  SUSCOUNT size)
 {
   return su_sigbuf_pool_helper_dump_matlab(data,
                                            size,
@@ -330,9 +335,9 @@ su_test_ctx_dumpf(su_test_context_t *ctx,
 
 SUBOOL
 su_test_ctx_dumpc(su_test_context_t *ctx,
-                  const char        *name,
-                  const SUCOMPLEX   *data,
-                  SUSCOUNT           size)
+                  const char *name,
+                  const SUCOMPLEX *data,
+                  SUSCOUNT size)
 {
   return su_sigbuf_pool_helper_dump_matlab(data,
                                            size,
@@ -341,7 +346,8 @@ su_test_ctx_dumpc(su_test_context_t *ctx,
                                            name);
 }
 
-SUPRIVATE void su_test_context_reset(su_test_context_t *ctx)
+SUPRIVATE void
+su_test_context_reset(su_test_context_t *ctx)
 {
   if (ctx->pool != NULL)
     su_sigbuf_pool_destroy(ctx->pool);
@@ -351,8 +357,8 @@ SUPRIVATE void su_test_context_reset(su_test_context_t *ctx)
   ctx->time_units = SU_TIME_UNITS_UNDEFINED;
 }
 
-SUPRIVATE const char *su_test_dump_format_to_string(
-    enum sigutils_dump_format fmt)
+SUPRIVATE const char *
+su_test_dump_format_to_string(enum sigutils_dump_format fmt)
 {
   switch (fmt) {
     case SU_DUMP_FORMAT_NONE:
@@ -373,17 +379,17 @@ SUPRIVATE const char *su_test_dump_format_to_string(
 }
 
 SUBOOL
-su_test_run(const su_test_entry_t           *test_list,
-            unsigned int                     test_count,
-            unsigned int                     range_start,
-            unsigned int                     range_end,
+su_test_run(const su_test_entry_t *test_list,
+            unsigned int test_count,
+            unsigned int range_start,
+            unsigned int range_end,
             const struct su_test_run_params *params)
 {
   su_test_context_t ctx = su_test_context_INITIALIZER;
-  unsigned int      i;
-  unsigned int      count   = 0;
-  unsigned int      success = 0;
-  time_t            now;
+  unsigned int i;
+  unsigned int count = 0;
+  unsigned int success = 0;
+  time_t now;
 
   if (range_end >= test_count)
     range_end = test_count - 1;
@@ -401,7 +407,7 @@ su_test_run(const su_test_entry_t           *test_list,
 
   for (i = range_start; i <= range_end; ++i) {
     ctx.testno = i;
-    ctx.entry  = &test_list[i];
+    ctx.entry = &test_list[i];
     ctx.params = params;
 
     if ((ctx.pool = su_sigbuf_pool_new(ctx.entry->name)) == NULL) {
@@ -409,8 +415,8 @@ su_test_run(const su_test_entry_t           *test_list,
       goto next_test;
     }
 
-    if (params->dump_fmt &&
-        !su_sigbuf_pool_helper_ensure_directory(ctx.entry->name)) {
+    if (params->dump_fmt
+        && !su_sigbuf_pool_helper_ensure_directory(ctx.entry->name)) {
       SU_ERROR("Failed to ensure dump directory\n");
       goto next_test;
     }

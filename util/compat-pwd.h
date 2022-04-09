@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_PWD_H
 
 #ifdef _WIN32
-#  include "win32-pwd.h"
+#include "win32-pwd.h"
 #else
-#  include <pwd.h>
+#include <pwd.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_PWD_H */

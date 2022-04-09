@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_IN_H
 
 #ifdef _WIN32
-#  include "win32-in.h"
+#include "win32-in.h"
 #else
-#  include <netinet/in.h>
+#include <netinet/in.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_IN_H */

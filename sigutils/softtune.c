@@ -25,9 +25,9 @@
 #include "sampling.h"
 #include "softtune.h"
 
-void su_softtuner_params_adjust_to_channel(
-    struct sigutils_softtuner_params *params,
-    const struct sigutils_channel    *channel)
+void
+su_softtuner_params_adjust_to_channel(struct sigutils_softtuner_params *params,
+                                      const struct sigutils_channel *channel)
 {
   SUFLOAT width;
 
@@ -41,7 +41,7 @@ void su_softtuner_params_adjust_to_channel(
 }
 
 SUBOOL
-su_softtuner_init(su_softtuner_t                         *tuner,
+su_softtuner_init(su_softtuner_t *tuner,
                   const struct sigutils_softtuner_params *params)
 {
   assert(params->samp_rate > 0);
@@ -62,8 +62,8 @@ su_softtuner_init(su_softtuner_t                         *tuner,
     SU_TRYCATCH(
         su_iir_bwlpf_init(&tuner->antialias,
                           SU_SOFTTUNER_ANTIALIAS_ORDER,
-                          .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw) *
-                              SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
+                          .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
+                              * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
         goto fail);
     tuner->filtered = SU_TRUE;
   }
@@ -79,11 +79,11 @@ fail:
 SUSCOUNT
 su_softtuner_feed(su_softtuner_t *tuner, const SUCOMPLEX *input, SUSCOUNT size)
 {
-  SUSCOUNT   i = 0;
-  SUCOMPLEX  x;
-  SUSCOUNT   avail;
+  SUSCOUNT i = 0;
+  SUCOMPLEX x;
+  SUSCOUNT avail;
   SUCOMPLEX *buf;
-  SUSCOUNT   n = 0;
+  SUSCOUNT n = 0;
 
   avail = su_stream_get_contiguous(&tuner->output,
                                    &buf,
@@ -136,7 +136,8 @@ su_softtuner_read(su_softtuner_t *tuner, SUCOMPLEX *out, SUSCOUNT size)
   return result;
 }
 
-void su_softtuner_finalize(su_softtuner_t *tuner)
+void
+su_softtuner_finalize(su_softtuner_t *tuner)
 {
   if (tuner->filtered)
     su_iir_filt_finalize(&tuner->antialias);

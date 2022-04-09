@@ -24,18 +24,20 @@
 
 #include "log.h"
 
-SUPRIVATE void su_equalizer_push_x(su_equalizer_t *eq, SUCOMPLEX x)
+SUPRIVATE void
+su_equalizer_push_x(su_equalizer_t *eq, SUCOMPLEX x)
 {
   eq->x[eq->ptr++] = x;
   if (eq->ptr >= eq->params.length)
     eq->ptr = 0;
 }
 
-SUPRIVATE SUCOMPLEX su_equalizer_eval(const su_equalizer_t *eq)
+SUPRIVATE SUCOMPLEX
+su_equalizer_eval(const su_equalizer_t *eq)
 {
-  SUCOMPLEX    y = 0;
+  SUCOMPLEX y = 0;
   unsigned int i;
-  int          p;
+  int p;
 
   /* Input feedback */
   p = eq->ptr - 1;
@@ -49,14 +51,15 @@ SUPRIVATE SUCOMPLEX su_equalizer_eval(const su_equalizer_t *eq)
   return y;
 }
 
-SUPRIVATE void su_equalizer_update_weights(su_equalizer_t *eq, SUCOMPLEX y)
+SUPRIVATE void
+su_equalizer_update_weights(su_equalizer_t *eq, SUCOMPLEX y)
 {
   unsigned int i;
-  int          p;
-  SUCOMPLEX    y2;
-  SUCOMPLEX    err;
+  int p;
+  SUCOMPLEX y2;
+  SUCOMPLEX err;
 
-  y2  = y * SU_C_CONJ(y);
+  y2 = y * SU_C_CONJ(y);
   err = y * (y2 - 1.);
 
   p = eq->ptr - 1;
@@ -69,7 +72,7 @@ SUPRIVATE void su_equalizer_update_weights(su_equalizer_t *eq, SUCOMPLEX y)
 }
 
 SUBOOL
-su_equalizer_init(su_equalizer_t                         *eq,
+su_equalizer_init(su_equalizer_t *eq,
                   const struct sigutils_equalizer_params *params)
 {
   memset(eq, 0, sizeof(su_equalizer_t));
@@ -89,7 +92,8 @@ fail:
   return SU_FALSE;
 }
 
-void su_equalizer_reset(su_equalizer_t *eq)
+void
+su_equalizer_reset(su_equalizer_t *eq)
 {
   memset(eq->w, 0, sizeof(SUCOMPLEX) * eq->params.length);
 
@@ -109,7 +113,8 @@ su_equalizer_feed(su_equalizer_t *eq, SUCOMPLEX x)
   return y;
 }
 
-void su_equalizer_finalize(su_equalizer_t *eq)
+void
+su_equalizer_finalize(su_equalizer_t *eq)
 {
   if (eq->x != NULL)
     free(eq->x);

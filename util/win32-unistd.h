@@ -23,7 +23,7 @@
 #include "win32-fcntl.h"
 
 #ifndef _SC_NPROCESSORS_ONLN
-#  define _SC_NPROCESSORS_ONLN 84
+#define _SC_NPROCESSORS_ONLN 84
 #endif /* _SC_NPROCESSORS_ONLN */
 
 #define pipe(fds) _pipe(fds, 4096, _O_BINARY)
@@ -33,7 +33,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 long sysconf(int name);
-int  getpagesize();
+int getpagesize();
 
 #ifdef __cplusplus
 }

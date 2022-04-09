@@ -26,10 +26,10 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -37,9 +37,9 @@ extern "C" {
 #define SU_COSTAS_FIR_ORDER_THRESHOLD 20
 
 struct sigutils_pll {
-  SUFLOAT   alpha;
-  SUFLOAT   beta;
-  SUFLOAT   lock;
+  SUFLOAT alpha;
+  SUFLOAT beta;
+  SUFLOAT lock;
   SUCOMPLEX a;
   su_ncqo_t ncqo;
 };
@@ -60,15 +60,15 @@ enum sigutils_costas_kind {
 
 struct sigutils_costas {
   enum sigutils_costas_kind kind;
-  SUFLOAT                   a;
-  SUFLOAT                   b;
-  SUFLOAT                   lock;
-  su_iir_filt_t             af;      /* Arm filter */
-  SUCOMPLEX                 z;       /* Arm filter output */
-  SUCOMPLEX                 y;       /* Demodulation result */
-  SUCOMPLEX                 y_alpha; /* Result alpha */
-  SUFLOAT                   gain;    /* Loop gain */
-  su_ncqo_t                 ncqo;
+  SUFLOAT a;
+  SUFLOAT b;
+  SUFLOAT lock;
+  su_iir_filt_t af;  /* Arm filter */
+  SUCOMPLEX z;       /* Arm filter output */
+  SUCOMPLEX y;       /* Demodulation result */
+  SUCOMPLEX y_alpha; /* Result alpha */
+  SUFLOAT gain;      /* Loop gain */
+  su_ncqo_t ncqo;
 };
 
 typedef struct sigutils_costas su_costas_t;
@@ -89,10 +89,10 @@ SU_METHOD(su_pll, void, feed, SUFLOAT x);
 /* QPSK costas loops are way more complex than that */
 SU_CONSTRUCTOR(su_costas,
                enum sigutils_costas_kind kind,
-               SUFLOAT                   fhint,
-               SUFLOAT                   arm_bw,
-               unsigned int              arm_order,
-               SUFLOAT                   loop_bw);
+               SUFLOAT fhint,
+               SUFLOAT arm_bw,
+               unsigned int arm_order,
+               SUFLOAT loop_bw);
 SU_DESTRUCTOR(su_costas);
 
 SU_METHOD(su_costas, void, set_kind, enum sigutils_costas_kind kind);
@@ -100,9 +100,9 @@ SU_METHOD(su_costas, void, set_loop_gain, SUFLOAT gain);
 SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x);
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic pop
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif  // __clang__
 }
 #endif /* __cplusplus */
 

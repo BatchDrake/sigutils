@@ -26,24 +26,24 @@
 #include <unistd.h>
 
 #ifdef linux
-#  include <linux/unistd.h>
-#  define TID_FUNC (int)syscall(224)
+#include <linux/unistd.h>
+#define TID_FUNC (int)syscall(224)
 #else
-#  define TID_FUNC (int)getpid()
+#define TID_FUNC (int)getpid()
 #endif
 
 #define RECOMMENDED_LINE_SIZE 256
 
 #ifndef MIN
-#  define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 #ifndef MAX
-#  define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef SIGN
-#  define SIGN(x) (!(x < 0) - !(x > 0))
+#define SIGN(x) (!(x < 0) - !(x > 0))
 #endif
 
 #define _JOIN(a, b) a##b
@@ -55,11 +55,11 @@
 #define IN_BOUNDS(x, range) (((x) >= 0) && ((x) < (range)))
 
 #define PTR_LIST(type, name) \
-  type       **name##_list;  \
+  type **name##_list;        \
   unsigned int name##_count;
 
-#define PTR_LIST_PRIVATE(type, name)  \
-  SUPRIVATE type       **name##_list; \
+#define PTR_LIST_PRIVATE(type, name) \
+  SUPRIVATE type **name##_list;      \
   SUPRIVATE unsigned int name##_count;
 
 #define PTR_LIST_CONST(type, name) \
@@ -70,16 +70,16 @@
   SUPRIVATE const type **name##_list;      \
   SUPRIVATE unsigned int name##_count;
 
-#define PTR_LIST_LOCAL(type, name)  \
-  type       **name##_list  = NULL; \
+#define PTR_LIST_LOCAL(type, name) \
+  type **name##_list = NULL;       \
   unsigned int name##_count = 0;
 
 #define PTR_LIST_EXTERN(type, name) \
-  extern type       **name##_list;  \
+  extern type **name##_list;        \
   extern unsigned int name##_count;
 
 #define PTR_LIST_INIT(where, name) \
-  where->name##_list  = NULL;      \
+  where->name##_list = NULL;       \
   where->name##_count = 0;
 
 #define PTR_LIST_APPEND(name, ptr) \
@@ -107,13 +107,13 @@
 #define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)
 
 #ifdef __GNUC__
-#  define IGNORE_RESULT(type, expr)               \
-    do {                                          \
-      type ignored_val__ __attribute__((unused)); \
-      ignored_val__ = expr;                       \
-    } while (0)
+#define IGNORE_RESULT(type, expr)               \
+  do {                                          \
+    type ignored_val__ __attribute__((unused)); \
+    ignored_val__ = expr;                       \
+  } while (0)
 #else
-#  define IGNORE_RESULT(type, expr) (void)expr
+#define IGNORE_RESULT(type, expr) (void)expr
 #endif /* __GNUC__ */
 
 struct strlist {
@@ -121,7 +121,7 @@ struct strlist {
 };
 
 typedef struct _al {
-  int    al_argc;
+  int al_argc;
   char **al_argv;
 
   char *al_line;
@@ -131,9 +131,9 @@ struct grow_buf {
   size_t ptr;
   size_t size;
   size_t alloc;
-  int    loan;
+  int loan;
   union {
-    void          *buffer;
+    void *buffer;
     unsigned char *bytes;
   };
 };
@@ -158,58 +158,58 @@ arg_list_t *split_line(const char *);
 void grow_buf_init(grow_buf_t *buf);
 void grow_buf_init_loan(grow_buf_t *buf,
                         const void *data,
-                        size_t      size,
-                        size_t      alloc);
+                        size_t size,
+                        size_t alloc);
 
-int     grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc);
-void   *grow_buf_alloc(grow_buf_t *buf, size_t size);
-void   *grow_buf_append_hollow(grow_buf_t *buf, size_t size);
-int     grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
+int grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc);
+void *grow_buf_alloc(grow_buf_t *buf, size_t size);
+void *grow_buf_append_hollow(grow_buf_t *buf, size_t size);
+int grow_buf_append(grow_buf_t *buf, const void *data, size_t size);
 ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t);
-int     grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...);
-int     grow_buf_append_null(grow_buf_t *buf);
-void   *grow_buf_get_buffer(const grow_buf_t *buf);
-void   *grow_buf_current_data(const grow_buf_t *buf);
-size_t  grow_buf_get_size(const grow_buf_t *buf);
-size_t  grow_buf_ptr(const grow_buf_t *buf);
-size_t  grow_buf_avail(const grow_buf_t *buf);
-void    grow_buf_finalize(grow_buf_t *buf);
-void    grow_buf_shrink(grow_buf_t *buf);
-void    grow_buf_clear(grow_buf_t *buf);
-size_t  grow_buf_seek(grow_buf_t *buf, off_t offset, int whence);
-int     grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src);
+int grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...);
+int grow_buf_append_null(grow_buf_t *buf);
+void *grow_buf_get_buffer(const grow_buf_t *buf);
+void *grow_buf_current_data(const grow_buf_t *buf);
+size_t grow_buf_get_size(const grow_buf_t *buf);
+size_t grow_buf_ptr(const grow_buf_t *buf);
+size_t grow_buf_avail(const grow_buf_t *buf);
+void grow_buf_finalize(grow_buf_t *buf);
+void grow_buf_shrink(grow_buf_t *buf);
+void grow_buf_clear(grow_buf_t *buf);
+size_t grow_buf_seek(grow_buf_t *buf, off_t offset, int whence);
+int grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src);
 
 void *xmalloc(size_t siz);
 void *xrealloc(void *p, size_t siz);
 char *xstrdup(const char *s);
-int   is_asciiz(const char *buf, int lbound, int ubound);
+int is_asciiz(const char *buf, int lbound, int ubound);
 char *vstrbuild(const char *fmt, va_list ap);
 char *strbuild(const char *fmt, ...);
 char *str_append_char(char *source, char c);
 char *fread_line(FILE *fp);
-void  ptr_list_append(void ***, unsigned int *, void *);
-int   ptr_list_append_check(void ***, unsigned int *, void *);
-int   ptr_list_remove_first(void ***, unsigned int *, void *);
-int   ptr_list_remove_all(void ***, int *, void *);
+void ptr_list_append(void ***, unsigned int *, void *);
+int ptr_list_append_check(void ***, unsigned int *, void *);
+int ptr_list_remove_first(void ***, unsigned int *, void *);
+int ptr_list_remove_all(void ***, int *, void *);
 
 void errno_save(void);
 void errno_restore(void);
 
 struct strlist *strlist_new(void);
-void            strlist_append_string(struct strlist *, const char *);
+void strlist_append_string(struct strlist *, const char *);
 void strlist_walk(struct strlist *, void *, void (*)(const char *, void *));
 void strlist_destroy(struct strlist *);
 void strlist_debug(const struct strlist *);
 void strlist_cat(struct strlist *, const struct strlist *);
 void strlist_union(struct strlist *, const struct strlist *);
-int  strlist_have_element(const struct strlist *, const char *);
+int strlist_have_element(const struct strlist *, const char *);
 unsigned int yday_to_daymonth(int, int);
 
 char *trim(const char *);
 char *rtrim(const char *);
 char *ltrim(const char *);
-int   lscanf(const char *, ...);
-int   lscanf_huge(const char *, ...);
+int lscanf(const char *, ...);
+int lscanf_huge(const char *, ...);
 
 #ifdef __sun__ /* puto Solaris */
 int dprintf(int fd, const char *fmt, ...);

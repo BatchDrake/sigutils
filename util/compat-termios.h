@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_TERMIOS_H
 
 #ifdef _WIN32
-#  include "win32-termios.h"
+#include "win32-termios.h"
 #else
-#  include <termios.h>
+#include <termios.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_TERMIOS_H */

@@ -65,8 +65,8 @@ void su_taps_rrc_init(SUFLOAT *h, SUFLOAT T, SUFLOAT beta, SUSCOUNT size);
 void su_taps_brickwall_lp_init(SUFLOAT *h, SUFLOAT fc, SUSCOUNT size);
 
 void su_taps_brickwall_bp_init(SUFLOAT *h,
-                               SUFLOAT  bw,
-                               SUFLOAT  if_nor,
+                               SUFLOAT bw,
+                               SUFLOAT if_nor,
                                SUSCOUNT size);
 
 #ifdef __cplusplus

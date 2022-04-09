@@ -33,25 +33,25 @@
 SUBOOL
 su_test_block(su_test_context_t *ctx)
 {
-  SUBOOL               ok         = SU_FALSE;
-  su_block_t          *block      = NULL;
-  su_block_port_t      port       = su_block_port_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
-  SUCOMPLEX            samp       = 0;
+  SUCOMPLEX samp = 0;
 
   SU_TEST_START(ctx);
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   block = su_block_new("agc", &agc_params);
@@ -61,8 +61,8 @@ su_test_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_block_port_plug(&port, block, 0));
 
   /* Try to read (this must fail) */
-  SU_TEST_ASSERT(su_block_port_read(&port, &samp, 1) ==
-                 SU_BLOCK_PORT_READ_ERROR_ACQUIRE);
+  SU_TEST_ASSERT(su_block_port_read(&port, &samp, 1)
+                 == SU_BLOCK_PORT_READ_ERROR_ACQUIRE);
 
   ok = SU_TRUE;
 done:
@@ -80,32 +80,32 @@ done:
 SUBOOL
 su_test_block_plugging(su_test_context_t *ctx)
 {
-  SUBOOL               ok         = SU_FALSE;
-  su_block_t          *agc_block  = NULL;
-  su_block_t          *wav_block  = NULL;
-  su_block_port_t      port       = su_block_port_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *agc_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUCOMPLEX           *rx = NULL;
-  int                  i;
-  unsigned int         j = 0;
-  SUSDIFF              got;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUCOMPLEX *rx = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSDIFF got;
 
   SU_TEST_START(ctx);
 
   SU_TEST_ASSERT(rx = su_test_ctx_getc(ctx, "rx"));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   agc_block = su_block_new("agc", &agc_params);
@@ -150,27 +150,28 @@ done:
 }
 
 struct su_test_block_flow_control_params {
-  su_block_port_t   *port;
+  su_block_port_t *port;
   su_test_context_t *ctx;
-  SUCOMPLEX         *readbuf;
-  SUSCOUNT           buffer_size;
-  SUBOOL             oddity;
-  SUBOOL             ok;
+  SUCOMPLEX *readbuf;
+  SUSCOUNT buffer_size;
+  SUBOOL oddity;
+  SUBOOL ok;
 };
 
-SUPRIVATE void *su_test_block_flow_control_reader_thread(void *private)
+SUPRIVATE void *
+su_test_block_flow_control_reader_thread(void *private)
 {
-  struct timespec                           wait_period;
+  struct timespec wait_period;
   struct su_test_block_flow_control_params *params =
       (struct su_test_block_flow_control_params *)private;
-  SUSCOUNT           p;
-  SUSCOUNT           rem;
-  SUSDIFF            got;
+  SUSCOUNT p;
+  SUSCOUNT rem;
+  SUSDIFF got;
   su_test_context_t *ctx = params->ctx;
-  SUBOOL             ok  = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
 
   /* Read sleep period */
-  wait_period.tv_sec  = SU_TEST_BLOCK_READ_WAIT_MS / 1000;
+  wait_period.tv_sec = SU_TEST_BLOCK_READ_WAIT_MS / 1000;
   wait_period.tv_nsec = (SU_TEST_BLOCK_READ_WAIT_MS * 1000000) % 1000000000;
 
   /* Populate buffer */
@@ -199,19 +200,19 @@ done:
 SUBOOL
 su_test_block_flow_control(su_test_context_t *ctx)
 {
-  SUBOOL                                   ok           = SU_FALSE;
-  su_block_t                              *siggen_block = NULL;
-  su_block_port_t                          port_1 = su_block_port_INITIALIZER;
-  su_block_port_t                          port_2 = su_block_port_INITIALIZER;
-  SUCOMPLEX                               *readbuf_1 = NULL;
-  SUCOMPLEX                               *readbuf_2 = NULL;
-  pthread_t                                thread_1;
-  pthread_t                                thread_2;
-  SUBOOL                                   thread_1_running = SU_FALSE;
-  SUBOOL                                   thread_2_running = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *siggen_block = NULL;
+  su_block_port_t port_1 = su_block_port_INITIALIZER;
+  su_block_port_t port_2 = su_block_port_INITIALIZER;
+  SUCOMPLEX *readbuf_1 = NULL;
+  SUCOMPLEX *readbuf_2 = NULL;
+  pthread_t thread_1;
+  pthread_t thread_2;
+  SUBOOL thread_1_running = SU_FALSE;
+  SUBOOL thread_2_running = SU_FALSE;
   struct su_test_block_flow_control_params thread_1_params;
   struct su_test_block_flow_control_params thread_2_params;
-  SUSCOUNT                                 i;
+  SUSCOUNT i;
 
   SU_TEST_START(ctx);
 
@@ -242,29 +243,31 @@ su_test_block_flow_control(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_block_port_plug(&port_2, siggen_block, 0));
 
   /* Create thread params */
-  thread_1_params.ctx         = ctx;
-  thread_1_params.port        = &port_1;
-  thread_1_params.readbuf     = readbuf_1;
+  thread_1_params.ctx = ctx;
+  thread_1_params.port = &port_1;
+  thread_1_params.readbuf = readbuf_1;
   thread_1_params.buffer_size = ctx->params->buffer_size;
-  thread_1_params.oddity      = SU_FALSE;
+  thread_1_params.oddity = SU_FALSE;
 
-  thread_2_params.ctx         = ctx;
-  thread_2_params.port        = &port_2;
-  thread_2_params.readbuf     = readbuf_2;
+  thread_2_params.ctx = ctx;
+  thread_2_params.port = &port_2;
+  thread_2_params.readbuf = readbuf_2;
   thread_2_params.buffer_size = ctx->params->buffer_size;
-  thread_2_params.oddity      = SU_TRUE;
+  thread_2_params.oddity = SU_TRUE;
 
   /* Spawn both threads */
   SU_TEST_ASSERT(pthread_create(&thread_1,
                                 NULL,
                                 su_test_block_flow_control_reader_thread,
-                                &thread_1_params) != -1);
+                                &thread_1_params)
+                 != -1);
   thread_1_running = SU_TRUE;
 
   SU_TEST_ASSERT(pthread_create(&thread_2,
                                 NULL,
                                 su_test_block_flow_control_reader_thread,
-                                &thread_2_params) != -1);
+                                &thread_2_params)
+                 != -1);
   thread_2_running = SU_TRUE;
 
   pthread_join(thread_1, NULL);
@@ -307,17 +310,17 @@ done:
 SUBOOL
 su_test_tuner(su_test_context_t *ctx)
 {
-  SUBOOL               ok          = SU_FALSE;
-  su_block_t          *agc_block   = NULL;
-  su_block_t          *tuner_block = NULL;
-  su_block_t          *wav_block   = NULL;
-  su_block_port_t      port        = su_block_port_INITIALIZER;
-  struct su_agc_params agc_params  = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUCOMPLEX           *rx = NULL;
-  int                  i;
-  unsigned int         j = 0;
-  SUSDIFF              got;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *agc_block = NULL;
+  su_block_t *tuner_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUCOMPLEX *rx = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSDIFF got;
 
   /* Block properties */
   int *samp_rate;
@@ -325,17 +328,17 @@ su_test_tuner(su_test_context_t *ctx)
 
   SU_TEST_ASSERT(rx = su_test_ctx_getc(ctx, "rx"));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   wav_block = su_block_new("wavfile", "test.wav");
@@ -404,27 +407,27 @@ done:
 SUBOOL
 su_test_costas_block(su_test_context_t *ctx)
 {
-  SUBOOL               ok           = SU_FALSE;
-  su_block_t          *costas_block = NULL;
-  su_block_t          *agc_block    = NULL;
-  su_block_t          *wav_block    = NULL;
-  su_block_port_t      port         = su_block_port_INITIALIZER;
-  struct su_agc_params agc_params   = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUCOMPLEX           *rx   = NULL;
-  SUFLOAT             *freq = NULL;
-  int                  i;
-  unsigned int         j = 0;
-  SUSDIFF              got;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *costas_block = NULL;
+  su_block_t *agc_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUCOMPLEX *rx = NULL;
+  SUFLOAT *freq = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSDIFF got;
 
   /* Signal properties */
-  const SUFLOAT      baud         = 468;
-  const SUFLOAT      arm_bw       = .5 * baud;
-  const unsigned int arm_order    = 10;
-  const SUFLOAT      loop_bw      = 1e-1 * baud;
+  const SUFLOAT baud = 468;
+  const SUFLOAT arm_bw = .5 * baud;
+  const unsigned int arm_order = 10;
+  const SUFLOAT loop_bw = 1e-1 * baud;
   const unsigned int sample_count = 8000 * 59;
   /* Block properties */
-  int     *samp_rate;
+  int *samp_rate;
   SUFLOAT *f;
 
   SU_TEST_START(ctx);
@@ -432,17 +435,17 @@ su_test_costas_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   wav_block = su_block_new("wavfile", "test.wav");
@@ -489,7 +492,7 @@ su_test_costas_block(su_test_context_t *ctx)
     if (ctx->params->dump_fmt)
       for (i = 0; i < got; ++i) {
         freq[i + j] = *f;
-        rx[i + j]   = buffer[i];
+        rx[i + j] = buffer[i];
       }
 
     if ((j % (17 * 25)) == 0)
@@ -498,8 +501,8 @@ su_test_costas_block(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909 &&
-                 SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 
@@ -524,28 +527,28 @@ done:
 SUBOOL
 su_test_rrc_block(su_test_context_t *ctx)
 {
-  SUBOOL               ok           = SU_FALSE;
-  su_block_t          *costas_block = NULL;
-  su_block_t          *agc_block    = NULL;
-  su_block_t          *rrc_block    = NULL;
-  su_block_t          *wav_block    = NULL;
-  su_block_port_t      port         = su_block_port_INITIALIZER;
-  struct su_agc_params agc_params   = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUCOMPLEX           *rx   = NULL;
-  SUFLOAT             *freq = NULL;
-  int                  i;
-  unsigned int         j = 0;
-  SUSDIFF              got;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *costas_block = NULL;
+  su_block_t *agc_block = NULL;
+  su_block_t *rrc_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUCOMPLEX *rx = NULL;
+  SUFLOAT *freq = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSDIFF got;
 
   /* Signal properties */
-  const SUFLOAT      baud         = 468;
-  const SUFLOAT      arm_bw       = 2 * baud;
-  const unsigned int arm_order    = 3;
-  const SUFLOAT      loop_bw      = 1e-1 * baud;
+  const SUFLOAT baud = 468;
+  const SUFLOAT arm_bw = 2 * baud;
+  const unsigned int arm_order = 3;
+  const SUFLOAT loop_bw = 1e-1 * baud;
   const unsigned int sample_count = 8000 * 59;
   /* Block properties */
-  int     *samp_rate;
+  int *samp_rate;
   SUFLOAT *f;
   SUFLOAT *gain;
 
@@ -554,17 +557,17 @@ su_test_rrc_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   wav_block = su_block_new("wavfile", "test.wav");
@@ -626,7 +629,7 @@ su_test_rrc_block(su_test_context_t *ctx)
     if (ctx->params->dump_fmt)
       for (i = 0; i < got; ++i) {
         freq[i + j] = *f;
-        rx[i + j]   = buffer[i];
+        rx[i + j] = buffer[i];
       }
 
     if ((j % (17 * 25)) == 0)
@@ -635,8 +638,8 @@ su_test_rrc_block(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909 &&
-                 SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 
@@ -664,34 +667,34 @@ done:
 SUBOOL
 su_test_rrc_block_with_if(su_test_context_t *ctx)
 {
-  SUBOOL               ok           = SU_FALSE;
-  su_block_t          *rrc_block    = NULL;
-  su_block_t          *costas_block = NULL;
-  su_block_t          *agc_block    = NULL;
-  su_block_t          *tuner_block  = NULL;
-  su_block_t          *wav_block    = NULL;
-  su_block_port_t      port         = su_block_port_INITIALIZER;
-  struct su_agc_params agc_params   = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUFLOAT             *freq = NULL;
-  SUCOMPLEX           *rx   = NULL;
-  int                  i;
-  unsigned int         j = 0;
-  SUSDIFF              got;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *rrc_block = NULL;
+  su_block_t *costas_block = NULL;
+  su_block_t *agc_block = NULL;
+  su_block_t *tuner_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUFLOAT *freq = NULL;
+  SUCOMPLEX *rx = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSDIFF got;
 
   /* Signal properties */
-  const SUFLOAT      baud         = 468;
-  const SUFLOAT      arm_bw       = 2 * baud;
-  const unsigned int arm_order    = 3;
-  const SUFLOAT      loop_bw      = 1e-1 * baud;
+  const SUFLOAT baud = 468;
+  const SUFLOAT arm_bw = 2 * baud;
+  const unsigned int arm_order = 3;
+  const SUFLOAT loop_bw = 1e-1 * baud;
   const unsigned int sample_count = 8000 * 59;
-  const SUFLOAT      if_off       = 4000; /* IF: 1000 Hz */
-  const SUFLOAT      fc           = 912;  /* FC: 912 Hz */
+  const SUFLOAT if_off = 4000; /* IF: 1000 Hz */
+  const SUFLOAT fc = 912;      /* FC: 912 Hz */
   /* Block properties */
-  int          *samp_rate;
-  SUFLOAT      *f;
-  SUFLOAT      *gain;
-  SUFLOAT      *taps;
+  int *samp_rate;
+  SUFLOAT *f;
+  SUFLOAT *gain;
+  SUFLOAT *taps;
   unsigned int *size;
 
   SU_TEST_START(ctx);
@@ -699,17 +702,17 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   SU_TEST_ASSERT(freq = su_test_ctx_getf_w_size(ctx, "freq", sample_count));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 1000;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   wav_block = su_block_new("wavfile", "test.wav");
@@ -791,7 +794,7 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
     if (ctx->params->dump_fmt)
       for (i = 0; i < got; ++i) {
         freq[i + j] = *f;
-        rx[i + j]   = buffer[i];
+        rx[i + j] = buffer[i];
       }
 
     if ((j % (17 * 25)) == 0)
@@ -800,8 +803,8 @@ su_test_rrc_block_with_if(su_test_context_t *ctx)
   }
 
   SU_INFO("\n");
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) < 1.01 * if_off &&
-                 SU_NORM2ABS_FREQ(*samp_rate, *f) > 0.99 * if_off);
+  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) < 1.01 * if_off
+                 && SU_NORM2ABS_FREQ(*samp_rate, *f) > 0.99 * if_off);
 
   ok = SU_TRUE;
 
@@ -833,11 +836,12 @@ done:
   return ok;
 }
 
-SUPRIVATE SUFLOAT su_test_cdr_block_symbol_uncertainty(SUCOMPLEX symbol)
+SUPRIVATE SUFLOAT
+su_test_cdr_block_symbol_uncertainty(SUCOMPLEX symbol)
 {
-  SUCOMPLEX    symbols[] = {1 + I, 1 - I, -1 + I, -1 - I};
-  unsigned int i         = 0;
-  SUFLOAT      dist      = INFINITY;
+  SUCOMPLEX symbols[] = {1 + I, 1 - I, -1 + I, -1 - I};
+  unsigned int i = 0;
+  SUFLOAT dist = INFINITY;
 
   for (i = 0; i < sizeof(symbols) / sizeof(SUCOMPLEX); ++i)
     if (SU_C_ABS(symbol - symbols[i]) < dist)
@@ -849,33 +853,33 @@ SUPRIVATE SUFLOAT su_test_cdr_block_symbol_uncertainty(SUCOMPLEX symbol)
 SUBOOL
 su_test_cdr_block(su_test_context_t *ctx)
 {
-  SUBOOL               ok           = SU_FALSE;
-  su_block_t          *cdr_block    = NULL;
-  su_block_t          *costas_block = NULL;
-  su_block_t          *agc_block    = NULL;
-  su_block_t          *rrc_block    = NULL;
-  su_block_t          *wav_block    = NULL;
-  su_block_port_t      port         = su_block_port_INITIALIZER;
-  struct su_agc_params agc_params   = su_agc_params_INITIALIZER;
-  SUCOMPLEX            buffer[17]; /* Prime number on purpose */
-  SUCOMPLEX           *rx   = NULL;
-  SUFLOAT             *freq = NULL;
-  SUFLOAT             *unc  = NULL;
-  int                  i;
-  unsigned int         j    = 0;
-  SUSCOUNT             uncp = 0;
-  SUSDIFF              got;
+  SUBOOL ok = SU_FALSE;
+  su_block_t *cdr_block = NULL;
+  su_block_t *costas_block = NULL;
+  su_block_t *agc_block = NULL;
+  su_block_t *rrc_block = NULL;
+  su_block_t *wav_block = NULL;
+  su_block_port_t port = su_block_port_INITIALIZER;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUCOMPLEX buffer[17]; /* Prime number on purpose */
+  SUCOMPLEX *rx = NULL;
+  SUFLOAT *freq = NULL;
+  SUFLOAT *unc = NULL;
+  int i;
+  unsigned int j = 0;
+  SUSCOUNT uncp = 0;
+  SUSDIFF got;
 
   /* Signal properties */
-  const SUFLOAT  baud             = 468;
-  const SUFLOAT  arm_bw           = 2 * baud;
-  const SUSCOUNT arm_order        = 3;
-  const SUFLOAT  loop_bw          = 1e-1 * baud;
-  const SUSCOUNT sample_count     = 8000 * 59;
+  const SUFLOAT baud = 468;
+  const SUFLOAT arm_bw = 2 * baud;
+  const SUSCOUNT arm_order = 3;
+  const SUFLOAT loop_bw = 1e-1 * baud;
+  const SUSCOUNT sample_count = 8000 * 59;
   const SUSCOUNT unc_measure_size = 100;
 
   /* Block properties */
-  int     *samp_rate;
+  int *samp_rate;
   SUFLOAT *f;
   SUFLOAT *gain;
   SUFLOAT *bmax, *bmin, *beta, *alpha, *bnor;
@@ -889,17 +893,17 @@ su_test_cdr_block(su_test_context_t *ctx)
                      SU_CEIL(sample_count / (SUFLOAT)unc_measure_size)));
   SU_TEST_ASSERT(rx = su_test_ctx_getc_w_size(ctx, "rx", sample_count));
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   wav_block = su_block_new("wavfile", "test.wav");
@@ -994,7 +998,7 @@ su_test_cdr_block(su_test_context_t *ctx)
     if (ctx->params->dump_fmt)
       for (i = 0; i < got; ++i) {
         freq[i + j] = *f;
-        rx[i + j]   = buffer[i];
+        rx[i + j] = buffer[i];
         unc[uncp] +=
             su_test_cdr_block_symbol_uncertainty(buffer[i]) / unc_measure_size;
         if (((i + j + 1) % unc_measure_size) == 0)
@@ -1013,8 +1017,8 @@ su_test_cdr_block(su_test_context_t *ctx)
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "freq", j));
   SU_TEST_ASSERT(su_test_ctx_resize_buf(ctx, "unc", uncp + 1));
 
-  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909 &&
-                 SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
+  SU_TEST_ASSERT(SU_NORM2ABS_FREQ(*samp_rate, *f) > 909
+                 && SU_NORM2ABS_FREQ(*samp_rate, *f) < 911);
 
   ok = SU_TRUE;
 

@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_FCNTL_H
 
 #ifdef _WIN32
-#  include "win32-fcntl.h"
+#include "win32-fcntl.h"
 #else
-#  include <fcntl.h>
+#include <fcntl.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_FCNTL_H */

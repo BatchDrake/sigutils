@@ -25,15 +25,14 @@
 #include "log.h"
 #include "taps.h"
 
-SUPRIVATE SUBOOL su_block_rrc_ctor(struct sigutils_block *block,
-                                   void **private,
-                                   va_list ap)
+SUPRIVATE SUBOOL
+su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
 {
-  SUBOOL         ok    = SU_FALSE;
-  su_iir_filt_t *filt  = NULL;
-  unsigned int   order = 0;
-  SUFLOAT        T     = 0;
-  SUFLOAT        beta  = 0;
+  SUBOOL ok = SU_FALSE;
+  su_iir_filt_t *filt = NULL;
+  unsigned int order = 0;
+  SUFLOAT T = 0;
+  SUFLOAT beta = 0;
 
   if ((filt = calloc(1, sizeof(su_iir_filt_t))) == NULL) {
     SU_ERROR("Cannot allocate RRC filter state\n");
@@ -41,8 +40,8 @@ SUPRIVATE SUBOOL su_block_rrc_ctor(struct sigutils_block *block,
   }
 
   order = va_arg(ap, unsigned int);
-  T     = va_arg(ap, double);
-  beta  = va_arg(ap, double);
+  T = va_arg(ap, double);
+  beta = va_arg(ap, double);
 
   if (!su_iir_rrc_init(filt, order, T, beta)) {
     SU_ERROR("Failed to initialize RRC filter\n");
@@ -66,7 +65,8 @@ done:
   return ok;
 }
 
-SUPRIVATE void su_block_rrc_dtor(void *private)
+SUPRIVATE void
+su_block_rrc_dtor(void *private)
 {
   su_iir_filt_t *filt;
 
@@ -78,15 +78,16 @@ SUPRIVATE void su_block_rrc_dtor(void *private)
   }
 }
 
-SUPRIVATE SUSDIFF su_block_rrc_acquire(void            *priv,
-                                       su_stream_t     *out,
-                                       unsigned int     port_id,
-                                       su_block_port_t *in)
+SUPRIVATE SUSDIFF
+su_block_rrc_acquire(void *priv,
+                     su_stream_t *out,
+                     unsigned int port_id,
+                     su_block_port_t *in)
 {
   su_iir_filt_t *filt;
-  SUSDIFF        size;
-  SUSDIFF        got;
-  int            i = 0;
+  SUSDIFF size;
+  SUSDIFF got;
+  int i = 0;
 
   SUCOMPLEX *start;
 

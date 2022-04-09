@@ -24,10 +24,10 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -41,19 +41,19 @@ struct sigutils_agc {
   SUBOOL enabled;
 
   /* AGC parameters */
-  SUFLOAT      knee;       /* AGC Knee in dBs */
-  SUFLOAT      gain_slope; /* Gain slope in dBs (0..10) */
-  SUFLOAT      fixed_gain; /* Gain below knee */
-  unsigned int hang_max;   /* Hang time in number of samples */
-  unsigned int hang_n;     /* Hang timer */
+  SUFLOAT knee;          /* AGC Knee in dBs */
+  SUFLOAT gain_slope;    /* Gain slope in dBs (0..10) */
+  SUFLOAT fixed_gain;    /* Gain below knee */
+  unsigned int hang_max; /* Hang time in number of samples */
+  unsigned int hang_n;   /* Hang timer */
 
   /* AGC memory - delay line */
-  SUCOMPLEX   *delay_line;
+  SUCOMPLEX *delay_line;
   unsigned int delay_line_size;
   unsigned int delay_line_ptr;
 
   /* AGC memory - signal magnitude history */
-  SUFLOAT     *mag_history;
+  SUFLOAT *mag_history;
   unsigned int mag_history_size;
   unsigned int mag_history_ptr;
 
@@ -78,8 +78,8 @@ typedef struct sigutils_agc su_agc_t;
   }
 
 struct su_agc_params {
-  SUFLOAT      threshold;
-  SUFLOAT      slope_factor;
+  SUFLOAT threshold;
+  SUFLOAT slope_factor;
   unsigned int hang_max;
   unsigned int delay_line_size;
   unsigned int mag_history_size;
@@ -104,9 +104,9 @@ SU_DESTRUCTOR(su_agc);
 SU_METHOD(su_agc, SUCOMPLEX, feed, SUCOMPLEX x);
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic pop
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif  // __clang__
 }
 #endif /* __cplusplus */
 

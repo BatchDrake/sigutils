@@ -17,7 +17,8 @@
 #include "win32-socket.h"
 
 /* WARN: EXTREMELY ADHOC */
-int fcntl(int fd, int cmd, ... /* arg */)
+int
+fcntl(int fd, int cmd, ... /* arg */)
 {
   switch (cmd) {
     case F_GETFL: {
@@ -27,8 +28,8 @@ int fcntl(int fd, int cmd, ... /* arg */)
     } break;
     case F_SETFL: {
       /* Assume suscan always wants to set fd to non blocking mode */
-      u_long iMode   = 0;
-      int    iResult = ioctlsocket(fd, FIONBIO, &iMode);
+      u_long iMode = 0;
+      int iResult = ioctlsocket(fd, FIONBIO, &iMode);
       if (iResult != NO_ERROR)
         return -1;
     } break;

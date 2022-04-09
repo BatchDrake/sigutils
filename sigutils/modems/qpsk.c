@@ -39,12 +39,12 @@
 struct qpsk_modem {
   SUSCOUNT fs; /* Sampling frequency */
 
-  SUFLOAT  baud;
-  SUFLOAT  arm_bw;  /* Arm filter bandwidth */
-  SUFLOAT  loop_bw; /* Loop bandwidth */
+  SUFLOAT baud;
+  SUFLOAT arm_bw;   /* Arm filter bandwidth */
+  SUFLOAT loop_bw;  /* Loop bandwidth */
   SUSCOUNT mf_span; /* RRC filter span in symbols */
-  SUFLOAT  rolloff; /* Rolloff factor */
-  SUFLOAT  fc;      /* Carrier frequency */
+  SUFLOAT rolloff;  /* Rolloff factor */
+  SUFLOAT fc;       /* Carrier frequency */
 
   SUBOOL abc; /* Enable Automatic Baudrate Control */
   SUBOOL afc; /* Enable Automatic Frequency Control */
@@ -61,7 +61,8 @@ struct qpsk_modem {
   su_block_port_t port;
 };
 
-void su_qpsk_modem_dtor(void *private)
+void
+su_qpsk_modem_dtor(void *private)
 {
   free(private);
 }
@@ -111,12 +112,12 @@ void su_qpsk_modem_dtor(void *private)
 SUBOOL
 su_qpsk_modem_ctor(su_modem_t *modem, void **private)
 {
-  struct qpsk_modem *new           = NULL;
-  struct su_agc_params agc_params  = su_agc_params_INITIALIZER;
-  SUFLOAT             *rrc_gain    = NULL;
-  SUFLOAT             *cdr_alpha   = NULL;
-  SUFLOAT             *cdr_beta    = NULL;
-  SUFLOAT             *costas_beta = NULL;
+  struct qpsk_modem *new = NULL;
+  struct su_agc_params agc_params = su_agc_params_INITIALIZER;
+  SUFLOAT *rrc_gain = NULL;
+  SUFLOAT *cdr_alpha = NULL;
+  SUFLOAT *cdr_beta = NULL;
+  SUFLOAT *costas_beta = NULL;
 
   if ((new = calloc(1, sizeof(struct qpsk_modem))) == NULL)
     goto fail;
@@ -135,20 +136,20 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
     goto fail;
   }
 
-  new->arm_bw  = SU_QPSK_MODEM_ARM_BANDWIDTH_FACTOR *new->baud;
+  new->arm_bw = SU_QPSK_MODEM_ARM_BANDWIDTH_FACTOR *new->baud;
   new->loop_bw = SU_QPSK_MODEM_LOOP_BANDWIDTH_FACTOR *new->baud;
 
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   /* Create blocks */
@@ -180,7 +181,8 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
   /* Expose some properties */
   if ((new->fc_ref = su_block_get_property_ref(new->costas_block,
                                                SU_PROPERTY_TYPE_FLOAT,
-                                               "f")) == NULL) {
+                                               "f"))
+      == NULL) {
     SU_ERROR("Cannot find f property in Costas block\n");
     goto fail;
   }
@@ -188,28 +190,32 @@ su_qpsk_modem_ctor(su_modem_t *modem, void **private)
   /* Tweak others properties */
   if ((rrc_gain = su_block_get_property_ref(new->rrc_block,
                                             SU_PROPERTY_TYPE_FLOAT,
-                                            "gain")) == NULL) {
+                                            "gain"))
+      == NULL) {
     SU_ERROR("Cannot find gain property in RRC block\n");
     goto fail;
   }
 
   if ((cdr_alpha = su_block_get_property_ref(new->cdr_block,
                                              SU_PROPERTY_TYPE_FLOAT,
-                                             "alpha")) == NULL) {
+                                             "alpha"))
+      == NULL) {
     SU_ERROR("Cannot find alpha property in CDR block\n");
     goto fail;
   }
 
   if ((cdr_beta = su_block_get_property_ref(new->cdr_block,
                                             SU_PROPERTY_TYPE_FLOAT,
-                                            "beta")) == NULL) {
+                                            "beta"))
+      == NULL) {
     SU_ERROR("Cannot find beta property in CDR block\n");
     goto fail;
   }
 
   if ((costas_beta = su_block_get_property_ref(new->costas_block,
                                                SU_PROPERTY_TYPE_FLOAT,
-                                               "beta")) == NULL) {
+                                               "beta"))
+      == NULL) {
     SU_ERROR("Cannot find beta property in Costas block\n");
     goto fail;
   }
@@ -256,7 +262,8 @@ su_qpsk_modem_onpropertychanged(void *private, const su_modem_property_t *prop)
   return SU_TRUE;
 }
 
-SUPRIVATE void su_qpsk_modem_update_state(struct qpsk_modem *modem)
+SUPRIVATE void
+su_qpsk_modem_update_state(struct qpsk_modem *modem)
 {
   modem->fc = SU_NORM2ABS_FREQ(modem->fs, *modem->fc_ref);
 }
@@ -265,8 +272,8 @@ SUCOMPLEX
 su_qpsk_modem_read_sample(su_modem_t *modem, void *private)
 {
   struct qpsk_modem *qpsk_modem = (struct qpsk_modem *)private;
-  SUSDIFF            got        = 0;
-  SUCOMPLEX          sample;
+  SUSDIFF got = 0;
+  SUCOMPLEX sample;
 
   if ((got = su_block_port_read(&qpsk_modem->port, &sample, 1)) == 0)
     return nan("nosym");
@@ -282,9 +289,9 @@ SUSYMBOL
 su_qpsk_modem_read_sym(su_modem_t *modem, void *private)
 {
   struct qpsk_modem *qpsk_modem = (struct qpsk_modem *)private;
-  SUSDIFF            got        = 0;
-  SUCOMPLEX          sample;
-  SUSYMBOL           sym = 0;
+  SUSDIFF got = 0;
+  SUCOMPLEX sample;
+  SUSYMBOL sym = 0;
 
   if ((got = su_block_port_read(&qpsk_modem->port, &sample, 1)) == 0)
     return SU_NOSYMBOL;

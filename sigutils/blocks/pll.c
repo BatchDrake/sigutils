@@ -24,18 +24,17 @@
 #include "log.h"
 #include "pll.h"
 
-SUPRIVATE SUBOOL su_block_costas_ctor(struct sigutils_block *block,
-                                      void **private,
-                                      va_list ap)
+SUPRIVATE SUBOOL
+su_block_costas_ctor(struct sigutils_block *block, void **private, va_list ap)
 {
-  SUBOOL       ok     = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
   su_costas_t *costas = NULL;
   /* Constructor params */
   enum sigutils_costas_kind kind;
-  SUFLOAT                   fhint     = 0;
-  SUFLOAT                   arm_bw    = 0;
-  unsigned int              arm_order = 0;
-  SUFLOAT                   loop_bw   = 0;
+  SUFLOAT fhint = 0;
+  SUFLOAT arm_bw = 0;
+  unsigned int arm_order = 0;
+  SUFLOAT loop_bw = 0;
 
   if ((costas = calloc(1, sizeof(su_costas_t))) == NULL) {
     SU_ERROR("Cannot allocate Costas loop state");
@@ -43,11 +42,11 @@ SUPRIVATE SUBOOL su_block_costas_ctor(struct sigutils_block *block,
   }
 
   /* Variadic function calls promote floats to doubles */
-  kind      = va_arg(ap, enum sigutils_costas_kind);
-  fhint     = va_arg(ap, double);
-  arm_bw    = va_arg(ap, double);
+  kind = va_arg(ap, enum sigutils_costas_kind);
+  fhint = va_arg(ap, double);
+  arm_bw = va_arg(ap, double);
   arm_order = va_arg(ap, unsigned int);
-  loop_bw   = va_arg(ap, double);
+  loop_bw = va_arg(ap, double);
 
   if (!su_costas_init(costas, kind, fhint, arm_bw, arm_order, loop_bw)) {
     SU_ERROR("Failed to initialize Costas loop");
@@ -56,20 +55,23 @@ SUPRIVATE SUBOOL su_block_costas_ctor(struct sigutils_block *block,
 
   ok = SU_TRUE;
 
-  ok = ok && su_block_set_property_ref(block,
-                                       SU_PROPERTY_TYPE_FLOAT,
-                                       "f",
-                                       &costas->ncqo.fnor);
+  ok = ok
+       && su_block_set_property_ref(block,
+                                    SU_PROPERTY_TYPE_FLOAT,
+                                    "f",
+                                    &costas->ncqo.fnor);
 
-  ok = ok && su_block_set_property_ref(block,
-                                       SU_PROPERTY_TYPE_FLOAT,
-                                       "lock",
-                                       &costas->lock);
+  ok = ok
+       && su_block_set_property_ref(block,
+                                    SU_PROPERTY_TYPE_FLOAT,
+                                    "lock",
+                                    &costas->lock);
 
-  ok = ok && su_block_set_property_ref(block,
-                                       SU_PROPERTY_TYPE_FLOAT,
-                                       "beta",
-                                       &costas->b);
+  ok = ok
+       && su_block_set_property_ref(block,
+                                    SU_PROPERTY_TYPE_FLOAT,
+                                    "beta",
+                                    &costas->b);
 
 done:
   if (!ok) {
@@ -83,7 +85,8 @@ done:
   return ok;
 }
 
-SUPRIVATE void su_block_costas_dtor(void *private)
+SUPRIVATE void
+su_block_costas_dtor(void *private)
 {
   su_costas_t *costas;
 
@@ -95,15 +98,16 @@ SUPRIVATE void su_block_costas_dtor(void *private)
   }
 }
 
-SUPRIVATE SUSDIFF su_block_costas_acquire(void            *priv,
-                                          su_stream_t     *out,
-                                          unsigned int     port_id,
-                                          su_block_port_t *in)
+SUPRIVATE SUSDIFF
+su_block_costas_acquire(void *priv,
+                        su_stream_t *out,
+                        unsigned int port_id,
+                        su_block_port_t *in)
 {
   su_costas_t *costas;
-  SUSDIFF      size;
-  SUSDIFF      got;
-  int          i = 0;
+  SUSDIFF size;
+  SUSDIFF got;
+  int i = 0;
 
   SUCOMPLEX *start;
 

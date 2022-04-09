@@ -28,16 +28,16 @@
 #include "test_param.h"
 
 struct su_specttuner_context {
-  SUCOMPLEX   *output;
+  SUCOMPLEX *output;
   unsigned int p;
 };
 
-SUPRIVATE SUBOOL su_specttuner_append(
-    const su_specttuner_channel_t *channel,
-    void *private,
-    const SUCOMPLEX
-            *data, /* This pointer remains valid until the next call to feed */
-    SUSCOUNT size)
+SUPRIVATE SUBOOL
+su_specttuner_append(const su_specttuner_channel_t *channel,
+                     void *private,
+                     const SUCOMPLEX *data, /* This pointer remains valid until
+                                               the next call to feed */
+                     SUSCOUNT size)
 {
   struct su_specttuner_context *ctx = (struct su_specttuner_context *)private;
 
@@ -51,25 +51,25 @@ SUPRIVATE SUBOOL su_specttuner_append(
 
 SUBOOL
 su_test_ctx_dumpc(su_test_context_t *ctx,
-                  const char        *name,
-                  const SUCOMPLEX   *data,
-                  SUSCOUNT           size);
+                  const char *name,
+                  const SUCOMPLEX *data,
+                  SUSCOUNT size);
 
 SUBOOL
 su_test_specttuner_two_tones(su_test_context_t *ctx)
 {
-  SUCOMPLEX                        *input  = NULL;
-  SUCOMPLEX                        *output = NULL;
-  unsigned int                      p;
+  SUCOMPLEX *input = NULL;
+  SUCOMPLEX *output = NULL;
+  unsigned int p;
   struct sigutils_specttuner_params st_params =
       sigutils_specttuner_params_INITIALIZER;
   struct sigutils_specttuner_channel_params ch_params =
       sigutils_specttuner_channel_params_INITIALIZER;
   struct su_specttuner_context out_ctx;
-  su_specttuner_channel_t     *ch = NULL;
-  su_specttuner_t             *st = NULL;
-  su_ncqo_t                    lo1, lo2;
-  SUBOOL                       ok = SU_FALSE;
+  su_specttuner_channel_t *ch = NULL;
+  su_specttuner_t *st = NULL;
+  su_ncqo_t lo1, lo2;
+  SUBOOL ok = SU_FALSE;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -104,10 +104,10 @@ su_test_specttuner_two_tones(su_test_context_t *ctx)
   /* Define channel */
   memset(output, 0, sizeof(SUCOMPLEX) * ctx->params->buffer_size);
   out_ctx.output = output;
-  out_ctx.p      = 0;
+  out_ctx.p = 0;
 
   ch_params.privdata = &out_ctx;
-  ch_params.on_data  = su_specttuner_append;
+  ch_params.on_data = su_specttuner_append;
 
   ch_params.bw =
       SU_NORM2ANG_FREQ(SU_ABS2NORM_FREQ(SU_TEST_SPECTTUNER_SAMP_RATE, 100));

@@ -43,7 +43,7 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
   dinv = 1.f / (1.f + 2.f * .707f * fc + fc * fc);
 
   self->alpha = 4 * fc * fc * dinv;
-  self->beta  = 4 * 0.707 * fc * dinv;
+  self->beta = 4 * 0.707 * fc * dinv;
 
   su_ncqo_init(&self->ncqo, fhint);
 
@@ -52,10 +52,10 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
 
 SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x)
 {
-  SUCOMPLEX ref   = su_ncqo_read(&self->ncqo);
-  SUCOMPLEX mix   = x * SU_C_CONJ(ref);
-  SUFLOAT   phase = su_ncqo_get_phase(&self->ncqo);
-  SUFLOAT   error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
+  SUCOMPLEX ref = su_ncqo_read(&self->ncqo);
+  SUCOMPLEX mix = x * SU_C_CONJ(ref);
+  SUFLOAT phase = su_ncqo_get_phase(&self->ncqo);
+  SUFLOAT error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
 
   su_ncqo_inc_angfreq(&self->ncqo, self->alpha * error);
   su_ncqo_inc_phase(&self->ncqo, self->beta * error);
@@ -92,24 +92,24 @@ SU_DESTRUCTOR(su_costas)
 
 SU_CONSTRUCTOR(su_costas,
                enum sigutils_costas_kind kind,
-               SUFLOAT                   fhint,
-               SUFLOAT                   arm_bw,
-               unsigned int              arm_order,
-               SUFLOAT                   loop_bw)
+               SUFLOAT fhint,
+               SUFLOAT arm_bw,
+               unsigned int arm_order,
+               SUFLOAT loop_bw)
 {
-  SUFLOAT     *b = NULL;
-  SUFLOAT     *a = NULL;
-  SUFLOAT      scaling;
+  SUFLOAT *b = NULL;
+  SUFLOAT *a = NULL;
+  SUFLOAT scaling;
   unsigned int i = 0;
 
   memset(self, 0, sizeof(su_costas_t));
 
   /* Make LPF filter critically damped (Eric Hagemann) */
-  self->a       = SU_NORM2ANG_FREQ(loop_bw);
-  self->b       = .5 * self->a * self->a;
+  self->a = SU_NORM2ANG_FREQ(loop_bw);
+  self->b = .5 * self->a * self->a;
   self->y_alpha = 1;
-  self->kind    = kind;
-  self->gain    = 1;
+  self->kind = kind;
+  self->gain = 1;
 
   su_ncqo_init(&self->ncqo, fhint);
 
@@ -168,7 +168,7 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
 {
   SUCOMPLEX s;
   SUCOMPLEX L;
-  SUFLOAT   e = 0;
+  SUFLOAT e = 0;
 
   s = su_ncqo_read(&self->ncqo);
   /*
@@ -223,11 +223,11 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
       L = SU_C_SGN(self->z);
 
       if (SU_ABS(SU_C_REAL(self->z)) >= SU_ABS(SU_C_IMAG(self->z)))
-        e = SU_C_REAL(L) * SU_C_IMAG(self->z) -
-            SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z)
+            - SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
       else
-        e = SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1) -
-            SU_C_IMAG(L) * SU_C_REAL(self->z);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1)
+            - SU_C_IMAG(L) * SU_C_REAL(self->z);
       break;
 
     default:

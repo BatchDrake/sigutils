@@ -30,16 +30,17 @@
 #include "test_list.h"
 #include "test_param.h"
 
-SUPRIVATE SUBOOL su_test_check_peak(const su_test_context_t *ctx,
-                                    const SUFLOAT           *buffer,
-                                    unsigned int             size,
-                                    unsigned int             window,
-                                    SUFLOAT                  peak_low,
-                                    SUFLOAT                  peak_high)
+SUPRIVATE SUBOOL
+su_test_check_peak(const su_test_context_t *ctx,
+                   const SUFLOAT *buffer,
+                   unsigned int size,
+                   unsigned int window,
+                   SUFLOAT peak_low,
+                   SUFLOAT peak_high)
 {
   unsigned int i, j;
-  SUFLOAT      peak = 0;
-  SUBOOL       ok   = SU_FALSE;
+  SUFLOAT peak = 0;
+  SUBOOL ok = SU_FALSE;
 
   /* Skip window. AGC needs some time to start */
   for (i = window; i < size - window; ++i) {
@@ -62,10 +63,10 @@ done:
 SUBOOL
 su_test_agc_transient(su_test_context_t *ctx)
 {
-  SUBOOL               ok     = SU_FALSE;
-  SUFLOAT             *buffer = NULL;
-  SUFLOAT              t;
-  su_agc_t             agc        = su_agc_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  SUFLOAT t;
+  su_agc_t agc = su_agc_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
 
   unsigned int p = 0;
@@ -74,10 +75,10 @@ su_test_agc_transient(su_test_context_t *ctx)
 
   /* Initialize */
   SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
@@ -91,7 +92,7 @@ su_test_agc_transient(su_test_context_t *ctx)
 
   /* Create a spike */
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
-    t         = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
+    t = p - SU_TEST_SIGNAL_BUFFER_SIZE / 2;
     buffer[p] = 1e-2 * rand() / (double)RAND_MAX;
 
     buffer[p] += SU_EXP(-t * t);
@@ -135,28 +136,28 @@ done:
 SUBOOL
 su_test_agc_steady_rising(su_test_context_t *ctx)
 {
-  SUBOOL               ok         = SU_FALSE;
-  SUFLOAT             *buffer     = NULL;
-  su_agc_t             agc        = su_agc_INITIALIZER;
-  su_ncqo_t            ncqo       = su_ncqo_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  su_agc_t agc = su_agc_INITIALIZER;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
-  unsigned int         p          = 0;
+  unsigned int p = 0;
 
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize */
   SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   SU_TEST_ASSERT(su_agc_init(&agc, &agc_params));
@@ -166,8 +167,8 @@ su_test_agc_steady_rising(su_test_context_t *ctx)
   /* Create a rising sinusoid */
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p) {
     buffer[p] = 1e-2 * rand() / (double)RAND_MAX;
-    buffer[p] += 0.2 * floor(1 + 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE) *
-                 su_ncqo_read_i(&ncqo);
+    buffer[p] += 0.2 * floor(1 + 5 * p / SU_TEST_SIGNAL_BUFFER_SIZE)
+                 * su_ncqo_read_i(&ncqo);
   }
 
   if (ctx->params->dump_fmt) {
@@ -216,30 +217,30 @@ done:
 SUBOOL
 su_test_agc_steady_falling(su_test_context_t *ctx)
 {
-  SUBOOL               ok         = SU_FALSE;
-  SUFLOAT             *input      = NULL;
-  SUFLOAT             *output     = NULL;
-  su_agc_t             agc        = su_agc_INITIALIZER;
-  su_ncqo_t            ncqo       = su_ncqo_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *input = NULL;
+  SUFLOAT *output = NULL;
+  su_agc_t agc = su_agc_INITIALIZER;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   struct su_agc_params agc_params = su_agc_params_INITIALIZER;
-  unsigned int         p          = 0;
+  unsigned int p = 0;
 
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize */
   SU_TEST_ASSERT(input = su_test_ctx_getf(ctx, "x"));
   SU_TEST_ASSERT(output = su_test_ctx_getf(ctx, "y"));
-  agc_params.delay_line_size  = 10;
+  agc_params.delay_line_size = 10;
   agc_params.mag_history_size = 10;
-  agc_params.fast_rise_t      = 2;
-  agc_params.fast_fall_t      = 4;
+  agc_params.fast_rise_t = 2;
+  agc_params.fast_fall_t = 4;
 
   agc_params.slow_rise_t = 20;
   agc_params.slow_fall_t = 40;
 
   agc_params.threshold = SU_DB(2e-2);
 
-  agc_params.hang_max     = 30;
+  agc_params.hang_max = 30;
   agc_params.slope_factor = 0;
 
   SU_TEST_ASSERT(su_agc_init(&agc, &agc_params));
@@ -249,8 +250,8 @@ su_test_agc_steady_falling(su_test_context_t *ctx)
   /* Create a falling sinusoid */
   for (p = 0; p < ctx->params->buffer_size; ++p) {
     input[p] = 1e-2 * rand() / (double)RAND_MAX;
-    input[p] += 0.2 * floor(5 - 5 * p / ctx->params->buffer_size) *
-                su_ncqo_read_i(&ncqo);
+    input[p] += 0.2 * floor(5 - 5 * p / ctx->params->buffer_size)
+                * su_ncqo_read_i(&ncqo);
   }
 
   SU_TEST_TICK(ctx);

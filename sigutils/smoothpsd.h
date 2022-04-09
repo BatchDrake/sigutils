@@ -29,9 +29,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct sigutils_smoothpsd_params {
-  unsigned int                          fft_size;
-  SUFLOAT                               samp_rate;
-  SUFLOAT                               refresh_rate;
+  unsigned int fft_size;
+  SUFLOAT samp_rate;
+  SUFLOAT refresh_rate;
   enum sigutils_channel_detector_window window;
 };
 
@@ -45,8 +45,8 @@ struct sigutils_smoothpsd_params {
 
 struct sigutils_smoothpsd {
   struct sigutils_smoothpsd_params params;
-  pthread_mutex_t                  mutex;
-  SUBOOL                           mutex_init;
+  pthread_mutex_t mutex;
+  SUBOOL mutex_init;
 
   SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size);
   void *userdata;
@@ -89,9 +89,9 @@ SU_GETTER(su_smoothpsd, SUFLOAT *, get_last_psd)
 
 SU_INSTANCER(su_smoothpsd,
              const struct sigutils_smoothpsd_params *params,
-             SUBOOL (*psd_func)(void          *userdata,
+             SUBOOL (*psd_func)(void *userdata,
                                 const SUFLOAT *psd,
-                                unsigned int   size),
+                                unsigned int size),
              void *userdata);
 
 SU_COLLECTOR(su_smoothpsd);

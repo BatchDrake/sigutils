@@ -40,11 +40,11 @@ enum sigutils_log_severity {
 
 struct sigutils_log_message {
   enum sigutils_log_severity severity;
-  struct timeval             time;
-  const char                *domain;
-  const char                *function;
-  unsigned int               line;
-  const char                *message;
+  struct timeval time;
+  const char *domain;
+  const char *function;
+  unsigned int line;
+  const char *message;
 };
 
 #define sigutils_log_message_INITIALIZER  \
@@ -58,7 +58,7 @@ struct sigutils_log_message {
   }
 
 struct sigutils_log_config {
-  void  *priv;
+  void *priv;
   SUBOOL exclusive;
   void (*log_func)(void *priv, const struct sigutils_log_message *msg);
 };
@@ -71,11 +71,11 @@ struct sigutils_log_config {
   }
 
 #ifndef __FILENAME__
-#  define __FILENAME__ "(no file)"
+#define __FILENAME__ "(no file)"
 #endif /* __FILENAME__ */
 
 #ifndef SU_LOG_DOMAIN
-#  define SU_LOG_DOMAIN __FILENAME__
+#define SU_LOG_DOMAIN __FILENAME__
 #endif /* SU_LOG_DOMAIN */
 
 #define SU_ERROR(fmt, arg...)         \
@@ -120,23 +120,23 @@ struct sigutils_log_message *sigutils_log_message_dup(
     const struct sigutils_log_message *msg);
 
 void su_log(enum sigutils_log_severity sev,
-            const char                *domain,
-            const char                *method,
-            unsigned int               line,
-            const char                *message);
+            const char *domain,
+            const char *method,
+            unsigned int line,
+            const char *message);
 
 void su_logvprintf(enum sigutils_log_severity sev,
-                   const char                *domain,
-                   const char                *method,
-                   unsigned int               line,
-                   const char                *msgfmt,
-                   va_list                    ap);
+                   const char *domain,
+                   const char *method,
+                   unsigned int line,
+                   const char *msgfmt,
+                   va_list ap);
 
 void su_logprintf(enum sigutils_log_severity sev,
-                  const char                *domain,
-                  const char                *method,
-                  unsigned int               line,
-                  const char                *msgfmt,
+                  const char *domain,
+                  const char *method,
+                  unsigned int line,
+                  const char *msgfmt,
                   ...);
 
 void su_log_init(const struct sigutils_log_config *config);

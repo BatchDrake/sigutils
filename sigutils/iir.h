@@ -27,10 +27,10 @@
 #define SU_FLOAT_GUARD INFINITY
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -79,14 +79,14 @@ void su_iir_filt_reset(su_iir_filt_t *filt);
 
 /* Initialize filter */
 SUBOOL su_iir_filt_init(su_iir_filt_t *filt,
-                        SUSCOUNT       y_size,
+                        SUSCOUNT y_size,
                         const SUFLOAT *__restrict a,
                         SUSCOUNT x_size,
                         const SUFLOAT *__restrict b);
 
 /* Initialize filter (internal) */
 SUBOOL __su_iir_filt_init(su_iir_filt_t *filt,
-                          SUSCOUNT       y_size,
+                          SUSCOUNT y_size,
                           SUFLOAT *__restrict a,
                           SUSCOUNT x_size,
                           SUFLOAT *__restrict b,
@@ -117,17 +117,17 @@ SUBOOL su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 
 /* Initialize brickwall BPF filter */
 SUBOOL su_iir_brickwall_bp_init(su_iir_filt_t *filt,
-                                SUSCOUNT       n,
-                                SUFLOAT        bw,
-                                SUFLOAT        ifnor);
+                                SUSCOUNT n,
+                                SUFLOAT bw,
+                                SUFLOAT ifnor);
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic pop
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif  // __clang__
 }
 #endif /* __cplusplus */
 

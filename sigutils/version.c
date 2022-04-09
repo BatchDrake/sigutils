@@ -20,26 +20,30 @@
 #include "version.h"
 
 #ifndef SIGUTILS_PKGVERSION
-#  define SIGUTILS_PKGVERSION \
-    "custom build on " __DATE__ " at " __TIME__ " (" __VERSION__ ")"
+#define SIGUTILS_PKGVERSION \
+  "custom build on " __DATE__ " at " __TIME__ " (" __VERSION__ ")"
 #endif /* SIGUTILS_BUILD_STRING */
 
-unsigned int sigutils_abi_version(void)
+unsigned int
+sigutils_abi_version(void)
 {
   return SIGUTILS_ABI_VERSION;
 }
 
-const char *sigutils_api_version(void)
+const char *
+sigutils_api_version(void)
 {
   return SIGUTILS_VERSION_STRING;
 }
 
-const char *sigutils_pkgversion(void)
+const char *
+sigutils_pkgversion(void)
 {
   return SIGUTILS_PKGVERSION;
 }
 
-void sigutils_abi_check(unsigned int abi)
+void
+sigutils_abi_check(unsigned int abi)
 {
   if (abi != SIGUTILS_ABI_VERSION) {
     fprintf(stderr, "*** SIGUTILS CRITICAL LIBRARY ERROR ***\n");

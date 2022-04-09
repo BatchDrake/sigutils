@@ -31,12 +31,14 @@
 
 int saved_errno;
 
-void errno_save()
+void
+errno_save()
 {
   saved_errno = errno;
 }
 
-void errno_restore()
+void
+errno_restore()
 {
   errno = saved_errno;
 }
@@ -44,7 +46,8 @@ void errno_restore()
 /* Prototipos de funciones estaticas */
 static void xalloc_die(void);
 
-int is_asciiz(const char *buf, int lbound, int ubound)
+int
+is_asciiz(const char *buf, int lbound, int ubound)
 {
   register int i;
 
@@ -54,13 +57,14 @@ int is_asciiz(const char *buf, int lbound, int ubound)
   return 0;
 }
 
-char *vstrbuild(const char *fmt, va_list ap)
+char *
+vstrbuild(const char *fmt, va_list ap)
 {
   char *out = NULL, *tmp = NULL;
   char *result = NULL;
 
-  int     size, zeroindex;
-  int     last;
+  int size, zeroindex;
+  int last;
   va_list copy;
 
   last = 0;
@@ -101,7 +105,7 @@ char *vstrbuild(const char *fmt, va_list ap)
     }
 
     result = out;
-    out    = NULL;
+    out = NULL;
   }
 
 done:
@@ -115,9 +119,10 @@ done:
    puntero a la cadena resultado. DEBES liberar tu mismo la salida. */
 
 /* FIXME: Buscar alguna alternativa mas portable */
-char *strbuild(const char *fmt, ...)
+char *
+strbuild(const char *fmt, ...)
 {
-  char   *out;
+  char *out;
   va_list ap;
 
   va_start(ap, fmt);
@@ -128,7 +133,8 @@ char *strbuild(const char *fmt, ...)
 }
 
 /* Wrapper para malloc que autocomprueba el valor de retorno */
-void *xmalloc(size_t size)
+void *
+xmalloc(size_t size)
 {
   void *m;
 
@@ -141,7 +147,8 @@ void *xmalloc(size_t size)
 }
 
 /* Wrapper para realloc */
-void *xrealloc(void *ptr, size_t new_size)
+void *
+xrealloc(void *ptr, size_t new_size)
 {
   void *m;
 
@@ -154,7 +161,8 @@ void *xrealloc(void *ptr, size_t new_size)
 }
 
 /* Wrapper para strdup */
-char *xstrdup(const char *str)
+char *
+xstrdup(const char *str)
 {
   char *ret;
 
@@ -168,24 +176,26 @@ char *xstrdup(const char *str)
 }
 
 /* Cuando nos quedamos sin memoria... */
-static void xalloc_die(void)
+static void
+xalloc_die(void)
 {
   abort();
 }
 
 /* Para manipular arrays de punteros */
-int ptr_list_append_check(void ***list, unsigned int *count, void *new)
+int
+ptr_list_append_check(void ***list, unsigned int *count, void *new)
 {
   unsigned int i;
-  void       **reallocd_list;
+  void **reallocd_list;
 
   for (i = 0; i < *count; i++)
     if ((*list)[i] == NULL)
       break;
 
   if (i == *count) {
-    if ((reallocd_list = xrealloc(*list, (1 + *count) * sizeof(void *))) ==
-        NULL)
+    if ((reallocd_list = xrealloc(*list, (1 + *count) * sizeof(void *)))
+        == NULL)
       return -1;
     else {
       ++(*count);
@@ -198,15 +208,17 @@ int ptr_list_append_check(void ***list, unsigned int *count, void *new)
   return i;
 }
 
-void ptr_list_append(void ***list, unsigned int *count, void *new)
+void
+ptr_list_append(void ***list, unsigned int *count, void *new)
 {
   (void)ptr_list_append_check(list, count, new);
 }
 
-int ptr_list_remove_first(void ***list, unsigned int *count, void *ptr)
+int
+ptr_list_remove_first(void ***list, unsigned int *count, void *ptr)
 {
   unsigned int i;
-  int          found;
+  int found;
 
   found = 0;
 
@@ -221,7 +233,8 @@ int ptr_list_remove_first(void ***list, unsigned int *count, void *ptr)
   return found;
 }
 
-int ptr_list_remove_all(void ***list, int *count, void *ptr)
+int
+ptr_list_remove_all(void ***list, int *count, void *ptr)
 {
   int i;
   int found;
@@ -237,9 +250,10 @@ int ptr_list_remove_all(void ***list, int *count, void *ptr)
   return found;
 }
 
-char *str_append_char(char *source, char c)
+char *
+str_append_char(char *source, char c)
 {
-  int   strsiz;
+  int strsiz;
   char *nptr;
 
   strsiz = source == NULL ? 1 : strlen(source) + 1;
@@ -250,17 +264,18 @@ char *str_append_char(char *source, char c)
     return NULL;
 
   nptr[strsiz - 1] = c;
-  nptr[strsiz]     = '\0';
+  nptr[strsiz] = '\0';
 
   return nptr;
 }
 
-char *fread_line(FILE *fp)
+char *
+fread_line(FILE *fp)
 {
-  char  c;
+  char c;
   char *line;
-  int   buffer_size;
-  int   n;
+  int buffer_size;
+  int n;
 
   line = NULL;
 
@@ -283,7 +298,7 @@ char *fread_line(FILE *fp)
         line = xrealloc(line, buffer_size + 1);
       } else {
         buffer_size = STRBUILD_BSIZ;
-        line        = xmalloc(buffer_size + 1);
+        line = xmalloc(buffer_size + 1);
       }
     }
 
@@ -298,7 +313,8 @@ char *fread_line(FILE *fp)
 
 /* Todo: this is interesting. Export if necessary */
 
-struct strlist *strlist_new(void)
+struct strlist *
+strlist_new(void)
 {
   struct strlist *new;
 
@@ -309,16 +325,18 @@ struct strlist *strlist_new(void)
   return new;
 }
 
-void strlist_append_string(struct strlist *list, const char *string)
+void
+strlist_append_string(struct strlist *list, const char *string)
 {
   ptr_list_append((void ***)&list->strings_list,
                   &list->strings_count,
                   xstrdup(string));
 }
 
-void strlist_walk(struct strlist *list,
-                  void           *data,
-                  void (*walk)(const char *, void *))
+void
+strlist_walk(struct strlist *list,
+             void *data,
+             void (*walk)(const char *, void *))
 {
   unsigned int i;
 
@@ -327,7 +345,8 @@ void strlist_walk(struct strlist *list,
       (walk)(list->strings_list[i], data);
 }
 
-void strlist_destroy(struct strlist *list)
+void
+strlist_destroy(struct strlist *list)
 {
   unsigned int i;
 
@@ -341,7 +360,8 @@ void strlist_destroy(struct strlist *list)
   free(list);
 }
 
-int strlist_have_element(const struct strlist *list, const char *string)
+int
+strlist_have_element(const struct strlist *list, const char *string)
 {
   unsigned int i;
 
@@ -353,7 +373,8 @@ int strlist_have_element(const struct strlist *list, const char *string)
   return 0;
 }
 
-void strlist_cat(struct strlist *dest, const struct strlist *list)
+void
+strlist_cat(struct strlist *dest, const struct strlist *list)
 {
   unsigned int i;
 
@@ -362,7 +383,8 @@ void strlist_cat(struct strlist *dest, const struct strlist *list)
       strlist_append_string(dest, list->strings_list[i]);
 }
 
-void strlist_union(struct strlist *dest, const struct strlist *list)
+void
+strlist_union(struct strlist *dest, const struct strlist *list)
 {
   unsigned int i;
 
@@ -372,7 +394,8 @@ void strlist_union(struct strlist *dest, const struct strlist *list)
         strlist_append_string(dest, list->strings_list[i]);
 }
 
-void strlist_debug(const struct strlist *list)
+void
+strlist_debug(const struct strlist *list)
 {
   unsigned int i;
 
@@ -389,9 +412,10 @@ void strlist_debug(const struct strlist *list)
    MMMMDDDDD
 */
 
-void al_append_argument(arg_list_t *al, const char *arg)
+void
+al_append_argument(arg_list_t *al, const char *arg)
 {
-  char  *ptr;
+  char *ptr;
   char **argl;
 
   ptr = (char *)xstrdup(arg);
@@ -400,10 +424,11 @@ void al_append_argument(arg_list_t *al, const char *arg)
                            sizeof(char *) * (al->al_argc + 1));
 
   argl[al->al_argc++] = ptr;
-  al->al_argv         = argl;
+  al->al_argv = argl;
 }
 
-void free_al(arg_list_t *al)
+void
+free_al(arg_list_t *al)
 {
   int i;
 
@@ -417,17 +442,16 @@ void free_al(arg_list_t *al)
   free(al);
 }
 
-static arg_list_t *__split_command(const char *line,
-                                   char       *separators,
-                                   int         fixed_sep_size)
+static arg_list_t *
+__split_command(const char *line, char *separators, int fixed_sep_size)
 {
   size_t i;
 
   int split_flag;
   int escape_flag;
 
-  char       *nptr;
-  char       *this_argument;
+  char *nptr;
+  char *this_argument;
   arg_list_t *arg_info;
 
   arg_info = (arg_list_t *)xmalloc(sizeof(arg_list_t));
@@ -438,7 +462,7 @@ static arg_list_t *__split_command(const char *line,
 
   this_argument = NULL;
 
-  split_flag  = 1;
+  split_flag = 1;
   escape_flag = 0;
 
   i = 0;
@@ -475,7 +499,7 @@ static arg_list_t *__split_command(const char *line,
       }
 
       this_argument = nptr;
-      escape_flag   = 0;
+      escape_flag = 0;
     }
   }
 
@@ -487,20 +511,23 @@ static arg_list_t *__split_command(const char *line,
   return arg_info;
 }
 
-arg_list_t *csv_split_line(const char *line)
+arg_list_t *
+csv_split_line(const char *line)
 {
   return __split_command(line, ",", 1);
 }
 
-arg_list_t *split_line(const char *line)
+arg_list_t *
+split_line(const char *line)
 {
   return __split_command(line, " ", 0);
 }
 
-int lscanf_huge(const char *fmt, ...)
+int
+lscanf_huge(const char *fmt, ...)
 {
-  char   *line;
-  int     result;
+  char *line;
+  int result;
   va_list ap;
 
   va_start(ap, fmt);
@@ -517,10 +544,11 @@ int lscanf_huge(const char *fmt, ...)
   return result;
 }
 
-int lscanf(const char *fmt, ...)
+int
+lscanf(const char *fmt, ...)
 {
-  char    line[RECOMMENDED_LINE_SIZE];
-  int     result;
+  char line[RECOMMENDED_LINE_SIZE];
+  int result;
   va_list ap;
 
   va_start(ap, fmt);
@@ -535,7 +563,8 @@ int lscanf(const char *fmt, ...)
   return result;
 }
 
-char *ltrim(const char *str)
+char *
+ltrim(const char *str)
 {
   while (*str)
     if (!isspace(*str))
@@ -546,7 +575,8 @@ char *ltrim(const char *str)
   return xstrdup(str);
 }
 
-char *rtrim(const char *str)
+char *
+rtrim(const char *str)
 {
   char *copy;
   char *tail;
@@ -563,7 +593,8 @@ char *rtrim(const char *str)
   return copy;
 }
 
-char *trim(const char *str)
+char *
+trim(const char *str)
 {
   char *copy;
   char *tail;
@@ -592,10 +623,11 @@ char *trim(const char *str)
    MMMMDDDDD
 */
 
-unsigned int yday_to_daymonth(int yday, int year)
+unsigned int
+yday_to_daymonth(int yday, int year)
 {
   int monthdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-  int month         = 0;
+  int month = 0;
 
   yday--;
 
@@ -611,10 +643,11 @@ unsigned int yday_to_daymonth(int yday, int year)
   return yday | (month << 5);
 }
 
-char *get_curr_ctime(void)
+char *
+get_curr_ctime(void)
 {
   time_t now;
-  char  *text;
+  char *text;
   time(&now);
 
   text = ctime(&now);
@@ -624,24 +657,24 @@ char *get_curr_ctime(void)
   return text;
 }
 
-void grow_buf_init_loan(grow_buf_t *buf,
-                        const void *data,
-                        size_t      size,
-                        size_t      alloc)
+void
+grow_buf_init_loan(grow_buf_t *buf, const void *data, size_t size, size_t alloc)
 {
   buf->buffer = (void *)data;
-  buf->alloc  = alloc;
-  buf->size   = size;
-  buf->ptr    = 0;
-  buf->loan   = 1;
+  buf->alloc = alloc;
+  buf->size = size;
+  buf->ptr = 0;
+  buf->loan = 1;
 }
 
-void grow_buf_init(grow_buf_t *buf)
+void
+grow_buf_init(grow_buf_t *buf)
 {
   memset(buf, 0, sizeof(grow_buf_t));
 }
 
-int grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc)
+int
+grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc)
 {
   void *tmp;
 
@@ -651,17 +684,18 @@ int grow_buf_ensure_min_alloc(grow_buf_t *buf, size_t min_alloc)
       return -1;
 
     buf->buffer = tmp;
-    buf->alloc  = min_alloc;
+    buf->alloc = min_alloc;
   }
 
   return 0;
 }
 
-void *grow_buf_alloc(grow_buf_t *buf, size_t size)
+void *
+grow_buf_alloc(grow_buf_t *buf, size_t size)
 {
-  size_t alloc      = buf->alloc;
+  size_t alloc = buf->alloc;
   size_t total_size = buf->size + size;
-  void  *tmp;
+  void *tmp;
 
   if (alloc == 0)
     alloc = 1;
@@ -674,19 +708,20 @@ void *grow_buf_alloc(grow_buf_t *buf, size_t size)
       return NULL;
 
     buf->buffer = tmp;
-    buf->alloc  = alloc;
+    buf->alloc = alloc;
   }
 
-  tmp       = (char *)buf->buffer + buf->size;
+  tmp = (char *)buf->buffer + buf->size;
   buf->size = total_size;
 
   return tmp;
 }
 
-void *grow_buf_append_hollow(grow_buf_t *buf, size_t size)
+void *
+grow_buf_append_hollow(grow_buf_t *buf, size_t size)
 {
-  void  *reserved = NULL;
-  size_t avail    = grow_buf_avail(buf);
+  void *reserved = NULL;
+  size_t avail = grow_buf_avail(buf);
 
   if (size > avail)
     if (grow_buf_alloc(buf, size - avail) == NULL)
@@ -700,7 +735,8 @@ void *grow_buf_append_hollow(grow_buf_t *buf, size_t size)
   return reserved;
 }
 
-int grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
+int
+grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
 {
   void *reserved = grow_buf_append_hollow(buf, size);
 
@@ -712,11 +748,12 @@ int grow_buf_append(grow_buf_t *buf, const void *data, size_t size)
   return 0;
 }
 
-int grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...)
+int
+grow_buf_append_printf(grow_buf_t *buf, const char *fmt, ...)
 {
   va_list ap;
-  char   *result = NULL;
-  int     code   = -1;
+  char *result = NULL;
+  int code = -1;
 
   va_start(ap, fmt);
 
@@ -737,7 +774,8 @@ done:
   return code;
 }
 
-ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t size)
+ssize_t
+grow_buf_read(grow_buf_t *buf, void *data, size_t size)
 {
   size_t avail = grow_buf_avail(buf);
 
@@ -752,17 +790,20 @@ ssize_t grow_buf_read(grow_buf_t *buf, void *data, size_t size)
   return size;
 }
 
-int grow_buf_append_null(grow_buf_t *buf)
+int
+grow_buf_append_null(grow_buf_t *buf)
 {
   return grow_buf_append(buf, "", 1);
 }
 
-void *grow_buf_get_buffer(const grow_buf_t *buf)
+void *
+grow_buf_get_buffer(const grow_buf_t *buf)
 {
   return buf->buffer;
 }
 
-void *grow_buf_current_data(const grow_buf_t *buf)
+void *
+grow_buf_current_data(const grow_buf_t *buf)
 {
   if (buf->ptr >= buf->size)
     return NULL;
@@ -770,17 +811,20 @@ void *grow_buf_current_data(const grow_buf_t *buf)
   return buf->bytes + buf->ptr;
 }
 
-size_t grow_buf_get_size(const grow_buf_t *buf)
+size_t
+grow_buf_get_size(const grow_buf_t *buf)
 {
   return buf->size;
 }
 
-size_t grow_buf_ptr(const grow_buf_t *buf)
+size_t
+grow_buf_ptr(const grow_buf_t *buf)
 {
   return buf->ptr;
 }
 
-size_t grow_buf_avail(const grow_buf_t *buf)
+size_t
+grow_buf_avail(const grow_buf_t *buf)
 {
   if (buf->ptr > buf->size)
     return 0;
@@ -788,25 +832,29 @@ size_t grow_buf_avail(const grow_buf_t *buf)
   return buf->size - buf->ptr;
 }
 
-void grow_buf_finalize(grow_buf_t *buf)
+void
+grow_buf_finalize(grow_buf_t *buf)
 {
   if (!buf->loan && buf->buffer != NULL)
     free(buf->buffer);
 }
 
-void grow_buf_shrink(grow_buf_t *buf)
+void
+grow_buf_shrink(grow_buf_t *buf)
 {
   buf->size = 0;
-  buf->ptr  = 0;
+  buf->ptr = 0;
 }
 
-void grow_buf_clear(grow_buf_t *buf)
+void
+grow_buf_clear(grow_buf_t *buf)
 {
   grow_buf_finalize(buf);
   memset(buf, 0, sizeof(grow_buf_t));
 }
 
-size_t grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
+size_t
+grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
 {
   off_t new_off;
 
@@ -838,7 +886,8 @@ size_t grow_buf_seek(grow_buf_t *buf, off_t offset, int whence)
   return buf->ptr;
 }
 
-int grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
+int
+grow_buf_transfer(grow_buf_t *dest, grow_buf_t *src)
 {
   memcpy(dest, src, sizeof(grow_buf_t));
   memset(src, 0, sizeof(grow_buf_t));

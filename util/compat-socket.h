@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_SOCKET_H
 
 #ifdef _WIN32
-#  include "win32-socket.h"
+#include "win32-socket.h"
 #else
-#  include <sys/socket.h>
+#include <sys/socket.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_SOCKET_H */

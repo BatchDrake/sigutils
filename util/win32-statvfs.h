@@ -28,9 +28,9 @@ typedef unsigned long fsfilcnt_t;
 struct statvfs {
   unsigned long f_bsize;   /*   Filesystem block size */
   unsigned long f_frsize;  /*   Fragment size */
-  fsblkcnt_t    f_blocks;  /* * Size of fs in f_frsize units */
-  fsblkcnt_t    f_bfree;   /*   Number of free blocks */
-  fsblkcnt_t    f_bavail;  /* * Number of free blocks for
+  fsblkcnt_t f_blocks;     /* * Size of fs in f_frsize units */
+  fsblkcnt_t f_bfree;      /*   Number of free blocks */
+  fsblkcnt_t f_bavail;     /* * Number of free blocks for
                                                          unprivileged users */
   fsfilcnt_t f_files;      /*   Number of inodes */
   fsfilcnt_t f_ffree;      /*   Number of free inodes */

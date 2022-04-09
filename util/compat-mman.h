@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_MMAN_H
 
 #ifdef _WIN32
-#  include "win32-mman.h"
+#include "win32-mman.h"
 #else
-#  include <sys/mman.h>
+#include <sys/mman.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_MMAN_H */

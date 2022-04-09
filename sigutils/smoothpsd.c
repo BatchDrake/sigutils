@@ -26,14 +26,14 @@
 
 #define _SWAP(a, b) \
   tmp = a;          \
-  a   = b;          \
-  b   = tmp;
+  a = b;            \
+  b = tmp;
 
 SU_INSTANCER(su_smoothpsd,
              const struct sigutils_smoothpsd_params *params,
-             SUBOOL (*psd_func)(void          *userdata,
+             SUBOOL (*psd_func)(void *userdata,
                                 const SUFLOAT *psd,
-                                unsigned int   size),
+                                unsigned int size),
              void *userdata)
 {
   su_smoothpsd_t *new = NULL;
@@ -62,7 +62,7 @@ SUPRIVATE
 SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 {
   unsigned int i;
-  SUFLOAT      wsizeinv = 1. / self->params.fft_size;
+  SUFLOAT wsizeinv = 1. / self->params.fft_size;
 
   /* Execute FFT */
   SU_FFTW(_execute(self->fft_plan));
@@ -86,8 +86,8 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
   unsigned int chunk;
   unsigned int i;
   unsigned int p;
-  SUBOOL       mutex_acquired = SU_FALSE;
-  SUBOOL       ok             = SU_FALSE;
+  SUBOOL mutex_acquired = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
 
   SU_TRYZ(pthread_mutex_lock(&self->mutex));
 
@@ -115,7 +115,7 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
         /* Time to trigger FFT! */
         if (self->fft_p >= self->max_p) {
           self->fft_p = 0;
-          self->p     = 0;
+          self->p = 0;
 
           /* Apply window function */
           for (i = 0; i < self->params.fft_size; ++i)
@@ -154,7 +154,7 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
         /* Time to trigger FFT! */
         if (self->fft_p >= self->max_p) {
           self->fft_p = 0;
-          p           = self->p;
+          p = self->p;
 
           /* Apply window function */
           for (i = 0; i < self->params.fft_size; ++i) {
@@ -184,16 +184,16 @@ SU_METHOD(su_smoothpsd,
           const struct sigutils_smoothpsd_params *params)
 {
   unsigned int i;
-  void        *tmp            = NULL;
-  SUBOOL       mutex_acquired = SU_FALSE;
+  void *tmp = NULL;
+  SUBOOL mutex_acquired = SU_FALSE;
 
   SU_FFTW(_complex) *window_func = NULL;
-  SU_FFTW(_complex) *buffer      = NULL;
-  SU_FFTW(_complex) *fftbuf      = NULL;
-  SU_FFTW(_plan) fft_plan        = NULL;
+  SU_FFTW(_complex) *buffer = NULL;
+  SU_FFTW(_complex) *fftbuf = NULL;
+  SU_FFTW(_plan) fft_plan = NULL;
 
   SUBOOL refresh_window_func = params->window != self->params.window;
-  SUBOOL ok                  = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
 
   /*
    * We do not acquire the mutex here immediately. This is because FFTW_ESTIMATE
@@ -201,22 +201,25 @@ SU_METHOD(su_smoothpsd,
    * it from the modification of the current object.
    */
   if (params->fft_size != self->params.fft_size) {
-    if ((window_func = SU_FFTW(_malloc)(params->fft_size *
-                                        sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((window_func =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for window\n");
       goto done;
     }
 
-    if ((buffer = SU_FFTW(_malloc)(params->fft_size *
-                                   sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((buffer =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for circular buffer\n");
       goto done;
     }
 
     memset(buffer, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
-    if ((fftbuf = SU_FFTW(_malloc)(params->fft_size *
-                                   sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((fftbuf =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for FFT buffer\n");
       goto done;
     }
@@ -228,7 +231,8 @@ SU_METHOD(su_smoothpsd,
                                           fftbuf,
                                           fftbuf,
                                           FFTW_FORWARD,
-                                          FFTW_ESTIMATE)) == NULL) {
+                                          FFTW_ESTIMATE))
+        == NULL) {
       SU_ERROR("failed to create FFT plan\n");
       goto done;
     }

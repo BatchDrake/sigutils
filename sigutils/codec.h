@@ -40,11 +40,11 @@ enum su_codec_direction {
 };
 
 struct sigutils_codec {
-  enum su_codec_direction            direction;
+  enum su_codec_direction direction;
   const struct sigutils_codec_class *classptr;
-  unsigned int                       bits;
-  unsigned int                       output_bits;
-  void                              *privdata;
+  unsigned int bits;
+  unsigned int output_bits;
+  void *privdata;
 };
 
 typedef struct sigutils_codec su_codec_t;

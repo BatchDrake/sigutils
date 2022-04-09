@@ -33,15 +33,15 @@ SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params)
   SU_ALLOCATE_MANY_FAIL(self->delay_line, params->delay_line_size, SUCOMPLEX);
 
   self->mag_history_size = params->mag_history_size;
-  self->delay_line_size  = params->delay_line_size;
-  self->knee             = params->threshold;
-  self->hang_max         = params->hang_max;
-  self->gain_slope       = params->slope_factor * 1e-2;
-  self->fast_alpha_rise  = 1 - SU_EXP(-1. / params->fast_rise_t);
-  self->fast_alpha_fall  = 1 - SU_EXP(-1. / params->fast_fall_t);
-  self->slow_alpha_rise  = 1 - SU_EXP(-1. / params->slow_rise_t);
-  self->slow_alpha_fall  = 1 - SU_EXP(-1. / params->slow_fall_t);
-  self->fixed_gain       = SU_MAG_RAW(self->knee * (self->gain_slope - 1));
+  self->delay_line_size = params->delay_line_size;
+  self->knee = params->threshold;
+  self->hang_max = params->hang_max;
+  self->gain_slope = params->slope_factor * 1e-2;
+  self->fast_alpha_rise = 1 - SU_EXP(-1. / params->fast_rise_t);
+  self->fast_alpha_fall = 1 - SU_EXP(-1. / params->fast_fall_t);
+  self->slow_alpha_rise = 1 - SU_EXP(-1. / params->slow_rise_t);
+  self->slow_alpha_fall = 1 - SU_EXP(-1. / params->slow_fall_t);
+  self->fixed_gain = SU_MAG_RAW(self->knee * (self->gain_slope - 1));
 
   self->enabled = SU_TRUE;
 
@@ -79,9 +79,9 @@ SU_METHOD(su_agc, SUCOMPLEX, feed, SUCOMPLEX x)
   unsigned int i;
 
   SUCOMPLEX x_delayed;
-  SUFLOAT   x_dBFS;
-  SUFLOAT   x_dBFS_delayed;
-  SUFLOAT   peak_delta;
+  SUFLOAT x_dBFS;
+  SUFLOAT x_dBFS_delayed;
+  SUFLOAT peak_delta;
 
   /* Push sample */
   x_delayed = self->delay_line[self->delay_line_ptr];

@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_NETDB_H
 
 #ifdef _WIN32
-#  include "win32-netdb.h"
+#include "win32-netdb.h"
 #else
-#  include <netdb.h>
+#include <netdb.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_NETDB_H */

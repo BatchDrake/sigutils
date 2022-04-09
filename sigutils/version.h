@@ -59,8 +59,8 @@ extern "C" {
   "." STRINGIFY(SIGUTILS_VERSION_MINOR) "." STRINGIFY(SIGUTILS_VERSION_PATCH)
 
 unsigned int sigutils_abi_version(void);
-const char  *sigutils_api_version(void);
-const char  *sigutils_pkgversion(void);
+const char *sigutils_api_version(void);
+const char *sigutils_pkgversion(void);
 
 void sigutils_abi_check(unsigned int);
 

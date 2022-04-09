@@ -19,7 +19,8 @@
 
 #include <windows.h>
 
-long sysconf(int name)
+long
+sysconf(int name)
 {
   switch (name) {
     case _SC_NPROCESSORS_ONLN: {
@@ -33,7 +34,8 @@ long sysconf(int name)
   return 0;
 }
 
-int getpagesize()
+int
+getpagesize()
 {
   SYSTEM_INFO sysInfo;
   GetSystemInfo(&sysInfo);

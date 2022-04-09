@@ -21,8 +21,8 @@
 #include <sys/types.h>
 
 typedef unsigned char cc_t;
-typedef unsigned int  speed_t;
-typedef unsigned int  tcflag_t;
+typedef unsigned int speed_t;
+typedef unsigned int tcflag_t;
 
 #define NCCS 32
 struct termios {
@@ -30,9 +30,9 @@ struct termios {
   tcflag_t c_oflag;
   tcflag_t c_cflag;
   tcflag_t c_lflag;
-  cc_t     c_cc[NCCS];
-  speed_t  c_ispeed;
-  speed_t  c_ospeed;
+  cc_t c_cc[NCCS];
+  speed_t c_ispeed;
+  speed_t c_ospeed;
 };
 
 #define TCSANOW 0
@@ -43,7 +43,7 @@ struct termios {
 #define read read_noecho_noicanon
 
 ssize_t read_noecho_noicanon(int fd, void *buf, size_t count);
-int     tcgetattr(int fd, struct termios *termios_p);
+int tcgetattr(int fd, struct termios *termios_p);
 int tcsetattr(int fd, int optional_actions, const struct termios *termios_p);
 
 #endif /* _UTIL_TERMIOS_H */

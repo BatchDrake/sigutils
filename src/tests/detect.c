@@ -33,33 +33,33 @@
 
 #define SU_TEST_CHANNEL_DETECTOR_SIGNAL_FREQ 1e-1
 
-SUPRIVATE SUBOOL __su_test_channel_detector_qpsk(su_test_context_t *ctx,
-                                                 SUBOOL             noisy)
+SUPRIVATE SUBOOL
+__su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
 {
-  SUBOOL     ok        = SU_FALSE;
-  SUCOMPLEX *input     = NULL;
-  SUFLOAT    N0        = 0;
-  SUCOMPLEX *tx        = NULL;
-  SUCOMPLEX *data      = NULL;
-  SUCOMPLEX  bbs       = 1;
-  SUCOMPLEX  symbols[] = {1, I, -1, -I};
-  SUCOMPLEX  phi0      = 1;
-  SUFLOAT   *fft       = NULL;
-  SUFLOAT    sigma;
+  SUBOOL ok = SU_FALSE;
+  SUCOMPLEX *input = NULL;
+  SUFLOAT N0 = 0;
+  SUCOMPLEX *tx = NULL;
+  SUCOMPLEX *data = NULL;
+  SUCOMPLEX bbs = 1;
+  SUCOMPLEX symbols[] = {1, I, -1, -I};
+  SUCOMPLEX phi0 = 1;
+  SUFLOAT *fft = NULL;
+  SUFLOAT sigma;
 
   unsigned int filter_period;
   unsigned int symbol_period;
   unsigned int message;
   unsigned int msgbuf;
 
-  su_ncqo_t                               ncqo = su_ncqo_INITIALIZER;
-  su_iir_filt_t                           mf   = su_iir_filt_INITIALIZER;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_iir_filt_t mf = su_iir_filt_INITIALIZER;
   struct sigutils_channel_detector_params params =
       sigutils_channel_detector_params_INITIALIZER;
-  su_channel_detector_t   *detector = NULL;
-  unsigned int             p        = 0;
-  unsigned int             sym;
-  unsigned int             n = 0;
+  su_channel_detector_t *detector = NULL;
+  unsigned int p = 0;
+  unsigned int sym;
+  unsigned int n = 0;
   struct sigutils_channel *channel;
 
   SU_TEST_START_TICKLESS(ctx);
@@ -67,7 +67,7 @@ SUPRIVATE SUBOOL __su_test_channel_detector_qpsk(su_test_context_t *ctx,
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
   filter_period = SU_TEST_MF_SYMBOL_SPAN * symbol_period; /* Span: 6 symbols */
-  message       = 0x414c4f48; /* Some greeting message */
+  message = 0x414c4f48; /* Some greeting message */
 
   if (noisy)
     N0 = SU_POWER_MAG(-10);
@@ -79,8 +79,8 @@ SUPRIVATE SUBOOL __su_test_channel_detector_qpsk(su_test_context_t *ctx,
   phi0 = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
   /* Initialize channel detector */
-  params.samp_rate   = 250000;
-  params.alpha       = 1e-1;
+  params.samp_rate = 250000;
+  params.alpha = 1e-1;
   params.window_size = 4096;
 
   /* Initialize buffers */
@@ -116,16 +116,16 @@ SUPRIVATE SUBOOL __su_test_channel_detector_qpsk(su_test_context_t *ctx,
       if (n == 32)
         n = 0;
       msgbuf = message >> n;
-      sym    = msgbuf & 3;
+      sym = msgbuf & 3;
       n += 2;
       bbs = symbol_period * symbols[sym];
     } else {
       bbs = 0;
     }
 
-    data[p]  = bbs;
+    data[p] = bbs;
     input[p] = su_iir_filt_feed(&mf, data[p]);
-    tx[p]    = phi0 * input[p] * su_ncqo_read(&ncqo) + sigma * su_c_awgn();
+    tx[p] = phi0 * input[p] * su_ncqo_read(&ncqo) + sigma * su_c_awgn();
   }
 
   SU_TEST_TICK(ctx);
@@ -181,35 +181,35 @@ su_test_channel_detector_qpsk_noisy(su_test_context_t *ctx)
 SUBOOL
 su_test_channel_detector_real_capture(su_test_context_t *ctx)
 {
-  SUBOOL         ok    = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
   complex float *input = (complex float *)-1; /* Required by mmap */
-  SUCOMPLEX     *fft;
-  SUCOMPLEX     *win;
-  SUFLOAT       *spect;
-  SUFLOAT       *spmax;
-  SUFLOAT       *spmin;
-  SUFLOAT       *spnln;
-  SUFLOAT       *n0est;
-  SUFLOAT       *acorr;
-  SUFLOAT       *decim;
+  SUCOMPLEX *fft;
+  SUCOMPLEX *win;
+  SUFLOAT *spect;
+  SUFLOAT *spmax;
+  SUFLOAT *spmin;
+  SUFLOAT *spnln;
+  SUFLOAT *n0est;
+  SUFLOAT *acorr;
+  SUFLOAT *decim;
 
   SUFLOAT *fc;
   SUSCOUNT req;
 
   struct sigutils_channel_detector_params params =
       sigutils_channel_detector_params_INITIALIZER;
-  su_channel_detector_t         *detector           = NULL;
-  su_channel_detector_t         *baud_det           = NULL;
-  su_channel_detector_t         *nonlinear_baud_det = NULL;
-  struct stat                    sbuf;
-  unsigned int                   i;
-  unsigned int                   n = 0;
-  unsigned int                   j = 0;
-  SUSCOUNT                       samples;
-  int                            fd             = -1;
+  su_channel_detector_t *detector = NULL;
+  su_channel_detector_t *baud_det = NULL;
+  su_channel_detector_t *nonlinear_baud_det = NULL;
+  struct stat sbuf;
+  unsigned int i;
+  unsigned int n = 0;
+  unsigned int j = 0;
+  SUSCOUNT samples;
+  int fd = -1;
   const struct sigutils_channel *center_channel = NULL;
-  struct sigutils_channel      **channel_list;
-  unsigned int                   channel_count;
+  struct sigutils_channel **channel_list;
+  unsigned int channel_count;
 
   SU_TEST_START_TICKLESS(ctx);
 
@@ -221,16 +221,16 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   SU_TEST_ASSERT(stat(SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE, &sbuf) != -1);
 
-  SU_TEST_ASSERT((fd = open(SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE, O_RDONLY)) !=
-                 -1);
+  SU_TEST_ASSERT((fd = open(SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE, O_RDONLY))
+                 != -1);
 
   SU_TEST_ASSERT((input = (complex float *)mmap(NULL,         /* addr */
                                                 sbuf.st_size, /* size */
                                                 PROT_READ,    /* prot */
                                                 MAP_PRIVATE,  /* flags */
                                                 fd,           /* fd */
-                                                0 /* offset */)) !=
-                 (complex float *)-1);
+                                                0 /* offset */))
+                 != (complex float *)-1);
 
   close(fd); /* We don't need this anymore */
   fd = -1;
@@ -243,8 +243,8 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   samples = sbuf.st_size / sizeof(complex float);
 
   /* Initialize channel detector */
-  params.samp_rate   = 250000;
-  params.alpha       = 1e-3;
+  params.samp_rate = 250000;
+  params.alpha = 1e-3;
   params.window_size = 4096;
 
   /* Create debug buffers */
@@ -317,9 +317,9 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   su_channel_params_adjust_to_channel(&params, center_channel);
 
-  params.mode        = SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION;
+  params.mode = SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION;
   params.window_size = 4096;
-  params.alpha       = 1e-3;
+  params.alpha = 1e-3;
   /* params.bw *= 2; */
   /*
    * Lowering the decimation, we can increase the precision of
@@ -328,7 +328,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   params.decimation /= 2;
 
   *decim = params.decimation;
-  *fc    = params.fc;
+  *fc = params.fc;
 
   SU_TEST_ASSERT(acorr =
                      su_test_ctx_getf_w_size(ctx, "acorr", params.window_size));
@@ -355,7 +355,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   *decim = baud_det->params.decimation;
   for (i = 0; i < params.window_size; ++i) {
     acorr[i] = baud_det->acorr[i];
-    fft[i]   = baud_det->fft[i];
+    fft[i] = baud_det->fft[i];
   }
 
   SU_INFO("Detected baudrate: %lg\n", baud_det->baud);
@@ -382,7 +382,7 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   for (i = 0; i < params.window_size; ++i) {
     spnln[i] = nonlinear_baud_det->spect[i];
-    win[i]   = nonlinear_baud_det->window[i];
+    win[i] = nonlinear_baud_det->window[i];
   }
 
   ok = SU_TRUE;

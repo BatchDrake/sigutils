@@ -28,10 +28,10 @@ extern "C" {
 
 struct sigutils_tv_processor_params {
   /* Flags */
-  SUBOOL  enable_sync;
-  SUBOOL  reverse;
-  SUBOOL  interlace;
-  SUBOOL  enable_agc;
+  SUBOOL enable_sync;
+  SUBOOL reverse;
+  SUBOOL interlace;
+  SUBOOL enable_agc;
   SUFLOAT x_off;
 
   /* Geometry */
@@ -42,11 +42,11 @@ struct sigutils_tv_processor_params {
   SUBOOL comb_reverse;
 
   /* Timing */
-  SUFLOAT  hsync_len;
-  SUFLOAT  vsync_len;
-  SUFLOAT  line_len;
+  SUFLOAT hsync_len;
+  SUFLOAT vsync_len;
+  SUFLOAT line_len;
   SUSCOUNT vsync_odd_trigger;
-  SUBOOL   dominance;
+  SUBOOL dominance;
 
   /* Tolerances */
   SUFLOAT t_tol; /* Timing tolerance */
@@ -68,37 +68,37 @@ struct sigutils_tv_processor_params {
 };
 
 struct sigutils_pulse_finder {
-  SUFLOAT  base;
-  SUFLOAT  peak_thr;
+  SUFLOAT base;
+  SUFLOAT peak_thr;
   SUSCOUNT length;
-  SUFLOAT  level_tolerance;
-  SUFLOAT  time_tolerance;
+  SUFLOAT level_tolerance;
+  SUFLOAT time_tolerance;
 
   SUFLOAT last_y;
 
   su_iir_filt_t corr;
-  SUBOOL        present;
-  SUFLOAT       accum;
-  SUFLOAT       w_accum;
-  SUFLOAT       duration;
-  SUFLOAT       rel_pos;
+  SUBOOL present;
+  SUFLOAT accum;
+  SUFLOAT w_accum;
+  SUFLOAT duration;
+  SUFLOAT rel_pos;
 };
 
 typedef struct sigutils_pulse_finder su_pulse_finder_t;
 
 SU_INSTANCER(su_pulse_finder,
-             SUFLOAT  base,
-             SUFLOAT  peak,
+             SUFLOAT base,
+             SUFLOAT peak,
              SUSCOUNT len,
-             SUFLOAT  tolerance);
+             SUFLOAT tolerance);
 SU_COLLECTOR(su_pulse_finder);
 
 SU_METHOD(su_pulse_finder, SUBOOL, feed, SUFLOAT x);
 SU_GETTER(su_pulse_finder, SUFLOAT, get_pos);
 
 struct sigutils_tv_frame_buffer {
-  int                              width, height;
-  SUFLOAT                         *buffer;
+  int width, height;
+  SUFLOAT *buffer;
   struct sigutils_tv_frame_buffer *next;
 };
 
@@ -117,7 +117,7 @@ enum sigutils_tv_processor_state {
 
 struct sigutils_tv_processor {
   struct sigutils_tv_processor_params params;
-  enum sigutils_tv_processor_state    state;
+  enum sigutils_tv_processor_state state;
 
   struct sigutils_tv_frame_buffer *free_pool;
   struct sigutils_tv_frame_buffer *current;
@@ -127,19 +127,19 @@ struct sigutils_tv_processor {
 
   /* Precalculated data */
   SUSCOUNT field_lines;
-  SUFLOAT  agc_alpha;
-  SUFLOAT  pulse_alpha;
-  SUFLOAT  hsync_len_alpha;
-  SUFLOAT  hsync_slow_track_alpha;
-  SUFLOAT  hsync_fast_track_alpha;
-  SUFLOAT  line_len_alpha;
+  SUFLOAT agc_alpha;
+  SUFLOAT pulse_alpha;
+  SUFLOAT hsync_len_alpha;
+  SUFLOAT hsync_slow_track_alpha;
+  SUFLOAT hsync_fast_track_alpha;
+  SUFLOAT line_len_alpha;
 
   /* Frame state */
   SUSCOUNT field_x;
-  SUFLOAT  field_x_dec;
+  SUFLOAT field_x_dec;
   SUSCOUNT field_y;
-  SUBOOL   field_parity;
-  SUBOOL   field_complete;
+  SUBOOL field_parity;
+  SUBOOL field_complete;
   SUSCOUNT field_prev_ptr;
 
   /* Comb filter's delay line */
@@ -148,33 +148,33 @@ struct sigutils_tv_processor {
   SUSCOUNT delay_line_ptr;
 
   /* AGC */
-  SUFLOAT  agc_gain;
-  SUFLOAT  agc_line_max;
-  SUFLOAT  agc_accum;
+  SUFLOAT agc_gain;
+  SUFLOAT agc_line_max;
+  SUFLOAT agc_accum;
   SUSCOUNT agc_lines;
 
   /* Pulse output */
   SUFLOAT pulse_x;
 
   /* Sync pulse detection */
-  SUBOOL   sync_found;
+  SUBOOL sync_found;
   SUSCOUNT sync_start;
 
   /* HSYNC detection */
   SUSCOUNT last_hsync;
-  SUBOOL   have_last_hsync;
-  SUFLOAT  est_hsync_len;
-  SUBOOL   hsync_slow_track;
+  SUBOOL have_last_hsync;
+  SUFLOAT est_hsync_len;
+  SUBOOL hsync_slow_track;
 
   /* VSYNC detection */
   SUSCOUNT last_frame;
   SUSCOUNT last_vsync;
   SUSCOUNT vsync_counter;
-  SUBOOL   frame_has_vsync;
+  SUBOOL frame_has_vsync;
 
   /* Line length estimation */
-  SUFLOAT  est_line_len;
-  SUFLOAT  est_line_len_accum;
+  SUFLOAT est_line_len;
+  SUFLOAT est_line_len_accum;
   SUSCOUNT est_line_len_count;
 };
 
@@ -185,7 +185,7 @@ SU_INSTANCER(su_tv_processor,
 SU_COLLECTOR(su_tv_processor);
 
 void su_tv_processor_params_pal(struct sigutils_tv_processor_params *self,
-                                SUFLOAT                              samp_rate);
+                                SUFLOAT samp_rate);
 
 void su_tv_processor_params_ntsc(struct sigutils_tv_processor_params *self,
                                  SUFLOAT samp_rate);

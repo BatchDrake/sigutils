@@ -27,13 +27,12 @@
 
 struct su_diff_codec_state {
   SUSYMBOL prev;
-  SUBOOL   sign;
-  SUBITS   mask;
+  SUBOOL sign;
+  SUBITS mask;
 };
 
-SUPRIVATE SUBOOL su_diff_codec_ctor(su_codec_t *codec,
-                                    void **private,
-                                    va_list ap)
+SUPRIVATE SUBOOL
+su_diff_codec_ctor(su_codec_t *codec, void **private, va_list ap)
 {
   struct su_diff_codec_state *new;
 
@@ -49,9 +48,8 @@ SUPRIVATE SUBOOL su_diff_codec_ctor(su_codec_t *codec,
   return SU_TRUE;
 }
 
-SUINLINE SUBITS su_diff_codec_int(const struct su_diff_codec_state *s,
-                                  SUBITS                            a,
-                                  SUBITS                            b)
+SUINLINE SUBITS
+su_diff_codec_int(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
 {
   if (s->sign)
     return s->mask & (a + b);
@@ -59,9 +57,8 @@ SUINLINE SUBITS su_diff_codec_int(const struct su_diff_codec_state *s,
     return s->mask & (a - b);
 }
 
-SUINLINE SUBITS su_diff_codec_diff(const struct su_diff_codec_state *s,
-                                   SUBITS                            a,
-                                   SUBITS                            b)
+SUINLINE SUBITS
+su_diff_codec_diff(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
 {
   if (s->sign)
     return s->mask & (b - a);
@@ -69,12 +66,11 @@ SUINLINE SUBITS su_diff_codec_diff(const struct su_diff_codec_state *s,
     return s->mask & (a - b);
 }
 
-SUPRIVATE SUSYMBOL su_diff_codec_encode(su_codec_t *codec,
-                                        void *private,
-                                        SUSYMBOL x)
+SUPRIVATE SUSYMBOL
+su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
 {
   struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
-  SUSYMBOL                    y;
+  SUSYMBOL y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
@@ -89,19 +85,18 @@ SUPRIVATE SUSYMBOL su_diff_codec_encode(su_codec_t *codec,
     state->prev = y;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
-    y           = x;
+    y = x;
     state->prev = SU_NOSYMBOL;
   }
 
   return y;
 }
 
-SUPRIVATE SUSYMBOL su_diff_codec_decode(su_codec_t *codec,
-                                        void *private,
-                                        SUSYMBOL x)
+SUPRIVATE SUSYMBOL
+su_diff_codec_decode(su_codec_t *codec, void *private, SUSYMBOL x)
 {
   struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
-  SUSYMBOL                    y;
+  SUSYMBOL y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
@@ -116,22 +111,23 @@ SUPRIVATE SUSYMBOL su_diff_codec_decode(su_codec_t *codec,
     state->prev = x;
   } else {
     /* When we don't receive a symbol, we must reset the stream */
-    y           = x;
+    y = x;
     state->prev = SU_NOSYMBOL;
   }
 
   return y;
 }
 
-SUPRIVATE void su_diff_codec_dtor(void *private)
+SUPRIVATE void
+su_diff_codec_dtor(void *private)
 {
   free(private);
 }
 
 struct sigutils_codec_class su_codec_class_DIFF = {
-    .name   = "diff",
-    .ctor   = su_diff_codec_ctor,
-    .dtor   = su_diff_codec_dtor,
+    .name = "diff",
+    .ctor = su_diff_codec_ctor,
+    .dtor = su_diff_codec_dtor,
     .encode = su_diff_codec_encode,
     .decode = su_diff_codec_decode,
 };

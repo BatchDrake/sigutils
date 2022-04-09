@@ -22,15 +22,14 @@
 
 #include "types.h"
 
-enum sigutils_equalizer_algorithm
-{
+enum sigutils_equalizer_algorithm {
   SU_EQUALIZER_ALGORITHM_CMA, /* Default */
 };
 
 struct sigutils_equalizer_params {
   enum sigutils_equalizer_algorithm algorithm;
-  SUSCOUNT                          length;
-  SUFLOAT                           mu;
+  SUSCOUNT length;
+  SUFLOAT mu;
 };
 
 #define sigutils_equalizer_params_INITIALIZER   \
@@ -47,9 +46,9 @@ struct sigutils_equalizer_params {
 
 struct sigutils_equalizer {
   struct sigutils_equalizer_params params;
-  SUCOMPLEX                       *w;
-  SUCOMPLEX                       *x;
-  SUSCOUNT                         ptr;
+  SUCOMPLEX *w;
+  SUCOMPLEX *x;
+  SUSCOUNT ptr;
 };
 
 typedef struct sigutils_equalizer su_equalizer_t;
@@ -62,7 +61,7 @@ typedef struct sigutils_equalizer su_equalizer_t;
         0,                                 /* ptr */    \
   }
 
-SUBOOL su_equalizer_init(su_equalizer_t                         *eq,
+SUBOOL su_equalizer_init(su_equalizer_t *eq,
                          const struct sigutils_equalizer_params *params);
 
 void su_equalizer_reset(su_equalizer_t *eq);

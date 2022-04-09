@@ -28,7 +28,8 @@
 PTR_LIST(SUPRIVATE su_modem_class_t, modem_class);
 
 /**************** Modem class API **********************/
-su_modem_class_t *su_modem_class_lookup(const char *name)
+su_modem_class_t *
+su_modem_class_lookup(const char *name)
 {
   su_modem_class_t *this = NULL;
 
@@ -56,7 +57,8 @@ su_modem_class_register(su_modem_class_t *modem)
 }
 
 /**************** Modem property API *******************/
-void su_modem_property_destroy(su_modem_property_t *prop)
+void
+su_modem_property_destroy(su_modem_property_t *prop)
 {
   if (prop->name != NULL)
     free(prop->name);
@@ -64,8 +66,8 @@ void su_modem_property_destroy(su_modem_property_t *prop)
   free(prop);
 }
 
-su_modem_property_t *su_modem_property_new(const char        *name,
-                                           su_property_type_t type)
+su_modem_property_t *
+su_modem_property_new(const char *name, su_property_type_t type)
 {
   su_modem_property_t *new = NULL;
 
@@ -87,9 +89,9 @@ fail:
   return NULL;
 }
 
-su_modem_property_t *su_modem_property_set_lookup(
-    const su_modem_property_set_t *set,
-    const char                    *name)
+su_modem_property_t *
+su_modem_property_set_lookup(const su_modem_property_set_t *set,
+                             const char *name)
 {
   su_modem_property_t *this = NULL;
 
@@ -100,7 +102,8 @@ su_modem_property_t *su_modem_property_set_lookup(
   return NULL;
 }
 
-ssize_t su_modem_property_get_value_marshalled_size(su_property_type_t type)
+ssize_t
+su_modem_property_get_value_marshalled_size(su_property_type_t type)
 {
   switch (type) {
     case SU_PROPERTY_TYPE_ANY:
@@ -148,13 +151,14 @@ su_modem_property_copy(su_modem_property_t *dst, const su_modem_property_t *src)
   return SU_TRUE;
 }
 
-SUPRIVATE SUBOOL __su_modem_set_state_property_from_modem_property(
-    su_modem_t                *modem,
-    su_property_t             *state_prop,
+SUPRIVATE SUBOOL
+__su_modem_set_state_property_from_modem_property(
+    su_modem_t *modem,
+    su_property_t *state_prop,
     const su_modem_property_t *prop)
 {
-  if (prop->type == SU_PROPERTY_TYPE_ANY ||
-      prop->type == SU_PROPERTY_TYPE_OBJECT) {
+  if (prop->type == SU_PROPERTY_TYPE_ANY
+      || prop->type == SU_PROPERTY_TYPE_OBJECT) {
     SU_ERROR("cannot set properties of type %s\n",
              su_property_type_to_string(prop->type));
     return SU_FALSE;
@@ -200,8 +204,9 @@ su_modem_load_state_property(su_modem_t *modem, const su_modem_property_t *prop)
 {
   su_property_t *state_prop;
 
-  if ((state_prop = su_property_set_lookup(&modem->state_properties,
-                                           prop->name)) != NULL) {
+  if ((state_prop =
+           su_property_set_lookup(&modem->state_properties, prop->name))
+      != NULL) {
     return __su_modem_set_state_property_from_modem_property(modem,
                                                              state_prop,
                                                              prop);
@@ -219,14 +224,15 @@ su_modem_load_state_property(su_modem_t *modem, const su_modem_property_t *prop)
 SUBOOL
 su_modem_load_all_state_properties(su_modem_t *modem)
 {
-  su_property_t             *state_prop;
+  su_property_t *state_prop;
   const su_modem_property_t *prop;
 
   FOR_EACH_PTR(state_prop, modem, state_properties.property)
   {
     if ((prop = su_modem_property_lookup_typed(modem,
                                                state_prop->name,
-                                               state_prop->type)) != NULL) {
+                                               state_prop->type))
+        != NULL) {
       if (!__su_modem_set_state_property_from_modem_property(modem,
                                                              state_prop,
                                                              prop)) {
@@ -247,9 +253,9 @@ su_modem_load_all_state_properties(su_modem_t *modem)
 SUPRIVATE ssize_t
 su_modem_property_get_marshalled_size(const su_modem_property_t *prop)
 {
-  size_t  size       = 0;
+  size_t size = 0;
   ssize_t field_size = 0;
-  size_t  tmp_size   = 0;
+  size_t tmp_size = 0;
   size += sizeof(uint8_t); /* Property type */
   size += sizeof(uint8_t); /* Property name size  */
 
@@ -260,8 +266,8 @@ su_modem_property_get_marshalled_size(const su_modem_property_t *prop)
 
   size += tmp_size; /* Property name */
 
-  if ((field_size = su_modem_property_get_value_marshalled_size(prop->type)) ==
-      -1) {
+  if ((field_size = su_modem_property_get_value_marshalled_size(prop->type))
+      == -1) {
     SU_ERROR("cannot marshall properties of type `%s'\n",
              su_property_type_to_string(prop->type));
     return -1;
@@ -272,14 +278,15 @@ su_modem_property_get_marshalled_size(const su_modem_property_t *prop)
   return size;
 }
 
-SUPRIVATE ssize_t su_modem_property_marshall(const su_modem_property_t *prop,
-                                             void                      *buffer,
-                                             size_t buffer_size)
+SUPRIVATE ssize_t
+su_modem_property_marshall(const su_modem_property_t *prop,
+                           void *buffer,
+                           size_t buffer_size)
 {
-  uint8_t *as_bytes  = NULL;
-  off_t    ptr       = 0;
-  size_t   tmp_size  = 0;
-  ssize_t  prop_size = 0;
+  uint8_t *as_bytes = NULL;
+  off_t ptr = 0;
+  size_t tmp_size = 0;
+  ssize_t prop_size = 0;
 
   if ((prop_size = su_modem_property_get_marshalled_size(prop)) == -1) {
     SU_ERROR("cannot marshall property `%s'\n", prop->name);
@@ -310,24 +317,25 @@ SUPRIVATE ssize_t su_modem_property_marshall(const su_modem_property_t *prop,
   return ptr;
 }
 
-SUPRIVATE ssize_t su_modem_property_unmarshall(su_modem_property_t *prop,
-                                               const void          *buffer,
-                                               size_t               buffer_size)
+SUPRIVATE ssize_t
+su_modem_property_unmarshall(su_modem_property_t *prop,
+                             const void *buffer,
+                             size_t buffer_size)
 {
   su_property_type_t type;
-  const uint8_t     *as_bytes   = NULL;
-  size_t             name_size  = 0;
-  size_t             value_size = 0;
-  off_t              ptr        = 0;
-  const char        *name_ptr   = NULL;
-  const uint8_t     *value      = NULL;
+  const uint8_t *as_bytes = NULL;
+  size_t name_size = 0;
+  size_t value_size = 0;
+  off_t ptr = 0;
+  const char *name_ptr = NULL;
+  const uint8_t *value = NULL;
 
   /* Minimum size: type + name size + null terminator */
   if (buffer_size < 3)
     goto corrupted;
 
-  as_bytes  = (const uint8_t *)buffer;
-  type      = as_bytes[ptr++];
+  as_bytes = (const uint8_t *)buffer;
+  type = as_bytes[ptr++];
   name_size = as_bytes[ptr++];
 
   /* Does the name fit in the buffer? */
@@ -365,15 +373,16 @@ corrupted:
 }
 
 /****************** Property Set API *******************/
-void su_modem_property_set_init(su_modem_property_set_t *set)
+void
+su_modem_property_set_init(su_modem_property_set_t *set)
 {
   memset(set, 0, sizeof(su_modem_property_set_t));
 }
 
-su_modem_property_t *su_modem_property_set_assert_property(
-    su_modem_property_set_t *set,
-    const char              *name,
-    su_property_type_t       type)
+su_modem_property_t *
+su_modem_property_set_assert_property(su_modem_property_set_t *set,
+                                      const char *name,
+                                      su_property_type_t type)
 {
   su_modem_property_t *prop = NULL;
 
@@ -404,8 +413,8 @@ su_modem_property_t *su_modem_property_set_assert_property(
 SUPRIVATE size_t
 su_modem_property_set_get_marshalled_size(const su_modem_property_set_t *set)
 {
-  size_t  size                    = 0;
-  ssize_t prop_size               = 0;
+  size_t size = 0;
+  ssize_t prop_size = 0;
   const su_modem_property_t *this = NULL;
 
   size = sizeof(uint16_t); /* Property counter */
@@ -417,16 +426,17 @@ su_modem_property_set_get_marshalled_size(const su_modem_property_set_t *set)
   return size;
 }
 
-ssize_t su_modem_property_set_marshall(const su_modem_property_set_t *set,
-                                       void                          *buffer,
-                                       size_t buffer_size)
+ssize_t
+su_modem_property_set_marshall(const su_modem_property_set_t *set,
+                               void *buffer,
+                               size_t buffer_size)
 {
-  size_t  marshalled_size = 0;
+  size_t marshalled_size = 0;
   ssize_t prop_size;
   const su_modem_property_t *this = NULL;
-  off_t        ptr                = 0;
-  uint8_t     *as_bytes           = NULL;
-  unsigned int count              = 0;
+  off_t ptr = 0;
+  uint8_t *as_bytes = NULL;
+  unsigned int count = 0;
 
   marshalled_size = su_modem_property_set_get_marshalled_size(set);
 
@@ -445,7 +455,8 @@ ssize_t su_modem_property_set_marshall(const su_modem_property_set_t *set,
     if ((prop_size = su_modem_property_get_marshalled_size(this)) > 0) {
       if ((prop_size = su_modem_property_marshall(this,
                                                   &as_bytes[ptr],
-                                                  buffer_size - ptr)) < 0) {
+                                                  buffer_size - ptr))
+          < 0) {
         SU_ERROR("failed to marshall property `%s'\n", this->name);
         return -1;
       }
@@ -465,22 +476,23 @@ ssize_t su_modem_property_set_marshall(const su_modem_property_set_t *set,
   return ptr;
 }
 
-ssize_t su_modem_property_set_unmarshall(su_modem_property_set_t *set,
-                                         const void              *buffer,
-                                         size_t                   buffer_size)
+ssize_t
+su_modem_property_set_unmarshall(su_modem_property_set_t *set,
+                                 const void *buffer,
+                                 size_t buffer_size)
 {
-  uint16_t             count     = 0;
-  unsigned int         i         = 0;
-  off_t                ptr       = 0;
-  ssize_t              prop_size = 0;
-  su_modem_property_t *prop      = NULL;
-  const uint8_t       *as_bytes  = NULL;
+  uint16_t count = 0;
+  unsigned int i = 0;
+  off_t ptr = 0;
+  ssize_t prop_size = 0;
+  su_modem_property_t *prop = NULL;
+  const uint8_t *as_bytes = NULL;
 
   if (buffer_size < 2)
     goto corrupted;
 
   as_bytes = (const uint8_t *)buffer;
-  count    = *((const uint16_t *)as_bytes);
+  count = *((const uint16_t *)as_bytes);
 
   ptr += 2;
 
@@ -494,7 +506,8 @@ ssize_t su_modem_property_set_unmarshall(su_modem_property_set_t *set,
 
     if ((prop_size = su_modem_property_unmarshall(prop,
                                                   &as_bytes[ptr],
-                                                  buffer_size - ptr)) < 0) {
+                                                  buffer_size - ptr))
+        < 0) {
       /* Property can be easily freed here */
       free(prop);
       goto corrupted;
@@ -519,18 +532,18 @@ corrupted:
 }
 
 SUBOOL
-su_modem_property_set_copy(su_modem_property_set_t       *dest,
+su_modem_property_set_copy(su_modem_property_set_t *dest,
                            const su_modem_property_set_t *src)
 {
-  su_modem_property_t *this     = NULL;
+  su_modem_property_t *this = NULL;
   su_modem_property_t *dst_prop = NULL;
 
   FOR_EACH_PTR(this, src, property)
   {
     if ((dst_prop = su_modem_property_set_assert_property(dest,
                                                           this->name,
-                                                          this->type)) ==
-        NULL) {
+                                                          this->type))
+        == NULL) {
       SU_ERROR("failed to assert property `%s'\n", this->name);
       return SU_FALSE;
     }
@@ -544,7 +557,8 @@ su_modem_property_set_copy(su_modem_property_set_t       *dest,
   return SU_TRUE;
 }
 
-void su_modem_property_set_finalize(su_modem_property_set_t *set)
+void
+su_modem_property_set_finalize(su_modem_property_set_t *set)
 {
   su_modem_property_t *this = NULL;
 
@@ -556,7 +570,8 @@ void su_modem_property_set_finalize(su_modem_property_set_t *set)
 }
 
 /****************** Modem API *******************/
-void su_modem_destroy(su_modem_t *modem)
+void
+su_modem_destroy(su_modem_t *modem)
 {
   su_block_t *this = NULL;
 
@@ -575,9 +590,10 @@ void su_modem_destroy(su_modem_t *modem)
   free(modem);
 }
 
-su_modem_t *su_modem_new(const char *class_name)
+su_modem_t *
+su_modem_new(const char *class_name)
 {
-  su_modem_t *new         = NULL;
+  su_modem_t *new = NULL;
   su_modem_class_t *class = NULL;
 
   if ((class = su_modem_class_lookup(class_name)) == NULL) {
@@ -615,7 +631,7 @@ su_modem_set_source(su_modem_t *modem, su_block_t *src)
 SUBOOL
 su_modem_set_wav_source(su_modem_t *modem, const char *path)
 {
-  su_block_t     *wav_block = NULL;
+  su_block_t *wav_block = NULL;
   const uint64_t *samp_rate = NULL;
 
   if ((wav_block = su_block_new("wavfile", path)) == NULL)
@@ -623,7 +639,8 @@ su_modem_set_wav_source(su_modem_t *modem, const char *path)
 
   if ((samp_rate = su_block_get_property_ref(wav_block,
                                              SU_PROPERTY_TYPE_INTEGER,
-                                             "samp_rate")) == NULL) {
+                                             "samp_rate"))
+      == NULL) {
     SU_ERROR("failed to acquire wav file sample rate\n");
     goto fail;
   }
@@ -657,11 +674,11 @@ su_modem_register_block(su_modem_t *modem, su_block_t *block)
 }
 
 SUBOOL
-su_modem_expose_state_property(su_modem_t        *modem,
-                               const char        *name,
+su_modem_expose_state_property(su_modem_t *modem,
+                               const char *name,
                                su_property_type_t type,
-                               SUBOOL             mandatory,
-                               void              *ptr)
+                               SUBOOL mandatory,
+                               void *ptr)
 {
   su_property_t *state_property = NULL;
 
@@ -669,7 +686,8 @@ su_modem_expose_state_property(su_modem_t        *modem,
            __su_property_set_assert_property(&modem->state_properties,
                                              name,
                                              type,
-                                             mandatory)) == NULL)
+                                             mandatory))
+      == NULL)
     return SU_FALSE;
 
   state_property->generic_ptr = ptr;
@@ -677,14 +695,15 @@ su_modem_expose_state_property(su_modem_t        *modem,
   return SU_TRUE;
 }
 
-void *su_modem_get_state_property_ref(const su_modem_t  *modem,
-                                      const char        *name,
-                                      su_property_type_t type)
+void *
+su_modem_get_state_property_ref(const su_modem_t *modem,
+                                const char *name,
+                                su_property_type_t type)
 {
   su_property_t *state_property;
 
-  if ((state_property =
-           su_property_set_lookup(&modem->state_properties, name)) == NULL)
+  if ((state_property = su_property_set_lookup(&modem->state_properties, name))
+      == NULL)
     return NULL;
 
   if (state_property->type != type) {
@@ -701,15 +720,15 @@ SUBOOL
 su_modem_set_int(su_modem_t *modem, const char *name, uint64_t val)
 {
   su_modem_property_t *prop = NULL;
-  uint64_t             old;
+  uint64_t old;
 
-  if ((prop = su_modem_property_set_assert_property(
-           &modem->properties,
-           name,
-           SU_PROPERTY_TYPE_INTEGER)) == NULL)
+  if ((prop = su_modem_property_set_assert_property(&modem->properties,
+                                                    name,
+                                                    SU_PROPERTY_TYPE_INTEGER))
+      == NULL)
     return SU_FALSE;
 
-  old          = prop->as_int;
+  old = prop->as_int;
   prop->as_int = val;
 
   if (!su_modem_load_state_property(modem, prop)) {
@@ -730,11 +749,11 @@ su_modem_set_float(su_modem_t *modem, const char *name, SUFLOAT val)
 
   if ((prop = su_modem_property_set_assert_property(&modem->properties,
                                                     name,
-                                                    SU_PROPERTY_TYPE_FLOAT)) ==
-      NULL)
+                                                    SU_PROPERTY_TYPE_FLOAT))
+      == NULL)
     return SU_FALSE;
 
-  old            = prop->as_float;
+  old = prop->as_float;
   prop->as_float = val;
 
   if (!su_modem_load_state_property(modem, prop)) {
@@ -751,15 +770,15 @@ SUBOOL
 su_modem_set_complex(su_modem_t *modem, const char *name, SUCOMPLEX val)
 {
   su_modem_property_t *prop = NULL;
-  SUCOMPLEX            old;
+  SUCOMPLEX old;
 
-  if ((prop = su_modem_property_set_assert_property(
-           &modem->properties,
-           name,
-           SU_PROPERTY_TYPE_COMPLEX)) == NULL)
+  if ((prop = su_modem_property_set_assert_property(&modem->properties,
+                                                    name,
+                                                    SU_PROPERTY_TYPE_COMPLEX))
+      == NULL)
     return SU_FALSE;
 
-  old              = prop->as_complex;
+  old = prop->as_complex;
   prop->as_complex = val;
 
   if (!su_modem_load_state_property(modem, prop)) {
@@ -775,15 +794,15 @@ SUBOOL
 su_modem_set_bool(su_modem_t *modem, const char *name, SUBOOL val)
 {
   su_modem_property_t *prop = NULL;
-  SUBOOL               old;
+  SUBOOL old;
 
   if ((prop = su_modem_property_set_assert_property(&modem->properties,
                                                     name,
-                                                    SU_PROPERTY_TYPE_BOOL)) ==
-      NULL)
+                                                    SU_PROPERTY_TYPE_BOOL))
+      == NULL)
     return SU_FALSE;
 
-  old           = prop->as_bool;
+  old = prop->as_bool;
   prop->as_bool = val;
 
   if (!su_modem_load_state_property(modem, prop)) {
@@ -799,15 +818,15 @@ SUBOOL
 su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
 {
   su_modem_property_t *prop = NULL;
-  void                *old;
+  void *old;
 
   if ((prop = su_modem_property_set_assert_property(&modem->properties,
                                                     name,
-                                                    SU_PROPERTY_TYPE_OBJECT)) ==
-      NULL)
+                                                    SU_PROPERTY_TYPE_OBJECT))
+      == NULL)
     return SU_FALSE;
 
-  old          = prop->as_ptr;
+  old = prop->as_ptr;
   prop->as_ptr = val;
 
   if (!su_modem_load_state_property(modem->privdata, prop)) {
@@ -820,16 +839,16 @@ su_modem_set_ptr(su_modem_t *modem, const char *name, void *val)
   return SU_TRUE;
 }
 
-const su_modem_property_t *su_modem_property_lookup(const su_modem_t *modem,
-                                                    const char       *name)
+const su_modem_property_t *
+su_modem_property_lookup(const su_modem_t *modem, const char *name)
 {
   return su_modem_property_set_lookup(&modem->properties, name);
 }
 
-const su_modem_property_t *su_modem_property_lookup_typed(
-    const su_modem_t  *modem,
-    const char        *name,
-    su_property_type_t type)
+const su_modem_property_t *
+su_modem_property_lookup_typed(const su_modem_t *modem,
+                               const char *name,
+                               su_property_type_t type)
 {
   const su_modem_property_t *prop = NULL;
 
@@ -849,15 +868,15 @@ const su_modem_property_t *su_modem_property_lookup_typed(
 SUBOOL
 su_modem_set_properties(su_modem_t *modem, const su_modem_property_set_t *set)
 {
-  su_modem_property_t *this     = NULL;
+  su_modem_property_t *this = NULL;
   su_modem_property_t *dst_prop = NULL;
 
   FOR_EACH_PTR(this, set, property)
   {
     if ((dst_prop = su_modem_property_set_assert_property(&modem->properties,
                                                           this->name,
-                                                          this->type)) ==
-        NULL) {
+                                                          this->type))
+        == NULL) {
       SU_ERROR("failed to assert property `%s'\n", this->name);
       return SU_FALSE;
     }
@@ -967,17 +986,20 @@ su_modem_get_signal(su_modem_t *modem)
   return modem->signal;
 }
 
-void su_modem_set_fec(su_modem_t *modem, SUFLOAT fec)
+void
+su_modem_set_fec(su_modem_t *modem, SUFLOAT fec)
 {
   modem->fec = fec;
 }
 
-void su_modem_set_snr(su_modem_t *modem, SUFLOAT snr)
+void
+su_modem_set_snr(su_modem_t *modem, SUFLOAT snr)
 {
   modem->snr = snr;
 }
 
-void su_modem_set_signal(su_modem_t *modem, SUFLOAT signal)
+void
+su_modem_set_signal(su_modem_t *modem, SUFLOAT signal)
 {
   modem->signal = signal;
 }

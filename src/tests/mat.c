@@ -25,7 +25,7 @@
 SUBOOL
 su_test_mat_file_regular(su_test_context_t *ctx)
 {
-  su_mat_file_t   *mf  = NULL;
+  su_mat_file_t *mf = NULL;
   su_mat_matrix_t *mtx = NULL;
 
   SUBOOL ok = SU_FALSE;
@@ -59,7 +59,7 @@ done:
 SUBOOL
 su_test_mat_file_streaming(su_test_context_t *ctx)
 {
-  su_mat_file_t   *mf  = NULL;
+  su_mat_file_t *mf = NULL;
   su_mat_matrix_t *mtx = NULL;
 
   SUBOOL ok = SU_FALSE;

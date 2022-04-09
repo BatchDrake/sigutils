@@ -21,20 +21,21 @@
 #include <windows.h>
 
 /* A bit adhoc */
-int statvfs(const char *restrict path, struct statvfs *restrict buf)
+int
+statvfs(const char *restrict path, struct statvfs *restrict buf)
 {
-  DWORD SectorsPerCluster     = 0;
-  DWORD BytesPerSector        = 0;
-  DWORD NumberOfFreeClusters  = 0;
+  DWORD SectorsPerCluster = 0;
+  DWORD BytesPerSector = 0;
+  DWORD NumberOfFreeClusters = 0;
   DWORD TotalNumberOfClusters = 0;
-  int   r                     = GetDiskFreeSpaceA(path,
+  int r = GetDiskFreeSpaceA(path,
                             &SectorsPerCluster,
                             &BytesPerSector,
                             &NumberOfFreeClusters,
                             &TotalNumberOfClusters);
 
   buf->f_frsize = BytesPerSector * SectorsPerCluster;
-  buf->f_bsize  = buf->f_frsize;
+  buf->f_bsize = buf->f_frsize;
 
   buf->f_blocks = TotalNumberOfClusters;
   buf->f_bavail = NumberOfFreeClusters;

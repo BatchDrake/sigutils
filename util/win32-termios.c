@@ -19,7 +19,8 @@
 
 #include <conio.h>
 
-ssize_t read_noecho_noicanon(int fd, void *buf, size_t count)
+ssize_t
+read_noecho_noicanon(int fd, void *buf, size_t count)
 {
   char *buff = (char *)buf;
   for (int i = 0; i < count; i++) {
@@ -29,12 +30,14 @@ ssize_t read_noecho_noicanon(int fd, void *buf, size_t count)
   return count;
 }
 
-int tcgetattr(int fd, struct termios *termios_p)
+int
+tcgetattr(int fd, struct termios *termios_p)
 {
   return 0;
 }
 
-int tcsetattr(int fd, int optional_actions, const struct termios *termios_p)
+int
+tcsetattr(int fd, int optional_actions, const struct termios *termios_p)
 {
   return 0;
 }

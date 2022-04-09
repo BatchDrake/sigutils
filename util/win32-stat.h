@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 
 #if (defined(_WIN32) || defined(__WIN32__))
-#  define mkdir(A, B) mkdir(A)
+#define mkdir(A, B) mkdir(A)
 #endif
 
 #endif /* _UTIL_STAT_H */

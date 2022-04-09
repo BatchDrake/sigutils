@@ -19,13 +19,13 @@
 #define _UTIL_COMPAT_TIME_H
 
 #ifdef _WIN32
-#  include <pthread.h> /* nanosleep() */
-#  include <time.h>    /* rest of time.h (time(), ctime()) */
+#include <pthread.h> /* nanosleep() */
+#include <time.h>    /* rest of time.h (time(), ctime()) */
 
-#  include "win32-time.h" /* timersub()  */
+#include "win32-time.h" /* timersub()  */
 #else
-#  include <sys/time.h>
-#  include <time.h>
+#include <sys/time.h>
+#include <time.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_TIME_H */

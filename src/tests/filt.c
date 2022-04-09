@@ -33,12 +33,12 @@
 SUBOOL
 su_test_butterworth_lpf(su_test_context_t *ctx)
 {
-  SUBOOL        ok   = SU_FALSE;
-  SUFLOAT      *hi   = NULL;
-  SUFLOAT      *lo   = NULL;
-  unsigned int  p    = 0;
-  su_ncqo_t     ncqo = su_ncqo_INITIALIZER;
-  su_iir_filt_t lpf  = su_iir_filt_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *hi = NULL;
+  SUFLOAT *lo = NULL;
+  unsigned int p = 0;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_iir_filt_t lpf = su_iir_filt_INITIALIZER;
 
   SU_TEST_START_TICKLESS(ctx);
 

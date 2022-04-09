@@ -25,10 +25,10 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -49,17 +49,17 @@ enum sigutils_specttuner_state {
 struct sigutils_specttuner_channel;
 
 struct sigutils_specttuner_channel_params {
-  SUFLOAT f0;       /* Central frequency (angular frequency) */
-  SUFLOAT delta_f;  /* Frequency correction (angular frequency) */
-  SUFLOAT bw;       /* Bandwidth (angular frequency) */
-  SUFLOAT guard;    /* Relative extra bandwidth */
-  SUBOOL  precise;  /* Precision mode */
-  void   *privdata; /* Private data */
+  SUFLOAT f0;      /* Central frequency (angular frequency) */
+  SUFLOAT delta_f; /* Frequency correction (angular frequency) */
+  SUFLOAT bw;      /* Bandwidth (angular frequency) */
+  SUFLOAT guard;   /* Relative extra bandwidth */
+  SUBOOL precise;  /* Precision mode */
+  void *privdata;  /* Private data */
   SUBOOL(*on_data)
   (const struct sigutils_specttuner_channel *channel,
-   void                                     *privdata,
+   void *privdata,
    const SUCOMPLEX
-           *data, /* This pointer remains valid until the next call to feed */
+       *data, /* This pointer remains valid until the next call to feed */
    SUSCOUNT size);
 };
 
@@ -76,20 +76,20 @@ struct sigutils_specttuner_channel_params {
 
 struct sigutils_specttuner_channel {
   struct sigutils_specttuner_channel_params params;
-  int                                       index; /* Back reference */
+  int index; /* Back reference */
 
-  SUFLOAT      k;          /* Scaling factor */
-  SUFLOAT      gain;       /* Channel gain */
-  SUFLOAT      decimation; /* Equivalent decimation */
-  su_ncqo_t    lo;         /* Local oscillator to correct imprecise centering */
-  su_ncqo_t    old_lo;     /* Copy of the old local oscillator */
-  SUBOOL       pending_freq; /* Pending frequency adjustment */
-  unsigned int center;       /* FFT center bin */
-  unsigned int size;         /* FFT bins to allocate */
-  unsigned int width;        /* FFT bins to copy (for guard bands, etc) */
-  unsigned int halfw;        /* Half of channel width */
-  unsigned int halfsz;       /* Half of window size */
-  unsigned int offset;       /* Window offset for overlapping */
+  SUFLOAT k;           /* Scaling factor */
+  SUFLOAT gain;        /* Channel gain */
+  SUFLOAT decimation;  /* Equivalent decimation */
+  su_ncqo_t lo;        /* Local oscillator to correct imprecise centering */
+  su_ncqo_t old_lo;    /* Copy of the old local oscillator */
+  SUBOOL pending_freq; /* Pending frequency adjustment */
+  unsigned int center; /* FFT center bin */
+  unsigned int size;   /* FFT bins to allocate */
+  unsigned int width;  /* FFT bins to copy (for guard bands, etc) */
+  unsigned int halfw;  /* Half of channel width */
+  unsigned int halfsz; /* Half of window size */
+  unsigned int offset; /* Window offset for overlapping */
 
   /*
    * Again, we have to keep 2 buffers: this way we can perform
@@ -117,8 +117,8 @@ SU_GETTER(su_specttuner_channel, SUFLOAT, get_decimation)
 SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_bw)
 {
-  return 2 * PI * (SUFLOAT)self->width /
-         (SUFLOAT)(self->size * self->decimation);
+  return 2 * PI * (SUFLOAT)self->width
+         / (SUFLOAT)(self->size * self->decimation);
 }
 
 SUINLINE
@@ -218,8 +218,8 @@ SUINLINE
 SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
 {
   SUSDIFF halfsz = self->half_size;
-  SUSDIFF p      = self->p;
-  SUBOOL  ready  = SU_FALSE;
+  SUSDIFF p = self->p;
+  SUBOOL ready = SU_FALSE;
 
   switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
@@ -283,24 +283,24 @@ SU_METHOD_CONST(su_specttuner,
                 void,
                 set_channel_freq,
                 su_specttuner_channel_t *channel,
-                SUFLOAT                  f0);
+                SUFLOAT f0);
 
 SU_METHOD_CONST(su_specttuner,
                 void,
                 set_channel_delta_f,
                 su_specttuner_channel_t *channel,
-                SUFLOAT                  delta_f);
+                SUFLOAT delta_f);
 
 SU_METHOD_CONST(su_specttuner,
                 SUBOOL,
                 set_channel_bandwidth,
                 su_specttuner_channel_t *channel,
-                SUFLOAT                  bw);
+                SUFLOAT bw);
 
 #ifdef __cplusplus
-#  ifdef __clang__
-#    pragma clang diagnostic pop
-#  endif  // __clang__
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif  // __clang__
 }
 #endif /* __cplusplus */
 

@@ -33,10 +33,10 @@
 SUBOOL
 su_test_ncqo(su_test_context_t *ctx)
 {
-  SUBOOL       ok     = SU_FALSE;
-  SUFLOAT     *buffer = NULL;
-  unsigned int p      = 0;
-  su_ncqo_t    ncqo   = su_ncqo_INITIALIZER;
+  SUBOOL ok = SU_FALSE;
+  SUFLOAT *buffer = NULL;
+  unsigned int p = 0;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
 
   SU_TEST_ASSERT(buffer = su_test_buffer_new(SU_TEST_SIGNAL_BUFFER_SIZE));
 

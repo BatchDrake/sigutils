@@ -45,7 +45,8 @@ fail:
   return SU_FALSE;
 }
 
-void su_lfsr_finalize(su_lfsr_t *lfsr)
+void
+su_lfsr_finalize(su_lfsr_t *lfsr)
 {
   if (lfsr->coef != NULL)
     free(lfsr->coef);
@@ -54,7 +55,8 @@ void su_lfsr_finalize(su_lfsr_t *lfsr)
     free(lfsr->buffer);
 }
 
-void su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
+void
+su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
 {
   lfsr->mode = mode;
 }
@@ -74,9 +76,10 @@ void su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
  *   y = F(P, x) ^ x
  *
  */
-SUINLINE SUBITS su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
+SUINLINE SUBITS
+su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
 {
-  SUBITS   F = 0;
+  SUBITS F = 0;
   uint64_t i;
   uint64_t n = lfsr->p;
 
@@ -93,12 +96,13 @@ SUINLINE SUBITS su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
    * n = (p + order - 1) % order = (p - 1) % order
    */
   lfsr->buffer[lfsr->p] = x;
-  lfsr->p               = n;
+  lfsr->p = n;
 
   return F;
 }
 
-void su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
+void
+su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
 {
   unsigned int i;
 
@@ -116,7 +120,7 @@ su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
   switch (lfsr->mode) {
     case SU_LFSR_MODE_ADDITIVE:
       lfsr->F_prev = su_lfsr_transfer(lfsr, lfsr->F_prev);
-      y            = lfsr->F_prev ^ x;
+      y = lfsr->F_prev ^ x;
       break;
 
     case SU_LFSR_MODE_MULTIPLICATIVE:
@@ -130,7 +134,8 @@ su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
   return y;
 }
 
-void su_lfsr_blind_sync_reset(su_lfsr_t *lfsr)
+void
+su_lfsr_blind_sync_reset(su_lfsr_t *lfsr)
 {
   lfsr->zeroes = 0;
   su_lfsr_set_mode(lfsr, SU_LFSR_MODE_MULTIPLICATIVE);

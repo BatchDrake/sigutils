@@ -31,24 +31,25 @@
 #include "test_list.h"
 #include "test_param.h"
 
-SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
+SUPRIVATE SUBOOL
+__su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 {
-  SUBOOL     ok        = SU_FALSE;
-  SUCOMPLEX *input     = NULL;
-  SUCOMPLEX *carrier   = NULL;
-  SUFLOAT   *omgerr    = NULL;
-  SUCOMPLEX *output    = NULL;
-  SUCOMPLEX *rx        = NULL;
-  SUFLOAT   *lock      = NULL;
-  SUCOMPLEX *baud      = NULL;
-  SUFLOAT    N0        = 0;
-  SUCOMPLEX *tx        = NULL;
-  SUCOMPLEX *data      = NULL;
-  SUCOMPLEX  bbs       = 1;
-  SUCOMPLEX  symsamp   = 0;
-  SUFLOAT    mean_baud = 0;
-  SUCOMPLEX  symbols[] = {1, I, -1, -I};
-  SUCOMPLEX  phi0      = 1;
+  SUBOOL ok = SU_FALSE;
+  SUCOMPLEX *input = NULL;
+  SUCOMPLEX *carrier = NULL;
+  SUFLOAT *omgerr = NULL;
+  SUCOMPLEX *output = NULL;
+  SUCOMPLEX *rx = NULL;
+  SUFLOAT *lock = NULL;
+  SUCOMPLEX *baud = NULL;
+  SUFLOAT N0 = 0;
+  SUCOMPLEX *tx = NULL;
+  SUCOMPLEX *data = NULL;
+  SUCOMPLEX bbs = 1;
+  SUCOMPLEX symsamp = 0;
+  SUFLOAT mean_baud = 0;
+  SUCOMPLEX symbols[] = {1, I, -1, -I};
+  SUCOMPLEX phi0 = 1;
 
   unsigned int filter_period;
   unsigned int symbol_period;
@@ -58,24 +59,24 @@ SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
 
   unsigned int rx_delay;
 
-  su_ncqo_t           ncqo   = su_ncqo_INITIALIZER;
-  su_costas_t         costas = su_costas_INITIALIZER;
-  su_iir_filt_t       mf     = su_iir_filt_INITIALIZER;
-  su_clock_detector_t cd     = su_clock_detector_INITIALIZER;
-  unsigned int        p      = 0;
-  unsigned int        sym;
-  unsigned int        n        = 0;
-  unsigned int        rx_count = 0;
-  unsigned int        rx_size;
+  su_ncqo_t ncqo = su_ncqo_INITIALIZER;
+  su_costas_t costas = su_costas_INITIALIZER;
+  su_iir_filt_t mf = su_iir_filt_INITIALIZER;
+  su_clock_detector_t cd = su_clock_detector_INITIALIZER;
+  unsigned int p = 0;
+  unsigned int sym;
+  unsigned int n = 0;
+  unsigned int rx_count = 0;
+  unsigned int rx_size;
 
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
   filter_period = SU_TEST_MF_SYMBOL_SPAN * symbol_period; /* Span: 6 symbols */
-  sync_period   = 1 * 4096; /* Number of samples to allow loop to synchronize */
-  message       = 0x414c4f48; /* Some greeting message */
-  rx_delay      = filter_period + sync_period - symbol_period / 2;
+  sync_period = 1 * 4096; /* Number of samples to allow loop to synchronize */
+  message = 0x414c4f48;   /* Some greeting message */
+  rx_delay = filter_period + sync_period - symbol_period / 2;
   rx_size =
       SU_CEIL((SUFLOAT)(ctx->params->buffer_size - rx_delay) / symbol_period);
 
@@ -131,7 +132,7 @@ SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
         if (n == 32)
           n = 0;
         msgbuf = message >> n;
-        sym    = msgbuf & 3;
+        sym = msgbuf & 3;
         n += 2;
         bbs = symbol_period * symbols[sym];
       } else {
@@ -142,9 +143,9 @@ SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
       bbs = symbols[1];
     }
 
-    data[p]  = bbs;
+    data[p] = bbs;
     input[p] = su_iir_filt_feed(&mf, data[p]);
-    tx[p]    = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
+    tx[p] = phi0 * input[p] * su_ncqo_read(&ncqo) + N0 * su_c_awgn();
   }
 
   /* Restart NCQO */
@@ -162,10 +163,10 @@ SUPRIVATE SUBOOL __su_test_clock_recovery(su_test_context_t *ctx, SUBOOL noisy)
     (void)su_ncqo_step(&ncqo);
     su_costas_feed(&costas, tx[p]);
     carrier[p] = su_ncqo_get(&costas.ncqo);
-    output[p]  = su_iir_filt_feed(&mf, costas.y);
-    lock[p]    = costas.lock;
-    omgerr[p]  = costas.ncqo.fnor - ncqo.fnor;
-    baud[p]    = cd.e + I * cd.bnor;
+    output[p] = su_iir_filt_feed(&mf, costas.y);
+    lock[p] = costas.lock;
+    omgerr[p] = costas.ncqo.fnor - ncqo.fnor;
+    baud[p] = cd.e + I * cd.bnor;
 
     if (p >= rx_delay) {
       /* Send sample to clock detector */

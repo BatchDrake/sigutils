@@ -25,7 +25,8 @@
 #include "test_list.h"
 #include "test_param.h"
 
-SUPRIVATE char su_test_symbol_to_char(SUSYMBOL sym)
+SUPRIVATE char
+su_test_symbol_to_char(SUSYMBOL sym)
 {
   switch (sym) {
     case SU_NOSYMBOL:
@@ -41,14 +42,14 @@ SUPRIVATE char su_test_symbol_to_char(SUSYMBOL sym)
 
 SUBOOL
 su_test_diff_codec_generic(su_test_context_t *ctx,
-                           unsigned int       bits,
-                           SUBOOL             sign)
+                           unsigned int bits,
+                           SUBOOL sign)
 {
-  su_codec_t  *encoder                            = NULL;
-  su_codec_t  *decoder                            = NULL;
-  SUSYMBOL     syms[SU_TEST_ENCODER_NUM_SYMS + 1] = {};
-  SUSYMBOL     encoded, decoded;
-  SUSCOUNT     len;
+  su_codec_t *encoder = NULL;
+  su_codec_t *decoder = NULL;
+  SUSYMBOL syms[SU_TEST_ENCODER_NUM_SYMS + 1] = {};
+  SUSYMBOL encoded, decoded;
+  SUSCOUNT len;
   unsigned int i;
 
   SUBOOL ok = SU_FALSE;

@@ -18,10 +18,11 @@
 #include <io.h>
 #include <ws2tcpip.h>
 
-static int conn_is_closed(int fd)
+static int
+conn_is_closed(int fd)
 {
   char buf[1];
-  int  ret = recv(fd, buf, 1, MSG_PEEK);
+  int ret = recv(fd, buf, 1, MSG_PEEK);
   if (ret == -1) {
     switch (WSAGetLastError()) {
       case WSAECONNABORTED:
@@ -34,13 +35,15 @@ static int conn_is_closed(int fd)
   return 0;
 }
 
-static int conn_has_oob_data(int fd)
+static int
+conn_has_oob_data(int fd)
 {
   char buf[1];
   return (recv(fd, buf, 1, MSG_PEEK | MSG_OOB) == 1);
 }
 
-static int is_socket(int fd)
+static int
+is_socket(int fd)
 {
   if (fd < 3)
     return 0;
@@ -48,11 +51,12 @@ static int is_socket(int fd)
   return (WSAEnumNetworkEvents((SOCKET)fd, NULL, &events) == 0);
 }
 
-static int compute_select_revents(int     fd,
-                                  short   events,
-                                  fd_set *rfds,
-                                  fd_set *wfds,
-                                  fd_set *efds)
+static int
+compute_select_revents(int fd,
+                       short events,
+                       fd_set *rfds,
+                       fd_set *wfds,
+                       fd_set *efds)
 {
   int rc = 0;
 
@@ -76,11 +80,12 @@ static int compute_select_revents(int     fd,
   return rc;
 }
 
-static int compute_wait_revents(HANDLE h, short events, int object, int wait_rc)
+static int
+compute_wait_revents(HANDLE h, short events, int object, int wait_rc)
 {
-  int          rc = 0;
+  int rc = 0;
   INPUT_RECORD record;
-  DWORD        num_read;
+  DWORD num_read;
 
   /*
    * Assume we can always write to file handles (probably a bad
@@ -92,13 +97,13 @@ static int compute_wait_revents(HANDLE h, short events, int object, int wait_rc)
   /*
    * Check if this handle was signaled by WaitForMultipleObjects
    */
-  if (wait_rc >= WAIT_OBJECT_0 && (object == (wait_rc - WAIT_OBJECT_0)) &&
-      (events & (POLLIN | POLLRDNORM))) {
+  if (wait_rc >= WAIT_OBJECT_0 && (object == (wait_rc - WAIT_OBJECT_0))
+      && (events & (POLLIN | POLLRDNORM))) {
     /*
      * Check if this file is stdin, and if so, if it is a console.
      */
-    if (h == GetStdHandle(STD_INPUT_HANDLE) &&
-        PeekConsoleInput(h, &record, 1, &num_read) == 1) {
+    if (h == GetStdHandle(STD_INPUT_HANDLE)
+        && PeekConsoleInput(h, &record, 1, &num_read) == 1) {
       /*
        * Handle the input console buffer differently,
        * since it can signal on other events like
@@ -121,7 +126,8 @@ static int compute_wait_revents(HANDLE h, short events, int object, int wait_rc)
   return rc;
 }
 
-static int wsa_select_errno(int err)
+static int
+wsa_select_errno(int err)
 {
   switch (err) {
     case WSAEINTR:
@@ -149,24 +155,25 @@ static int wsa_select_errno(int err)
   return -1;
 }
 
-int poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
+int
+poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 {
   nfds_t i;
-  int    timespent_ms, looptime_ms;
+  int timespent_ms, looptime_ms;
 
   /*
    * select machinery
    */
   fd_set rfds, wfds, efds;
-  int    rc;
-  int    num_sockets;
+  int rc;
+  int num_sockets;
 
   /*
    * wait machinery
    */
-  DWORD  wait_rc;
+  DWORD wait_rc;
   HANDLE handles[FD_SETSIZE];
-  int    num_handles;
+  int num_handles;
 
   if (pfds == NULL) {
     errno = EINVAL;
@@ -235,7 +242,7 @@ int poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
    * than simply triggering if there is space available.
    */
   timespent_ms = 0;
-  wait_rc      = WAIT_FAILED;
+  wait_rc = WAIT_FAILED;
 
   if (timeout_ms < 0)
     timeout_ms = INFINITE;
@@ -243,8 +250,8 @@ int poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 
   do {
     struct timeval tv;
-    tv.tv_sec           = 0;
-    tv.tv_usec          = looptime_ms * 1000;
+    tv.tv_sec = 0;
+    tv.tv_usec = looptime_ms * 1000;
     int handle_signaled = 0;
 
     /*
@@ -268,9 +275,9 @@ int poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
     /*
      * If we signaled on a file handle, don't wait on the sockets.
      */
-    if (wait_rc >= WAIT_OBJECT_0 &&
-        (wait_rc <= WAIT_OBJECT_0 + num_handles - 1)) {
-      tv.tv_usec      = 0;
+    if (wait_rc >= WAIT_OBJECT_0
+        && (wait_rc <= WAIT_OBJECT_0 + num_handles - 1)) {
+      tv.tv_usec = 0;
       handle_signaled = 1;
     }
 
@@ -288,7 +295,7 @@ int poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 
   } while (timespent_ms < timeout_ms);
 
-  rc          = 0;
+  rc = 0;
   num_handles = 0;
   for (i = 0; i < nfds; i++) {
     pfds[i].revents = 0;

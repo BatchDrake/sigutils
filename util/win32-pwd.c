@@ -20,13 +20,15 @@
 #include <Shlobj.h>
 
 // WARN: VERY ADHOC: dummy function lol
-uid_t getuid()
+uid_t
+getuid()
 {
   return 0;
 }
 
 // WARN: VERY ADHOC: ignores uid, only populates pw_dir
-struct passwd *getpwuid(uid_t uid)
+struct passwd *
+getpwuid(uid_t uid)
 {
   struct passwd *pw = malloc(sizeof(struct passwd));
   memset(pw, 0, sizeof(struct passwd));

@@ -44,22 +44,22 @@ enum sigutils_test_time_units {
 };
 
 struct sigutils_sigbuf {
-  char    *name;       /* Buffer name */
-  SUSCOUNT fs;         /* Sampling frequency */
-  size_t   size;       /* Buffer size */
-  SUBOOL   is_complex; /* Buffer type */
+  char *name;        /* Buffer name */
+  SUSCOUNT fs;       /* Sampling frequency */
+  size_t size;       /* Buffer size */
+  SUBOOL is_complex; /* Buffer type */
 
   union {
-    void      *buffer;
+    void *buffer;
     SUCOMPLEX *as_complex;
-    SUFLOAT   *as_float;
+    SUFLOAT *as_float;
   };
 };
 
 typedef struct sigutils_sigbuf su_sigbuf_t;
 
 struct sigutils_sigbuf_pool {
-  char    *name;
+  char *name;
   SUSCOUNT fs; /* Default sampling frequency */
   PTR_LIST(su_sigbuf_t, sigbuf);
 };
@@ -69,20 +69,20 @@ typedef struct sigutils_sigbuf_pool su_sigbuf_pool_t;
 struct sigutils_test_entry;
 
 struct su_test_run_params {
-  SUSCOUNT                  buffer_size;
-  SUSCOUNT                  fs;
+  SUSCOUNT buffer_size;
+  SUSCOUNT fs;
   enum sigutils_dump_format dump_fmt;
 };
 
 struct sigutils_test_context {
-  const struct su_test_run_params  *params;
+  const struct su_test_run_params *params;
   const struct sigutils_test_entry *entry;
-  su_sigbuf_pool_t                 *pool;
-  unsigned int                      testno;
-  struct timeval                    start;
-  struct timeval                    end;
-  float                             elapsed_time;
-  enum sigutils_test_time_units     time_units;
+  su_sigbuf_pool_t *pool;
+  unsigned int testno;
+  struct timeval start;
+  struct timeval end;
+  float elapsed_time;
+  enum sigutils_test_time_units time_units;
 };
 
 typedef struct sigutils_test_context su_test_context_t;
@@ -90,7 +90,7 @@ typedef struct sigutils_test_context su_test_context_t;
 typedef SUBOOL (*su_test_cb_t)(su_test_context_t *);
 
 struct sigutils_test_entry {
-  const char  *name;
+  const char *name;
   su_test_cb_t cb;
 };
 
@@ -160,21 +160,21 @@ void su_test_context_update_times(su_test_context_t *ctx);
 const char *su_test_context_time_units(const su_test_context_t *ctx);
 
 SUFLOAT *su_test_ctx_getf_w_size(su_test_context_t *ctx,
-                                 const char        *name,
-                                 SUSCOUNT           size);
+                                 const char *name,
+                                 SUSCOUNT size);
 
 SUCOMPLEX *su_test_ctx_getc_w_size(su_test_context_t *ctx,
-                                   const char        *name,
-                                   SUSCOUNT           size);
+                                   const char *name,
+                                   SUSCOUNT size);
 
 SUFLOAT *su_test_ctx_getf(su_test_context_t *ctx, const char *name);
 
 SUCOMPLEX *su_test_ctx_getc(su_test_context_t *ctx, const char *name);
 
-SUBOOL su_test_run(const su_test_entry_t           *test_list,
-                   unsigned int                     test_count,
-                   unsigned int                     range_start,
-                   unsigned int                     range_end,
+SUBOOL su_test_run(const su_test_entry_t *test_list,
+                   unsigned int test_count,
+                   unsigned int range_start,
+                   unsigned int range_end,
                    const struct su_test_run_params *params);
 
 SUFLOAT *su_test_buffer_new(unsigned int size);
@@ -190,32 +190,32 @@ SUFLOAT su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size);
 SUFLOAT su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size);
 
 SUBOOL su_test_complex_buffer_dump_raw(const SUCOMPLEX *buffer,
-                                       unsigned int     size,
-                                       const char      *file);
+                                       unsigned int size,
+                                       const char *file);
 
 SUBOOL su_test_buffer_dump_raw(const SUFLOAT *buffer,
-                               unsigned int   size,
-                               const char    *file);
+                               unsigned int size,
+                               const char *file);
 
 SUBOOL su_test_complex_buffer_dump_matlab(const SUCOMPLEX *buffer,
-                                          unsigned int     size,
-                                          const char      *file,
-                                          const char      *arrname);
+                                          unsigned int size,
+                                          const char *file,
+                                          const char *arrname);
 
 SUBOOL su_test_buffer_dump_matlab(const SUFLOAT *buffer,
-                                  unsigned int   size,
-                                  const char    *file,
-                                  const char    *arrname);
+                                  unsigned int size,
+                                  const char *file,
+                                  const char *arrname);
 
 SUBOOL su_test_ctx_dumpf(su_test_context_t *ctx,
-                         const char        *name,
-                         const SUFLOAT     *data,
-                         SUSCOUNT           size);
+                         const char *name,
+                         const SUFLOAT *data,
+                         SUSCOUNT size);
 
 SUBOOL su_test_ctx_dumpc(su_test_context_t *ctx,
-                         const char        *name,
-                         const SUCOMPLEX   *data,
-                         SUSCOUNT           size);
+                         const char *name,
+                         const SUCOMPLEX *data,
+                         SUSCOUNT size);
 
 SUBOOL
 su_test_ctx_resize_buf(su_test_context_t *ctx, const char *name, SUSCOUNT size);
@@ -233,29 +233,29 @@ su_sigbuf_pool_t *su_sigbuf_pool_new(const char *name);
 void su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool);
 
 SUFLOAT *su_sigbuf_pool_get_float(su_sigbuf_pool_t *pool,
-                                  const char       *name,
-                                  SUSCOUNT          size);
+                                  const char *name,
+                                  SUSCOUNT size);
 
 SUCOMPLEX *su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool,
-                                      const char       *name,
-                                      SUSCOUNT          size);
+                                      const char *name,
+                                      SUSCOUNT size);
 
 SUBOOL su_sigbuf_pool_helper_ensure_directory(const char *name);
 
 SUBOOL su_sigbuf_pool_helper_dump_matlab(const void *data,
-                                         SUSCOUNT    size,
-                                         SUBOOL      is_complex,
+                                         SUSCOUNT size,
+                                         SUBOOL is_complex,
                                          const char *directory,
                                          const char *name);
 
 SUBOOL su_sigbuf_pool_helper_dump_wav(const void *data,
-                                      SUSCOUNT    size,
-                                      SUSCOUNT    fs,
-                                      SUBOOL      is_complex,
+                                      SUSCOUNT size,
+                                      SUSCOUNT fs,
+                                      SUBOOL is_complex,
                                       const char *directory,
                                       const char *name);
 
-SUBOOL su_sigbuf_pool_dump(const su_sigbuf_pool_t   *pool,
+SUBOOL su_sigbuf_pool_dump(const su_sigbuf_pool_t *pool,
                            enum sigutils_dump_format f);
 
 SUBOOL su_sigbuf_pool_dump_raw(const su_sigbuf_pool_t *pool);

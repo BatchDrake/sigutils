@@ -36,20 +36,22 @@
 */
 
 #if !defined(_WIN32) && defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
-#  define SU_USE_VOLK
-#  include <volk/volk.h>
+#define SU_USE_VOLK
+#include <volk/volk.h>
 #endif
 
 #ifdef SU_USE_VOLK
-#  define calloc su_volk_calloc
-#  define malloc su_volk_malloc
-#  define free volk_free
-SUINLINE void *su_volk_malloc(size_t size)
+#define calloc su_volk_calloc
+#define malloc su_volk_malloc
+#define free volk_free
+SUINLINE void *
+su_volk_malloc(size_t size)
 {
   return volk_malloc(size, volk_get_alignment());
 }
 
-SUINLINE void *su_volk_calloc(size_t nmemb, size_t size)
+SUINLINE void *
+su_volk_calloc(size_t nmemb, size_t size)
 {
   void *result = su_volk_malloc(nmemb * size);
 
@@ -60,7 +62,8 @@ SUINLINE void *su_volk_calloc(size_t nmemb, size_t size)
 }
 #endif /* SU_USE_VOLK */
 
-SUINLINE void __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
+SUINLINE void
+__su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 {
 #ifdef SU_USE_VOLK
   if (--filt->x_ptr < 0)
@@ -72,11 +75,12 @@ SUINLINE void __su_iir_filt_push_x(su_iir_filt_t *filt, SUCOMPLEX x)
 #else
   filt->x[filt->x_ptr++] = x;
   if (filt->x_ptr >= filt->x_size)
-    filt->x_ptr            = 0;
+    filt->x_ptr = 0;
 #endif /* SU_USE_VOLK */
 }
 
-SUINLINE void __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
+SUINLINE void
+__su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
 {
   if (filt->y_size > 0) {
 #ifdef SU_USE_VOLK
@@ -94,13 +98,14 @@ SUINLINE void __su_iir_filt_push_y(su_iir_filt_t *filt, SUCOMPLEX y)
   }
 }
 
-SUINLINE SUCOMPLEX __su_iir_filt_eval(const su_iir_filt_t *filt)
+SUINLINE SUCOMPLEX
+__su_iir_filt_eval(const su_iir_filt_t *filt)
 {
 #ifdef SU_USE_VOLK
   SUCOMPLEX y_tmp = 0;
 #else
   unsigned int i;
-  int          p;
+  int p;
 #endif /* SU_USE_VOLK */
 
   SUCOMPLEX y = 0;
@@ -144,7 +149,8 @@ SUINLINE SUCOMPLEX __su_iir_filt_eval(const su_iir_filt_t *filt)
   return y;
 }
 
-void su_iir_filt_finalize(su_iir_filt_t *filt)
+void
+su_iir_filt_finalize(su_iir_filt_t *filt)
 {
   if (filt->a != NULL)
     free(filt->a);
@@ -173,10 +179,11 @@ su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x)
   return filt->gain * y;
 }
 
-void su_iir_filt_feed_bulk(su_iir_filt_t *filt,
-                           const SUCOMPLEX *__restrict x,
-                           SUCOMPLEX *__restrict y,
-                           SUSCOUNT len)
+void
+su_iir_filt_feed_bulk(su_iir_filt_t *filt,
+                      const SUCOMPLEX *__restrict x,
+                      SUCOMPLEX *__restrict y,
+                      SUSCOUNT len)
 {
   SUCOMPLEX tmp_y = 0;
 
@@ -196,32 +203,34 @@ su_iir_filt_get(const su_iir_filt_t *filt)
   return filt->gain * filt->curr_y;
 }
 
-void su_iir_filt_reset(su_iir_filt_t *filt)
+void
+su_iir_filt_reset(su_iir_filt_t *filt)
 {
   memset(filt->x, 0, sizeof(SUCOMPLEX) * filt->x_alloc);
   memset(filt->y, 0, sizeof(SUCOMPLEX) * filt->y_alloc);
   filt->curr_y = 0;
-  filt->x_ptr  = 0;
-  filt->y_ptr  = 0;
+  filt->x_ptr = 0;
+  filt->y_ptr = 0;
 }
 
-void su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
+void
+su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain)
 {
   filt->gain = gain;
 }
 
 SUBOOL
 __su_iir_filt_init(su_iir_filt_t *filt,
-                   SUSCOUNT       y_size,
+                   SUSCOUNT y_size,
                    SUFLOAT *__restrict a,
                    SUSCOUNT x_size,
                    SUFLOAT *__restrict b,
                    SUBOOL copy_coef)
 {
-  SUCOMPLEX   *x       = NULL;
-  SUCOMPLEX   *y       = NULL;
-  SUFLOAT     *a_copy  = NULL;
-  SUFLOAT     *b_copy  = NULL;
+  SUCOMPLEX *x = NULL;
+  SUCOMPLEX *y = NULL;
+  SUFLOAT *a_copy = NULL;
+  SUFLOAT *b_copy = NULL;
   unsigned int x_alloc = x_size;
   unsigned int y_alloc = y_size;
 
@@ -303,7 +312,7 @@ fail:
 
 SUBOOL
 su_iir_filt_init(su_iir_filt_t *filt,
-                 SUSCOUNT       y_size,
+                 SUSCOUNT y_size,
                  const SUFLOAT *__restrict a,
                  SUSCOUNT x_size,
                  const SUFLOAT *__restrict b)
@@ -321,7 +330,7 @@ su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 {
   SUFLOAT *a = NULL;
   SUFLOAT *b = NULL;
-  SUFLOAT  scaling;
+  SUFLOAT scaling;
 
   unsigned int i;
 
@@ -356,7 +365,7 @@ su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 {
   SUFLOAT *a = NULL;
   SUFLOAT *b = NULL;
-  SUFLOAT  scaling;
+  SUFLOAT scaling;
 
   unsigned int i;
 
@@ -391,7 +400,7 @@ su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2)
 {
   SUFLOAT *a = NULL;
   SUFLOAT *b = NULL;
-  SUFLOAT  scaling;
+  SUFLOAT scaling;
 
   unsigned int i;
 
@@ -474,9 +483,9 @@ fail:
 
 SUBOOL
 su_iir_brickwall_bp_init(su_iir_filt_t *filt,
-                         SUSCOUNT       n,
-                         SUFLOAT        bw,
-                         SUFLOAT        ifnor)
+                         SUSCOUNT n,
+                         SUFLOAT bw,
+                         SUFLOAT ifnor)
 {
   SUFLOAT *b = NULL;
 

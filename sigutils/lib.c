@@ -40,7 +40,8 @@ extern struct sigutils_codec_class su_codec_class_DIFF;
 
 SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
 
-SUPRIVATE char su_log_severity_to_char(enum sigutils_log_severity sev)
+SUPRIVATE char
+su_log_severity_to_char(enum sigutils_log_severity sev)
 {
   const char *sevstr = "di!ex";
 
@@ -50,11 +51,11 @@ SUPRIVATE char su_log_severity_to_char(enum sigutils_log_severity sev)
   return sevstr[sev];
 }
 
-SUPRIVATE void su_log_func_default(void *private,
-                                   const struct sigutils_log_message *msg)
+SUPRIVATE void
+su_log_func_default(void *private, const struct sigutils_log_message *msg)
 {
   SUBOOL *cr = (SUBOOL *)private;
-  size_t  msglen;
+  size_t msglen;
 
   if (*cr)
     fprintf(stderr,

@@ -21,10 +21,11 @@
 #include <windows.h>
 
 #ifndef FILE_MAP_EXECUTE
-#  define FILE_MAP_EXECUTE 0x0020
+#define FILE_MAP_EXECUTE 0x0020
 #endif /* FILE_MAP_EXECUTE */
 
-static int __map_mman_error(const DWORD err, const int deferr)
+static int
+__map_mman_error(const DWORD err, const int deferr)
 {
   if (err == 0)
     return 0;
@@ -32,7 +33,8 @@ static int __map_mman_error(const DWORD err, const int deferr)
   return err;
 }
 
-static DWORD __map_mmap_prot_page(const int prot)
+static DWORD
+__map_mmap_prot_page(const int prot)
 {
   DWORD protect = 0;
 
@@ -49,7 +51,8 @@ static DWORD __map_mmap_prot_page(const int prot)
   return protect;
 }
 
-static DWORD __map_mmap_prot_file(const int prot)
+static DWORD
+__map_mmap_prot_file(const int prot)
 {
   DWORD desiredAccess = 0;
 
@@ -66,37 +69,38 @@ static DWORD __map_mmap_prot_file(const int prot)
   return desiredAccess;
 }
 
-void *mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
+void *
+mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
 {
   HANDLE fm, h;
 
   void *map = MAP_FAILED;
 
 #ifdef _MSC_VER
-#  pragma warning(push)
-#  pragma warning(disable : 4293)
+#pragma warning(push)
+#pragma warning(disable : 4293)
 #endif
 
-  const DWORD dwFileOffsetLow  = (sizeof(off_t) <= sizeof(DWORD))
-                                     ? (DWORD)off
-                                     : (DWORD)(off & 0xFFFFFFFFL);
+  const DWORD dwFileOffsetLow = (sizeof(off_t) <= sizeof(DWORD))
+                                    ? (DWORD)off
+                                    : (DWORD)(off & 0xFFFFFFFFL);
   const DWORD dwFileOffsetHigh = (sizeof(off_t) <= sizeof(DWORD))
                                      ? (DWORD)0
                                      : (DWORD)((off >> 32) & 0xFFFFFFFFL);
-  const DWORD protect          = __map_mmap_prot_page(prot);
-  const DWORD desiredAccess    = __map_mmap_prot_file(prot);
+  const DWORD protect = __map_mmap_prot_page(prot);
+  const DWORD desiredAccess = __map_mmap_prot_file(prot);
 
   const off_t maxSize = off + (off_t)len;
 
-  const DWORD dwMaxSizeLow  = (sizeof(off_t) <= sizeof(DWORD))
-                                  ? (DWORD)maxSize
-                                  : (DWORD)(maxSize & 0xFFFFFFFFL);
+  const DWORD dwMaxSizeLow = (sizeof(off_t) <= sizeof(DWORD))
+                                 ? (DWORD)maxSize
+                                 : (DWORD)(maxSize & 0xFFFFFFFFL);
   const DWORD dwMaxSizeHigh = (sizeof(off_t) <= sizeof(DWORD))
                                   ? (DWORD)0
                                   : (DWORD)((maxSize >> 32) & 0xFFFFFFFFL);
 
 #ifdef _MSC_VER
-#  pragma warning(pop)
+#pragma warning(pop)
 #endif
 
   errno = 0;
@@ -138,7 +142,8 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
   return map;
 }
 
-int munmap(void *addr, size_t len)
+int
+munmap(void *addr, size_t len)
 {
   if (UnmapViewOfFile(addr))
     return 0;
@@ -148,7 +153,8 @@ int munmap(void *addr, size_t len)
   return -1;
 }
 
-int mprotect(void *addr, size_t len, int prot)
+int
+mprotect(void *addr, size_t len, int prot)
 {
   DWORD newProtect = __map_mmap_prot_page(prot);
   DWORD oldProtect = 0;
@@ -161,7 +167,8 @@ int mprotect(void *addr, size_t len, int prot)
   return -1;
 }
 
-int msync(void *addr, size_t len, int flags)
+int
+msync(void *addr, size_t len, int flags)
 {
   if (FlushViewOfFile(addr, len))
     return 0;
@@ -171,7 +178,8 @@ int msync(void *addr, size_t len, int flags)
   return -1;
 }
 
-int mlock(const void *addr, size_t len)
+int
+mlock(const void *addr, size_t len)
 {
   if (VirtualLock((LPVOID)addr, len))
     return 0;
@@ -181,7 +189,8 @@ int mlock(const void *addr, size_t len)
   return -1;
 }
 
-int munlock(const void *addr, size_t len)
+int
+munlock(const void *addr, size_t len)
 {
   if (VirtualUnlock((LPVOID)addr, len))
     return 0;

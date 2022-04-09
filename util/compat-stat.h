@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_STAT_H
 
 #ifdef _WIN32
-#  include "win32-stat.h"
+#include "win32-stat.h"
 #else
-#  include <sys/stat.h>
+#include <sys/stat.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_STAT_H */
