@@ -98,3 +98,6 @@ PointerAlignment: Right
 
 # 15. In C/C++ code, we favor upper snake case for #defines and enumerated constants.
 # Warn: Cannot be checked. User responsibility.
+
+# 16. Ident preprocessor directives after the hash
+IndentPPDirectives: AfterHash
