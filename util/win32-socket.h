@@ -29,7 +29,7 @@
   send(sockfd, (const char *)buf, len, flags)
 
 #ifdef interface
-#undef interface
+#  undef interface
 #endif /* interface */
 
 #endif /* _UTIL_SOCKET_H */

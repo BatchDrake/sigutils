@@ -48,11 +48,11 @@
 #define SU_TEST_USE_ACTUAL_CAPTURE
 
 #ifdef SU_TEST_USE_ACTUAL_CAPTURE
-#define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
-  "gqrx_20170219_185002_1545346100_250000_fc.raw"
+#  define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
+    "gqrx_20170219_185002_1545346100_250000_fc.raw"
 #else
-#define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
-  "su_test_channel_detector_qpsk/tx-complex.raw"
+#  define SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE \
+    "su_test_channel_detector_qpsk/tx-complex.raw"
 #endif
 
 /* Encoder parameters */

@@ -23,15 +23,15 @@
 #include <util/util.h>
 
 #ifndef su_calloc
-#define su_calloc(len, size) calloc(len, size)
+#  define su_calloc(len, size) calloc(len, size)
 #endif /* su_calloc */
 
 #ifndef su_free
-#define su_free(ptr) free(ptr)
+#  define su_free(ptr) free(ptr)
 #endif /* su_free */
 
 #ifndef su_malloc
-#define su_malloc(size) malloc(size)
+#  define su_malloc(size) malloc(size)
 #endif /* su_malloc */
 
 #define SU_TYPENAME(class) JOIN(class, _t)

@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_UNISTD_H
 
 #ifdef _WIN32
-#include "win32-unistd.h"
+#  include "win32-unistd.h"
 #else
-#include <unistd.h>
+#  include <unistd.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_UNISTD_H */

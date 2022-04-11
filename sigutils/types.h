@@ -19,7 +19,7 @@
 #define _SIGUTILS_TYPES_H
 
 #if defined(__GNUC__) && !defined(_GNU_SOURCE)
-#define _GNU_SOURCE
+#  define _GNU_SOURCE
 #endif /* __GNUC__ */
 
 #include <complex.h>
@@ -31,56 +31,56 @@
 #include <util.h>
 
 #if defined(__cplusplus)
-#define SU_USE_CPP_COMPLEX_API
+#  define SU_USE_CPP_COMPLEX_API
 #endif
 
 #if __STDC_VERSION__ >= 199901L
-#define SU_ENABLE_C99
+#  define SU_ENABLE_C99
 #endif /* __STDC_VERSION__ */
 
 #if defined(SU_ENABLE_C99)
-#define __restrict restrict
+#  define __restrict restrict
 #elif !defined(__GNUC__)
-#define __restrict
+#  define __restrict
 #endif
 
 #ifdef SU_USE_CPP_COMPLEX_API
-#ifdef I
-#undef I
-#endif /* I */
-#define I               \
-  std::complex<SUFLOAT> \
-  {                     \
-    0, 1                \
-  }
-#define SUCOMPLEX std::complex<SUFLOAT>
-#define SU_C_REAL(c) (c).real()
-#define SU_C_IMAG(c) (c).imag()
-#define SU_C_ABS(c) std::abs(c)
-#define SU_C_ARG(c) std::arg(c)
-#define SU_C_EXP(c) std::exp(c)
-#define SU_C_CONJ(c) std::conj(c)
-#define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
+#  ifdef I
+#    undef I
+#  endif /* I */
+#  define I               \
+    std::complex<SUFLOAT> \
+    {                     \
+      0, 1                \
+    }
+#  define SUCOMPLEX std::complex<SUFLOAT>
+#  define SU_C_REAL(c) (c).real()
+#  define SU_C_IMAG(c) (c).imag()
+#  define SU_C_ABS(c) std::abs(c)
+#  define SU_C_ARG(c) std::arg(c)
+#  define SU_C_EXP(c) std::exp(c)
+#  define SU_C_CONJ(c) std::conj(c)
+#  define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
 #else
-#define SUCOMPLEX _Complex SUFLOAT
-#define SU_C_REAL(c) (SU_ADDSFX(creal)(c))
-#define SU_C_IMAG(c) (SU_ADDSFX(cimag)(c))
-#define SU_C_ABS SU_ADDSFX(cabs)
-#define SU_C_ARG SU_ADDSFX(carg)
-#define SU_C_EXP SU_ADDSFX(cexp)
-#define SU_C_CONJ SU_ADDSFX(conj)
-#define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
+#  define SUCOMPLEX _Complex SUFLOAT
+#  define SU_C_REAL(c) (SU_ADDSFX(creal)(c))
+#  define SU_C_IMAG(c) (SU_ADDSFX(cimag)(c))
+#  define SU_C_ABS SU_ADDSFX(cabs)
+#  define SU_C_ARG SU_ADDSFX(carg)
+#  define SU_C_EXP SU_ADDSFX(cexp)
+#  define SU_C_CONJ SU_ADDSFX(conj)
+#  define SU_C_SGN(x) (SU_SGN(SU_C_REAL(x)) + I * SU_SGN(SU_C_IMAG(x)))
 #endif
 
 #define SUSINGLE float
 #define SUDOUBLE double
 
 #ifdef _SU_SINGLE_PRECISION
-#define SUFLOAT SUSINGLE
-#define SU_SOURCE_FFTW_PREFIX fftwf
+#  define SUFLOAT SUSINGLE
+#  define SU_SOURCE_FFTW_PREFIX fftwf
 #else
-#define SUFLOAT SUDOUBLE
-#define SU_SOURCE_FFTW_PREFIX fftw
+#  define SUFLOAT SUDOUBLE
+#  define SU_SOURCE_FFTW_PREFIX fftw
 #endif
 
 #define SUPRIVATE static
@@ -92,16 +92,16 @@
 #define SUBITS uint8_t /* Not exactly a bit */
 
 #ifdef __cplusplus
-#define SUINLINE inline
+#  define SUINLINE inline
 #else
-#define SUINLINE static inline
+#  define SUINLINE static inline
 #endif /* __cplusplus */
 
 /* Perform casts in C and C++ */
 #ifdef __cplusplus
-#define SUCAST(type, value) static_cast<type>(value)
+#  define SUCAST(type, value) static_cast<type>(value)
 #else
-#define SUCAST(type, value) ((type)(value))
+#  define SUCAST(type, value) ((type)(value))
 #endif /* __cplusplus */
 
 #define SU_ASFLOAT(value) SUCAST(SUFLOAT, value)
@@ -119,15 +119,15 @@
 #define SUDOUBLE_PRECISION_FMT "%.16lf"
 
 #ifdef _SU_SINGLE_PRECISION
-#define SUFLOAT_FMT SUSINGLE_FMT
-#define SUFLOAT_PRECISION_FMT SUSINGLE_PRECISION_FMT
-#define SUFLOAT_SCANF_FMT SUSINGLE_SCANF_FMT
-#define SU_ADDSFX(token) JOIN(token, f)
+#  define SUFLOAT_FMT SUSINGLE_FMT
+#  define SUFLOAT_PRECISION_FMT SUSINGLE_PRECISION_FMT
+#  define SUFLOAT_SCANF_FMT SUSINGLE_SCANF_FMT
+#  define SU_ADDSFX(token) JOIN(token, f)
 #else
-#define SUFLOAT_FMT SUDOUBLE_FMT
-#define SUFLOAT_PRECISION_FMT SUDOUBLE_PRECISION_FMT
-#define SUFLOAT_SCANF_FMT SUDOUBLE_SCANF_FMT
-#define SU_ADDSFX(token) token
+#  define SUFLOAT_FMT SUDOUBLE_FMT
+#  define SUFLOAT_PRECISION_FMT SUDOUBLE_PRECISION_FMT
+#  define SUFLOAT_SCANF_FMT SUDOUBLE_SCANF_FMT
+#  define SU_ADDSFX(token) token
 #endif
 
 #define SU_FALSE 0
@@ -162,15 +162,15 @@
 #define SU_POWX(x, y) pow(x, y)
 
 #ifdef __APPLE__
-#define SU_SINCOS SU_ADDSFX(__sincos)
+#  define SU_SINCOS SU_ADDSFX(__sincos)
 #elif defined(__GNUC__)
-#define SU_SINCOS SU_ADDSFX(sincos)
+#  define SU_SINCOS SU_ADDSFX(sincos)
 #else
-#define SU_SINCOS(phi, sinptr, cosptr) \
-  do {                                 \
-    *(sinptr) = SU_SIN(phi);           \
-    *(cosptr) = SU_COS(phi);           \
-  } while (0)
+#  define SU_SINCOS(phi, sinptr, cosptr) \
+    do {                                 \
+      *(sinptr) = SU_SIN(phi);           \
+      *(cosptr) = SU_COS(phi);           \
+    } while (0)
 #endif /* __APPLE__ */
 
 #define SU_SPLPF_ALPHA(tau) (1.f - SU_EXP(-1.f / (tau)))
@@ -186,15 +186,15 @@
 #define SU_DEG2RAD(rad) ((rad) * (PI / 180))
 
 #ifndef PI
-#define PI SU_ADDSFX(3.141592653589793238462643)
+#  define PI SU_ADDSFX(3.141592653589793238462643)
 #endif
 
 #ifndef M_PI
-#define M_PI PI
+#  define M_PI PI
 #endif
 
 #ifndef INFINITY
-#define INFINITY (1.0 / 0)
+#  define INFINITY (1.0 / 0)
 #endif
 
 #define sufcmp(a, b, tol) (SU_ABS(SU_ASFLOAT(a) - SU_ASFLOAT(b)) > (tol))

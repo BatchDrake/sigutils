@@ -26,10 +26,10 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -101,9 +101,9 @@ SU_METHOD(su_costas, void, set_loop_gain, SUFLOAT gain);
 SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x);
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

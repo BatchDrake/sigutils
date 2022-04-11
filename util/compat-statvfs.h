@@ -19,9 +19,9 @@
 #define _UTIL_COMPAT_STATVFS_H
 
 #ifdef _WIN32
-#include "win32-statvfs.h"
+#  include "win32-statvfs.h"
 #else
-#include <sys/statvfs.h>
+#  include <sys/statvfs.h>
 #endif /* _WIN32 */
 
 #endif /* _UTIL_COMPAT_STATVFS_H */

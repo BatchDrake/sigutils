@@ -26,16 +26,16 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
 #define SU_NCQO_USE_PRECALC_BUFFER
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-#define SU_NCQO_PRECALC_BUFFER_LEN 1024
+#  define SU_NCQO_PRECALC_BUFFER_LEN 1024
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
 /* The numerically-controlled quadruature oscillator definition */
@@ -62,15 +62,15 @@ struct sigutils_ncqo {
 typedef struct sigutils_ncqo su_ncqo_t;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-#define su_ncqo_INITIALIZER                                               \
-  {                                                                       \
-    {0.}, {0.}, {0.}, SU_FALSE, 0, 0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
-  }
+#  define su_ncqo_INITIALIZER                                               \
+    {                                                                       \
+      {0.}, {0.}, {0.}, SU_FALSE, 0, 0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
+    }
 #else
-#define su_ncqo_INITIALIZER                \
-  {                                        \
-    0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
-  }
+#  define su_ncqo_INITIALIZER                \
+    {                                        \
+      0., 0., 0., SU_FALSE, 0., SU_FALSE, 0. \
+    }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
 /* Methods */
@@ -105,17 +105,17 @@ __su_ncqo_step(su_ncqo_t *ncqo)
 
 /* vvvvvvvvvvvvvvvvvvvvvvvvvvv VOLK HACKS BELOW vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
 #if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
-#define SU_USE_VOLK
-#define SU_VOLK_CALL_STRIDE_BITS 5
-#define SU_VOLK_CALL_STRIDE (1 << SU_VOLK_CALL_STRIDE_BITS)
-#define SU_VOLK_CALL_STRIDE_MASK (SU_VOLK_CALL_STRIDE - 1)
-#ifdef __cplusplus
+#  define SU_USE_VOLK
+#  define SU_VOLK_CALL_STRIDE_BITS 5
+#  define SU_VOLK_CALL_STRIDE (1 << SU_VOLK_CALL_STRIDE_BITS)
+#  define SU_VOLK_CALL_STRIDE_MASK (SU_VOLK_CALL_STRIDE - 1)
+#  ifdef __cplusplus
 }
-#endif /* __cplusplus */
-#include <volk/volk.h>
-#ifdef __cplusplus
+#  endif /* __cplusplus */
+#  include <volk/volk.h>
+#  ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#  endif /* __cplusplus */
 #endif
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
@@ -123,20 +123,20 @@ SUINLINE void
 __su_ncqo_populate_precalc_buffer(su_ncqo_t *ncqo)
 {
   unsigned int i;
-#ifdef SU_USE_VOLK
+#  ifdef SU_USE_VOLK
   unsigned int p;
-#endif /* SU_USE_VOLK */
+#  endif /* SU_USE_VOLK */
   /* Precalculate phase buffer */
   for (i = 0; i < SU_NCQO_PRECALC_BUFFER_LEN; ++i) {
     ncqo->phi_buffer[i] = ncqo->phi;
-#ifndef SU_USE_VOLK
-#ifdef HAVE_SINCOS
+#  ifndef SU_USE_VOLK
+#    ifdef HAVE_SINCOS
     SU_SINCOS(ncqo->phi, ncqo->sin_buffer + i, ncqo->cos_buffer + i);
-#else  /* HAVE_SINCOS */
+#    else  /* HAVE_SINCOS */
     ncqo->sin_buffer[i] = SU_SIN(ncqo->phi);
     ncqo->cos_buffer[i] = SU_COS(ncqo->phi);
-#endif /* HAVE_SINCOS */
-#else
+#    endif /* HAVE_SINCOS */
+#  else
     if ((i & SU_VOLK_CALL_STRIDE_MASK) == SU_VOLK_CALL_STRIDE_MASK) {
       p = i & ~SU_VOLK_CALL_STRIDE_MASK;
       volk_32f_sin_32f(
@@ -148,7 +148,7 @@ __su_ncqo_populate_precalc_buffer(su_ncqo_t *ncqo)
           ncqo->phi_buffer + p,
           SU_VOLK_CALL_STRIDE);
     }
-#endif /* SU_USE_VOLK */
+#  endif /* SU_USE_VOLK */
     __su_ncqo_step(ncqo);
   }
 }
@@ -214,9 +214,9 @@ SU_METHOD(su_ncqo, void, inc_phase, SUFLOAT delta)
 {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   if (self->pre_c) {
-#ifdef SU_LOG_DOMAIN
+#  ifdef SU_LOG_DOMAIN
     SU_ERROR("Cannot increase phase on a fixed NCQO\n");
-#endif /* SU_LOG_DOMAIN */
+#  endif /* SU_LOG_DOMAIN */
     return;
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
@@ -264,9 +264,9 @@ SU_METHOD(su_ncqo, void, inc_freq, SUFLOAT delta);
 SU_GETTER(su_ncqo, SUFLOAT, get_freq);
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

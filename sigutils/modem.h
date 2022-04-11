@@ -26,10 +26,10 @@
 #include "types.h"
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -183,9 +183,9 @@ void su_modem_set_signal(su_modem_t *modem, SUFLOAT signal);
 void su_modem_destroy(su_modem_t *modem);
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

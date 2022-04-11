@@ -26,11 +26,11 @@
 #include "test.h"
 
 #ifdef _SU_SINGLE_PRECISION
-#define sf_write sf_write_float
-#define SU_REAL_TYPE_STR "float"
+#  define sf_write sf_write_float
+#  define SU_REAL_TYPE_STR "float"
 #else
-#define sf_write sf_write_double
-#define SU_REAL_TYPE_STR "double"
+#  define sf_write sf_write_double
+#  define SU_REAL_TYPE_STR "double"
 #endif
 
 SUBOOL

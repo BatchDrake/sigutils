@@ -26,10 +26,10 @@
 #include "softtune.h"
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -292,9 +292,9 @@ SU_COPY_INSTANCER(su_channel);
 SU_COLLECTOR(su_channel);
 
 #ifdef __cplusplus
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif  // __clang__
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

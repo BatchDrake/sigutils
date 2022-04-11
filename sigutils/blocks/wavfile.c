@@ -25,9 +25,9 @@
 #include "log.h"
 
 #ifdef _SU_SINGLE_PRECISION
-#define sf_read sf_read_float
+#  define sf_read sf_read_float
 #else
-#define sf_read sf_read_double
+#  define sf_read sf_read_double
 #endif
 
 struct su_wavfile {

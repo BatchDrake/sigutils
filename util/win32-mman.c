@@ -21,7 +21,7 @@
 #include <windows.h>
 
 #ifndef FILE_MAP_EXECUTE
-#define FILE_MAP_EXECUTE 0x0020
+#  define FILE_MAP_EXECUTE 0x0020
 #endif /* FILE_MAP_EXECUTE */
 
 static int
@@ -77,8 +77,8 @@ mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
   void *map = MAP_FAILED;
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4293)
+#  pragma warning(push)
+#  pragma warning(disable : 4293)
 #endif
 
   const DWORD dwFileOffsetLow = (sizeof(off_t) <= sizeof(DWORD))
@@ -100,7 +100,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
                                   : (DWORD)((maxSize >> 32) & 0xFFFFFFFFL);
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#  pragma warning(pop)
 #endif
 
   errno = 0;

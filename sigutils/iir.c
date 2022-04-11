@@ -36,14 +36,14 @@
 */
 
 #if !defined(_WIN32) && defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
-#define SU_USE_VOLK
-#include <volk/volk.h>
+#  define SU_USE_VOLK
+#  include <volk/volk.h>
 #endif
 
 #ifdef SU_USE_VOLK
-#define calloc su_volk_calloc
-#define malloc su_volk_malloc
-#define free volk_free
+#  define calloc su_volk_calloc
+#  define malloc su_volk_malloc
+#  define free volk_free
 SUINLINE void *
 su_volk_malloc(size_t size)
 {

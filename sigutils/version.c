@@ -20,8 +20,8 @@
 #include "version.h"
 
 #ifndef SIGUTILS_PKGVERSION
-#define SIGUTILS_PKGVERSION \
-  "custom build on " __DATE__ " at " __TIME__ " (" __VERSION__ ")"
+#  define SIGUTILS_PKGVERSION \
+    "custom build on " __DATE__ " at " __TIME__ " (" __VERSION__ ")"
 #endif /* SIGUTILS_BUILD_STRING */
 
 unsigned int

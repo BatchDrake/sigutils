@@ -24,7 +24,7 @@
 
 /* for gods sake microsoft */
 #ifdef interface
-#undef interface
+#  undef interface
 #endif /* interface */
 
 #endif /* _UTIL_IN_H */

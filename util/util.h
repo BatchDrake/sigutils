@@ -26,24 +26,24 @@
 #include <unistd.h>
 
 #ifdef linux
-#include <linux/unistd.h>
-#define TID_FUNC (int)syscall(224)
+#  include <linux/unistd.h>
+#  define TID_FUNC (int)syscall(224)
 #else
-#define TID_FUNC (int)getpid()
+#  define TID_FUNC (int)getpid()
 #endif
 
 #define RECOMMENDED_LINE_SIZE 256
 
 #ifndef MIN
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#  define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 #ifndef MAX
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#  define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef SIGN
-#define SIGN(x) (!(x < 0) - !(x > 0))
+#  define SIGN(x) (!(x < 0) - !(x > 0))
 #endif
 
 #define _JOIN(a, b) a##b
@@ -107,13 +107,13 @@
 #define __ALIGN(x, wrdsiz) (__UNITS(x, wrdsiz) * wrdsiz)
 
 #ifdef __GNUC__
-#define IGNORE_RESULT(type, expr)               \
-  do {                                          \
-    type ignored_val__ __attribute__((unused)); \
-    ignored_val__ = expr;                       \
-  } while (0)
+#  define IGNORE_RESULT(type, expr)               \
+    do {                                          \
+      type ignored_val__ __attribute__((unused)); \
+      ignored_val__ = expr;                       \
+    } while (0)
 #else
-#define IGNORE_RESULT(type, expr) (void)expr
+#  define IGNORE_RESULT(type, expr) (void)expr
 #endif /* __GNUC__ */
 
 struct strlist {
