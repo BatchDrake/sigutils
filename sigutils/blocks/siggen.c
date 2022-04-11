@@ -22,8 +22,8 @@
 
 #define SU_LOG_LEVEL "siggen-block"
 
-#include "log.h"
 #include "block.h"
+#include "log.h"
 
 enum su_sig_type {
   SU_SIGNAL_TYPE_NULL,
@@ -36,7 +36,7 @@ enum su_sig_type {
 
 struct su_sig_desc {
   enum su_sig_type type;
-  SUFLOAT  A; /* Amplitude */
+  SUFLOAT A;  /* Amplitude */
   SUSCOUNT T; /* Period */
   SUSCOUNT n; /* Phase */
 };
@@ -57,11 +57,11 @@ su_sig_desc_eval(const struct su_sig_desc *desc)
       break;
 
     case SU_SIGNAL_TYPE_SINE:
-      y = sin(2. * M_PI * (SUFLOAT) (desc->n % desc->T) / (SUFLOAT) desc->T);
+      y = sin(2. * M_PI * (SUFLOAT)(desc->n % desc->T) / (SUFLOAT)desc->T);
       break;
 
     case SU_SIGNAL_TYPE_COSINE:
-      y = cos(2. * M_PI * (SUFLOAT) (desc->n % desc->T) / (SUFLOAT) desc->T);
+      y = cos(2. * M_PI * (SUFLOAT)(desc->n % desc->T) / (SUFLOAT)desc->T);
       break;
 
     case SU_SIGNAL_TYPE_SQUARE:
@@ -69,7 +69,7 @@ su_sig_desc_eval(const struct su_sig_desc *desc)
       break;
 
     case SU_SIGNAL_TYPE_SAWTOOTH:
-      y = (SUFLOAT) (desc->n % desc->T) / (SUFLOAT) desc->T;
+      y = (SUFLOAT)(desc->n % desc->T) / (SUFLOAT)desc->T;
       break;
 
     case SU_SIGNAL_TYPE_NOISE:
@@ -127,7 +127,7 @@ su_block_siggen_ctor(struct sigutils_block *block, void **private, va_list ap)
   const char *typestr;
   SUBOOL result = SU_FALSE;
 
-  if ((state = calloc(1, sizeof (struct su_siggen_state))) == NULL)
+  if ((state = calloc(1, sizeof(struct su_siggen_state))) == NULL)
     goto done;
 
   typestr = va_arg(ap, const char *);
@@ -174,7 +174,7 @@ su_block_siggen_acquire(
     unsigned int port_id,
     su_block_port_t *in)
 {
-  struct su_siggen_state *state = (struct su_siggen_state *) priv;
+  struct su_siggen_state *state = (struct su_siggen_state *)priv;
   SUSDIFF size;
   unsigned int i;
   SUCOMPLEX *start;
@@ -191,10 +191,10 @@ su_block_siggen_acquire(
 }
 
 struct sigutils_block_class su_block_class_SIGGEN = {
-    "siggen",  /* name */
-    0,         /* in_size */
-    1,         /* out_size */
-    su_block_siggen_ctor,     /* constructor */
-    su_block_siggen_dtor,     /* destructor */
+    "siggen",                /* name */
+    0,                       /* in_size */
+    1,                       /* out_size */
+    su_block_siggen_ctor,    /* constructor */
+    su_block_siggen_dtor,    /* destructor */
     su_block_siggen_acquire, /* acquire */
 };

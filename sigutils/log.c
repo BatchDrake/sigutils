@@ -17,14 +17,15 @@
 
 */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include "log.h"
+
 #include <pthread.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <util.h>
 
 #include "types.h"
-#include "log.h"
-#include <util.h>
 
 SUPRIVATE struct sigutils_log_config log_config;
 SUPRIVATE uint32_t log_mask;
@@ -64,13 +65,13 @@ void
 sigutils_log_message_destroy(struct sigutils_log_message *msg)
 {
   if (msg->domain != NULL)
-    free((void *) msg->domain);
+    free((void *)msg->domain);
 
   if (msg->function != NULL)
-    free((void *) msg->function);
+    free((void *)msg->function);
 
   if (msg->message != NULL)
-    free((void *) msg->message);
+    free((void *)msg->message);
 
   free(msg);
 }
@@ -80,7 +81,7 @@ sigutils_log_message_dup(const struct sigutils_log_message *msg)
 {
   struct sigutils_log_message *dup = NULL;
 
-  if ((dup = calloc(1, sizeof (struct sigutils_log_message))) == NULL)
+  if ((dup = calloc(1, sizeof(struct sigutils_log_message))) == NULL)
     goto fail;
 
   if ((dup->domain = strdup(msg->domain)) == NULL)
@@ -122,7 +123,6 @@ su_log_severity_to_string(enum sigutils_log_severity sev)
 
     case SU_LOG_SEVERITY_DEBUG:
       return "Debug";
-
   }
 
   return "Unknown";
@@ -142,19 +142,19 @@ su_log(
     gettimeofday(&msg.time, NULL);
 
     msg.severity = sev;
-    msg.domain   = domain;
+    msg.domain = domain;
     msg.function = function;
-    msg.line     = line;
-    msg.message  = message;
+    msg.line = line;
+    msg.message = message;
 
     if (log_config.exclusive)
       if (pthread_mutex_lock(&log_mutex) == -1) /* Too dangerous to log */
         return;
 
-    (log_config.log_func) (log_config.priv, &msg);
+    (log_config.log_func)(log_config.priv, &msg);
 
     if (log_config.exclusive)
-      (void) pthread_mutex_unlock(&log_mutex);
+      (void)pthread_mutex_unlock(&log_mutex);
   }
 }
 
@@ -210,4 +210,3 @@ su_log_init(const struct sigutils_log_config *config)
 {
   log_config = *config;
 }
-

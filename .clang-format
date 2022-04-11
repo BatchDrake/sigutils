@@ -1,0 +1,103 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+
+# 1. Two space indentation (never-ever use tabs)
+IndentWidth: 2
+UseTab: Never
+
+# 2. Max number of columns is 80
+ColumnLimit: 80
+
+# 3. No space before parenthesis except for flow control statements
+# (if, for, switch, etc) and sizeof.
+# Warning: It seems there is no option for spacing after sizeof
+SpaceBeforeCaseColon: false
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+
+# 4. Opening and closing braces in the same line as the statement they refer to,
+# preceded by a space (if () {) except for function definitions
+# (opening braces in a new line)
+BreakBeforeBraces: Linux
+
+# 5. Variable declarations at the beginning of the innermost block they are
+# required.
+# Warn: Cannot be tested
+
+# 6. Return type and qualifiers of a function prototype goes in the same line
+# as the function name.
+# 7. Return type and qualifiers of a function definition goes in two separate
+# lines (qualifiers, types, line break, name(...))
+AlwaysBreakAfterDefinitionReturnType: All
+AlwaysBreakAfterReturnType: AllDefinitions
+
+# 8. If a line is too long (more than 80 chars) we break it according to the
+# following rules:
+#   - We break from left to right, until all sublines honor the 80 column limit
+#   - Line break increments the indentation level of all sublines in one unit
+#     (2 spaces) except the first one
+#   - Unary operations are never broken
+#   - Binary operations are broken between the first operand and the operation
+#   - Ternary operations are broken in three lines, with the first break
+#     between the conditional expression and the "?", and the second break
+#     right before the ":"
+#   - Function calls are broken right after the parenthesis, with every
+#     argument in a separate line except if the grouping of certain arguments
+#     improves readability (e.g. pairs of I/Q components, groups of 3 spatial
+#     coordinates, etc)
+#   - Function definitions are broken right after the parenthesis, with every
+#     argument definition in a separate line, always.
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+
+# 9. Assignments inside conditional statements are allowed, unless it impacts
+# readability
+# Warn: Cannot be tested
+
+# 10. Braceless blocks (i.e. when the body of certain control flow statement
+# consists in only one statement) are preferred, according to the following
+# rules:
+#   - The statement itself and its body is separated by a line break, with the
+#      body indentation incremented by one unit.
+#   - If the statement is an if-else construct, and one of either blocks
+#     contain more than 1 statement, both blocks use braces.
+#   - If the statement consists of several nested blocks of the same kind, and
+#     any of the statement bodies cannot be expressed as a braceless block, all
+#     nested blocks use braces.
+# Warn: Cannot be tested.
+# Note: Going by the statements above, one-liners will be avoided.
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
+AlignAfterOpenBracket: AlwaysBreak
+
+# 11. Variable names in declarations are not aligned, unless it improves
+# readability.
+# Warn: A general rule must be set. Going for not aligned.
+
+# 12. Structure member names are not aligned, unless it improves readability.
+# Warn: A general rule must be set. Going for not aligned.
+
+# 13. Pointer declarations leave a space between the type and the stars, and no
+# space between the stars and the identifier, or between the stars themselves.
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+# 14. In C code, we favor lower snake case for variables, types and function
+# names.
+# Warn: Cannot be checked. User responsibility.
+
+# 15. In C/C++ code, we favor upper snake case for #defines and enumerated constants.
+# Warn: Cannot be checked. User responsibility.
+
+# 16. Ident preprocessor directives after the hash
+IndentPPDirectives: AfterHash

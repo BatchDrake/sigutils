@@ -17,17 +17,18 @@
 
 */
 
-#include <util.h>
+#include "block.h"
+
 #include <string.h>
+#include <util.h>
+
+#include "log.h"
 
 #define SU_LOG_LEVEL "block"
 
-#include "log.h"
-#include "block.h"
-
 static su_block_class_t *class_list;
-static unsigned int      class_storage;
-static unsigned int      class_count;
+static unsigned int class_storage;
+static unsigned int class_count;
 
 /****************************** su_stream API ********************************/
 SU_CONSTRUCTOR(su_stream, SUSCOUNT size)
@@ -36,20 +37,16 @@ SU_CONSTRUCTOR(su_stream, SUSCOUNT size)
 
   memset(self, 0, sizeof(su_stream_t));
 
-  SU_ALLOCATE_MANY_CATCH(
-    self->buffer,
-    size,
-    SUCOMPLEX,
-    return SU_FALSE);
-    
+  SU_ALLOCATE_MANY_CATCH(self->buffer, size, SUCOMPLEX, return SU_FALSE);
+
   /* Populate uninitialized buffer with NaNs */
   for (i = 0; i < size; ++i)
     self->buffer[i] = nan("uninitialized");
 
-  self->size  = size;
+  self->size = size;
   self->ptr = 0;
   self->avail = 0;
-  self->pos   = 0ull;
+  self->pos = 0ull;
 
   return SU_TRUE;
 }
@@ -86,7 +83,7 @@ SU_METHOD(su_stream, void, write, const SUCOMPLEX *data, SUSCOUNT size)
   if (self->avail < self->size)
     self->avail += chunksz;
 
-  memcpy(self->buffer + self->ptr, data, chunksz * sizeof (SUCOMPLEX));
+  memcpy(self->buffer + self->ptr, data, chunksz * sizeof(SUCOMPLEX));
   self->ptr += chunksz;
 
   /* Rollover only can happen here */
@@ -98,7 +95,7 @@ SU_METHOD(su_stream, void, write, const SUCOMPLEX *data, SUSCOUNT size)
       size -= chunksz;
       data += chunksz;
 
-      memcpy(self->buffer + self->ptr, data, size * sizeof (SUCOMPLEX));
+      memcpy(self->buffer + self->ptr, data, size * sizeof(SUCOMPLEX));
       self->ptr += size;
     }
   }
@@ -109,12 +106,7 @@ SU_GETTER(su_stream, su_off_t, tell)
   return self->pos - self->avail;
 }
 
-SU_GETTER(
-  su_stream, 
-  SUSCOUNT, 
-  get_contiguous, 
-  SUCOMPLEX **start, 
-  SUSCOUNT size)
+SU_GETTER(su_stream, SUSCOUNT, get_contiguous, SUCOMPLEX **start, SUSCOUNT size)
 {
   SUSCOUNT avail = self->size - self->ptr;
 
@@ -150,12 +142,12 @@ SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size)
 }
 
 SU_GETTER(
-  su_stream, 
-  SUSDIFF,  
-  read, 
-  su_off_t off, 
-  SUCOMPLEX *data, 
-  SUSCOUNT size)
+    su_stream,
+    SUSDIFF,
+    read,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size)
 {
   SUSCOUNT avail;
   su_off_t readpos = su_stream_tell(self);
@@ -192,12 +184,12 @@ SU_GETTER(
   else
     chunksz = size;
 
-  memcpy(data, self->buffer + ptr, chunksz * sizeof (SUCOMPLEX));
+  memcpy(data, self->buffer + ptr, chunksz * sizeof(SUCOMPLEX));
   size -= chunksz;
 
   /* Is there anything left to read? */
   if (size > 0)
-    memcpy(data + chunksz, self->buffer, size * sizeof (SUCOMPLEX));
+    memcpy(data + chunksz, self->buffer, size * sizeof(SUCOMPLEX));
 
   return chunksz + size;
 }
@@ -219,7 +211,7 @@ su_flow_controller_init(
 {
   SUBOOL result = SU_FALSE;
 
-  memset(fc, 0, sizeof (su_flow_controller_t));
+  memset(fc, 0, sizeof(su_flow_controller_t));
 
   if (pthread_mutex_init(&fc->acquire_lock, NULL) == -1)
     goto done;
@@ -337,7 +329,7 @@ su_flow_controller_read_unsafe(
   SUSDIFF result;
 
   while ((result = su_stream_read(&fc->output, off, data, size)) == 0
-      && fc->consumers > 1) {
+         && fc->consumers > 1) {
     /*
      * We have reached the end of the stream. In the concurrent case,
      * we may need to wait to repeat the read operation on the stream
@@ -360,8 +352,7 @@ su_flow_controller_read_unsafe(
         break;
 
       case SU_FLOW_CONTROL_KIND_MASTER_SLAVE:
-        if (fc->master != reader)
-          /* Slave must wait for master to read */
+        if (fc->master != reader) /* Slave must wait for master to read */
           pthread_cond_wait(&fc->acquire_cond, &fc->acquire_lock);
         else
           return SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED;
@@ -411,9 +402,8 @@ su_block_class_register(struct sigutils_block_class *class)
     else
       new_storage = class_storage << 1;
 
-    if ((tmp = realloc(
-        class_list,
-        new_storage * sizeof (su_block_class_t))) == NULL) {
+    if ((tmp = realloc(class_list, new_storage * sizeof(su_block_class_t)))
+        == NULL) {
       SU_ERROR("realloc() failed\n");
       return SU_FALSE;
     }
@@ -422,7 +412,7 @@ su_block_class_register(struct sigutils_block_class *class)
     class_storage = new_storage;
   }
 
-  memcpy(class_list + class_count++, class, sizeof (su_block_class_t));
+  memcpy(class_list + class_count++, class, sizeof(su_block_class_t));
 
   return SU_TRUE;
 }
@@ -462,7 +452,8 @@ void *
 su_block_get_property_ref(
     const su_block_t *block,
     su_property_type_t type,
-    const char *name) {
+    const char *name)
+{
   const su_property_t *prop;
 
   if ((prop = su_block_lookup_property(block, name)) == NULL)
@@ -549,9 +540,9 @@ su_block_new(const char *class_name, ...)
   /* Initialize all outputs */
   for (i = 0; i < class->out_size; ++i)
     if (!su_flow_controller_init(
-        &new->out[i],
-        SU_FLOW_CONTROL_KIND_NONE,
-        SU_BLOCK_STREAM_BUFFER_SIZE / new->decimation)) {
+            &new->out[i],
+            SU_FLOW_CONTROL_KIND_NONE,
+            SU_BLOCK_STREAM_BUFFER_SIZE / new->decimation)) {
       SU_ERROR("Cannot allocate memory for block output #%d\n", i + 1);
       goto done;
     }
@@ -662,7 +653,8 @@ su_block_port_is_plugged(const su_block_port_t *port)
 }
 
 SUBOOL
-su_block_port_plug(su_block_port_t *port,
+su_block_port_plug(
+    su_block_port_t *port,
     struct sigutils_block *block,
     unsigned int portid)
 {
@@ -679,11 +671,11 @@ su_block_port_plug(su_block_port_t *port,
   }
 
   port->port_id = portid;
-  port->fc      = block->out + portid;
-  port->block   = block;
+  port->fc = block->out + portid;
+  port->block = block;
 
   su_flow_controller_add_consumer(port->fc);
-  port->pos     = su_flow_controller_tell(port->fc);
+  port->pos = su_flow_controller_tell(port->fc);
 
   return SU_TRUE;
 }
@@ -731,10 +723,11 @@ su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size)
          * implementation doesn't have to worry about threads.
          */
         if ((acquired = port->block->classname->acquire(
-            port->block->privdata,
-            su_flow_controller_get_stream(port->block->out),
-            port->port_id,
-            port->block->in)) == -1) {
+                 port->block->privdata,
+                 su_flow_controller_get_stream(port->block->out),
+                 port->port_id,
+                 port->block->in))
+            == -1) {
           /* Acquire error */
           SU_ERROR("%s: acquire failed\n", port->block->classname->name);
           /* TODO: set error condition in flow control */
@@ -798,4 +791,3 @@ su_block_port_unplug(su_block_port_t *port)
     port->reading = SU_FALSE;
   }
 }
-

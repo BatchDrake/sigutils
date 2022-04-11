@@ -17,37 +17,33 @@
 
 */
 
+#include "agc.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "log.h"
-#include "agc.h"
 
 SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params)
 {
-  memset(self, 0, sizeof (su_agc_t));
+  memset(self, 0, sizeof(su_agc_t));
 
-  SU_ALLOCATE_MANY_FAIL(
-    self->mag_history, 
-    params->mag_history_size, 
-    SUFLOAT);
+  SU_ALLOCATE_MANY_FAIL(self->mag_history, params->mag_history_size, SUFLOAT);
 
-  SU_ALLOCATE_MANY_FAIL(
-    self->delay_line, 
-    params->delay_line_size, 
-    SUCOMPLEX);
+  SU_ALLOCATE_MANY_FAIL(self->delay_line, params->delay_line_size, SUCOMPLEX);
 
   self->mag_history_size = params->mag_history_size;
-  self->delay_line_size  = params->delay_line_size;
-  self->knee             = params->threshold;
-  self->hang_max         = params->hang_max;
-  self->gain_slope       = params->slope_factor * 1e-2;
-  self->fast_alpha_rise  = 1 - SU_EXP(-1. / params->fast_rise_t);
-  self->fast_alpha_fall  = 1 - SU_EXP(-1. / params->fast_fall_t);
-  self->slow_alpha_rise  = 1 - SU_EXP(-1. / params->slow_rise_t);
-  self->slow_alpha_fall  = 1 - SU_EXP(-1. / params->slow_fall_t);
-  self->fixed_gain       = SU_MAG_RAW(self->knee * (self->gain_slope - 1));
+  self->delay_line_size = params->delay_line_size;
+  self->knee = params->threshold;
+  self->hang_max = params->hang_max;
+  self->gain_slope = params->slope_factor * 1e-2;
+  self->fast_alpha_rise = 1 - SU_EXP(-1. / params->fast_rise_t);
+  self->fast_alpha_fall = 1 - SU_EXP(-1. / params->fast_fall_t);
+  self->slow_alpha_rise = 1 - SU_EXP(-1. / params->slow_rise_t);
+  self->slow_alpha_fall = 1 - SU_EXP(-1. / params->slow_fall_t);
+  self->fixed_gain = SU_MAG_RAW(self->knee * (self->gain_slope - 1));
 
-  self->enabled          = SU_TRUE;
+  self->enabled = SU_TRUE;
 
   return SU_TRUE;
 

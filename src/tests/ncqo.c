@@ -17,20 +17,18 @@
 
 */
 
+#include <sigutils/agc.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/pll.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <sigutils/sampling.h>
-#include <sigutils/ncqo.h>
-#include <sigutils/iir.h>
-#include <sigutils/agc.h>
-#include <sigutils/pll.h>
-
-#include <sigutils/sigutils.h>
-
-#include "test_param.h"
 #include "test_list.h"
+#include "test_param.h"
 
 SUBOOL
 su_test_ncqo(su_test_context_t *ctx)
@@ -50,25 +48,23 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_i(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));
+      SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));
 
   /* Test quadrature signal */
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_q(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+      SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
 
   /* Modify phase */
   su_ncqo_set_phase(&ncqo, PI / 2);
@@ -77,25 +73,23 @@ su_test_ncqo(su_test_context_t *ctx)
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_i(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+      SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
 
   /* Test quadrature signal */
   for (p = 0; p < SU_TEST_SIGNAL_BUFFER_SIZE; ++p)
     buffer[p] = su_ncqo_read_q(&ncqo);
 
-  SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 0));
+  SU_TEST_ASSERT(SUFLOAT_EQUAL(
+      su_test_buffer_mean(buffer, SU_TEST_SIGNAL_BUFFER_SIZE),
+      0));
 
   SU_TEST_ASSERT(
-      SUFLOAT_EQUAL(
-          su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));
+      SUFLOAT_EQUAL(su_test_buffer_pp(buffer, SU_TEST_SIGNAL_BUFFER_SIZE), 2));
 
   /* Test constant signal */
   su_ncqo_set_phase(&ncqo, 0);
@@ -117,4 +111,3 @@ done:
 
   return ok;
 }
-

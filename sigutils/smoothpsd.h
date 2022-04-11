@@ -20,9 +20,9 @@
 #ifndef _SIGUTILS_SMOOTHPSD_H
 #define _SIGUTILS_SMOOTHPSD_H
 
-#include <sigutils/types.h>
-#include <sigutils/detect.h>
 #include <pthread.h>
+#include <sigutils/detect.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,20 +35,20 @@ struct sigutils_smoothpsd_params {
   enum sigutils_channel_detector_window window;
 };
 
-#define sigutils_smoothpsd_params_INITIALIZER       \
-{                                                   \
-  4096, /* fft_size */                              \
-  1e6, /* samp_rate */                              \
-  25, /* refresh_rate */                            \
-  SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS /* window */ \
-}
+#define sigutils_smoothpsd_params_INITIALIZER                          \
+  {                                                                    \
+    4096,                                           /* fft_size */     \
+        1e6,                                        /* samp_rate */    \
+        25,                                         /* refresh_rate */ \
+        SU_CHANNEL_DETECTOR_WINDOW_BLACKMANN_HARRIS /* window */       \
+  }
 
 struct sigutils_smoothpsd {
   struct sigutils_smoothpsd_params params;
   pthread_mutex_t mutex;
-  SUBOOL          mutex_init;
+  SUBOOL mutex_init;
 
-  SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size);
+  SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size);
   void *userdata;
 
   unsigned int p;
@@ -57,25 +57,25 @@ struct sigutils_smoothpsd {
 
   SUSCOUNT iters;
 
-  SU_FFTW(_complex) *window_func;
-  SU_FFTW(_complex) *buffer;
+  SU_FFTW(_complex) * window_func;
+  SU_FFTW(_complex) * buffer;
   SU_FFTW(_plan) fft_plan;
 
   union {
-    SU_FFTW(_complex) *fft;
+    SU_FFTW(_complex) * fft;
     SUFLOAT *realfft;
   };
 };
 
 typedef struct sigutils_smoothpsd su_smoothpsd_t;
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_smoothpsd, SUSCOUNT, get_iters)
 {
   return self->iters;
 }
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_smoothpsd, unsigned int, get_fft_size)
 {
   return self->params.fft_size;
@@ -88,29 +88,23 @@ SU_GETTER(su_smoothpsd, SUFLOAT *, get_last_psd)
 }
 
 SU_INSTANCER(
-  su_smoothpsd,
-  const struct sigutils_smoothpsd_params *params,
-  SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
-  void *userdata);
+    su_smoothpsd,
+    const struct sigutils_smoothpsd_params *params,
+    SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size),
+    void *userdata);
 
 SU_COLLECTOR(su_smoothpsd);
 
-SU_METHOD(
-  su_smoothpsd,
-  SUBOOL,
-  feed,
-  const SUCOMPLEX *data,
-  SUSCOUNT size);
+SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size);
 
 SU_METHOD(
-  su_smoothpsd,
-  SUBOOL,
-  set_params,
-  const struct sigutils_smoothpsd_params *params);
+    su_smoothpsd,
+    SUBOOL,
+    set_params,
+    const struct sigutils_smoothpsd_params *params);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #endif /* _SIGUTILS_SMOOTHPSD_H */
-

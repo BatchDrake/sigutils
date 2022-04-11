@@ -20,10 +20,9 @@
 
 #define SU_LOG_DOMAIN "clock-block"
 
-#include "log.h"
-
 #include "block.h"
 #include "clock.h"
+#include "log.h"
 
 SUPRIVATE SUBOOL
 su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
@@ -35,15 +34,15 @@ su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
   SUFLOAT bhint = 0;
   SUSCOUNT bufsiz = 0;
 
-  if ((clock_detector = calloc(1, sizeof (su_clock_detector_t))) == NULL) {
+  if ((clock_detector = calloc(1, sizeof(su_clock_detector_t))) == NULL) {
     SU_ERROR("Cannot allocate clock detector state");
     goto done;
   }
 
   /* Variadic function calls promote floats to doubles */
   loop_gain = va_arg(ap, double);
-  bhint     = va_arg(ap, double);
-  bufsiz    = va_arg(ap, SUSCOUNT);
+  bhint = va_arg(ap, double);
+  bufsiz = va_arg(ap, SUSCOUNT);
 
   if (!su_clock_detector_init(clock_detector, loop_gain, bhint, bufsiz)) {
     SU_ERROR("Failed to initialize Costas loop");
@@ -52,41 +51,47 @@ su_block_cdr_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   ok = SU_TRUE;
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "bnor",
-      &clock_detector->bnor);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bnor",
+           &clock_detector->bnor);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "bmax",
-      &clock_detector->bmax);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bmax",
+           &clock_detector->bmax);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "bmin",
-      &clock_detector->bmin);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "bmin",
+           &clock_detector->bmin);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "alpha",
-      &clock_detector->alpha);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "alpha",
+           &clock_detector->alpha);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "beta",
-      &clock_detector->beta);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "beta",
+           &clock_detector->beta);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "gain",
-      &clock_detector->gain);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "gain",
+           &clock_detector->gain);
 
 done:
   if (!ok) {
@@ -94,8 +99,7 @@ done:
       su_clock_detector_finalize(clock_detector);
       free(clock_detector);
     }
-  }
-  else
+  } else
     *private = clock_detector;
 
   return ok;
@@ -106,7 +110,7 @@ su_block_cdr_dtor(void *private)
 {
   su_clock_detector_t *clock_detector;
 
-  clock_detector = (su_clock_detector_t *) private;
+  clock_detector = (su_clock_detector_t *)private;
 
   if (clock_detector != NULL) {
     su_clock_detector_finalize(clock_detector);
@@ -128,7 +132,7 @@ su_block_cdr_acquire(
   int p = 0;
   SUCOMPLEX *start;
 
-  clock_detector = (su_clock_detector_t *) priv;
+  clock_detector = (su_clock_detector_t *)priv;
 
   size = su_stream_get_contiguous(out, &start, out->size);
 
@@ -156,17 +160,16 @@ su_block_cdr_acquire(
       SU_ERROR("su_block_port_read: error %d\n", got);
       return -1;
     }
-  } while (got == SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC
-      || (p == 0 && got > 0));
+  } while (got == SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC || (p == 0 && got > 0));
 
   return p;
 }
 
 struct sigutils_block_class su_block_class_CDR = {
-    "cdr",      /* name */
-    1,          /* in_size */
-    1,          /* out_size */
-    su_block_cdr_ctor,    /* constructor */
-    su_block_cdr_dtor,    /* destructor */
-    su_block_cdr_acquire  /* acquire */
+    "cdr",               /* name */
+    1,                   /* in_size */
+    1,                   /* out_size */
+    su_block_cdr_ctor,   /* constructor */
+    su_block_cdr_dtor,   /* destructor */
+    su_block_cdr_acquire /* acquire */
 };

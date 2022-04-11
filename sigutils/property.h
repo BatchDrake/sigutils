@@ -72,7 +72,9 @@ su_property_t *su_property_new(
 
 /* Property set API */
 void su_property_set_init(su_property_set_t *set);
-su_property_t *su_property_set_lookup(const su_property_set_t *set, const char *name);
+su_property_t *su_property_set_lookup(
+    const su_property_set_t *set,
+    const char *name);
 su_property_t *su_property_set_assert_property(
     su_property_set_t *set,
     const char *name,

@@ -17,11 +17,10 @@
 
 */
 
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <sigutils/sigutils.h>
 
 #include "test_list.h"
 #include "test_param.h"
@@ -110,4 +109,3 @@ su_test_diff_codec_quaternary(su_test_context_t *ctx)
 {
   return su_test_diff_codec_generic(ctx, 2, SU_FALSE);
 }
-

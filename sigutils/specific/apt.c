@@ -19,21 +19,21 @@
 
 #define _SU_LOG_DOMAIN "apt"
 
+#include "apt.h"
+
 #include <sigutils/log.h>
 #include <sigutils/taps.h>
-#include <string.h>
 #include <stdio.h>
-
-#include "apt.h"
+#include <string.h>
 
 SUPRIVATE unsigned int
 su_apt_decoder_correlate(
-  su_apt_decoder_t *self, 
-  const SUCOMPLEX *pat,
-  unsigned int start,
-  unsigned int end,
-  SUFLOAT *snr,
-  SUFLOAT *delta)
+    su_apt_decoder_t *self,
+    const SUCOMPLEX *pat,
+    unsigned int start,
+    unsigned int end,
+    SUFLOAT *snr,
+    SUFLOAT *delta)
 {
   unsigned int i, where;
   unsigned int p = start;
@@ -45,48 +45,48 @@ su_apt_decoder_correlate(
   SUFLOAT mean, sum;
 
   /* Correlate */
-  SU_FFTW(_execute)(self->direct_plan);  
+  SU_FFTW(_execute)(self->direct_plan);
   for (i = 0; i < SU_APT_BUFF_LEN; ++i)
     self->corr_fft[i] *= SU_C_CONJ(pat[i]);
   SU_FFTW(_execute)(self->reverse_plan);
 
   /* Find pulse. This is actually a first guess. */
-  max   = SU_APT_MIN_LEVEL;
+  max = SU_APT_MIN_LEVEL;
   where = start;
-  len   = (SU_APT_BUFF_LEN + end - start) % SU_APT_BUFF_LEN + 1;
+  len = (SU_APT_BUFF_LEN + end - start) % SU_APT_BUFF_LEN + 1;
 
   for (i = 0; i < len; ++i) {
     self->corr_fft[p] *= SU_C_CONJ(self->corr_fft[p]);
     psd = SU_C_REAL(self->corr_fft[p]);
-    
+
     sig_noise += psd;
     if (psd > max) {
-      where = p; 
-      max   = psd;
+      where = p;
+      max = psd;
     }
 
     if (++p >= SU_APT_BUFF_LEN)
       p = 0;
   }
 
-  *snr   = len * max / (sig_noise - max);
+  *snr = len * max / (sig_noise - max);
 
   /* Get the pulse position _with decimals_ */
   mean = sum = 0;
   for (i = 0; i < 7; ++i) {
     p_signed = where + i - 3;
-    psd      = SU_C_REAL(self->corr_fft[(SU_APT_BUFF_LEN + p_signed) % SU_APT_BUFF_LEN]);
-    mean    += p_signed * psd;
-    sum     += psd;
+    psd = SU_C_REAL(
+        self->corr_fft[(SU_APT_BUFF_LEN + p_signed) % SU_APT_BUFF_LEN]);
+    mean += p_signed * psd;
+    sum += psd;
   }
-  mean  /= sum;
-  
+  mean /= sum;
+
   *delta = mean - SU_FLOOR(mean);
-  where = (SU_APT_BUFF_LEN + (int) SU_FLOOR(mean)) % SU_APT_BUFF_LEN;
-  
+  where = (SU_APT_BUFF_LEN + (int)SU_FLOOR(mean)) % SU_APT_BUFF_LEN;
+
   return where;
 }
-
 
 SUPRIVATE void
 su_apt_decoder_update_levels(su_apt_decoder_t *self, SUBOOL detected)
@@ -96,25 +96,28 @@ su_apt_decoder_update_levels(su_apt_decoder_t *self, SUBOOL detected)
   SUFLOAT mean_white = 0;
   SUFLOAT mean_black = 0;
 
-  SUFLOAT min        = INFINITY;
-  SUFLOAT max        = -INFINITY;
+  SUFLOAT min = INFINITY;
+  SUFLOAT max = -INFINITY;
 
   if (detected) {
     /* Find black and white levels */
     for (i = 0; i < SU_APT_LEVEL_LEN; ++i) {
-      mean_black += self->line_buffer[(SU_APT_BLACK_START + i) % SU_APT_LINE_BUFF_LEN];
-      mean_white += self->line_buffer[(SU_APT_WHITE_START + i) % SU_APT_LINE_BUFF_LEN];
+      mean_black +=
+          self->line_buffer[(SU_APT_BLACK_START + i) % SU_APT_LINE_BUFF_LEN];
+      mean_white +=
+          self->line_buffer[(SU_APT_WHITE_START + i) % SU_APT_LINE_BUFF_LEN];
     }
 
-    //fprintf(stderr, "%d: %g\n", self->lines, mean_white - mean_black, mean_white, mean_black);    
+    // fprintf(stderr, "%d: %g\n", self->lines, mean_white - mean_black,
+    // mean_white, mean_black);
     mean_black /= SU_APT_LEVEL_LEN;
     mean_white /= SU_APT_LEVEL_LEN;
 
-    if (mean_black < mean_white 
+    if (mean_black < mean_white
         && !sufeq(mean_white, mean_black, .5 * (mean_white + mean_black))) {
       if (!self->have_levels) {
-        self->mean_black  = mean_black;
-        self->mean_white  = mean_white;
+        self->mean_black = mean_black;
+        self->mean_white = mean_white;
         self->have_levels = SU_TRUE;
       } else {
         SU_SPLPF_FEED(self->mean_black, mean_black, self->line_len_alpha);
@@ -130,7 +133,6 @@ su_apt_decoder_update_levels(su_apt_decoder_t *self, SUBOOL detected)
         min = self->line_buffer[i];
       if (max < self->line_buffer[i])
         max = self->line_buffer[i];
-
     }
 
     self->mean_black = min;
@@ -139,9 +141,7 @@ su_apt_decoder_update_levels(su_apt_decoder_t *self, SUBOOL detected)
 }
 
 SUPRIVATE SUBOOL
-su_apt_decoder_flush_line(
-  su_apt_decoder_t *self, 
-  SUBOOL detected)
+su_apt_decoder_flush_line(su_apt_decoder_t *self, SUBOOL detected)
 {
   uint8_t *line = NULL;
   unsigned int i, j, ndx;
@@ -154,24 +154,23 @@ su_apt_decoder_flush_line(
   if (self->line_ptr < SU_APT_CHANNEL_LEN)
     return SU_TRUE;
 
-  SU_TRYCATCH(
-    line = malloc(sizeof(uint8_t) * SU_APT_LINE_LEN), 
-    goto done);
+  SU_TRYCATCH(line = malloc(sizeof(uint8_t) * SU_APT_LINE_LEN), goto done);
 
   su_apt_decoder_update_levels(self, detected);
   range = self->mean_white - self->mean_black;
 
   for (i = 0; i < SU_APT_LINE_LEN; ++i) {
-    ndx   = (self->line_ptr - 1) * i / (SUFLOAT) (SU_APT_LINE_LEN - 1);
-    j     = SU_FLOOR(ndx);
-    beta  = ndx - j;
+    ndx = (self->line_ptr - 1) * i / (SUFLOAT)(SU_APT_LINE_LEN - 1);
+    j = SU_FLOOR(ndx);
+    beta = ndx - j;
 
     if (j < self->line_ptr - 1)
-      value =  (1 - beta) * self->line_buffer[j] + beta * self->line_buffer[j + 1];
+      value =
+          (1 - beta) * self->line_buffer[j] + beta * self->line_buffer[j + 1];
     else
       value = self->line_buffer[j];
 
-    px = (unsigned int) (255 * (value - self->mean_black) / range);
+    px = (unsigned int)(255 * (value - self->mean_black) / range);
 
     if (px > 255)
       px = 255;
@@ -183,27 +182,27 @@ su_apt_decoder_flush_line(
 
   if (self->callbacks.on_line_data != NULL) {
     SU_TRYCATCH(
-      (self->callbacks.on_line_data) (
-        self, 
-        self->callbacks.userdata, 
-        self->lines,
-        SU_APT_DECODER_CHANNEL_B,
-        detected,
-        line,
-        SU_APT_CHANNEL_LEN),
-      goto done);
+        (self->callbacks.on_line_data)(
+            self,
+            self->callbacks.userdata,
+            self->lines,
+            SU_APT_DECODER_CHANNEL_B,
+            detected,
+            line,
+            SU_APT_CHANNEL_LEN),
+        goto done);
     SU_TRYCATCH(
-      (self->callbacks.on_line_data) (
-        self, 
-        self->callbacks.userdata, 
-        self->lines + 1,
-        SU_APT_DECODER_CHANNEL_A,
-        detected,
-        line + SU_APT_CHANNEL_LEN,
-        SU_APT_CHANNEL_LEN),
-      goto done);
+        (self->callbacks.on_line_data)(
+            self,
+            self->callbacks.userdata,
+            self->lines + 1,
+            SU_APT_DECODER_CHANNEL_A,
+            detected,
+            line + SU_APT_CHANNEL_LEN,
+            SU_APT_CHANNEL_LEN),
+        goto done);
   }
-  
+
   SU_TRYCATCH(PTR_LIST_APPEND_CHECK(self->scan_line, line) != -1, goto done);
   line = NULL;
 
@@ -233,9 +232,10 @@ su_apt_decoder_extract_line_until(su_apt_decoder_t *self, unsigned int pos)
     if (self->line_ptr >= SU_APT_LINE_LEN)
       break;
 
-    self->line_buffer[self->line_ptr++] = 
-      (1 - self->last_sync_delta) * self->samp_buffer[p]
-      + (self->last_sync_delta) * self->samp_buffer[(p + 1) % SU_APT_LINE_BUFF_LEN];
+    self->line_buffer[self->line_ptr++] =
+        (1 - self->last_sync_delta) * self->samp_buffer[p]
+        + (self->last_sync_delta)
+              * self->samp_buffer[(p + 1) % SU_APT_LINE_BUFF_LEN];
     ++p;
   }
 
@@ -245,13 +245,12 @@ su_apt_decoder_extract_line_until(su_apt_decoder_t *self, unsigned int pos)
 SUINLINE SUSCOUNT
 su_apt_decoder_pos_to_abs(const su_apt_decoder_t *self, SUSCOUNT pos)
 {
-  return pos >= self->samp_ptr 
-      ? self->samp_epoch - SU_APT_BUFF_LEN + pos 
-      : self->samp_epoch + pos;
+  return pos >= self->samp_ptr ? self->samp_epoch - SU_APT_BUFF_LEN + pos
+                               : self->samp_epoch + pos;
 }
 
 SUPRIVATE SUBOOL
-su_apt_decoder_perform_search(su_apt_decoder_t *self) 
+su_apt_decoder_perform_search(su_apt_decoder_t *self)
 {
   unsigned int pos;
   SUSCOUNT abs_pos;
@@ -260,34 +259,34 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
   SUSCOUNT next_search;
   unsigned int expected_sync;
   unsigned int search_start, search_end;
-  SUBOOL  have_line = SU_FALSE;
+  SUBOOL have_line = SU_FALSE;
   SUFLOAT delta;
-  SUBOOL  ok = SU_FALSE;
+  SUBOOL ok = SU_FALSE;
 
-  /* 
+  /*
    * If the last sync is still in the circular buffer, we intentionally
-   * skip it from search. 
+   * skip it from search.
    */
   if (self->count - self->last_sync < SU_APT_BUFF_LEN)
     search_start = (self->last_sync + SU_APT_SYNC_SIZE) % SU_APT_BUFF_LEN;
   else
     search_start = self->samp_ptr;
-  search_end   = (SU_APT_BUFF_LEN + self->samp_ptr - 1) % SU_APT_BUFF_LEN;
+  search_end = (SU_APT_BUFF_LEN + self->samp_ptr - 1) % SU_APT_BUFF_LEN;
 
   next_search = self->count + self->line_len / 2;
 
   /* Correlate against SYNC B */
   pos = su_apt_decoder_correlate(
-    self, 
-    self->sync_fft, 
-    search_start, 
-    search_end,
-    &snr,
-    &delta);
+      self,
+      self->sync_fft,
+      search_start,
+      search_end,
+      &snr,
+      &delta);
   abs_pos = su_apt_decoder_pos_to_abs(self, pos);
 
   if (snr > SU_APT_SYNC_MIN_SNR) {
-    /* 
+    /*
      * Sync found!
      *
      * If the distance between this sync and the last one is compatible
@@ -297,32 +296,29 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
 
     if (self->callbacks.on_sync != NULL) {
       SU_TRYCATCH(
-        (self->callbacks.on_sync) (self, self->callbacks.userdata, abs_pos),
-        goto done);
+          (self->callbacks.on_sync)(self, self->callbacks.userdata, abs_pos),
+          goto done);
     }
 
     line_len = abs_pos - self->last_sync;
 
     if (sufeq(line_len, SU_APT_LINE_LEN, 5e-2 * SU_APT_LINE_LEN)) {
-      SU_SPLPF_FEED(
-        self->line_len, 
-        line_len, 
-        self->line_len_alpha);
-      
+      SU_SPLPF_FEED(self->line_len, line_len, self->line_len_alpha);
+
       if (self->callbacks.on_line != NULL) {
         SU_TRYCATCH(
-          (self->callbacks.on_line) (
-            self, 
-            self->callbacks.userdata, 
-            self->line_len),
-          goto done);
+            (self->callbacks.on_line)(
+                self,
+                self->callbacks.userdata,
+                self->line_len),
+            goto done);
       }
 
       have_line = SU_TRUE;
     }
 
     /* In any case, we already have a guess for the next sync */
-    next_search     = abs_pos + self->line_len + SU_APT_SYNC_SIZE;
+    next_search = abs_pos + self->line_len + SU_APT_SYNC_SIZE;
     self->last_sync = abs_pos;
     self->next_sync = self->last_sync + self->line_len;
 
@@ -332,12 +328,13 @@ su_apt_decoder_perform_search(su_apt_decoder_t *self)
     self->last_sync_delta = delta;
   } else {
     if (self->lines > 0) {
-      if (su_apt_decoder_pos_to_abs(self, search_start) < self->next_sync 
-        && self->next_sync + SU_APT_SYNC_SIZE < su_apt_decoder_pos_to_abs(self, search_end)) {
-        next_search      = self->next_sync + self->line_len + SU_APT_SYNC_SIZE;
-        expected_sync    = self->next_sync % SU_APT_LINE_BUFF_LEN;
+      if (su_apt_decoder_pos_to_abs(self, search_start) < self->next_sync
+          && self->next_sync + SU_APT_SYNC_SIZE
+                 < su_apt_decoder_pos_to_abs(self, search_end)) {
+        next_search = self->next_sync + self->line_len + SU_APT_SYNC_SIZE;
+        expected_sync = self->next_sync % SU_APT_LINE_BUFF_LEN;
         self->next_sync += SU_FLOOR(self->line_len);
-        delta            = 0;
+        delta = 0;
 
         su_apt_decoder_extract_line_until(self, expected_sync);
         su_apt_decoder_flush_line(self, SU_FALSE);
@@ -356,17 +353,17 @@ done:
   return ok;
 }
 
-void 
+void
 su_apt_decoder_set_snr(su_apt_decoder_t *self, SUFLOAT snr)
 {
   self->sync_snr = snr;
 }
 
-SUBOOL 
+SUBOOL
 su_apt_decoder_feed(
-  su_apt_decoder_t *self, 
-  const SUCOMPLEX *buffer,
-  SUSCOUNT count)
+    su_apt_decoder_t *self,
+    const SUCOMPLEX *buffer,
+    SUSCOUNT count)
 {
   SUSCOUNT i;
   SUCOMPLEX x;
@@ -380,18 +377,18 @@ su_apt_decoder_feed(
       pwr = SU_C_REAL(x * SU_C_CONJ(x));
       self->mean_i += SU_C_REAL(x) * SU_C_REAL(x);
       self->mean_q += SU_C_IMAG(x) * SU_C_IMAG(x);
-      
+
       self->samp_buffer[self->samp_ptr++] = pwr;
       if (self->samp_ptr >= SU_APT_BUFF_LEN) {
         snr = SU_ABS(SU_POWER_DB_RAW(self->mean_i / self->mean_q));
 
         if (self->callbacks.on_carrier != NULL)
           SU_TRYCATCH(
-            (self->callbacks.on_carrier) (
-              self, 
-              self->callbacks.userdata, 
-              SU_POWER_DB(snr)),
-            return SU_FALSE);
+              (self->callbacks.on_carrier)(
+                  self,
+                  self->callbacks.userdata,
+                  SU_POWER_DB(snr)),
+              return SU_FALSE);
 
         self->samp_ptr = 0;
         self->mean_i = self->mean_q = 0;
@@ -401,9 +398,7 @@ su_apt_decoder_feed(
       ++self->count;
 
       if (self->count >= self->next_search) {
-        SU_TRYCATCH(
-          su_apt_decoder_perform_search(self), 
-          return SU_FALSE);
+        SU_TRYCATCH(su_apt_decoder_perform_search(self), return SU_FALSE);
       }
     }
   }
@@ -411,7 +406,7 @@ su_apt_decoder_feed(
   return SU_TRUE;
 }
 
-void 
+void
 su_apt_decoder_clear_image(su_apt_decoder_t *self)
 {
   unsigned int i;
@@ -423,7 +418,7 @@ su_apt_decoder_clear_image(su_apt_decoder_t *self)
     free(self->scan_line_list);
 
   self->scan_line_count = 0;
-  self->scan_line_list  = NULL;
+  self->scan_line_list = NULL;
 }
 
 SUBOOL
@@ -448,7 +443,7 @@ su_apt_decoder_dump_pgm(const su_apt_decoder_t *self, const char *path)
 
     fprintf(fp, "\n");
   }
-  
+
   ok = SU_TRUE;
 
 fail:
@@ -465,9 +460,7 @@ fail:
  */
 
 su_apt_decoder_t *
-su_apt_decoder_new(
-  SUFLOAT fs, 
-  const struct sigutils_apt_decoder_callbacks *cb)
+su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
 {
   su_apt_decoder_t *new = NULL;
   SU_FFTW(_plan) pattern_plan = NULL;
@@ -478,69 +471,65 @@ su_apt_decoder_new(
   SUBOOL ok = SU_FALSE;
 
   SU_TRYCATCH(new = calloc(1, sizeof(su_apt_decoder_t)), goto done);
-  
+
   if (cb != NULL)
     new->callbacks = *cb;
 
-  new->samp_rate      = fs;
-  new->line_len       = SU_APT_LINE_LEN;
+  new->samp_rate = fs;
+  new->line_len = SU_APT_LINE_LEN;
   new->line_len_alpha = SU_SPLPF_ALPHA(SU_APT_TRAINING_LINES);
-  new->sync_snr       = SU_APT_SYNC_MIN_SNR;
-  new->next_search    = new->line_len / 2;
+  new->sync_snr = SU_APT_SYNC_MIN_SNR;
+  new->next_search = new->line_len / 2;
 
   /* Setup PLL */
-  bw = SU_ABS2NORM_FREQ(
-    fs, 
-    SU_APT_AM_BANDWIDTH);
+  bw = SU_ABS2NORM_FREQ(fs, SU_APT_AM_BANDWIDTH);
 
   SU_TRYCATCH(
-    pattern_plan = SU_FFTW(_plan_dft_1d)(
-      SU_APT_BUFF_LEN,
-      new->sync_fft,
-      new->sync_fft,
-      FFTW_FORWARD,
-      FFTW_ESTIMATE),
-    goto done);
+      pattern_plan = SU_FFTW(_plan_dft_1d)(
+          SU_APT_BUFF_LEN,
+          new->sync_fft,
+          new->sync_fft,
+          FFTW_FORWARD,
+          FFTW_ESTIMATE),
+      goto done);
 
   SU_TRYCATCH(
-    new->direct_plan = SU_FFTW(_plan_dft_1d)(
-      SU_APT_BUFF_LEN,
-      new->samp_buffer,
-      new->corr_fft,
-      FFTW_FORWARD,
-      FFTW_ESTIMATE),
-    goto done);
+      new->direct_plan = SU_FFTW(_plan_dft_1d)(
+          SU_APT_BUFF_LEN,
+          new->samp_buffer,
+          new->corr_fft,
+          FFTW_FORWARD,
+          FFTW_ESTIMATE),
+      goto done);
 
   SU_TRYCATCH(
-    new->reverse_plan = SU_FFTW(_plan_dft_1d)(
-      SU_APT_BUFF_LEN,
-      new->corr_fft,
-      new->corr_fft,
-      FFTW_BACKWARD,
-      FFTW_ESTIMATE),
-    goto done);
+      new->reverse_plan = SU_FFTW(_plan_dft_1d)(
+          SU_APT_BUFF_LEN,
+          new->corr_fft,
+          new->corr_fft,
+          FFTW_BACKWARD,
+          FFTW_ESTIMATE),
+      goto done);
 
   su_pll_init(
-    &new->pll, 
-    SU_ABS2NORM_FREQ(fs, SU_APT_AM_CARRIER_FREQ),
-    .001f * bw);
+      &new->pll,
+      SU_ABS2NORM_FREQ(fs, SU_APT_AM_CARRIER_FREQ),
+      .001f * bw);
 
   /* Setup matched filter for 4160 Hz */
   SU_TRYCATCH(
-    su_iir_rrc_init(
-      &new->mf, 
-      5 * SU_CEIL(2 * samps_per_word),
-      2 * samps_per_word,
-      .55),
-    goto done);
+      su_iir_rrc_init(
+          &new->mf,
+          5 * SU_CEIL(2 * samps_per_word),
+          2 * samps_per_word,
+          .55),
+      goto done);
 
   /* Set resampler */
   SU_TRYCATCH(
-    su_sampler_init(
-      &new->resampler,
-      SU_ABS2NORM_BAUD(fs, SU_APT_IF_RATE)),
-    goto done);
-  
+      su_sampler_init(&new->resampler, SU_ABS2NORM_BAUD(fs, SU_APT_IF_RATE)),
+      goto done);
+
   kinv = 1. / SU_APT_SYNC_SIZE;
 
   /* Configure channel B detector */
@@ -548,9 +537,9 @@ su_apt_decoder_new(
     j = (i - 4) % 5;
     new->sync_fft[i] = (i >= 4 && j < 3) ? kinv : -kinv;
   }
-  
+
   SU_FFTW(_execute)(pattern_plan);
-  
+
   ok = SU_TRUE;
 
 done:
@@ -560,9 +549,9 @@ done:
       new = NULL;
     }
   }
-    
+
   if (pattern_plan != NULL)
-    SU_FFTW(_destroy_plan) (pattern_plan);
+    SU_FFTW(_destroy_plan)(pattern_plan);
 
   return new;
 }
@@ -571,16 +560,16 @@ void
 su_apt_decoder_destroy(su_apt_decoder_t *self)
 {
   if (self->reverse_plan != NULL)
-    SU_FFTW(_destroy_plan) (self->reverse_plan);
+    SU_FFTW(_destroy_plan)(self->reverse_plan);
 
   if (self->direct_plan != NULL)
-    SU_FFTW(_destroy_plan) (self->direct_plan);
+    SU_FFTW(_destroy_plan)(self->direct_plan);
 
   su_apt_decoder_clear_image(self);
 
   su_sampler_finalize(&self->resampler);
   su_iir_filt_finalize(&self->mf);
   su_pll_finalize(&self->pll);
-  
+
   free(self);
 }

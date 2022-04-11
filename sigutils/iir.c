@@ -17,13 +17,14 @@
 
 */
 
+#include "iir.h"
+
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
-#include "sampling.h"
-#include "iir.h"
 #include "coef.h"
+#include "sampling.h"
 #include "taps.h"
 
 /*
@@ -42,7 +43,7 @@
 #ifdef SU_USE_VOLK
 #  define calloc su_volk_calloc
 #  define malloc su_volk_malloc
-#  define free   volk_free
+#  define free volk_free
 SUINLINE void *
 su_volk_malloc(size_t size)
 {
@@ -238,7 +239,7 @@ __su_iir_filt_init(
 
   assert(x_size > 0);
 
-  memset(filt, 0, sizeof (su_iir_filt_t));
+  memset(filt, 0, sizeof(su_iir_filt_t));
 
   filt->gain = 1;
 
@@ -253,25 +254,25 @@ __su_iir_filt_init(
     y_alloc = 2 * y_alloc - 1;
 #endif /* SU_USE_VOLK */
 
-  if ((x = calloc(x_alloc, sizeof (SUCOMPLEX))) == NULL)
+  if ((x = calloc(x_alloc, sizeof(SUCOMPLEX))) == NULL)
     goto fail;
 
   if (y_size > 0)
-    if ((y = calloc(y_alloc, sizeof (SUCOMPLEX))) == NULL)
+    if ((y = calloc(y_alloc, sizeof(SUCOMPLEX))) == NULL)
       goto fail;
 
   if (copy_coef) {
     if (y_size > 0) {
-      if ((a_copy = malloc(y_size * sizeof (SUFLOAT))) == NULL)
+      if ((a_copy = malloc(y_size * sizeof(SUFLOAT))) == NULL)
         goto fail;
 
-      memcpy(a_copy, a, y_size * sizeof (SUFLOAT));
+      memcpy(a_copy, a, y_size * sizeof(SUFLOAT));
     }
 
-    if ((b_copy = malloc(x_size * sizeof (SUFLOAT))) == NULL)
+    if ((b_copy = malloc(x_size * sizeof(SUFLOAT))) == NULL)
       goto fail;
 
-    memcpy(b_copy, b, x_size * sizeof (SUFLOAT));
+    memcpy(b_copy, b, x_size * sizeof(SUFLOAT));
   } else {
     a_copy = a;
     b_copy = b;
@@ -323,9 +324,9 @@ su_iir_filt_init(
   return __su_iir_filt_init(
       filt,
       y_size,
-      (SUFLOAT *) a,
+      (SUFLOAT *)a,
       x_size,
-      (SUFLOAT *) b,
+      (SUFLOAT *)b,
       SU_TRUE);
 }
 
@@ -443,7 +444,7 @@ su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta)
   if (n < 1)
     goto fail;
 
-  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+  if ((b = malloc(n * sizeof(SUFLOAT))) == NULL)
     goto fail;
 
   su_taps_rrc_init(b, T, beta, n);
@@ -468,7 +469,7 @@ su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n)
   if (n < 1)
     goto fail;
 
-  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+  if ((b = malloc(n * sizeof(SUFLOAT))) == NULL)
     goto fail;
 
   su_taps_hilbert_init(b, n);
@@ -497,7 +498,7 @@ su_iir_brickwall_bp_init(
   if (n < 1)
     goto fail;
 
-  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+  if ((b = malloc(n * sizeof(SUFLOAT))) == NULL)
     goto fail;
 
   su_taps_brickwall_bp_init(b, bw, ifnor, n);
@@ -522,7 +523,7 @@ su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
   if (n < 1)
     goto fail;
 
-  if ((b = malloc(n * sizeof (SUFLOAT))) == NULL)
+  if ((b = malloc(n * sizeof(SUFLOAT))) == NULL)
     goto fail;
 
   su_taps_brickwall_lp_init(b, fc, n);

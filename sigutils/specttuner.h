@@ -20,15 +20,15 @@
 #ifndef _SIGUTILS_SPECTTUNER_H
 #define _SIGUTILS_SPECTTUNER_H
 
-#include "types.h"
-#include "ncqo.h"
 #include "defs.h"
+#include "ncqo.h"
+#include "types.h"
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif // __clang__
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -36,10 +36,10 @@ struct sigutils_specttuner_params {
   SUSCOUNT window_size;
 };
 
-#define sigutils_specttuner_params_INITIALIZER  \
-{                                               \
-  4096, /* window_size */                       \
-}
+#define sigutils_specttuner_params_INITIALIZER \
+  {                                            \
+    4096, /* window_size */                    \
+  }
 
 enum sigutils_specttuner_state {
   SU_SPECTTUNER_STATE_EVEN,
@@ -49,33 +49,34 @@ enum sigutils_specttuner_state {
 struct sigutils_specttuner_channel;
 
 struct sigutils_specttuner_channel_params {
-  SUFLOAT f0;       /* Central frequency (angular frequency) */
-  SUFLOAT delta_f;  /* Frequency correction (angular frequency) */
-  SUFLOAT bw;       /* Bandwidth (angular frequency) */
-  SUFLOAT guard;    /* Relative extra bandwidth */
-  SUBOOL  precise;  /* Precision mode */
-  void *privdata;   /* Private data */
-  SUBOOL (*on_data) (
-      const struct sigutils_specttuner_channel *channel,
-      void *privdata,
-      const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
-      SUSCOUNT size);
+  SUFLOAT f0;      /* Central frequency (angular frequency) */
+  SUFLOAT delta_f; /* Frequency correction (angular frequency) */
+  SUFLOAT bw;      /* Bandwidth (angular frequency) */
+  SUFLOAT guard;   /* Relative extra bandwidth */
+  SUBOOL precise;  /* Precision mode */
+  void *privdata;  /* Private data */
+  SUBOOL(*on_data)
+  (const struct sigutils_specttuner_channel *channel,
+   void *privdata,
+   const SUCOMPLEX
+       *data, /* This pointer remains valid until the next call to feed */
+   SUSCOUNT size);
 };
 
-#define sigutils_specttuner_channel_params_INITIALIZER  \
-{                                                       \
-  0,        /* f0 */                                    \
-  0,        /* delta_f */                               \
-  0,        /* bw */                                    \
-  1,        /* guard */                                 \
-  SU_FALSE, /* precise */                               \
-  NULL,     /* private */                               \
-  NULL,     /* on_data */                               \
-}
+#define sigutils_specttuner_channel_params_INITIALIZER \
+  {                                                    \
+    0,            /* f0 */                             \
+        0,        /* delta_f */                        \
+        0,        /* bw */                             \
+        1,        /* guard */                          \
+        SU_FALSE, /* precise */                        \
+        NULL,     /* private */                        \
+        NULL,     /* on_data */                        \
+  }
 
 struct sigutils_specttuner_channel {
   struct sigutils_specttuner_channel_params params;
-  int index;           /* Back reference */
+  int index; /* Back reference */
 
   SUFLOAT k;           /* Scaling factor */
   SUFLOAT gain;        /* Channel gain */
@@ -95,32 +96,32 @@ struct sigutils_specttuner_channel {
    * a good windowing that does not rely on rectangular windows
    */
   enum sigutils_specttuner_state state;
-  SU_FFTW(_complex) *fft;      /* Filtered spectrum */
-  SU_FFTW(_complex) *h;        /* Frequency response of filter */
-  SU_FFTW(_plan)     plan[2];  /* Even & Odd plans */
-  SU_FFTW(_plan)     forward;  /* Filter response forward plan */
-  SU_FFTW(_plan)     backward; /* Filter response backward plan */
+  SU_FFTW(_complex) * fft; /* Filtered spectrum */
+  SU_FFTW(_complex) * h;   /* Frequency response of filter */
+  SU_FFTW(_plan) plan[2];  /* Even & Odd plans */
+  SU_FFTW(_plan) forward;  /* Filter response forward plan */
+  SU_FFTW(_plan) backward; /* Filter response backward plan */
 
-  SU_FFTW(_complex) *ifft[2];  /* Even & Odd time-domain signal */
-  SUFLOAT           *window;   /* Window function */
+  SU_FFTW(_complex) * ifft[2]; /* Even & Odd time-domain signal */
+  SUFLOAT *window;             /* Window function */
 };
 
 typedef struct sigutils_specttuner_channel su_specttuner_channel_t;
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_decimation)
 {
   return self->decimation;
 }
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_bw)
 {
-  return 2 * PI * (SUFLOAT) self->width
-      / (SUFLOAT) (self->size * self->decimation);
+  return 2 * PI * (SUFLOAT)self->width
+         / (SUFLOAT)(self->size * self->decimation);
 }
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_f0)
 {
   return self->params.f0;
@@ -171,15 +172,15 @@ SU_GETTER(su_specttuner_channel, SUFLOAT, get_effective_freq)
 struct sigutils_specttuner {
   struct sigutils_specttuner_params params;
 
-  SU_FFTW(_complex) *window; /* 3/2 the space, double allocation trick */
-  SU_FFTW(_complex) *fft;
+  SU_FFTW(_complex) * window; /* 3/2 the space, double allocation trick */
+  SU_FFTW(_complex) * fft;
 
   enum sigutils_specttuner_state state;
   SU_FFTW(_plan) plans[2]; /* Even and odd plans */
 
   unsigned int half_size; /* 3/2 of window size */
   unsigned int full_size; /* 3/2 of window size */
-  unsigned int p; /* From 0 to window_size - 1 */
+  unsigned int p;         /* From 0 to window_size - 1 */
 
   unsigned int count; /* Active channels */
 
@@ -191,19 +192,19 @@ struct sigutils_specttuner {
 
 typedef struct sigutils_specttuner su_specttuner_t;
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_specttuner, unsigned int, get_channel_count)
 {
   return self->count;
 }
 
-SUINLINE 
+SUINLINE
 SU_GETTER(su_specttuner, SUBOOL, new_data)
 {
   return self->ready;
 }
 
-SUINLINE 
+SUINLINE
 SU_METHOD(su_specttuner, void, ack_data)
 {
   self->ready = SU_FALSE;
@@ -218,7 +219,7 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
 {
   SUSDIFF halfsz = self->half_size;
   SUSDIFF p = self->p;
-  SUBOOL  ready = SU_FALSE;
+  SUBOOL ready = SU_FALSE;
 
   switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
@@ -241,11 +242,11 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
     self->p = halfsz;
 
     /* Compute FFT */
-    SU_FFTW(_execute) (self->plans[self->state]);
+    SU_FFTW(_execute)(self->plans[self->state]);
 
     /* Toggle state */
     self->state = !self->state;
-    
+
     ready = SU_TRUE;
   }
 
@@ -257,56 +258,56 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params);
 SU_COLLECTOR(su_specttuner);
 
 SU_METHOD(
-  su_specttuner, 
-  SUSDIFF, 
-  feed_bulk_single, 
-  const SUCOMPLEX *__restrict buf, 
-  SUSCOUNT size);
+    su_specttuner,
+    SUSDIFF,
+    feed_bulk_single,
+    const SUCOMPLEX *__restrict buf,
+    SUSCOUNT size);
 
 SU_METHOD(
-  su_specttuner, 
-  SUBOOL, 
-  feed_bulk, 
-  const SUCOMPLEX *__restrict buf, 
-  SUSCOUNT size);
+    su_specttuner,
+    SUBOOL,
+    feed_bulk,
+    const SUCOMPLEX *__restrict buf,
+    SUSCOUNT size);
 
 SU_METHOD(
-  su_specttuner,
-  su_specttuner_channel_t *,
-  open_channel,
-  const struct sigutils_specttuner_channel_params *params);
+    su_specttuner,
+    su_specttuner_channel_t *,
+    open_channel,
+    const struct sigutils_specttuner_channel_params *params);
 
 SU_METHOD(
-  su_specttuner,
-  SUBOOL,
-  close_channel,
-  su_specttuner_channel_t *channel);
+    su_specttuner,
+    SUBOOL,
+    close_channel,
+    su_specttuner_channel_t *channel);
 
 SU_METHOD_CONST(
-  su_specttuner,
-  void,
-  set_channel_freq,
-  su_specttuner_channel_t *channel,
-  SUFLOAT f0);
+    su_specttuner,
+    void,
+    set_channel_freq,
+    su_specttuner_channel_t *channel,
+    SUFLOAT f0);
 
 SU_METHOD_CONST(
-  su_specttuner,
-  void,
-  set_channel_delta_f,
-  su_specttuner_channel_t *channel,
-  SUFLOAT delta_f);
+    su_specttuner,
+    void,
+    set_channel_delta_f,
+    su_specttuner_channel_t *channel,
+    SUFLOAT delta_f);
 
 SU_METHOD_CONST(
-  su_specttuner,
-  SUBOOL,
-  set_channel_bandwidth,
-  su_specttuner_channel_t *channel,
-  SUFLOAT bw);
+    su_specttuner,
+    SUBOOL,
+    set_channel_bandwidth,
+    su_specttuner_channel_t *channel,
+    SUFLOAT bw);
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
-#  endif // __clang__
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

@@ -17,11 +17,10 @@
 
 */
 
-
 #include <sigutils/matfile.h>
 
-#include "test_param.h"
 #include "test_list.h"
+#include "test_param.h"
 
 SUBOOL
 su_test_mat_file_regular(su_test_context_t *ctx)

@@ -21,8 +21,8 @@
 
 #define SU_LOG_LEVEL "clock"
 
-#include "log.h"
 #include "clock.h"
+#include "log.h"
 
 /*
  * Fixed sampler
@@ -34,7 +34,7 @@ SU_CONSTRUCTOR(su_sampler, SUFLOAT bnor)
 
   self->bnor = bnor;
   if (bnor > 0)
-    self->period = 1./ bnor;
+    self->period = 1. / bnor;
   else
     self->period = 0;
 
@@ -51,7 +51,7 @@ SU_METHOD(su_sampler, SUBOOL, set_rate, SUFLOAT bnor)
 
   self->bnor = bnor;
   if (bnor > 0) {
-    self->period = 1./ bnor;
+    self->period = 1. / bnor;
     if (self->phase > self->period)
       self->phase -= self->period * SU_FLOOR(self->phase / self->period);
 
@@ -64,7 +64,7 @@ SU_METHOD(su_sampler, SUBOOL, set_rate, SUFLOAT bnor)
 }
 
 /* Phase is always set in a relative fashion */
-SU_METHOD(su_sampler, void,   set_phase, SUFLOAT phase)
+SU_METHOD(su_sampler, void, set_phase, SUFLOAT phase)
 {
   if (phase > 1)
     phase -= SU_FLOOR(phase);
@@ -73,8 +73,7 @@ SU_METHOD(su_sampler, void,   set_phase, SUFLOAT phase)
 }
 
 SU_DESTRUCTOR(su_sampler)
-{
-  /* No-op */
+{ /* No-op */
 }
 
 /*
@@ -87,23 +86,23 @@ SU_DESTRUCTOR(su_clock_detector)
 }
 
 SU_CONSTRUCTOR(
-  su_clock_detector, 
-  SUFLOAT  loop_gain,
-  SUFLOAT  bhint,
-  SUSCOUNT bufsiz)
+    su_clock_detector,
+    SUFLOAT loop_gain,
+    SUFLOAT bhint,
+    SUSCOUNT bufsiz)
 {
   memset(self, 0, sizeof(su_clock_detector_t));
 
   SU_CONSTRUCT_FAIL(su_stream, &self->sym_stream, bufsiz);
 
   self->alpha = SU_PREFERED_CLOCK_ALPHA;
-  self->beta  = SU_PREFERED_CLOCK_BETA;
-  self->algo  = SU_CLOCK_DETECTOR_ALGORITHM_GARDNER;
-  self->phi   = .25;
-  self->bnor  = bhint;
-  self->bmin  = 0;
-  self->bmax  = 1;
-  self->gain  = loop_gain; /* Somehow this parameter is critical */
+  self->beta = SU_PREFERED_CLOCK_BETA;
+  self->algo = SU_CLOCK_DETECTOR_ALGORITHM_GARDNER;
+  self->phi = .25;
+  self->bnor = bhint;
+  self->bmin = 0;
+  self->bmax = 1;
+  self->gain = loop_gain; /* Somehow this parameter is critical */
 
   return SU_TRUE;
 
@@ -167,10 +166,11 @@ SU_METHOD(su_clock_detector, void, feed, SUCOMPLEX val)
           self->x[0] = p;
 
           /* Compute error signal */
-          e = self->gain * SU_C_REAL(SU_C_CONJ(self->x[1]) * (self->x[0] - self->x[2]));
+          e = self->gain
+              * SU_C_REAL(SU_C_CONJ(self->x[1]) * (self->x[0] - self->x[2]));
           self->e = e;
           /* Adjust phase and frequency */
-          self->phi  += self->alpha * e;
+          self->phi += self->alpha * e;
           self->bnor += self->beta * e;
 
           /* Check that current baudrate is within some reasonable limits */

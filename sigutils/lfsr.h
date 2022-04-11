@@ -28,9 +28,9 @@ enum su_lfsr_mode {
 };
 
 struct sigutils_lfsr {
-  SUBITS *coef;   /* LFSR coefficients */
-  SUBITS *buffer; /* State buffer */
-  SUSCOUNT order;   /* Polynomial degree */
+  SUBITS *coef;           /* LFSR coefficients */
+  SUBITS *buffer;         /* State buffer */
+  SUSCOUNT order;         /* Polynomial degree */
   enum su_lfsr_mode mode; /* LFSR mode */
 
   SUBITS F_prev;
@@ -40,11 +40,14 @@ struct sigutils_lfsr {
 
 typedef struct sigutils_lfsr su_lfsr_t;
 
-#define su_lfsr_INITIALIZER {NULL, NULL, 0}
+#define su_lfsr_INITIALIZER \
+  {                         \
+    NULL, NULL, 0           \
+  }
 
 SUBOOL su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order);
-void   su_lfsr_finalize(su_lfsr_t *lfsr);
-void   su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode);
+void su_lfsr_finalize(su_lfsr_t *lfsr);
+void su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode);
 
 void su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq);
 SUBITS su_lfsr_feed(su_lfsr_t *lfsr, SUBITS input);
