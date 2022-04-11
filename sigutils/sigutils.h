@@ -21,9 +21,7 @@
 #define _SIGUTILS_SIGUTILS_H
 
 #include "block.h"
-#include "codec.h"
 #include "log.h"
-#include "modem.h"
 #include "types.h"
 #include "version.h"
 
