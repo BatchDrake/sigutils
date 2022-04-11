@@ -17,13 +17,13 @@
 
 */
 
-#include <string.h>
-
 #include "detect.h"
 
+#include <string.h>
+
+#include "assert.h"
 #include "sampling.h"
 #include "taps.h"
-#include "assert.h"
 
 SU_CONSTRUCTOR(su_peak_detector, unsigned int size, SUFLOAT thres)
 {
@@ -32,11 +32,7 @@ SU_CONSTRUCTOR(su_peak_detector, unsigned int size, SUFLOAT thres)
   assert(self != NULL);
   assert(size > 0);
 
-  SU_ALLOCATE_MANY_CATCH(
-    history,
-    size,
-    SUFLOAT,
-    return SU_FALSE);
+  SU_ALLOCATE_MANY_CATCH(history, size, SUFLOAT, return SU_FALSE);
 
   self->size = size;
   self->thr2 = thres * thres;
@@ -89,7 +85,6 @@ SU_METHOD(su_peak_detector, int, feed, SUFLOAT x)
     if (x2 > threshold) {
       peak = x > mean ? 1 : -1;
     }
-
 
     /* Remove last sample from accumulator */
     self->accum -= self->history[self->p];
@@ -169,13 +164,13 @@ SU_METHOD(su_channel_detector, void, channel_list_clear)
   struct sigutils_channel *chan;
 
   FOR_EACH_PTR(chan, self, channel)
-    SU_DISPOSE(su_channel, chan);
+  SU_DISPOSE(su_channel, chan);
 
   if (self->channel_list != NULL)
     free(self->channel_list);
 
   self->channel_count = 0;
-  self->channel_list  = NULL;
+  self->channel_list = NULL;
 }
 
 SUPRIVATE
@@ -185,8 +180,7 @@ SU_METHOD(su_channel_detector, void, channel_collect)
 
   for (i = 0; i < self->channel_count; ++i)
     if (self->channel_list[i] != NULL)
-      if (self->channel_list[i]->age++
-          > 2 * self->channel_list[i]->present) {
+      if (self->channel_list[i]->age++ > 2 * self->channel_list[i]->present) {
         su_channel_destroy(self->channel_list[i]);
         self->channel_list[i] = NULL;
       }
@@ -197,26 +191,20 @@ SU_GETTER(su_channel_detector, su_channel_t *, lookup_channel, SUFLOAT fc)
   su_channel_t *chan;
 
   FOR_EACH_PTR(chan, self, channel)
-    if (fc >= chan->fc - chan->bw * .5 &&
-        fc <= chan->fc + chan->bw * .5)
-      return chan;
+  if (fc >= chan->fc - chan->bw * .5 && fc <= chan->fc + chan->bw * .5)
+    return chan;
 
   return NULL;
 }
 
-SU_GETTER(
-  su_channel_detector, 
-  su_channel_t *, 
-  lookup_valid_channel, 
-  SUFLOAT fc)
+SU_GETTER(su_channel_detector, su_channel_t *, lookup_valid_channel, SUFLOAT fc)
 {
   su_channel_t *chan;
 
   FOR_EACH_PTR(chan, self, channel)
-    if (SU_CHANNEL_IS_VALID(chan))
-      if (fc >= chan->fc - chan->bw * .5 &&
-          fc <= chan->fc + chan->bw * .5)
-        return chan;
+  if (SU_CHANNEL_IS_VALID(chan))
+    if (fc >= chan->fc - chan->bw * .5 && fc <= chan->fc + chan->bw * .5)
+      return chan;
 
   return NULL;
 }
@@ -233,10 +221,10 @@ su_channel_detector_assert_channel(
   if ((chan = su_channel_detector_lookup_channel(self, new->fc)) == NULL) {
     SU_ALLOCATE(owned, su_channel_t);
 
-    owned->bw      = new->bw;
-    owned->fc      = new->fc;
-    owned->f_lo    = new->f_lo;
-    owned->f_hi    = new->f_hi;
+    owned->bw = new->bw;
+    owned->fc = new->fc;
+    owned->f_lo = new->f_lo;
+    owned->f_hi = new->f_hi;
 
     SU_TRYC(PTR_LIST_APPEND_CHECK(self->channel, owned));
 
@@ -245,19 +233,19 @@ su_channel_detector_assert_channel(
   } else {
     chan->present++;
     if (chan->age > 20)
-      k /=  (chan->age - 20);
+      k /= (chan->age - 20);
 
     /* The older the channel is, the harder it must be to change its params */
-    chan->bw   += 1. / (chan->age + 1) * (new->bw   - chan->bw);
+    chan->bw += 1. / (chan->age + 1) * (new->bw - chan->bw);
     chan->f_lo += 1. / (chan->age + 1) * (new->f_lo - chan->f_lo);
     chan->f_hi += 1. / (chan->age + 1) * (new->f_hi - chan->f_hi);
-    chan->fc   += 1. / (chan->age + 1) * (new->fc   - chan->fc);
+    chan->fc += 1. / (chan->age + 1) * (new->fc - chan->fc);
   }
 
   /* Signal levels are instantaneous values. Cannot average */
-  chan->S0        = new->S0;
-  chan->N0        = new->N0;
-  chan->snr       = new->S0 - new->N0;
+  chan->S0 = new->S0;
+  chan->N0 = new->N0;
+  chan->snr = new->S0 - new->N0;
 
   ok = SU_TRUE;
 
@@ -310,21 +298,21 @@ SU_COLLECTOR(su_channel_detector)
 }
 
 SU_GETTER(
-  su_channel_detector,
-  void,
-  get_channel_list,
-  struct sigutils_channel ***channel_list,
-  unsigned int *channel_count)
+    su_channel_detector,
+    void,
+    get_channel_list,
+    struct sigutils_channel ***channel_list,
+    unsigned int *channel_count)
 {
   *channel_list = self->channel_list;
   *channel_count = self->channel_count;
 }
 
 SU_METHOD(
-  su_channel_detector, 
-  SUBOOL, 
-  set_params, 
-  const struct sigutils_channel_detector_params *params)
+    su_channel_detector,
+    SUBOOL,
+    set_params,
+    const struct sigutils_channel_detector_params *params)
 {
   SU_TRYCATCH(params->alpha > .0, return SU_FALSE);
   SU_TRYCATCH(params->samp_rate > 0, return SU_FALSE);
@@ -385,9 +373,7 @@ SU_METHOD(su_channel_detector, SUBOOL, init_window_func)
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_HANN:
-      su_taps_apply_hann_complex(
-          self->window_func,
-          self->params.window_size);
+      su_taps_apply_hann_complex(self->window_func, self->params.window_size);
       break;
 
     case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
@@ -415,12 +401,12 @@ SU_METHOD(su_channel_detector, SUBOOL, init_window_func)
 }
 
 SU_INSTANCER(
-  su_channel_detector,
-  const struct sigutils_channel_detector_params *params)
+    su_channel_detector,
+    const struct sigutils_channel_detector_params *params)
 {
   su_channel_detector_t *new = NULL;
-  struct sigutils_softtuner_params tuner_params
-    = sigutils_softtuner_params_INITIALIZER;
+  struct sigutils_softtuner_params tuner_params =
+      sigutils_softtuner_params_INITIALIZER;
 
   assert(params->alpha > .0);
   assert(params->samp_rate > 0);
@@ -431,27 +417,27 @@ SU_INSTANCER(
 
   new->params = *params;
 
-  if ((new->window
-      = SU_FFTW(_malloc)(
-          params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+  if ((new->window =
+           SU_FFTW(_malloc)(params->window_size * sizeof(SU_FFTW(_complex))))
+      == NULL) {
     SU_ERROR("cannot allocate memory for window\n");
     goto fail;
   }
 
   memset(new->window, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
-  if ((new->window_func
-      = SU_FFTW(_malloc)(
-          params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+  if ((new->window_func =
+           SU_FFTW(_malloc)(params->window_size * sizeof(SU_FFTW(_complex))))
+      == NULL) {
     SU_ERROR("cannot allocate memory for window function\n");
     goto fail;
   }
 
   SU_TRYCATCH(su_channel_detector_init_window_func(new), goto fail);
 
-  if ((new->fft
-      = SU_FFTW(_malloc)(
-          params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+  if ((new->fft =
+           SU_FFTW(_malloc)(params->window_size * sizeof(SU_FFTW(_complex))))
+      == NULL) {
     SU_ERROR("cannot allocate memory for FFT\n");
     goto fail;
   }
@@ -466,11 +452,12 @@ SU_INSTANCER(
 
   /* Direct FFT plan */
   if ((new->fft_plan = SU_FFTW(_plan_dft_1d)(
-      params->window_size,
-      new->window,
-      new->fft,
-      FFTW_FORWARD,
-      FFTW_ESTIMATE)) == NULL) {
+           params->window_size,
+           new->window,
+           new->fft,
+           FFTW_FORWARD,
+           FFTW_ESTIMATE))
+      == NULL) {
     SU_ERROR("failed to create FFT plan\n");
     goto fail;
   }
@@ -483,14 +470,12 @@ SU_INSTANCER(
 
     case SU_CHANNEL_DETECTOR_MODE_DISCOVERY:
       /* Discovery mode requires these max/min levels */
-      if ((new->spmax
-          = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
+      if ((new->spmax = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
         SU_ERROR("cannot allocate memory for max\n");
         goto fail;
       }
 
-      if ((new->spmin
-          = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
+      if ((new->spmin = calloc(params->window_size, sizeof(SUFLOAT))) == NULL) {
         SU_ERROR("cannot allocate memory for min\n");
         goto fail;
       }
@@ -498,9 +483,9 @@ SU_INSTANCER(
 
     case SU_CHANNEL_DETECTOR_MODE_AUTOCORRELATION:
       /* For inverse FFT */
-      if ((new->ifft
-          = SU_FFTW(_malloc)(
-              params->window_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+      if ((new->ifft = SU_FFTW(_malloc)(
+               params->window_size * sizeof(SU_FFTW(_complex))))
+          == NULL) {
         SU_ERROR("cannot allocate memory for IFFT\n");
         goto fail;
       }
@@ -508,11 +493,12 @@ SU_INSTANCER(
       memset(new->ifft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
       if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(
-          params->window_size,
-          new->fft,
-          new->ifft,
-          FFTW_BACKWARD,
-          FFTW_ESTIMATE)) == NULL) {
+               params->window_size,
+               new->fft,
+               new->ifft,
+               FFTW_BACKWARD,
+               FFTW_ESTIMATE))
+          == NULL) {
         SU_ERROR("failed to create FFT plan\n");
         goto fail;
       }
@@ -531,14 +517,11 @@ SU_INSTANCER(
   /* Initialize tuner (if enabled) */
   if (params->tune) {
     SU_ALLOCATE_MANY_FAIL(
-      new->tuner_buf, 
-      SU_BLOCK_STREAM_BUFFER_SIZE, 
-      SUCOMPLEX);
-
-    memset(
         new->tuner_buf,
-        0,
-        SU_BLOCK_STREAM_BUFFER_SIZE * sizeof (SUCOMPLEX));
+        SU_BLOCK_STREAM_BUFFER_SIZE,
+        SUCOMPLEX);
+
+    memset(new->tuner_buf, 0, SU_BLOCK_STREAM_BUFFER_SIZE * sizeof(SUCOMPLEX));
 
     tuner_params.fc = params->fc;
     tuner_params.bw = params->bw;
@@ -565,7 +548,7 @@ SU_GETTER(su_channel_detector, SUSCOUNT, get_req_samples)
   return self->req_samples;
 }
 
-SUPRIVATE 
+SUPRIVATE
 SU_METHOD(su_channel_detector, SUBOOL, find_channels)
 {
   unsigned int i;
@@ -578,7 +561,7 @@ SU_METHOD(su_channel_detector, SUBOOL, find_channels)
   SUFLOAT power;
   SUFLOAT squelch;
   struct sigutils_channel new_channel = sigutils_channel_INITIALIZER;
-  SUBOOL  c = SU_FALSE;  /* Channel flag */
+  SUBOOL c = SU_FALSE; /* Channel flag */
 
   squelch = self->params.snr * self->N0;
 
@@ -587,7 +570,7 @@ SU_METHOD(su_channel_detector, SUBOOL, find_channels)
 
   for (i = 0; i < N; ++i) {
     psd = self->spect[i];
-    nfreq = 2 * i / (SUFLOAT) N;
+    nfreq = 2 * i / (SUFLOAT)N;
 
     /* Below threshold */
     if (!c) {
@@ -619,12 +602,10 @@ SU_METHOD(su_channel_detector, SUBOOL, find_channels)
 
         /* Populate channel information */
         new_channel.f_hi = SU_NORM2ABS_FREQ(fs, nfreq);
-        new_channel.S0   = SU_POWER_DB(peak_S0);
-        new_channel.N0   = SU_POWER_DB(self->N0);
-        new_channel.bw   = SU_NORM2ABS_FREQ(fs, 2. * power / (peak_S0 * N));
-        new_channel.fc   = SU_NORM2ABS_FREQ(
-            fs,
-            SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
+        new_channel.S0 = SU_POWER_DB(peak_S0);
+        new_channel.N0 = SU_POWER_DB(self->N0);
+        new_channel.bw = SU_NORM2ABS_FREQ(fs, 2. * power / (peak_S0 * N));
+        new_channel.fc = SU_NORM2ABS_FREQ(fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
 
         /* Assert it */
         if (!su_channel_detector_assert_channel(self, &new_channel)) {
@@ -675,9 +656,9 @@ su_channel_params_adjust(struct sigutils_channel_detector_params *params)
    * detect that case and set alpha to 1.
    */
 
-  equiv_fs = (SUFLOAT) params->samp_rate / params->decimation;
-  alpha = (SUFLOAT) params->window_size /
-      (equiv_fs * SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW);
+  equiv_fs = (SUFLOAT)params->samp_rate / params->decimation;
+  alpha = (SUFLOAT)params->window_size
+          / (equiv_fs * SU_CHANNEL_DETECTOR_AVG_TIME_WINDOW);
   params->alpha = MIN(alpha, 1.);
 }
 
@@ -704,15 +685,15 @@ SUPRIVATE
 SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
 {
   unsigned int i;
-  unsigned int N; /* FFT size */
-  unsigned int valid; /* valid FFT bins */
+  unsigned int N;           /* FFT size */
+  unsigned int valid;       /* valid FFT bins */
   unsigned int min_pwr_bin; /* bin of the stpectrogram where the min power is */
   SUFLOAT beta;
   SUFLOAT min_pwr; /* minimum power density */
-  SUFLOAT psd; /* current power density */
-  SUFLOAT N0; /* Noise level */
+  SUFLOAT psd;     /* current power density */
+  SUFLOAT N0;      /* Noise level */
 
-  SUBOOL  detector_enabled; /* whether we can detect channels */
+  SUBOOL detector_enabled; /* whether we can detect channels */
 
   N = self->params.window_size;
 
@@ -733,8 +714,8 @@ SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
   } else {
     /* Next runs */
 
-    beta  = self->params.beta;
-    
+    beta = self->params.beta;
+
     detector_enabled = self->req_samples == 0;
     N0 = 0;
     valid = 0;
@@ -758,8 +739,7 @@ SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
 
       if (detector_enabled) {
         /* Use previous N0 estimation to detect outliers */
-        if (self->spmin[i] < self->N0
-            && self->N0 < self->spmax[i]) {
+        if (self->spmin[i] < self->N0 && self->N0 < self->spmax[i]) {
           N0 += psd;
           ++valid;
         }
@@ -776,8 +756,7 @@ SU_METHOD(su_channel_detector, SUBOOL, perform_discovery)
       if (valid != 0)
         self->N0 = N0 / valid;
       else if (min_pwr_bin != -1)
-        self->N0 = .5
-          * (self->spmin[min_pwr_bin] + self->spmax[min_pwr_bin]);
+        self->N0 = .5 * (self->spmin[min_pwr_bin] + self->spmax[min_pwr_bin]);
     }
 
     /* Check whether max age has been reached and clear channel list */
@@ -807,8 +786,7 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_from_acorr)
   SUFLOAT tau;
 
   N = self->params.window_size;
-  dtau = (SUFLOAT) self->params.decimation
-       / (SUFLOAT) self->params.samp_rate;
+  dtau = (SUFLOAT)self->params.decimation / (SUFLOAT)self->params.samp_rate;
 
   prev = self->acorr[0];
 
@@ -843,12 +821,12 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_from_acorr)
 
 SUPRIVATE
 SU_METHOD(
-  su_channel_detector, 
-  SUBOOL, 
-  guess_baudrate, 
-  SUFLOAT equiv_fs, 
-  int bin, 
-  SUFLOAT signif)
+    su_channel_detector,
+    SUBOOL,
+    guess_baudrate,
+    SUFLOAT equiv_fs,
+    int bin,
+    SUFLOAT signif)
 {
   int N;
   int j;
@@ -886,9 +864,8 @@ SU_METHOD(
        * autocorrelation technique
        */
       for (j = lo + 1; j < hi; ++j)
-        acc += SU_C_EXP(2 * I * M_PI * j / (SUFLOAT) N) * self->spect[j];
-      self->baud =
-          SU_NORM2ABS_FREQ(equiv_fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
+        acc += SU_C_EXP(2 * I * M_PI * j / (SUFLOAT)N) * self->spect[j];
+      self->baud = SU_NORM2ABS_FREQ(equiv_fs, SU_ANG2NORM_FREQ(SU_C_ARG(acc)));
       return SU_TRUE;
     }
   }
@@ -908,9 +885,7 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
   SUFLOAT equiv_fs;
 
   N = self->params.window_size;
-  equiv_fs =
-      (SUFLOAT) self->params.samp_rate
-      / (SUFLOAT) self->params.decimation;
+  equiv_fs = (SUFLOAT)self->params.samp_rate / (SUFLOAT)self->params.decimation;
   dbaud = equiv_fs / N;
 
   /*
@@ -928,7 +903,8 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
 
   /*
    * First step: find where the DC ends */
-  for (i = 1; i < N / 2 && (self->spect[i] < self->spect[i - 1]); ++i);
+  for (i = 1; i < N / 2 && (self->spect[i] < self->spect[i - 1]); ++i)
+    ;
 
   /* Second step: look for the second largest peak */
   max_idx = -1;
@@ -945,16 +921,15 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
   /* Peak found. Verify if its significance is big enough */
   if (max_idx != -1)
     if (su_channel_detector_guess_baudrate(
-        self,
-        equiv_fs,
-        max_idx,
-        self->params.pd_signif))
+            self,
+            equiv_fs,
+            max_idx,
+            self->params.pd_signif))
       return SU_TRUE;
 
   /* Previous method failed. Fall back to the old way */
   if (self->params.bw != 0.0) {
-    startbin =
-        SU_CEIL(.5 * self->params.bw / dbaud) - self->params.pd_size;
+    startbin = SU_CEIL(.5 * self->params.bw / dbaud) - self->params.pd_size;
     if (startbin < 0) {
       /*
        * Fail silently here. The current configuration of the
@@ -970,10 +945,10 @@ SU_METHOD(su_channel_detector, SUBOOL, find_baudrate_nonlinear)
   while (i < N / 2) {
     if (su_peak_detector_feed(&self->pd, SU_DB(self->spect[i])) > 0)
       if (su_channel_detector_guess_baudrate(
-          self,
-          equiv_fs,
-          i,
-          self->params.pd_signif))
+              self,
+              equiv_fs,
+              i,
+              self->params.pd_signif))
         break;
     ++i;
   }
@@ -1012,7 +987,8 @@ SU_METHOD(su_channel_detector, SUBOOL, exec_fft)
       SU_FFTW(_execute(self->fft_plan));
 
       for (i = 0; i < self->params.window_size; ++i)
-        self->spect[i] = wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
+        self->spect[i] =
+            wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
 
       return SU_TRUE;
 
@@ -1024,9 +1000,8 @@ SU_METHOD(su_channel_detector, SUBOOL, exec_fft)
 
       SU_FFTW(_execute(self->fft_plan));
 
-      self->dc +=
-        SU_CHANNEL_DETECTOR_DC_ALPHA *
-        (self->fft[0] / self->params.window_size - self->dc);
+      self->dc += SU_CHANNEL_DETECTOR_DC_ALPHA
+                  * (self->fft[0] / self->params.window_size - self->dc);
 
       /* Update DC component */
       for (i = 0; i < self->params.window_size; ++i) {
@@ -1052,8 +1027,7 @@ SU_METHOD(su_channel_detector, SUBOOL, exec_fft)
       /* Average result */
       for (i = 0; i < self->params.window_size; ++i) {
         ac = SU_C_REAL(self->ifft[i] * SU_C_CONJ(self->ifft[i]));
-        self->acorr[i] +=
-            self->params.alpha * (ac - self->acorr[i]);
+        self->acorr[i] += self->params.alpha * (ac - self->acorr[i]);
       }
 
       /* Update baudrate estimation */
@@ -1097,9 +1071,9 @@ SU_METHOD(su_channel_detector, SUBOOL, feed_internal, SUCOMPLEX x)
 
   /* In nonlinear diff mode, we store something else in the window */
   if (self->params.mode == SU_CHANNEL_DETECTOR_MODE_NONLINEAR_DIFF) {
-     diff = (x - self->prev) * self->params.samp_rate;
-     self->prev = x;
-     x = diff * SU_C_CONJ(diff);
+    diff = (x - self->prev) * self->params.samp_rate;
+    self->prev = x;
+    x = diff * SU_C_CONJ(diff);
   }
 
   self->window[self->ptr++] = x - self->dc;
@@ -1107,9 +1081,7 @@ SU_METHOD(su_channel_detector, SUBOOL, feed_internal, SUCOMPLEX x)
 
   if (self->ptr == self->params.window_size) {
     /* Window is full, perform FFT */
-    SU_TRYCATCH(
-        su_channel_detector_exec_fft(self),
-        return SU_FALSE);
+    SU_TRYCATCH(su_channel_detector_exec_fft(self), return SU_FALSE);
 
     self->ptr = 0;
     self->next_to_window = 0;
@@ -1119,11 +1091,11 @@ SU_METHOD(su_channel_detector, SUBOOL, feed_internal, SUCOMPLEX x)
 }
 
 SU_METHOD(
-  su_channel_detector,
-  SUSCOUNT,
-  feed_bulk,
-  const SUCOMPLEX *signal,
-  SUSCOUNT size)
+    su_channel_detector,
+    SUSCOUNT,
+    feed_bulk,
+    const SUCOMPLEX *signal,
+    SUSCOUNT size)
 {
   unsigned int i;
   const SUCOMPLEX *tuned_signal;
@@ -1139,10 +1111,10 @@ SU_METHOD(
         SU_BLOCK_STREAM_BUFFER_SIZE);
 
     tuned_signal = self->tuner_buf;
-    tuned_size   = result;
+    tuned_size = result;
   } else {
     tuned_signal = signal;
-    tuned_size   = size;
+    tuned_size = size;
   }
 
   for (i = 0; i < tuned_size; ++i)

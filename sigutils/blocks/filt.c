@@ -20,10 +20,9 @@
 
 #define SU_LOG_DOMAIN "block"
 
-#include "log.h"
-
 #include "block.h"
 #include "iir.h"
+#include "log.h"
 #include "taps.h"
 
 SUPRIVATE SUBOOL
@@ -35,7 +34,7 @@ su_block_rrc_ctor(struct sigutils_block *block, void **private, va_list ap)
   SUFLOAT T = 0;
   SUFLOAT beta = 0;
 
-  if ((filt = calloc(1, sizeof (su_iir_filt_t))) == NULL) {
+  if ((filt = calloc(1, sizeof(su_iir_filt_t))) == NULL) {
     SU_ERROR("Cannot allocate RRC filter state\n");
     goto done;
   }
@@ -61,8 +60,7 @@ done:
       su_iir_filt_finalize(filt);
       free(filt);
     }
-  }
-  else
+  } else
     *private = filt;
 
   return ok;
@@ -73,7 +71,7 @@ su_block_rrc_dtor(void *private)
 {
   su_iir_filt_t *filt;
 
-  filt = (su_iir_filt_t *) private;
+  filt = (su_iir_filt_t *)private;
 
   if (filt != NULL) {
     su_iir_filt_finalize(filt);
@@ -95,7 +93,7 @@ su_block_rrc_acquire(
 
   SUCOMPLEX *start;
 
-  filt = (su_iir_filt_t *) priv;
+  filt = (su_iir_filt_t *)priv;
 
   size = su_stream_get_contiguous(out, &start, out->size);
 
@@ -126,10 +124,10 @@ su_block_rrc_acquire(
 }
 
 struct sigutils_block_class su_block_class_RRC = {
-    "rrc", /* name */
-    1,     /* in_size */
-    1,     /* out_size */
-    su_block_rrc_ctor,    /* constructor */
-    su_block_rrc_dtor,    /* destructor */
-    su_block_rrc_acquire  /* acquire */
+    "rrc",               /* name */
+    1,                   /* in_size */
+    1,                   /* out_size */
+    su_block_rrc_ctor,   /* constructor */
+    su_block_rrc_dtor,   /* destructor */
+    su_block_rrc_acquire /* acquire */
 };

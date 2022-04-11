@@ -38,10 +38,11 @@
 
 #define SU_LOG_DOMAIN "coef"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "iir.h"
 #include "log.h"
 
@@ -85,9 +86,10 @@ su_binomial_mult(int n, const SUFLOAT *p)
     return NULL;
 
   for (i = 0; i < n; ++i) {
-    for(j = i; j > 0; --j) {
+    for (j = i; j > 0; --j) {
       a[2 * j] += p[2 * i] * a[2 * (j - 1)] - p[2 * i + 1] * a[2 * (j - 1) + 1];
-      a[2 *j + 1] += p[2 * i] * a[2 * (j - 1) + 1] + p[2 * i + 1] * a[2 * (j - 1)];
+      a[2 * j + 1] +=
+          p[2 * i] * a[2 * (j - 1) + 1] + p[2 * i + 1] * a[2 * (j - 1)];
     }
 
     a[0] += p[2 * i];
@@ -96,7 +98,6 @@ su_binomial_mult(int n, const SUFLOAT *p)
 
   return a;
 }
-
 
 /**********************************************************************
   trinomial_mult - multiplies a series of trinomials together and returns
@@ -144,22 +145,20 @@ su_trinomial_mult(int n, const SUFLOAT *b, const SUFLOAT *c)
   a[1] = b[1];
 
   for (i = 1; i < n; ++i) {
-    a[2 * (2 * i + 1)]     += c[2 * i]     * a[2 * (2 * i - 1)]
-                            - c[2 * i + 1] * a[2 * (2 * i - 1) + 1];
+    a[2 * (2 * i + 1)] +=
+        c[2 * i] * a[2 * (2 * i - 1)] - c[2 * i + 1] * a[2 * (2 * i - 1) + 1];
 
-    a[2 * (2 * i + 1) + 1] += c[2 * i]     * a[2 * (2 * i - 1) + 1]
-                            + c[2 * i + 1] * a[2 * (2 * i - 1)];
+    a[2 * (2 * i + 1) + 1] +=
+        c[2 * i] * a[2 * (2 * i - 1) + 1] + c[2 * i + 1] * a[2 * (2 * i - 1)];
 
     for (j = 2 * i; j > 1; --j) {
-      a[2 * j]     += b[2 * i]     * a[2 * (j - 1)]
-                    - b[2 * i + 1] * a[2 * (j - 1) + 1]
-                    + c[2 * i]     * a[2 * (j - 2)]
-                    - c[2 * i + 1] * a[2 * (j - 2) + 1];
+      a[2 * j] += b[2 * i] * a[2 * (j - 1)] - b[2 * i + 1] * a[2 * (j - 1) + 1]
+                  + c[2 * i] * a[2 * (j - 2)]
+                  - c[2 * i + 1] * a[2 * (j - 2) + 1];
 
-      a[2 * j + 1] += b[2 * i]     * a[2 * (j - 1) + 1]
-                    + b[2 * i + 1] * a[2 * (j - 1)]
-                    + c[2 * i]     * a[2 * (j - 2) + 1]
-                    + c[2 * i + 1] * a[2 * (j - 2)];
+      a[2 * j + 1] +=
+          b[2 * i] * a[2 * (j - 1) + 1] + b[2 * i + 1] * a[2 * (j - 1)]
+          + c[2 * i] * a[2 * (j - 2) + 1] + c[2 * i + 1] * a[2 * (j - 2)];
     }
 
     a[2] += b[2 * i] * a[0] - b[2 * i + 1] * a[1] + c[2 * i];
@@ -171,7 +170,6 @@ su_trinomial_mult(int n, const SUFLOAT *b, const SUFLOAT *c)
   return a;
 }
 
-
 /**********************************************************************
   dcof_bwlp - calculates the d coefficients for a butterworth lowpass
   filter. The coefficients are returned as an array of SUFLOATs.
@@ -179,17 +177,18 @@ su_trinomial_mult(int n, const SUFLOAT *b, const SUFLOAT *c)
 */
 
 SUFLOAT *
-su_dcof_bwlp(int n, SUFLOAT fcf) {
-  int k;      
-  SUFLOAT theta; 
-  SUFLOAT st;    
-  SUFLOAT ct;   
-  SUFLOAT parg; 
+su_dcof_bwlp(int n, SUFLOAT fcf)
+{
+  int k;
+  SUFLOAT theta;
+  SUFLOAT st;
+  SUFLOAT ct;
+  SUFLOAT parg;
   SUFLOAT sparg;
   SUFLOAT cparg;
-  SUFLOAT a;    
-  SUFLOAT *rcof = NULL;  
-  SUFLOAT *dcof = NULL;  
+  SUFLOAT a;
+  SUFLOAT *rcof = NULL;
+  SUFLOAT *dcof = NULL;
 
   SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
 
@@ -198,11 +197,11 @@ su_dcof_bwlp(int n, SUFLOAT fcf) {
   ct = SU_COS(theta);
 
   for (k = 0; k < n; ++k) {
-    parg  = M_PI * (SUFLOAT) (2 * k + 1) / (SUFLOAT) (2 * n);
+    parg = M_PI * (SUFLOAT)(2 * k + 1) / (SUFLOAT)(2 * n);
     sparg = SU_SIN(parg);
     cparg = SU_COS(parg);
-    a     = 1.0 + st * sparg;
-    rcof[2 * k]     = -ct / a;
+    a = 1.0 + st * sparg;
+    rcof[2 * k] = -ct / a;
     rcof[2 * k + 1] = -st * cparg / a;
   }
 
@@ -234,7 +233,6 @@ su_dcof_bwhp(int n, SUFLOAT fcf)
   return su_dcof_bwlp(n, fcf);
 }
 
-
 /**********************************************************************
   dcof_bwbp - calculates the d coefficients for a butterworth bandpass
   filter. The coefficients are returned as an array of SUFLOATs.
@@ -244,34 +242,33 @@ su_dcof_bwhp(int n, SUFLOAT fcf)
 SUFLOAT *
 su_dcof_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;     
+  int k;
   SUFLOAT theta;
-  SUFLOAT cp;    
-  SUFLOAT st;    
-  SUFLOAT ct;    
-  SUFLOAT s2t;     
-  SUFLOAT c2t;     
-  SUFLOAT *rcof = NULL;   
-  SUFLOAT *tcof = NULL;   
-  SUFLOAT *dcof = NULL;   
-  SUFLOAT parg;    
-  SUFLOAT sparg;   
-  SUFLOAT cparg;   
-  SUFLOAT a;     
+  SUFLOAT cp;
+  SUFLOAT st;
+  SUFLOAT ct;
+  SUFLOAT s2t;
+  SUFLOAT c2t;
+  SUFLOAT *rcof = NULL;
+  SUFLOAT *tcof = NULL;
+  SUFLOAT *dcof = NULL;
+  SUFLOAT parg;
+  SUFLOAT sparg;
+  SUFLOAT cparg;
+  SUFLOAT a;
 
-  cp    = SU_COS(M_PI * (f2f + f1f) / 2.0);
+  cp = SU_COS(M_PI * (f2f + f1f) / 2.0);
   theta = M_PI * (f2f - f1f) / 2.0;
-  st  = SU_SIN(theta);
-  ct  = SU_COS(theta);
-  s2t = 2.0 * st * ct;    
-  c2t = 2.0 * ct * ct - 1.0;  
+  st = SU_SIN(theta);
+  ct = SU_COS(theta);
+  s2t = 2.0 * st * ct;
+  c2t = 2.0 * ct * ct - 1.0;
 
   SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
   SU_ALLOCATE_MANY(tcof, 2 * n, SUFLOAT);
 
-  for (k = 0; k < n; ++k)
-  {
-    parg = M_PI * (SUFLOAT) (2 * k + 1) / (SUFLOAT) (2 * n);
+  for (k = 0; k < n; ++k) {
+    parg = M_PI * (SUFLOAT)(2 * k + 1) / (SUFLOAT)(2 * n);
     sparg = SU_SIN(parg);
     cparg = SU_COS(parg);
     a = 1.0 + s2t * sparg;
@@ -309,33 +306,33 @@ done:
 SUFLOAT *
 su_dcof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      
-  SUFLOAT theta;   
-  SUFLOAT cp;    
-  SUFLOAT st;    
-  SUFLOAT ct;    
-  SUFLOAT s2t;     
-  SUFLOAT c2t;     
-  SUFLOAT *rcof = NULL;   
-  SUFLOAT *tcof = NULL;   
-  SUFLOAT *dcof = NULL;   
-  SUFLOAT parg;    
-  SUFLOAT sparg;   
-  SUFLOAT cparg;   
-  SUFLOAT a;     
+  int k;
+  SUFLOAT theta;
+  SUFLOAT cp;
+  SUFLOAT st;
+  SUFLOAT ct;
+  SUFLOAT s2t;
+  SUFLOAT c2t;
+  SUFLOAT *rcof = NULL;
+  SUFLOAT *tcof = NULL;
+  SUFLOAT *dcof = NULL;
+  SUFLOAT parg;
+  SUFLOAT sparg;
+  SUFLOAT cparg;
+  SUFLOAT a;
 
   cp = SU_COS(M_PI * (f2f + f1f) / 2.0);
   theta = M_PI * (f2f - f1f) / 2.0;
   st = SU_SIN(theta);
   ct = SU_COS(theta);
-  s2t = 2.0 * st * ct;    
-  c2t = 2.0 * ct * ct - 1.0;  
+  s2t = 2.0 * st * ct;
+  c2t = 2.0 * ct * ct - 1.0;
 
   SU_ALLOCATE_MANY(rcof, 2 * n, SUFLOAT);
   SU_ALLOCATE_MANY(tcof, 2 * n, SUFLOAT);
 
   for (k = 0; k < n; ++k) {
-    parg = M_PI * (SUFLOAT) (2 * k + 1) / (SUFLOAT) (2 * n);
+    parg = M_PI * (SUFLOAT)(2 * k + 1) / (SUFLOAT)(2 * n);
     sparg = SU_SIN(parg);
     cparg = SU_COS(parg);
     a = 1.0 + s2t * sparg;
@@ -382,13 +379,13 @@ su_ccof_bwlp(int n)
   ccof[1] = n;
   m = n / 2;
 
-  for(i = 2; i <= m; ++i) {
-    ccof[i]     = (n - i + 1) * (int) ccof[i - 1] / i;
+  for (i = 2; i <= m; ++i) {
+    ccof[i] = (n - i + 1) * (int)ccof[i - 1] / i;
     ccof[n - i] = ccof[i];
   }
 
   ccof[n - 1] = n;
-  ccof[n]     = 1;
+  ccof[n] = 1;
 
   return ccof;
 }
@@ -400,7 +397,8 @@ su_ccof_bwlp(int n)
 */
 
 SUFLOAT *
-su_ccof_bwhp(int n) {
+su_ccof_bwhp(int n)
+{
   SUFLOAT *ccof;
   int i;
 
@@ -459,7 +457,8 @@ su_ccof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
   SUFLOAT *ccof;
   int i, j;
 
-  alpha = -2.0 * SU_COS(M_PI * (f2f + f1f) / 2.0) / SU_COS(M_PI * (f2f - f1f) / 2.0);
+  alpha = -2.0 * SU_COS(M_PI * (f2f + f1f) / 2.0)
+          / SU_COS(M_PI * (f2f - f1f) / 2.0);
 
   SU_ALLOCATE_MANY_CATCH(ccof, 2 * n + 1, SUFLOAT, return NULL);
 
@@ -490,19 +489,19 @@ su_ccof_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 SUFLOAT
 su_sf_bwlp(int n, SUFLOAT fcf)
 {
-  int k;     
-  SUFLOAT omega;   
-  SUFLOAT fomega;  
-  SUFLOAT parg0;   
-  SUFLOAT sf;    
+  int k;
+  SUFLOAT omega;
+  SUFLOAT fomega;
+  SUFLOAT parg0;
+  SUFLOAT sf;
 
   omega = M_PI * fcf;
   fomega = SU_SIN(omega);
-  parg0 = M_PI / (SUFLOAT) (2 * n);
+  parg0 = M_PI / (SUFLOAT)(2 * n);
 
   sf = 1.0;
   for (k = 0; k < n / 2; ++k)
-    sf *= 1.0 + fomega * SU_SIN((SUFLOAT) (2 * k + 1) * parg0);
+    sf *= 1.0 + fomega * SU_SIN((SUFLOAT)(2 * k + 1) * parg0);
 
   fomega = SU_SIN(omega / 2.0);
 
@@ -524,20 +523,20 @@ su_sf_bwlp(int n, SUFLOAT fcf)
 SUFLOAT
 su_sf_bwhp(int n, SUFLOAT fcf)
 {
-  int k;     
-  SUFLOAT omega;   
-  SUFLOAT fomega;  
-  SUFLOAT parg0;   
-  SUFLOAT sf;    
+  int k;
+  SUFLOAT omega;
+  SUFLOAT fomega;
+  SUFLOAT parg0;
+  SUFLOAT sf;
 
   omega = M_PI * fcf;
   fomega = SU_SIN(omega);
-  parg0 = M_PI / (SUFLOAT) (2 * n);
+  parg0 = M_PI / (SUFLOAT)(2 * n);
 
   sf = 1.0;
 
   for (k = 0; k < n / 2; ++k)
-    sf *= 1.0 + fomega * SU_SIN((SUFLOAT) (2 * k + 1) * parg0);
+    sf *= 1.0 + fomega * SU_SIN((SUFLOAT)(2 * k + 1) * parg0);
 
   fomega = SU_COS(omega / 2.0);
 
@@ -559,27 +558,27 @@ su_sf_bwhp(int n, SUFLOAT fcf)
 SUFLOAT
 su_sf_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      
-  SUFLOAT ctt;     
-  SUFLOAT sfr, sfi;  
-  SUFLOAT parg;    
-  SUFLOAT sparg;   
-  SUFLOAT cparg;   
-  SUFLOAT a, b, c;   
+  int k;
+  SUFLOAT ctt;
+  SUFLOAT sfr, sfi;
+  SUFLOAT parg;
+  SUFLOAT sparg;
+  SUFLOAT cparg;
+  SUFLOAT a, b, c;
 
   ctt = 1.0 / SU_TAN(M_PI * (f2f - f1f) / 2.0);
   sfr = 1.0;
   sfi = 0.0;
 
   for (k = 0; k < n; ++k) {
-    parg  = M_PI * (SUFLOAT) (2 * k + 1) / (SUFLOAT) (2 * n);
+    parg = M_PI * (SUFLOAT)(2 * k + 1) / (SUFLOAT)(2 * n);
     sparg = ctt + SU_SIN(parg);
     cparg = SU_COS(parg);
-    a     = (sfr + sfi) * (sparg - cparg);
-    b     = sfr * sparg;
-    c     = -sfi * cparg;
-    sfr   = b - c;
-    sfi   = a - b - c;
+    a = (sfr + sfi) * (sparg - cparg);
+    b = sfr * sparg;
+    c = -sfi * cparg;
+    sfr = b - c;
+    sfi = a - b - c;
   }
 
   return 1.0 / sfr;
@@ -595,27 +594,27 @@ su_sf_bwbp(int n, SUFLOAT f1f, SUFLOAT f2f)
 SUFLOAT
 su_sf_bwbs(int n, SUFLOAT f1f, SUFLOAT f2f)
 {
-  int k;      
-  SUFLOAT tt;    
-  SUFLOAT sfr, sfi;  
-  SUFLOAT parg;    
-  SUFLOAT sparg;   
-  SUFLOAT cparg;   
-  SUFLOAT a, b, c;   
+  int k;
+  SUFLOAT tt;
+  SUFLOAT sfr, sfi;
+  SUFLOAT parg;
+  SUFLOAT sparg;
+  SUFLOAT cparg;
+  SUFLOAT a, b, c;
 
   tt = SU_TAN(M_PI * (f2f - f1f) / 2.0);
   sfr = 1.0;
   sfi = 0.0;
 
   for (k = 0; k < n; ++k) {
-    parg  = M_PI * (SUFLOAT)(2 * k + 1)/(SUFLOAT)(2 * n);
+    parg = M_PI * (SUFLOAT)(2 * k + 1) / (SUFLOAT)(2 * n);
     sparg = tt + SU_SIN(parg);
     cparg = SU_COS(parg);
-    a     = (sfr + sfi) * (sparg - cparg);
-    b     = sfr * sparg;
-    c     = -sfi * cparg;
-    sfr   = b - c;
-    sfi   = a - b - c;
+    a = (sfr + sfi) * (sparg - cparg);
+    b = sfr * sparg;
+    c = -sfi * cparg;
+    sfr = b - c;
+    sfi = a - b - c;
   }
 
   return 1.0 / sfr;

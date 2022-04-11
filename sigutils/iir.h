@@ -21,6 +21,7 @@
 #define _SIGUTILS_IIR_H
 
 #include <stdlib.h>
+
 #include "types.h"
 
 #define SU_FLOAT_GUARD INFINITY
@@ -29,7 +30,7 @@
 #  ifdef __clang__
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif // __clang__
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -44,7 +45,7 @@ struct sigutils_iir_filt {
   int x_ptr;
   int y_ptr;
 
-  SUCOMPLEX  curr_y;
+  SUCOMPLEX curr_y;
 
   SUCOMPLEX *y;
   SUCOMPLEX *x;
@@ -57,7 +58,10 @@ struct sigutils_iir_filt {
 
 typedef struct sigutils_iir_filt su_iir_filt_t;
 
-#define su_iir_filt_INITIALIZER {0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, 1}
+#define su_iir_filt_INITIALIZER                    \
+  {                                                \
+    0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, 1 \
+  }
 
 /* Push sample to filter */
 SUCOMPLEX su_iir_filt_feed(su_iir_filt_t *filt, SUCOMPLEX x);
@@ -98,13 +102,15 @@ void su_iir_filt_set_gain(su_iir_filt_t *filt, SUFLOAT gain);
 SUBOOL su_iir_bwlpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 
 /* Initialize Butterworth band-pass filter of order N */
-SUBOOL su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2);
+SUBOOL
+su_iir_bwbpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT f1, SUFLOAT f2);
 
 /* Initialize Butterworh high-pass filter of order N */
 SUBOOL su_iir_bwhpf_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 
 /* Initialize Root Raised Cosine filter */
-SUBOOL su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta);
+SUBOOL
+su_iir_rrc_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT T, SUFLOAT beta);
 
 /* Initialize Hilbert transform */
 SUBOOL su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n);
@@ -113,7 +119,11 @@ SUBOOL su_iir_hilbert_init(su_iir_filt_t *filt, SUSCOUNT n);
 SUBOOL su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc);
 
 /* Initialize brickwall BPF filter */
-SUBOOL su_iir_brickwall_bp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT bw, SUFLOAT ifnor);
+SUBOOL su_iir_brickwall_bp_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor);
 
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
@@ -121,7 +131,7 @@ void su_iir_filt_finalize(su_iir_filt_t *filt);
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
-#  endif // __clang__
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

@@ -17,17 +17,18 @@
 
 */
 
-#include <string.h>
-#include "sampling.h"
-#include "log.h"
-#include "types.h"
 #include "pll.h"
-#include "taps.h"
+
+#include <string.h>
+
 #include "coef.h"
+#include "log.h"
+#include "sampling.h"
+#include "taps.h"
+#include "types.h"
 
 SU_DESTRUCTOR(su_pll)
 {
-
 }
 
 SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
@@ -42,7 +43,7 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
   dinv = 1.f / (1.f + 2.f * .707f * fc + fc * fc);
 
   self->alpha = 4 * fc * fc * dinv;
-  self->beta  = 4 * 0.707 * fc * dinv;
+  self->beta = 4 * 0.707 * fc * dinv;
 
   su_ncqo_init(&self->ncqo, fhint);
 
@@ -53,11 +54,11 @@ SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x)
 {
   SUCOMPLEX ref = su_ncqo_read(&self->ncqo);
   SUCOMPLEX mix = x * SU_C_CONJ(ref);
-  SUFLOAT   phase = su_ncqo_get_phase(&self->ncqo);
-  SUFLOAT   error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
+  SUFLOAT phase = su_ncqo_get_phase(&self->ncqo);
+  SUFLOAT error = su_phase_adjust_one_cycle(SU_C_ARG(x) - phase);
 
   su_ncqo_inc_angfreq(&self->ncqo, self->alpha * error);
-  su_ncqo_inc_phase  (&self->ncqo, self->beta  * error);
+  su_ncqo_inc_phase(&self->ncqo, self->beta * error);
 
   return mix;
 }
@@ -72,7 +73,7 @@ SU_METHOD(su_pll, void, feed, SUFLOAT x)
   s = su_ncqo_read(&self->ncqo);
 
   err = -x * SU_C_IMAG(s); /* Error signal: projection against Q */
-  lck =  x * SU_C_REAL(s); /* Lock: projection against I */
+  lck = x * SU_C_REAL(s);  /* Lock: projection against I */
 
   self->lock += self->beta * (2 * lck - self->lock);
 
@@ -119,7 +120,7 @@ SU_CONSTRUCTOR(
 
   if (arm_order == 1 || arm_order >= SU_COSTAS_FIR_ORDER_THRESHOLD) {
     SU_ALLOCATE_MANY_FAIL(b, arm_order, SUFLOAT);
-    
+
     if (arm_order == 1)
       b[0] = 1; /* No filtering */
     else
@@ -196,8 +197,7 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
        * Error signal taken from Maarten Tytgat's paper "Time Domain Model
        * for Costas Loop Based QPSK Receiver.
        */
-      e =  SU_C_REAL(L) * SU_C_IMAG(self->z)
-          -SU_C_IMAG(L) * SU_C_REAL(self->z);
+      e = SU_C_REAL(L) * SU_C_IMAG(self->z) - SU_C_IMAG(L) * SU_C_REAL(self->z);
       break;
 
     case SU_COSTAS_KIND_8PSK:
@@ -225,11 +225,11 @@ SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x)
       L = SU_C_SGN(self->z);
 
       if (SU_ABS(SU_C_REAL(self->z)) >= SU_ABS(SU_C_IMAG(self->z)))
-        e =  SU_C_REAL(L) * SU_C_IMAG(self->z)
-            -SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z)
+            - SU_C_IMAG(L) * SU_C_REAL(self->z) * (SU_SQRT2 - 1);
       else
-        e =  SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1)
-            -SU_C_IMAG(L) * SU_C_REAL(self->z);
+        e = SU_C_REAL(L) * SU_C_IMAG(self->z) * (SU_SQRT2 - 1)
+            - SU_C_IMAG(L) * SU_C_REAL(self->z);
       break;
 
     default:

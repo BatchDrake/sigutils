@@ -27,9 +27,9 @@
  * ---------------------------------------------
  * SAMPLING FREQUENCY (fs): How many samples are taken per second, in Hz.
  *
- * NORMALIZED FREQUENCY (fnor): Represents the frequency of a discretized signal,
- * ranging from 0 (constant signal) to 1 (a signal that flips sign on each
- * time step). Units: hcps ("half cycles per sample")
+ * NORMALIZED FREQUENCY (fnor): Represents the frequency of a discretized
+ * signal, ranging from 0 (constant signal) to 1 (a signal that flips sign on
+ * each time step). Units: hcps ("half cycles per sample")
  *
  * ABSOLUTE FREQUENCY (freq): Represents the actual frequency of the signal,
  * in Hz. It is defined as:
@@ -45,8 +45,8 @@
  * time step.
  */
 
-#define SU_ABS2NORM_FREQ(fs, freq) (2 * (SUFLOAT) (freq) / (SUFLOAT) (fs))
-#define SU_NORM2ABS_FREQ(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor) / 2.)
+#define SU_ABS2NORM_FREQ(fs, freq) (2 * (SUFLOAT)(freq) / (SUFLOAT)(fs))
+#define SU_NORM2ABS_FREQ(fs, fnor) ((SUFLOAT)(fs) * (SUFLOAT)(fnor) / 2.)
 
 /*
  * Normalized and absolute baud rates are transformed using a different
@@ -57,19 +57,19 @@
  * sample.
  */
 
-#define SU_ABS2NORM_BAUD(fs, freq) ((SUFLOAT) (freq) / (SUFLOAT) (fs))
-#define SU_NORM2ABS_BAUD(fs, fnor) ((SUFLOAT) (fs) * (SUFLOAT) (fnor))
+#define SU_ABS2NORM_BAUD(fs, freq) ((SUFLOAT)(freq) / (SUFLOAT)(fs))
+#define SU_NORM2ABS_BAUD(fs, fnor) ((SUFLOAT)(fs) * (SUFLOAT)(fnor))
 
 #define SU_NORM2ANG_FREQ(freq) (PI * (freq))
 #define SU_ANG2NORM_FREQ(omrel) ((omrel) / (PI))
 
-#define SU_T2N(fs, t) ((unsigned int) SU_FLOOR((t) * (SUFLOAT) (fs)))
-#define SU_N2T(fs, n) ((unsigned int) SU_FLOOR((n) / (SUFLOAT) (fs)))
+#define SU_T2N(fs, t) ((unsigned int)SU_FLOOR((t) * (SUFLOAT)(fs)))
+#define SU_N2T(fs, n) ((unsigned int)SU_FLOOR((n) / (SUFLOAT)(fs)))
 
-#define SU_T2N_COUNT(fs, t) ((unsigned int) SU_CEIL((t) * (SUFLOAT) (fs)))
-#define SU_N2T_COUNT(fs, n) ((unsigned int) SU_CEIL((n) / (SUFLOAT) (fs)))
+#define SU_T2N_COUNT(fs, t) ((unsigned int)SU_CEIL((t) * (SUFLOAT)(fs)))
+#define SU_N2T_COUNT(fs, n) ((unsigned int)SU_CEIL((n) / (SUFLOAT)(fs)))
 
-#define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT) (fs))
-#define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT) (fs))
+#define SU_T2N_FLOAT(fs, t) ((t) * (SUFLOAT)(fs))
+#define SU_N2T_FLOAT(fs, n) ((n) / (SUFLOAT)(fs))
 
 #endif /* _SIGUTILS_SAMPLING_H */

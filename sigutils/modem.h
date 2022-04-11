@@ -21,14 +21,15 @@
 #define _SIGUTILS_MODEM_H
 
 #include <util.h>
-#include "types.h"
+
 #include "block.h"
+#include "types.h"
 
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#  endif // __clang__
+#  endif  // __clang__
 extern "C" {
 #endif /* __cplusplus */
 
@@ -39,12 +40,12 @@ struct sigutils_modem_property {
   char *name;
 
   union {
-    uint64_t  as_int;
-    SUFLOAT   as_float;
+    uint64_t as_int;
+    SUFLOAT as_float;
     SUCOMPLEX as_complex;
-    SUBOOL    as_bool;
-    void     *as_ptr;
-    uint8_t   as_bytes[0];
+    SUBOOL as_bool;
+    void *as_ptr;
+    uint8_t as_bytes[0];
   };
 };
 
@@ -61,21 +62,21 @@ struct sigutils_modem;
 struct sigutils_modem_class {
   const char *name;
 
-  SUBOOL    (*ctor) (struct sigutils_modem *, void **);
-  SUSYMBOL  (*read_sym) (struct sigutils_modem *, void *);
-  SUCOMPLEX (*read_sample) (struct sigutils_modem *, void *);
-  SUBOOL    (*onpropertychanged) (void *, const su_modem_property_t *);
-  void      (*dtor) (void *);
+  SUBOOL (*ctor)(struct sigutils_modem *, void **);
+  SUSYMBOL (*read_sym)(struct sigutils_modem *, void *);
+  SUCOMPLEX (*read_sample)(struct sigutils_modem *, void *);
+  SUBOOL (*onpropertychanged)(void *, const su_modem_property_t *);
+  void (*dtor)(void *);
 };
 
 struct sigutils_modem {
   struct sigutils_modem_class *classptr;
   void *privdata;
 
-  SUFLOAT signal; /* signal indicator */
-  SUFLOAT fec; /* FEC quality indicator */
-  SUFLOAT snr; /* SNR ratio */
-  su_block_t *source; /* Loaned */
+  SUFLOAT signal;              /* signal indicator */
+  SUFLOAT fec;                 /* FEC quality indicator */
+  SUFLOAT snr;                 /* SNR ratio */
+  su_block_t *source;          /* Loaned */
   PTR_LIST(su_block_t, block); /* Owned */
   su_modem_property_set_t properties;
   su_property_set_t state_properties;
@@ -153,8 +154,7 @@ const su_modem_property_t *su_modem_property_lookup(
     const su_modem_t *modem,
     const char *name);
 
-const su_modem_property_t *
-su_modem_property_lookup_typed(
+const su_modem_property_t *su_modem_property_lookup_typed(
     const su_modem_t *modem,
     const char *name,
     su_property_type_t type);
@@ -169,11 +169,11 @@ SUBOOL su_modem_get_properties(
 
 SUBOOL su_modem_start(su_modem_t *modem);
 
-SUSYMBOL  su_modem_read(su_modem_t *modem);    /* Returns a stream of symbols */
+SUSYMBOL su_modem_read(su_modem_t *modem); /* Returns a stream of symbols */
 SUCOMPLEX su_modem_read_sample(su_modem_t *modem);
-SUFLOAT   su_modem_get_fec(su_modem_t *modem); /* Returns FEC quality */
-SUFLOAT   su_modem_get_snr(su_modem_t *modem); /* Returns SNR magnitude */
-SUFLOAT   su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
+SUFLOAT su_modem_get_fec(su_modem_t *modem);    /* Returns FEC quality */
+SUFLOAT su_modem_get_snr(su_modem_t *modem);    /* Returns SNR magnitude */
+SUFLOAT su_modem_get_signal(su_modem_t *modem); /* Signal indicator */
 
 /* This functions are to be used by modem implementations */
 void su_modem_set_fec(su_modem_t *modem, SUFLOAT fec);
@@ -185,7 +185,7 @@ void su_modem_destroy(su_modem_t *modem);
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
-#  endif // __clang__
+#  endif  // __clang__
 }
 #endif /* __cplusplus */
 

@@ -17,9 +17,9 @@
 
 */
 
-#include <util.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <util.h>
 #define SU_LOG_LEVEL "property"
 
 #include "log.h"
@@ -32,7 +32,7 @@ su_property_new(const char *name, su_property_type_t type, SUBOOL m, void *p)
   su_property_t *new = NULL;
   char *namedup = NULL;
 
-  if ((new = malloc(sizeof (su_property_t))) == NULL)
+  if ((new = malloc(sizeof(su_property_t))) == NULL)
     goto fail;
 
   if ((namedup = strdup(name)) == NULL)
@@ -68,7 +68,7 @@ su_property_destroy(su_property_t *prop)
 void
 su_property_set_init(su_property_set_t *set)
 {
-  memset(set, 0, sizeof (su_property_set_t));
+  memset(set, 0, sizeof(su_property_set_t));
 }
 
 su_property_t *
@@ -77,8 +77,8 @@ su_property_set_lookup(const su_property_set_t *set, const char *name)
   su_property_t *this = NULL;
 
   FOR_EACH_PTR(this, set, property)
-    if (strcmp(this->name, name) == 0)
-      return this;
+  if (strcmp(this->name, name) == 0)
+    return this;
 
   return NULL;
 }
@@ -86,7 +86,7 @@ su_property_set_lookup(const su_property_set_t *set, const char *name)
 const char *
 su_property_type_to_string(su_property_type_t type)
 {
-  switch(type) {
+  switch (type) {
     case SU_PROPERTY_TYPE_ANY:
       return "(any)";
 
@@ -170,7 +170,7 @@ su_property_set_finalize(su_property_set_t *set)
   su_property_t *this = NULL;
 
   FOR_EACH_PTR(this, set, property)
-    su_property_destroy(this);
+  su_property_destroy(this);
 
   if (set->property_list != NULL)
     free(set->property_list);

@@ -17,11 +17,12 @@
 
 */
 
+#include "equalizer.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "log.h"
-#include "equalizer.h"
 
 SUPRIVATE void
 su_equalizer_push_x(su_equalizer_t *eq, SUCOMPLEX x)
@@ -113,7 +114,8 @@ su_equalizer_feed(su_equalizer_t *eq, SUCOMPLEX x)
   return y;
 }
 
-void su_equalizer_finalize(su_equalizer_t *eq)
+void
+su_equalizer_finalize(su_equalizer_t *eq)
 {
   if (eq->x != NULL)
     free(eq->x);

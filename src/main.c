@@ -3,22 +3,19 @@
  * Creation date: Thu Oct 20 22:56:46 2016
  */
 
+#include <errno.h>
+#include <getopt.h>
+#include <inttypes.h>
+#include <sigutils/agc.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/pll.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <getopt.h>
-#include <stdbool.h>
-#include <inttypes.h>
-
-#include <sigutils/sampling.h>
-#include <sigutils/ncqo.h>
-#include <sigutils/iir.h>
-#include <sigutils/agc.h>
-#include <sigutils/pll.h>
-
-#include <sigutils/sigutils.h>
-
 #include <test_list.h>
 #include <test_param.h>
 
@@ -65,16 +62,39 @@ help(const char *argv0)
       "to run. If neither test_start nor test_end is passed, all tests will\n"
       "be executed\n\n");
   fprintf(stderr, "Options:\n\n");
-  fprintf(stderr, "     -d, --dump            Dump tests results as MATLAB files\n");
-  fprintf(stderr, "     -w, --wav             Dump tests results as WAV files\n");
-  fprintf(stderr, "     -R, --raw             Dump tests results as raw (I/Q) files\n");
-  fprintf(stderr, "     -c, --count           Print number of tests and exit\n");
-  fprintf(stderr, "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
-  fprintf(stderr, "                           tests. Default is %d samples\n", SU_TEST_SIGNAL_BUFFER_SIZE);
-  fprintf(stderr, "     -r, --sample-rate=r   For WAV files, set the sampling frequency.\n");
-  fprintf(stderr, "                           Default is %d samples per second\n", SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
-  fprintf(stderr, "     -l, --list            Provides a list of available unit tests\n");
-  fprintf(stderr, "                           with their corresponding test ID and exit\n");
+  fprintf(
+      stderr,
+      "     -d, --dump            Dump tests results as MATLAB files\n");
+  fprintf(
+      stderr,
+      "     -w, --wav             Dump tests results as WAV files\n");
+  fprintf(
+      stderr,
+      "     -R, --raw             Dump tests results as raw (I/Q) files\n");
+  fprintf(
+      stderr,
+      "     -c, --count           Print number of tests and exit\n");
+  fprintf(
+      stderr,
+      "     -s, --buffer-size=S   Sets the signal buffer size for unit\n");
+  fprintf(
+      stderr,
+      "                           tests. Default is %d samples\n",
+      SU_TEST_SIGNAL_BUFFER_SIZE);
+  fprintf(
+      stderr,
+      "     -r, --sample-rate=r   For WAV files, set the sampling "
+      "frequency.\n");
+  fprintf(
+      stderr,
+      "                           Default is %d samples per second\n",
+      SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT);
+  fprintf(
+      stderr,
+      "     -l, --list            Provides a list of available unit tests\n");
+  fprintf(
+      stderr,
+      "                           with their corresponding test ID and exit\n");
   fprintf(stderr, "     -v, --version         Print sigutils version\n");
   fprintf(stderr, "     -h, --help            This help\n\n");
   fprintf(stderr, "(c) 2020 Gonzalo J. Caracedo <BatchDrake@gmail.com>\n");
@@ -89,7 +109,8 @@ version(void)
   fprintf(stderr, "Copyright © 2020 Gonzalo José Carracedo Carballal\n");
   fprintf(
       stderr,
-      "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
+      "License GPLv3+: GNU GPL version 3 or later "
+      "<http://gnu.org/licenses/gpl.html>\n");
 }
 
 SUPRIVATE void
@@ -115,13 +136,12 @@ SUPRIVATE struct option long_options[] = {
     {"count", no_argument, NULL, 'c'},
     {"list", no_argument, NULL, 'l'},
     {"version", no_argument, NULL, 'v'},
-    {NULL, 0, NULL, 0}
-};
+    {NULL, 0, NULL, 0}};
 
 extern int optind;
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   unsigned int test_count = sizeof(test_list) / sizeof(test_list[0]);
   unsigned int test_start = 0;
@@ -131,7 +151,8 @@ main (int argc, char *argv[])
   int c;
   int index;
 
-  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index)) != -1) {
+  while ((c = getopt_long(argc, argv, "Rdhclws:r:v", long_options, &index))
+         != -1) {
     switch (c) {
       case 'c':
         printf("%s: %d unit tests available\n", argv[0], test_count);
@@ -190,13 +211,17 @@ main (int argc, char *argv[])
 
   if (!su_lib_init()) {
     fprintf(stderr, "%s: failed to initialize sigutils library\n", argv[0]);
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
   if (argc - optind >= 1) {
     if (sscanf(argv[optind++], "%u", &test_start) < 1) {
-      fprintf(stderr, "%s: invalid test start `%s'\n", argv[0], argv[optind - 1]);
-      exit (EXIT_FAILURE);
+      fprintf(
+          stderr,
+          "%s: invalid test start `%s'\n",
+          argv[0],
+          argv[optind - 1]);
+      exit(EXIT_FAILURE);
     }
 
     test_end = test_start;
@@ -205,14 +230,14 @@ main (int argc, char *argv[])
   if (argc - optind >= 1) {
     if (sscanf(argv[optind++], "%u", &test_end) < 1) {
       fprintf(stderr, "%s: invalid test end\n", argv[0]);
-      exit (EXIT_FAILURE);
+      exit(EXIT_FAILURE);
     }
   }
 
   if (argc - optind >= 1) {
     fprintf(stderr, "%s: too many arguments\n", argv[0]);
     help(argv[0]);
-    exit (EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
   result = su_test_run(

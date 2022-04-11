@@ -20,13 +20,14 @@
 #ifndef _SIGUTILS_BLOCK_H
 #define _SIGUTILS_BLOCK_H
 
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <util.h>
-#include <pthread.h>
-#include "types.h"
-#include "property.h"
+
 #include "defs.h"
+#include "property.h"
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,15 +35,15 @@ extern "C" {
 
 #define SU_BLOCK_STREAM_BUFFER_SIZE 4096
 
-#define SU_BLOCK_PORT_READ_END_OF_STREAM          0
+#define SU_BLOCK_PORT_READ_END_OF_STREAM 0
 #define SU_BLOCK_PORT_READ_ERROR_NOT_INITIALIZED -1
-#define SU_BLOCK_PORT_READ_ERROR_ACQUIRE         -2
-#define SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC     -3
+#define SU_BLOCK_PORT_READ_ERROR_ACQUIRE -2
+#define SU_BLOCK_PORT_READ_ERROR_PORT_DESYNC -3
 
-#define SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED        0
-#define SU_FLOW_CONTROLLER_DESYNC                -1
-#define SU_FLOW_CONTROLLER_END_OF_STREAM         -2
-#define SU_FLOW_CONTROLLER_INTERNAL_ERROR        -3
+#define SU_FLOW_CONTROLLER_ACQUIRE_ALLOWED 0
+#define SU_FLOW_CONTROLLER_DESYNC -1
+#define SU_FLOW_CONTROLLER_END_OF_STREAM -2
+#define SU_FLOW_CONTROLLER_INTERNAL_ERROR -3
 
 typedef uint64_t su_off_t;
 
@@ -52,29 +53,40 @@ struct sigutils_stream {
   unsigned int ptr;   /* Buffer pointer */
   unsigned int avail; /* Samples available for reading */
 
-  su_off_t pos;       /* Stream position */
+  su_off_t pos; /* Stream position */
 };
 
 typedef struct sigutils_stream su_stream_t;
 
-#define su_stream_INITIALIZER   \
-{                               \
-  NULL, /* buffer */            \
-  0,    /* size */              \
-  0,    /* ptr */               \
-  0,    /* avail */             \
-  0     /* post */              \
-}
+#define su_stream_INITIALIZER \
+  {                           \
+    NULL,  /* buffer */       \
+        0, /* size */         \
+        0, /* ptr */          \
+        0, /* avail */        \
+        0  /* post */         \
+  }
 
 /* su_stream operations */
 SU_CONSTRUCTOR(su_stream, SUSCOUNT size);
 SU_DESTRUCTOR(su_stream);
 
-SU_METHOD(su_stream, void,     write, const SUCOMPLEX *data, SUSCOUNT size);
+SU_METHOD(su_stream, void, write, const SUCOMPLEX *data, SUSCOUNT size);
 SU_METHOD(su_stream, SUSCOUNT, advance_contiguous, SUSCOUNT size);
-SU_GETTER(su_stream, SUSCOUNT, get_contiguous, SUCOMPLEX **start, SUSCOUNT size);
+SU_GETTER(
+    su_stream,
+    SUSCOUNT,
+    get_contiguous,
+    SUCOMPLEX **start,
+    SUSCOUNT size);
 SU_GETTER(su_stream, su_off_t, tell);
-SU_GETTER(su_stream, SUSDIFF,  read, su_off_t off, SUCOMPLEX *data, SUSCOUNT size);
+SU_GETTER(
+    su_stream,
+    SUSDIFF,
+    read,
+    su_off_t off,
+    SUCOMPLEX *data,
+    SUSCOUNT size);
 
 /**************************** DEPRECATED API ********************************/
 struct sigutils_block;
@@ -117,8 +129,8 @@ struct sigutils_flow_controller {
   enum sigutils_flow_controller_kind kind;
   SUBOOL eos;
   pthread_mutex_t acquire_lock;
-  pthread_cond_t  acquire_cond;
-  su_stream_t output; /* Output stream */
+  pthread_cond_t acquire_cond;
+  su_stream_t output;     /* Output stream */
   unsigned int consumers; /* Number of ports plugged to this flow controller */
   unsigned int pending;   /* Number of ports waiting for new data */
   const struct sigutils_block_port *master; /* Master port */
@@ -131,8 +143,8 @@ typedef struct sigutils_flow_controller su_flow_controller_t;
  * are not. Don't attempt to use the same block port in different threads.
  */
 struct sigutils_block_port {
-  su_off_t pos; /* Current reading position in this port */
-  su_flow_controller_t *fc; /* Flow controller */
+  su_off_t pos;                 /* Current reading position in this port */
+  su_flow_controller_t *fc;     /* Flow controller */
   struct sigutils_block *block; /* Input block */
   unsigned int port_id;
   SUBOOL reading;
@@ -140,7 +152,10 @@ struct sigutils_block_port {
 
 typedef struct sigutils_block_port su_block_port_t;
 
-#define su_block_port_INITIALIZER {0, NULL, NULL, 0, SU_FALSE}
+#define su_block_port_INITIALIZER \
+  {                               \
+    0, NULL, NULL, 0, SU_FALSE    \
+  }
 
 struct sigutils_block_class {
   const char *name;
@@ -148,11 +163,11 @@ struct sigutils_block_class {
   unsigned int out_size;
 
   /* Generic constructor / destructor */
-  SUBOOL (*ctor) (struct sigutils_block *block, void **privdata, va_list);
-  void (*dtor) (void *privdata);
+  SUBOOL (*ctor)(struct sigutils_block *block, void **privdata, va_list);
+  void (*dtor)(void *privdata);
 
   /* This function gets called when more data is required */
-  SUSDIFF (*acquire) (void *, su_stream_t *, unsigned int, su_block_port_t *);
+  SUSDIFF (*acquire)(void *, su_stream_t *, unsigned int, su_block_port_t *);
 };
 
 typedef struct sigutils_block_class su_block_class_t;
@@ -161,12 +176,12 @@ struct sigutils_block {
   /* Block overall configuration */
   su_block_class_t *classname;
   su_property_set_t properties;
-  void             *privdata;
+  void *privdata;
 
   /* Architectural properties */
-  su_block_port_t      *in; /* Input ports */
+  su_block_port_t *in;       /* Input ports */
   su_flow_controller_t *out; /* Output streams */
-  SUSCOUNT              decimation; /* Block decimation */
+  SUSCOUNT decimation;       /* Block decimation */
 };
 
 typedef struct sigutils_block su_block_t;
@@ -207,7 +222,8 @@ SUBOOL su_block_port_plug(
     struct sigutils_block *block,
     unsigned int portid); /* Position initialized with current stream pos */
 
-SUSDIFF su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size);
+SUSDIFF
+su_block_port_read(su_block_port_t *port, SUCOMPLEX *obuf, SUSCOUNT size);
 
 /* Sometimes, a port connection may go out of sync. This fixes it */
 SUBOOL su_block_port_resync(su_block_port_t *port);

@@ -20,9 +20,9 @@
 
 #define SU_LOG_LEVEL "agc-block"
 
-#include "log.h"
-#include "block.h"
 #include "agc.h"
+#include "block.h"
+#include "log.h"
 
 SUPRIVATE SUBOOL
 su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
@@ -31,7 +31,7 @@ su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
   su_agc_t *agc = NULL;
   const struct su_agc_params *agc_params;
 
-  if ((agc = calloc(1, sizeof (su_agc_t))) == NULL) {
+  if ((agc = calloc(1, sizeof(su_agc_t))) == NULL) {
     SU_ERROR("Cannot allocate AGC state");
     goto done;
   }
@@ -45,17 +45,19 @@ su_block_agc_ctor(struct sigutils_block *block, void **private, va_list ap)
 
   ok = SU_TRUE;
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_FLOAT,
-      "peak",
-      &agc->peak);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_FLOAT,
+           "peak",
+           &agc->peak);
 
-  ok = ok && su_block_set_property_ref(
-      block,
-      SU_PROPERTY_TYPE_BOOL,
-      "enabled",
-      &agc->enabled);
+  ok = ok
+       && su_block_set_property_ref(
+           block,
+           SU_PROPERTY_TYPE_BOOL,
+           "enabled",
+           &agc->enabled);
 
 done:
   if (!ok) {
@@ -63,8 +65,7 @@ done:
       su_agc_finalize(agc);
       free(agc);
     }
-  }
-  else
+  } else
     *private = agc;
 
   return ok;
@@ -75,7 +76,7 @@ su_block_agc_dtor(void *private)
 {
   su_agc_t *agc;
 
-  agc = (su_agc_t *) private;
+  agc = (su_agc_t *)private;
 
   if (agc != NULL) {
     su_agc_finalize(agc);
@@ -97,7 +98,7 @@ su_block_agc_acquire(
 
   SUCOMPLEX *start;
 
-  agc = (su_agc_t *) priv;
+  agc = (su_agc_t *)priv;
 
   size = su_stream_get_contiguous(out, &start, out->size);
 
@@ -128,10 +129,10 @@ su_block_agc_acquire(
 }
 
 struct sigutils_block_class su_block_class_AGC = {
-    "agc", /* name */
-    1,     /* in_size */
-    1,     /* out_size */
-    su_block_agc_ctor,    /* constructor */
-    su_block_agc_dtor,    /* destructor */
-    su_block_agc_acquire  /* acquire */
+    "agc",               /* name */
+    1,                   /* in_size */
+    1,                   /* out_size */
+    su_block_agc_ctor,   /* constructor */
+    su_block_agc_dtor,   /* destructor */
+    su_block_agc_acquire /* acquire */
 };

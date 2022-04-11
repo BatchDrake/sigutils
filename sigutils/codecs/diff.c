@@ -17,18 +17,18 @@
 
 */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SU_LOG_LEVEL "diff-codec"
 
-#include "log.h"
 #include "../codec.h"
+#include "log.h"
 
 struct su_diff_codec_state {
   SUSYMBOL prev;
-  SUBOOL   sign;
-  SUBITS   mask;
+  SUBOOL sign;
+  SUBITS mask;
 };
 
 SUPRIVATE SUBOOL
@@ -37,7 +37,7 @@ su_diff_codec_ctor(su_codec_t *codec, void **private, va_list ap)
   struct su_diff_codec_state *new;
 
   SU_TRYCATCH(
-      new = malloc(sizeof (struct su_diff_codec_state)),
+      new = malloc(sizeof(struct su_diff_codec_state)),
       return SU_FALSE);
 
   new->sign = va_arg(ap, SUBOOL);
@@ -70,17 +70,15 @@ su_diff_codec_diff(const struct su_diff_codec_state *s, SUBITS a, SUBITS b)
 SUPRIVATE SUSYMBOL
 su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
 {
-  struct su_diff_codec_state *state =
-      (struct su_diff_codec_state *) private;
+  struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
   SUSYMBOL y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
-      y = SU_TOSYM(
-            su_diff_codec_int(
-                state, /* Encode == Ambiguously integrate */
-                SU_FROMSYM(state->prev),
-                SU_FROMSYM(x)));
+      y = SU_TOSYM(su_diff_codec_int(
+          state, /* Encode == Ambiguously integrate */
+          SU_FROMSYM(state->prev),
+          SU_FROMSYM(x)));
 
     } else {
       y = x;
@@ -98,17 +96,15 @@ su_diff_codec_encode(su_codec_t *codec, void *private, SUSYMBOL x)
 SUPRIVATE SUSYMBOL
 su_diff_codec_decode(su_codec_t *codec, void *private, SUSYMBOL x)
 {
-  struct su_diff_codec_state *state =
-      (struct su_diff_codec_state *) private;
+  struct su_diff_codec_state *state = (struct su_diff_codec_state *)private;
   SUSYMBOL y;
 
   if (SU_ISSYM(x)) {
     if (state->prev != SU_NOSYMBOL) {
-      y = SU_TOSYM(
-            su_diff_codec_diff(
-                state, /* Decode == Unambiguously differentiate */
-                SU_FROMSYM(state->prev),
-                SU_FROMSYM(x)));
+      y = SU_TOSYM(su_diff_codec_diff(
+          state, /* Decode == Unambiguously differentiate */
+          SU_FROMSYM(state->prev),
+          SU_FROMSYM(x)));
     } else {
       y = SU_NOSYMBOL;
     }
@@ -130,9 +126,9 @@ su_diff_codec_dtor(void *private)
 }
 
 struct sigutils_codec_class su_codec_class_DIFF = {
-    .name   = "diff",
-    .ctor   = su_diff_codec_ctor,
-    .dtor   = su_diff_codec_dtor,
+    .name = "diff",
+    .ctor = su_diff_codec_ctor,
+    .dtor = su_diff_codec_dtor,
     .encode = su_diff_codec_encode,
     .decode = su_diff_codec_decode,
 };

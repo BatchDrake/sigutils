@@ -30,14 +30,14 @@
 /* Expects: relative frequency */
 SU_CONSTRUCTOR_TYPED(void, su_ncqo, SUFLOAT fnor)
 {
-  self->phi   = .0;
+  self->phi = .0;
   self->omega = SU_NORM2ANG_FREQ(fnor);
-  self->fnor  = fnor;
-  self->sin   = 0;
-  self->cos   = 1;
+  self->fnor = fnor;
+  self->sin = 0;
+  self->cos = 1;
 
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  self->p     = 0;
+  self->p = 0;
   self->pre_c = SU_FALSE;
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 }
@@ -140,10 +140,10 @@ SU_METHOD(su_ncqo, SUCOMPLEX, get)
     return self->cos_buffer[self->p] + I * self->sin_buffer[self->p];
   } else {
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
-  __su_ncqo_assert_cos(self);
-  __su_ncqo_assert_sin(self);
+    __su_ncqo_assert_cos(self);
+    __su_ncqo_assert_sin(self);
 
-  return self->cos + self->sin * I;
+    return self->cos + self->sin * I;
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
@@ -233,7 +233,7 @@ SU_METHOD(su_ncqo, void, set_angfreq, SUFLOAT omrel)
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
   self->omega = omrel;
-  self->fnor  = SU_ANG2NORM_FREQ(omrel);
+  self->fnor = SU_ANG2NORM_FREQ(omrel);
 }
 
 SU_METHOD(su_ncqo, void, inc_angfreq, SUFLOAT delta)
@@ -246,7 +246,7 @@ SU_METHOD(su_ncqo, void, inc_angfreq, SUFLOAT delta)
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
   self->omega += delta;
-  self->fnor   = SU_ANG2NORM_FREQ(self->omega);
+  self->fnor = SU_ANG2NORM_FREQ(self->omega);
 }
 
 SU_GETTER(su_ncqo, SUFLOAT, get_angfreq)
@@ -263,7 +263,7 @@ SU_METHOD(su_ncqo, void, set_freq, SUFLOAT fnor)
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  self->fnor  = fnor;
+  self->fnor = fnor;
   self->omega = SU_NORM2ANG_FREQ(fnor);
 }
 
@@ -276,8 +276,8 @@ SU_METHOD(su_ncqo, void, inc_freq, SUFLOAT delta)
   }
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  self->fnor  += delta;
-  self->omega  = SU_NORM2ANG_FREQ(self->fnor);
+  self->fnor += delta;
+  self->omega = SU_NORM2ANG_FREQ(self->fnor);
 }
 
 SU_GETTER(su_ncqo, SUFLOAT, get_freq)

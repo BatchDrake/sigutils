@@ -19,23 +19,20 @@
 
 #define SU_LOG_LEVEL "lfsr"
 
+#include "lfsr.h"
+
 #include <string.h>
 
 #include "log.h"
-#include "lfsr.h"
 
 SUBOOL
 su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order)
 {
   memset(lfsr, 0, sizeof(su_lfsr_t));
 
-  SU_TRYCATCH(
-      lfsr->coef = malloc(order * sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->coef = malloc(order * sizeof(SUBITS)), goto fail);
 
-  SU_TRYCATCH(
-      lfsr->buffer = calloc(order, sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->buffer = calloc(order, sizeof(SUBITS)), goto fail);
 
   memcpy(lfsr->coef, coef, order * sizeof(SUBITS));
   lfsr->order = order;
@@ -63,7 +60,6 @@ su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
 {
   lfsr->mode = mode;
 }
-
 
 /*
  * There is a common part for both additive and multiplicative
@@ -114,7 +110,6 @@ su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
     lfsr->buffer[lfsr->order - i - 1] = seq[i];
   lfsr->p = lfsr->order - 1;
 }
-
 
 SUBITS
 su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
