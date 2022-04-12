@@ -51,9 +51,6 @@ pkg_check_modules(VOLK              volk>=1.0)
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
-set(CODECDIR ${SRCDIR}/codecs)
-set(BLOCKDIR ${SRCDIR}/blocks)
-set(MODEMDIR ${SRCDIR}/modems)
 set(SPECDIR  ${SRCDIR}/specific)
 
 # Compiler configuration
@@ -172,7 +169,6 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/agc.h
     ${SRCDIR}/block.h
     ${SRCDIR}/clock.h
-    ${SRCDIR}/codec.h
     ${SRCDIR}/coef.h
     ${SRCDIR}/decider.h
     ${SRCDIR}/defs.h
@@ -182,7 +178,6 @@ set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/lfsr.h
     ${SRCDIR}/log.h
     ${SRCDIR}/matfile.h
-    ${SRCDIR}/modem.h
     ${SRCDIR}/ncqo.h
     ${SRCDIR}/pll.h
     ${SRCDIR}/property.h
@@ -200,7 +195,6 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/agc.c
     ${SRCDIR}/block.c
     ${SRCDIR}/clock.c
-    ${SRCDIR}/codec.c
     ${SRCDIR}/coef.c
     ${SRCDIR}/detect.c
     ${SRCDIR}/equalizer.c
@@ -209,7 +203,6 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/lib.c
     ${SRCDIR}/log.c
     ${SRCDIR}/matfile.c
-    ${SRCDIR}/modem.c
     ${SRCDIR}/ncqo.c
     ${SRCDIR}/pll.c
     ${SRCDIR}/property.c
@@ -219,18 +212,6 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/taps.c
     ${SRCDIR}/tvproc.c
     ${SRCDIR}/version.c)
-    
-set(SIGUTILS_BLOCK_SOURCES
-    ${BLOCKDIR}/agc.c
-    ${BLOCKDIR}/clock.c
-    ${BLOCKDIR}/pll.c
-    ${BLOCKDIR}/tuner.c
-    ${BLOCKDIR}/filt.c
-    ${BLOCKDIR}/siggen.c
-    ${BLOCKDIR}/wavfile.c)
-
-set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
-set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
 
 link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
  
@@ -242,9 +223,6 @@ add_library(
   ${SIGUTILS_UTIL_HEADERS}
   ${SIGUTILS_LIB_SOURCES}
   ${SIGUTILS_LIB_HEADERS}
-  ${SIGUTILS_BLOCK_SOURCES}
-  ${SIGUTILS_CODEC_SOURCES}
-  ${SIGUTILS_MODEM_SOURCES}
   ${SIGUTILS_SPECIFIC_SOURCES})
   
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
@@ -313,7 +291,6 @@ set(SIGUTILS_TEST_SOURCES
   ${MAINDIR}/main.c
   ${TESTDIR}/mat.c
   ${TESTDIR}/ncqo.c
-  ${TESTDIR}/codec.c
   ${TESTDIR}/pll.c
   ${TESTDIR}/specttuner.c)
   
