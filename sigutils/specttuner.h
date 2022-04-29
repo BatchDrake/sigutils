@@ -34,11 +34,13 @@ extern "C" {
 
 struct sigutils_specttuner_params {
   SUSCOUNT window_size;
+  SUBOOL   early_windowing;
 };
 
 #define sigutils_specttuner_params_INITIALIZER \
   {                                            \
     4096, /* window_size */                    \
+    SU_TRUE, /* early_windowing */             \
   }
 
 enum sigutils_specttuner_state {
@@ -172,7 +174,8 @@ SU_GETTER(su_specttuner_channel, SUFLOAT, get_effective_freq)
 struct sigutils_specttuner {
   struct sigutils_specttuner_params params;
 
-  SU_FFTW(_complex) * window; /* 3/2 the space, double allocation trick */
+  SUFLOAT           * wfunc;  /* Window function */
+  SU_FFTW(_complex) * buffer; /* 3/2 the space, double allocation trick */
   SU_FFTW(_complex) * fft;
 
   enum sigutils_specttuner_state state;
@@ -224,16 +227,16 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
   switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
       /* Just copy at the beginning */
-      self->window[p] = x;
+      self->buffer[p] = x;
       break;
 
     case SU_SPECTTUNER_STATE_ODD:
       /* Copy to the second third */
-      self->window[p + halfsz] = x;
+      self->buffer[p + halfsz] = x;
 
       /* Are we populating the last third too? */
       if (p >= halfsz)
-        self->window[p - halfsz] = x;
+        self->buffer[p - halfsz] = x;
   }
 
   if (++p < self->params.window_size) {

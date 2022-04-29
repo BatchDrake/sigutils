@@ -28,6 +28,28 @@
 #include "sampling.h"
 #include "taps.h"
 
+#ifdef SU_USE_VOLK
+#  define calloc su_volk_calloc
+#  define malloc su_volk_malloc
+#  define free   volk_free
+SUINLINE void *
+su_volk_malloc(size_t size)
+{
+  return volk_malloc(size, volk_get_alignment());
+}
+
+SUINLINE void *
+su_volk_calloc(size_t nmemb, size_t size)
+{
+  void *result = su_volk_malloc(nmemb * size);
+
+  if (result != NULL)
+    memset(result, 0, nmemb * size);
+
+  return result;
+}
+#endif /* SU_USE_VOLK */
+
 SUPRIVATE
 SU_COLLECTOR(su_specttuner_channel)
 {
@@ -351,26 +373,31 @@ SU_INSTANCER(
 
   SU_TRY_FAIL(su_specttuner_init_filter_response(owner, new));
 
-  /*
-   * Squared cosine window. Seems odd, right? Well, it turns out that
-   * since we are storing the square of half a cycle, when we add the
-   * odd and even halves we are actually adding up something weighted
-   * by two squared cosine halves DELAYED one quarter of a cycle.
-   *
-   * This is equivalent to adding up something weighted by a squared SINE
-   * and a squared COSINE. And it can be proven that cos^2 + sin^2 = 1.
-   *
-   * In the end, we are favouring central IFFT values before those in
-   * the borders. This is something that we generally want.
-   *
-   * PS: We use SU_SIN instead of SU_COS because we are assuming that
-   * the 0 is at new->size/2.
-   */
-  for (i = 0; i < new->size; ++i) {
-    new->window[i] = SU_SIN(PI * (SUFLOAT)i / new->size);
-    new->window[i] *= new->window[i];
+  if (owner->params.early_windowing) {
+    for (i = 0; i < new->size; ++i)
+      new->window[i] = 1.;
+  } else {
+    /*
+     * Squared cosine window. Seems odd, right? Well, it turns out that
+     * since we are storing the square of half a cycle, when we add the
+     * odd and even halves we are actually adding up something weighted
+     * by two squared cosine halves DELAYED one quarter of a cycle.
+     *
+     * This is equivalent to adding up something weighted by a squared SINE
+     * and a squared COSINE. And it can be proven that cos^2 + sin^2 = 1.
+     *
+     * In the end, we are favouring central IFFT values before those in
+     * the borders. This is something that we generally want.
+     *
+     * PS: We use SU_SIN instead of SU_COS because we are assuming that
+     * the 0 is at new->size/2.
+     */
+    for (i = 0; i < new->size; ++i) {
+      new->window[i] = SU_SIN(PI * (SUFLOAT)i / new->size);
+      new->window[i] *= new->window[i];
+    }
   }
-
+  
   /* FFT initialization */
   SU_TRY_FAIL(
       new->ifft[SU_SPECTTUNER_STATE_EVEN] =
@@ -440,8 +467,11 @@ SU_COLLECTOR(su_specttuner)
   if (self->fft != NULL)
     SU_FFTW(_free)(self->fft);
 
-  if (self->window != NULL)
-    SU_FFTW(_free)(self->window);
+  if (self->wfunc != NULL)
+    free(self->wfunc);
+
+  if (self->buffer != NULL)
+    SU_FFTW(_free)(self->buffer);
 
   free(self);
 }
@@ -449,6 +479,7 @@ SU_COLLECTOR(su_specttuner)
 SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 {
   su_specttuner_t *new = NULL;
+  unsigned int i;
 
   SU_TRYCATCH((params->window_size & 1) == 0, goto fail);
 
@@ -458,9 +489,19 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
   new->half_size = params->window_size >> 1;
   new->full_size = 3 * params->window_size;
 
-  /* Window is 3/2 the FFT size */
+  /* Early windowing enabled */
+  if (params->early_windowing) {
+    SU_TRY_FAIL(new->wfunc = malloc(params->window_size * sizeof(SUFLOAT)));
+
+    for (i = 0; i < params->window_size; ++i) {
+      new->wfunc[i]  = SU_SIN(PI * (SUFLOAT) i / params->window_size);
+      new->wfunc[i] *= new->wfunc[i];
+    }
+  }
+  
+  /* Buffer is 3/2 the FFT size */
   SU_TRY_FAIL(
-      new->window =
+      new->buffer =
           SU_FFTW(_malloc(new->full_size * sizeof(SU_FFTW(_complex)))));
 
   /* FFT is the size provided by params */
@@ -468,23 +509,42 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
       new->fft =
           SU_FFTW(_malloc(params->window_size * sizeof(SU_FFTW(_complex)))));
 
-  /* Even plan starts at the beginning of the window */
-  SU_TRY_FAIL(
-      new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
-          params->window_size,
-          new->window,
-          new->fft,
-          FFTW_FORWARD,
-          FFTW_ESTIMATE));
+  if (new->params.early_windowing) {
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->fft,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_ESTIMATE));
 
-  /* Odd plan stars at window_size / 2 */
-  SU_TRY_FAIL(
-      new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
-          params->window_size,
-          new->window + new->half_size,
-          new->fft,
-          FFTW_FORWARD,
-          FFTW_ESTIMATE));
+    /* Odd plan stars at window_size / 2 */
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->fft,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_ESTIMATE));
+  } else {
+    /* Even plan starts at the beginning of the window */
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->buffer,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_ESTIMATE));
+
+    /* Odd plan stars at window_size / 2 */
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->buffer + new->half_size,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_ESTIMATE));
+  }
 
   return new;
 
@@ -502,21 +562,21 @@ __su_specttuner_feed_bulk(
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
-  SUSDIFF p;
-
+  SUSDIFF p, i;
+  
   if (size + self->p > self->params.window_size)
     size = self->params.window_size - self->p;
 
   switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
       /* Just copy at the beginning */
-      memcpy(self->window + self->p, buf, size * sizeof(SUCOMPLEX));
+      memcpy(self->buffer + self->p, buf, size * sizeof(SUCOMPLEX));
       break;
 
     case SU_SPECTTUNER_STATE_ODD:
       /* Copy to the second third */
       memcpy(
-          self->window + self->p + self->half_size,
+          self->buffer + self->p + self->half_size,
           buf,
           size * sizeof(SUCOMPLEX));
 
@@ -531,8 +591,8 @@ __su_specttuner_feed_bulk(
         /* Copy to the first third */
         if (halfsz > 0)
           memcpy(
-              self->window + p - self->half_size,
-              self->window + p + self->half_size,
+              self->buffer + p - self->half_size,
+              self->buffer + p + self->half_size,
               halfsz * sizeof(SUCOMPLEX));
       }
   }
@@ -541,6 +601,36 @@ __su_specttuner_feed_bulk(
 
   if (self->p == self->params.window_size) {
     self->p = self->half_size;
+
+    /* Early windowing, copy windowed input */
+
+    volk_32fc_32f_multiply_32fc;
+
+    if (self->params.early_windowing) {
+      if (self->state == SU_SPECTTUNER_STATE_EVEN) {
+#ifdef SU_USE_VOLK
+        volk_32fc_32f_multiply_32fc(
+          self->fft,
+          self->buffer,
+          self->wfunc,
+          self->params.window_size);
+#else
+        for (i = 0; i < self->params.window_size; ++i)
+          self->fft[i] = self->buffer[i] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+      } else {
+#ifdef SU_USE_VOLK
+        volk_32fc_32f_multiply_32fc(
+          self->fft,
+          self->buffer + self->half_size,
+          self->wfunc,
+          self->params.window_size);
+#else
+        for (i = 0; i < self->params.window_size; ++i)
+          self->fft[i] = self->buffer[i + self->half_size] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+      }
+    }
 
     /* Compute FFT */
     SU_FFTW(_execute)(self->plans[self->state]);
@@ -625,8 +715,7 @@ __su_specttuner_feed_channel(
         self->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
-    /*********************** Apply filter and scaling
-     * **************************/
+    /*********************** Apply filter and scaling ************************/
 #ifdef SU_SPECTTUNER_SQUARE_FILTER
   for (i = 0; i < channel->halfw; ++i)
     channel->fft[i] *= channel->k;
@@ -650,30 +739,57 @@ __su_specttuner_feed_channel(
   if (channel->params.precise) {
     if (changing_freqs) {
       /* Do this only when switching frequencies */
-      for (i = 0; i < channel->halfsz; ++i) {
-        alpha = channel->window[i];
-        beta = channel->window[i + channel->halfsz];
+      if (self->params.early_windowing) {
+        /* Windowing already applied, no need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          phold = su_ncqo_read(&channel->old_lo);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] =
+              channel->gain * (phase * curr[i] + phold * prev[i]);
+        }
+      } else {
+        /* Late windowing, need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          alpha = channel->window[i];
+          beta = channel->window[i + channel->halfsz];
 
-        phold = su_ncqo_read(&channel->old_lo);
-        phase = su_ncqo_read(&channel->lo);
-        curr[i] =
-            channel->gain * (phase * alpha * curr[i] + phold * beta * prev[i]);
+          phold = su_ncqo_read(&channel->old_lo);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] =
+              channel->gain * (phase * alpha * curr[i] + phold * beta * prev[i]);
+        }
       }
     } else {
-      for (i = 0; i < channel->halfsz; ++i) {
-        alpha = channel->window[i];                  /* Positive slope */
-        beta = channel->window[i + channel->halfsz]; /* Negative slope */
+      if (self->params.early_windowing) {
+        /* Early windowing, speed things up */
+        for (i = 0; i < channel->halfsz; ++i) {
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] = channel->gain * phase * (curr[i] + prev[i]);
+        }
+      } else {
+        /* Late windowing, need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          alpha = channel->window[i];                  /* Positive slope */
+          beta = channel->window[i + channel->halfsz]; /* Negative slope */
 
-        phase = su_ncqo_read(&channel->lo);
-        curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+        }
       }
     }
   } else {
-    for (i = 0; i < channel->halfsz; ++i) {
-      alpha = a_sign * channel->window[i];                  /* Positive slope */
-      beta = b_sign * channel->window[i + channel->halfsz]; /* Negative slope */
+    if (self->params.early_windowing) {
+      /* Early windowing */
+      for (i = 0; i < channel->halfsz; ++i)
+        curr[i] = channel->gain * (a_sign * curr[i] + b_sign * prev[i]);
+    } else {
+      /* Late windowing */
+      for (i = 0; i < channel->halfsz; ++i) {
+        alpha = a_sign * channel->window[i];                  /* Positive slope */
+        beta = b_sign * channel->window[i + channel->halfsz]; /* Negative slope */
 
-      curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
+        curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
+      }
     }
   }
 
