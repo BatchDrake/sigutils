@@ -360,8 +360,9 @@ su_apt_decoder_set_snr(su_apt_decoder_t *self, SUFLOAT snr)
 }
 
 SUBOOL
-su_apt_decoder_feed(
+su_apt_decoder_feed_ex(
     su_apt_decoder_t *self,
+    SUBOOL phase_only,
     const SUCOMPLEX *buffer,
     SUSCOUNT count)
 {
@@ -371,7 +372,13 @@ su_apt_decoder_feed(
   SUFLOAT snr;
 
   for (i = 0; i < count; ++i) {
-    x = su_iir_filt_feed(&self->mf, su_pll_track(&self->pll, buffer[i]));
+    x = su_iir_filt_feed(
+      &self->mf, 
+      su_pll_track(
+        &self->pll, 
+        phase_only 
+        ? SU_C_ARG(buffer[i])
+        : buffer[i]));
 
     if (su_sampler_feed(&self->resampler, &x)) {
       pwr = SU_C_REAL(x * SU_C_CONJ(x));
@@ -404,6 +411,15 @@ su_apt_decoder_feed(
   }
 
   return SU_TRUE;
+}
+
+SUBOOL
+su_apt_decoder_feed(
+    su_apt_decoder_t *self,
+    const SUCOMPLEX *buffer,
+    SUSCOUNT count)
+{
+  return su_apt_decoder_feed_ex(self, SU_FALSE, buffer, count);
 }
 
 void

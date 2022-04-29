@@ -143,6 +143,12 @@ su_apt_decoder_t *su_apt_decoder_new(
     SUFLOAT fs,
     const struct sigutils_apt_decoder_callbacks *);
 
+SUBOOL su_apt_decoder_feed_ex(
+    su_apt_decoder_t *self,
+    SUBOOL phase_only,
+    const SUCOMPLEX *buffer,
+    SUSCOUNT count);
+
 SUBOOL su_apt_decoder_feed(
     su_apt_decoder_t *self,
     const SUCOMPLEX *buffer,
