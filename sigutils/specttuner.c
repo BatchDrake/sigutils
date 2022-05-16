@@ -144,7 +144,7 @@ SU_METHOD_CONST(
           channel->h,
           channel->h,
           FFTW_FORWARD,
-          FFTW_ESTIMATE));
+          FFTW_MEASURE));
 
   /* Forward plan */
   SU_TRY(
@@ -153,7 +153,7 @@ SU_METHOD_CONST(
           channel->h,
           channel->h,
           FFTW_BACKWARD,
-          FFTW_ESTIMATE));
+          FFTW_MEASURE));
 
   su_specttuner_update_channel_filter(self, channel);
 
@@ -428,7 +428,7 @@ SU_INSTANCER(
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_EVEN],
           FFTW_BACKWARD,
-          FFTW_ESTIMATE));
+          FFTW_MEASURE));
 
   SU_TRY_FAIL(
       new->plan[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
@@ -436,7 +436,7 @@ SU_INSTANCER(
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_ODD],
           FFTW_BACKWARD,
-          FFTW_ESTIMATE));
+          FFTW_MEASURE));
 
   return new;
 
@@ -503,11 +503,14 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
   SU_TRY_FAIL(
       new->buffer =
           SU_FFTW(_malloc(new->full_size * sizeof(SU_FFTW(_complex)))));
+  memset(new->buffer, 0, new->full_size * sizeof(SU_FFTW(_complex)));
 
   /* FFT is the size provided by params */
   SU_TRY_FAIL(
       new->fft =
           SU_FFTW(_malloc(params->window_size * sizeof(SU_FFTW(_complex)))));
+
+  memset(new->fft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
   if (new->params.early_windowing) {
     SU_TRY_FAIL(
@@ -516,16 +519,15 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->fft,
             new->fft,
             FFTW_FORWARD,
-            FFTW_ESTIMATE));
+            FFTW_MEASURE));
 
-    /* Odd plan stars at window_size / 2 */
     SU_TRY_FAIL(
         new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
             params->window_size,
             new->fft,
             new->fft,
             FFTW_FORWARD,
-            FFTW_ESTIMATE));
+            FFTW_MEASURE));
   } else {
     /* Even plan starts at the beginning of the window */
     SU_TRY_FAIL(
@@ -534,7 +536,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->buffer,
             new->fft,
             FFTW_FORWARD,
-            FFTW_ESTIMATE));
+            FFTW_MEASURE));
 
     /* Odd plan stars at window_size / 2 */
     SU_TRY_FAIL(
@@ -543,7 +545,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->buffer + new->half_size,
             new->fft,
             FFTW_FORWARD,
-            FFTW_ESTIMATE));
+            FFTW_MEASURE));
   }
 
   return new;
@@ -553,6 +555,41 @@ fail:
     SU_DISPOSE(su_specttuner, new);
 
   return NULL;
+}
+
+SU_METHOD(su_specttuner, void, run_fft)
+{
+  unsigned int i;
+
+  /* Early windowing, copy windowed input */
+  if (self->params.early_windowing) {
+    if (self->state == SU_SPECTTUNER_STATE_EVEN) {
+#ifdef SU_USE_VOLK
+      volk_32fc_32f_multiply_32fc(
+        self->fft,
+        self->buffer,
+        self->wfunc,
+        self->params.window_size);
+#else
+      for (i = 0; i < self->params.window_size; ++i)
+        self->fft[i] = self->buffer[i] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+    } else {
+#ifdef SU_USE_VOLK
+      volk_32fc_32f_multiply_32fc(
+        self->fft,
+        self->buffer + self->half_size,
+        self->wfunc,
+        self->params.window_size);
+#else
+      for (i = 0; i < self->params.window_size; ++i)
+        self->fft[i] = self->buffer[i + self->half_size] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+    }
+  }
+
+  /* Compute FFT */
+  SU_FFTW(_execute)(self->plans[self->state]);
 }
 
 SUINLINE SUSCOUNT
@@ -602,38 +639,7 @@ __su_specttuner_feed_bulk(
   if (self->p == self->params.window_size) {
     self->p = self->half_size;
 
-    /* Early windowing, copy windowed input */
-
-    volk_32fc_32f_multiply_32fc;
-
-    if (self->params.early_windowing) {
-      if (self->state == SU_SPECTTUNER_STATE_EVEN) {
-#ifdef SU_USE_VOLK
-        volk_32fc_32f_multiply_32fc(
-          self->fft,
-          self->buffer,
-          self->wfunc,
-          self->params.window_size);
-#else
-        for (i = 0; i < self->params.window_size; ++i)
-          self->fft[i] = self->buffer[i] * self->wfunc[i];
-#endif /* SU_USE_VOLK */
-      } else {
-#ifdef SU_USE_VOLK
-        volk_32fc_32f_multiply_32fc(
-          self->fft,
-          self->buffer + self->half_size,
-          self->wfunc,
-          self->params.window_size);
-#else
-        for (i = 0; i < self->params.window_size; ++i)
-          self->fft[i] = self->buffer[i + self->half_size] * self->wfunc[i];
-#endif /* SU_USE_VOLK */
-      }
-    }
-
-    /* Compute FFT */
-    SU_FFTW(_execute)(self->plans[self->state]);
+    su_specttuner_run_fft(self);
 
     /* Toggle state */
     self->state = !self->state;
@@ -808,9 +814,12 @@ SU_METHOD(su_specttuner, SUBOOL, feed_all_channels)
   unsigned int i;
   SUBOOL ok = SU_TRUE;
 
-  for (i = 0; i < self->channel_count; ++i)
-    if (self->channel_list[i] != NULL)
-      ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
+  if (su_specttuner_new_data(self)) {
+    for (i = 0; i < self->channel_count; ++i)
+      if (self->channel_list[i] != NULL)
+        ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
+    su_specttuner_ack_data(self);
+  }
 
   return ok;
 }

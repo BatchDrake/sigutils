@@ -214,15 +214,18 @@ SU_METHOD(su_specttuner, void, ack_data)
 }
 
 #ifndef __cplusplus
+
 /* Internal */
 SU_METHOD(su_specttuner, SUBOOL, feed_all_channels);
+
+/* Internal */
+SU_METHOD(su_specttuner, void, run_fft);
 
 SUINLINE
 SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
 {
   SUSDIFF halfsz = self->half_size;
   SUSDIFF p = self->p;
-  SUBOOL ready = SU_FALSE;
 
   switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
@@ -245,15 +248,14 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
     self->p = halfsz;
 
     /* Compute FFT */
-    SU_FFTW(_execute)(self->plans[self->state]);
+    su_specttuner_run_fft(self);
 
     /* Toggle state */
     self->state = !self->state;
-
-    ready = SU_TRUE;
+    self->ready = SU_TRUE;
   }
 
-  return ready;
+  return self->ready;
 }
 #endif /* __cplusplus */
 
