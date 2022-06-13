@@ -358,7 +358,7 @@ SU_INSTANCER(
   new->halfsz = new->size >> 1;
   new->offset = new->size >> 2;
 
-  new->gain = SU_SQRT(1.f / new->size);
+  new->gain = 1.f;
 
   SU_TRY_FAIL(new->width > 0);
 
