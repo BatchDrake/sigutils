@@ -45,6 +45,7 @@ struct sigutils_smoothpsd_params {
 
 struct sigutils_smoothpsd {
   struct sigutils_smoothpsd_params params;
+  SUFLOAT nominal_rate;
   pthread_mutex_t mutex;
   SUBOOL mutex_init;
 
@@ -68,6 +69,12 @@ struct sigutils_smoothpsd {
 };
 
 typedef struct sigutils_smoothpsd su_smoothpsd_t;
+
+SUINLINE
+SU_GETTER(su_smoothpsd, SUFLOAT, get_nominal_samp_rate)
+{
+  return self->nominal_rate;
+}
 
 SUINLINE
 SU_GETTER(su_smoothpsd, SUSCOUNT, get_iters)

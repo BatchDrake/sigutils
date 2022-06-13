@@ -46,6 +46,8 @@ SU_INSTANCER(
   new->psd_func = psd_func;
   new->userdata = userdata;
 
+  new->nominal_rate = params->samp_rate;
+  
   SU_TRY_FAIL(su_smoothpsd_set_params(new, params));
 
   return new;
@@ -61,7 +63,7 @@ SUPRIVATE
 SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 {
   unsigned int i;
-  SUFLOAT wsizeinv = 1. / self->params.fft_size;
+  SUFLOAT wsizeinv = 1. / (self->params.fft_size * self->nominal_rate);
 
   /* Execute FFT */
   SU_FFTW(_execute(self->fft_plan));
