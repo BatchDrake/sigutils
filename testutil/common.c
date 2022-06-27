@@ -435,7 +435,7 @@ su_test_run(
     if ((test_list[i].cb)(&ctx))
       ++success;
     else {
-      printf("[t:%3d] TEST FAILED\n", i);
+      printf("[t:%3u] TEST FAILED\n", i);
     }
 
     if (params->dump_fmt) {
@@ -453,7 +453,7 @@ su_test_run(
     su_test_context_reset(&ctx);
   }
 
-  printf("%d tests run, %d failed\n", count, count - success);
+  printf("%u tests run, %u failed\n", count, count - success);
 
   return count == success;
 }

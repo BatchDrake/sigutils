@@ -94,14 +94,14 @@ SUBOOL su_mat_file_give_streaming_matrix(su_mat_file_t *, su_mat_matrix_t *);
 su_mat_matrix_t *su_mat_file_make_matrix(
     su_mat_file_t *self,
     const char *name,
-    int cols,
-    int rows);
+    int rows,
+    int cols);
 
 su_mat_matrix_t *su_mat_file_make_streaming_matrix(
     su_mat_file_t *self,
     const char *name,
-    int cols,
-    int rows);
+    int rows,
+    int cols);
 
 SUBOOL su_mat_file_stream_col(su_mat_file_t *, ...);
 

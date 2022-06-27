@@ -77,6 +77,16 @@ SU_GETTER(su_smoothpsd, SUFLOAT, get_nominal_samp_rate)
 }
 
 SUINLINE
+SU_METHOD(
+  su_smoothpsd,
+  void,
+  set_nominal_samp_rate,
+  SUFLOAT rate)
+{
+  self->nominal_rate = rate;
+}
+
+SUINLINE
 SU_GETTER(su_smoothpsd, SUSCOUNT, get_iters)
 {
   return self->iters;

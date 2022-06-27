@@ -470,7 +470,7 @@ __su_test_costas_qpsk(su_test_context_t *ctx, SUBOOL noisy)
         t = (p - rx_delay) / symbol_period;
         sym = su_test_costas_qpsk_decision(output[p]);
         if (t < 32)
-          rx_buf |= sym << (2 * t);
+          rx_buf |= (uint64_t) sym << (2 * t);
 
         rx[rx_count++] = output[p];
       }

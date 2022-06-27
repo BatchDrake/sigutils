@@ -403,7 +403,7 @@ strlist_debug(const struct strlist *list)
 
   for (i = 0; i < list->strings_count; i++)
     if (list->strings_list[i] != NULL)
-      fprintf(stderr, "%3d. %s\n", i, list->strings_list[i]);
+      fprintf(stderr, "%3u. %s\n", i, list->strings_list[i]);
     else
       fprintf(stderr, "<empty slot>\n");
 }

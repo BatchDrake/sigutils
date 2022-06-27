@@ -51,7 +51,7 @@ sigutils_abi_check(unsigned int abi)
         stderr,
         "Expected ABI version (v%u) is incompatible with current\n",
         abi);
-    fprintf(stderr, "sigutils ABI version (v%u).\n\n", SIGUTILS_ABI_VERSION);
+    fprintf(stderr, "sigutils ABI version (v%u).\n\n", (unsigned) SIGUTILS_ABI_VERSION);
 
     if (abi < SIGUTILS_ABI_VERSION) {
       fprintf(

@@ -129,11 +129,11 @@ typedef struct sigutils_test_entry su_test_entry_t;
   }
 
 #define SU_TEST_START(ctx)                                      \
-  printf("[t:%3d] %s: start\n", ctx->testno, ctx->entry->name); \
+  printf("[t:%3u] %s: start\n", ctx->testno, ctx->entry->name); \
   gettimeofday(&ctx->start, NULL);
 
 #define SU_TEST_START_TICKLESS(ctx) \
-  printf("[t:%3d] %s: start\n", ctx->testno, ctx->entry->name);
+  printf("[t:%3u] %s: start\n", ctx->testno, ctx->entry->name);
 
 #define SU_TEST_TICK(ctx) gettimeofday(&ctx->start, NULL)
 
@@ -141,7 +141,7 @@ typedef struct sigutils_test_entry su_test_entry_t;
   gettimeofday(&(ctx)->end, NULL);   \
   su_test_context_update_times(ctx); \
   printf(                            \
-      "[t:%3d] %s: end (%g %s)\n",   \
+      "[t:%3u] %s: end (%g %s)\n",   \
       ctx->testno,                   \
       ctx->entry->name,              \
       ctx->elapsed_time,             \
@@ -149,9 +149,9 @@ typedef struct sigutils_test_entry su_test_entry_t;
 
 #define SU_TEST_ASSERT(cond)                                                 \
   if (!(cond)) {                                                             \
-    printf("[t:%3d] %s: assertion failed\n", ctx->testno, ctx->entry->name); \
+    printf("[t:%3u] %s: assertion failed\n", ctx->testno, ctx->entry->name); \
     printf(                                                                  \
-        "[t:%3d] %s: !(%s)\n",                                               \
+        "[t:%3u] %s: !(%s)\n",                                               \
         ctx->testno,                                                         \
         ctx->entry->name,                                                    \
         STRINGIFY(cond));                                                    \

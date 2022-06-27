@@ -110,10 +110,10 @@ list(const char *argv0)
   unsigned int i;
 
   for (i = 0; i < test_count; ++i) {
-    printf("  %3d %s\n", i, test_list[i].name);
+    printf("  %3u %s\n", i, test_list[i].name);
   }
 
-  printf("%s: %d unit tests available\n", argv0, test_count);
+  printf("%s: %u unit tests available\n", argv0, test_count);
 }
 
 SUPRIVATE struct option long_options[] = {
@@ -145,7 +145,7 @@ main(int argc, char *argv[])
          != -1) {
     switch (c) {
       case 'c':
-        printf("%s: %d unit tests available\n", argv[0], test_count);
+        printf("%s: %u unit tests available\n", argv[0], test_count);
         exit(EXIT_FAILURE);
 
       case 'd':

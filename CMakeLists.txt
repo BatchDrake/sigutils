@@ -48,6 +48,10 @@ pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
 pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
 pkg_check_modules(VOLK              volk>=1.0)
 
+# Find cppcheck (if available)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
+include(CodeAnalysis)
+
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
@@ -214,7 +218,7 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/version.c)
 
 link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
- 
+	
 add_library(
   sigutils SHARED
   ${SIGUTILS_COMPAT_SOURCES}
