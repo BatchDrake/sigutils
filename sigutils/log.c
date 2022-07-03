@@ -30,6 +30,9 @@
 SUPRIVATE struct sigutils_log_config log_config;
 SUPRIVATE uint32_t log_mask;
 SUPRIVATE pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+SUPRIVATE SUBOOL su_forced_logging = SU_FALSE;
+SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
+SUPRIVATE FILE  *su_log_fp = NULL;
 
 void
 su_log_mask_severity(enum sigutils_log_severity sev)
@@ -58,7 +61,7 @@ su_log_set_mask(uint32_t mask)
 SUBOOL
 su_log_is_masked(enum sigutils_log_severity sev)
 {
-  return !!(log_mask & (1 << sev));
+  return !su_forced_logging && !!(log_mask & (1 << sev));
 }
 
 void
@@ -128,6 +131,81 @@ su_log_severity_to_string(enum sigutils_log_severity sev)
   return "Unknown";
 }
 
+SUPRIVATE void
+print_date(void)
+{
+  time_t t;
+  struct tm tm;
+  char mytime[50];
+
+  time(&t);
+  localtime_r(&t, &tm);
+
+  strftime(mytime, sizeof(mytime), "%d %b %Y - %H:%M:%S", &tm);
+
+  fprintf(su_log_fp, "%s", mytime);
+}
+
+SUPRIVATE void
+su_log_func(void *private, const struct sigutils_log_message *msg)
+{
+  SUBOOL *cr = (SUBOOL *) private;
+  SUBOOL is_except;
+  size_t msglen;
+
+  if (*cr) {
+    switch (msg->severity) {
+      case SU_LOG_SEVERITY_DEBUG:
+        fprintf(su_log_fp, "\033[1;30m");
+        print_date();
+        fprintf(su_log_fp, " - debug: ");
+        break;
+
+      case SU_LOG_SEVERITY_INFO:
+        print_date();
+        fprintf(su_log_fp, " - ");
+        break;
+
+      case SU_LOG_SEVERITY_WARNING:
+        print_date();
+        fprintf(su_log_fp, " - \033[1;33mwarning [%s]\033[0m: ", msg->domain);
+        break;
+
+      case SU_LOG_SEVERITY_ERROR:
+        print_date();
+
+        is_except = 
+             strstr(msg->message, "exception in \"") != NULL
+          || strstr(msg->message, "failed to create instance") != NULL;
+
+        if (is_except)
+          fprintf(su_log_fp, "\033[1;30m   ");
+        else
+          fprintf(su_log_fp, " - \033[1;31merror   [%s]\033[0;1m: ", msg->domain);
+        
+        break;
+
+      case SU_LOG_SEVERITY_CRITICAL:
+        print_date();
+        fprintf(su_log_fp, 
+            " - \033[1;37;41mcritical[%s] in %s:%u\033[0m: ",
+            msg->domain,
+            msg->function,
+            msg->line);
+        break;
+    }
+  }
+
+  msglen = strlen(msg->message);
+
+  *cr = msg->message[msglen - 1] == '\n' || msg->message[msglen - 1] == '\r';
+
+  fputs(msg->message, su_log_fp);
+
+  if (*cr)
+    fputs("\033[0m", su_log_fp);
+}
+
 void
 su_log(
     enum sigutils_log_severity sev,
@@ -137,8 +215,9 @@ su_log(
     const char *message)
 {
   struct sigutils_log_message msg = sigutils_log_message_INITIALIZER;
+  SUBOOL log_needed = (log_config.log_func != NULL || su_forced_logging);
 
-  if (!su_log_is_masked(sev) && log_config.log_func != NULL) {
+  if (!su_log_is_masked(sev) && log_needed) {
     gettimeofday(&msg.time, NULL);
 
     msg.severity = sev;
@@ -151,7 +230,11 @@ su_log(
       if (pthread_mutex_lock(&log_mutex) == -1) /* Too dangerous to log */
         return;
 
-    (log_config.log_func)(log_config.priv, &msg);
+    if (log_config.log_func != NULL)
+      (log_config.log_func)(log_config.priv, &msg);
+
+    if (su_forced_logging)
+      su_log_func(&su_log_cr, &msg);
 
     if (log_config.exclusive)
       (void)pthread_mutex_unlock(&log_mutex);
@@ -208,5 +291,20 @@ su_logprintf(
 void
 su_log_init(const struct sigutils_log_config *config)
 {
+  const char *env  = getenv("SIGUTILS_FORCELOG");
+  const char *logf = getenv("SIGUTILS_LOGFILE");
+  FILE *fp;
+
+  if (env != NULL && strlen(env) > 0) {
+    su_forced_logging = SU_TRUE;
+
+    if (logf != NULL)
+      if ((fp = fopen(logf, "w")) != NULL)
+        su_log_fp = fp;
+
+    if (su_log_fp == NULL)
+      su_log_fp = stdout;
+  }
+
   log_config = *config;
 }
