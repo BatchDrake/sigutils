@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <util.h>
+#include <util/compat-time.h>
 
 #include "types.h"
 
