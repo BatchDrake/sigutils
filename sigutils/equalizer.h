@@ -20,8 +20,10 @@
 #ifndef _SIGUTILS_EQUALIZER_H
 #define _SIGUTILS_EQUALIZER_H
 
+#include "types.h"
+
 enum sigutils_equalizer_algorithm {
-  SU_EQUALIZER_ALGORITHM_CMA /* Default */
+  SU_EQUALIZER_ALGORITHM_CMA, /* Default */
 };
 
 struct sigutils_equalizer_params {
@@ -31,11 +33,11 @@ struct sigutils_equalizer_params {
 };
 
 #define sigutils_equalizer_params_INITIALIZER   \
-{                                               \
-  SU_EQUALIZER_ALGORITHM_CMA, /* algorithm */   \
-  10,   /* length */                            \
-  0.2,  /* mu */                                \
-}
+  {                                             \
+    SU_EQUALIZER_ALGORITHM_CMA, /* algorithm */ \
+        10,                     /* length */    \
+        0.2,                    /* mu */        \
+  }
 
 /*
  * A signal equalizer is basically an adaptive filter, so we can leverage
@@ -52,12 +54,12 @@ struct sigutils_equalizer {
 typedef struct sigutils_equalizer su_equalizer_t;
 
 #define su_equalizer_INITIALIZER                        \
-{                                                       \
-  sigutils_equalizer_params_INITIALIZER, /* params */   \
-  NULL, /* w */                                         \
-  NULL, /* x */                                         \
-  0, /* ptr */                                          \
-}
+  {                                                     \
+    sigutils_equalizer_params_INITIALIZER, /* params */ \
+        NULL,                              /* w */      \
+        NULL,                              /* x */      \
+        0,                                 /* ptr */    \
+  }
 
 SUBOOL su_equalizer_init(
     su_equalizer_t *eq,

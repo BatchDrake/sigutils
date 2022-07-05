@@ -19,53 +19,79 @@
 
 #define SU_LOG_DOMAIN "specttuner"
 
-#include "log.h"
-#include <string.h>
-#include <stdlib.h>
-#include "sampling.h"
-#include "taps.h"
 #include "specttuner.h"
 
-SUPRIVATE void
-su_specttuner_channel_destroy(su_specttuner_channel_t *channel)
+#include <stdlib.h>
+#include <string.h>
+
+#include "log.h"
+#include "sampling.h"
+#include "taps.h"
+
+#ifdef SU_USE_VOLK
+#  define calloc su_volk_calloc
+#  define malloc su_volk_malloc
+#  define free   volk_free
+SUINLINE void *
+su_volk_malloc(size_t size)
 {
-  if (channel->plan[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_destroy_plan) (channel->plan[SU_SPECTTUNER_STATE_EVEN]);
-
-  if (channel->plan[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_destroy_plan) (channel->plan[SU_SPECTTUNER_STATE_ODD]);
-
-  if (channel->ifft[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_free) (channel->ifft[SU_SPECTTUNER_STATE_EVEN]);
-
-  if (channel->ifft[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_free) (channel->ifft[SU_SPECTTUNER_STATE_ODD]);
-
-  if (channel->fft != NULL)
-    SU_FFTW(_free) (channel->fft);
-
-  if (channel->window != NULL)
-    SU_FFTW(_free) (channel->window);
-
-  if (channel->forward != NULL)
-    SU_FFTW(_destroy_plan) (channel->forward);
-
-  if (channel->backward != NULL)
-    SU_FFTW(_destroy_plan) (channel->backward);
-
-  if (channel->h != NULL)
-    SU_FFTW(_free) (channel->h);
-
-  free(channel);
+  return volk_malloc(size, volk_get_alignment());
 }
 
-SUPRIVATE void
-su_specttuner_update_channel_filter(
-    const su_specttuner_t *owner,
+SUINLINE void *
+su_volk_calloc(size_t nmemb, size_t size)
+{
+  void *result = su_volk_malloc(nmemb * size);
+
+  if (result != NULL)
+    memset(result, 0, nmemb * size);
+
+  return result;
+}
+#endif /* SU_USE_VOLK */
+
+SUPRIVATE
+SU_COLLECTOR(su_specttuner_channel)
+{
+  if (self->plan[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_destroy_plan)(self->plan[SU_SPECTTUNER_STATE_EVEN]);
+
+  if (self->plan[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_destroy_plan)(self->plan[SU_SPECTTUNER_STATE_ODD]);
+
+  if (self->ifft[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_free)(self->ifft[SU_SPECTTUNER_STATE_EVEN]);
+
+  if (self->ifft[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_free)(self->ifft[SU_SPECTTUNER_STATE_ODD]);
+
+  if (self->fft != NULL)
+    SU_FFTW(_free)(self->fft);
+
+  if (self->window != NULL)
+    SU_FFTW(_free)(self->window);
+
+  if (self->forward != NULL)
+    SU_FFTW(_destroy_plan)(self->forward);
+
+  if (self->backward != NULL)
+    SU_FFTW(_destroy_plan)(self->backward);
+
+  if (self->h != NULL)
+    SU_FFTW(_free)(self->h);
+
+  free(self);
+}
+
+SUPRIVATE
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    update_channel_filter,
     su_specttuner_channel_t *channel)
 {
   SUCOMPLEX tmp;
-  unsigned int window_size = owner->params.window_size;
+  unsigned int window_size = self->params.window_size;
   unsigned int window_half = window_size / 2;
   unsigned int i;
 
@@ -78,7 +104,7 @@ su_specttuner_update_channel_filter(
   }
 
   /* Second step: switch to time domain */
-  SU_FFTW(_execute) (channel->backward);
+  SU_FFTW(_execute)(channel->backward);
 
   /* Third step: recenter coefficients to apply window function */
   for (i = 0; i < window_half; ++i) {
@@ -98,38 +124,38 @@ su_specttuner_update_channel_filter(
   }
 
   /* Sixth step: move back to frequency domain */
-  SU_FFTW(_execute) (channel->forward);
+  SU_FFTW(_execute)(channel->forward);
 }
 
-SUPRIVATE SUBOOL
-su_specttuner_init_filter_response(
-    const su_specttuner_t *owner,
+SUPRIVATE
+SU_METHOD_CONST(
+    su_specttuner,
+    SUBOOL,
+    init_filter_response,
     su_specttuner_channel_t *channel)
 {
   SUBOOL ok = SU_FALSE;
-  unsigned int window_size = owner->params.window_size;
+  unsigned int window_size = self->params.window_size;
 
   /* Backward plan */
-  SU_TRYCATCH(
+  SU_TRY(
       channel->forward = SU_FFTW(_plan_dft_1d)(
           window_size,
           channel->h,
           channel->h,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto done);
+          FFTW_MEASURE));
 
   /* Forward plan */
-  SU_TRYCATCH(
+  SU_TRY(
       channel->backward = SU_FFTW(_plan_dft_1d)(
           window_size,
           channel->h,
           channel->h,
           FFTW_BACKWARD,
-          FFTW_ESTIMATE),
-      goto done);
+          FFTW_MEASURE));
 
-  su_specttuner_update_channel_filter(owner, channel);
+  su_specttuner_update_channel_filter(self, channel);
 
   ok = SU_TRUE;
 done:
@@ -137,42 +163,66 @@ done:
   return ok;
 }
 
-void
-su_specttuner_set_channel_freq(
-    const su_specttuner_t *st,
-    su_specttuner_channel_t *channel,
-    SUFLOAT f0)
+SUPRIVATE
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    refresh_channel_center,
+    su_specttuner_channel_t *channel)
 {
-  unsigned int window_size = st->params.window_size;
-  su_ncqo_t lo = su_ncqo_INITIALIZER;
-  SUFLOAT off;
+  unsigned int window_size = self->params.window_size;
+  SUFLOAT rbw = 2 * PI / window_size;
+  SUFLOAT off, ef;
 
-  channel->params.f0 = f0;
-  channel->center = 2 * SU_ROUND(f0 / (4 * PI) * window_size);
+  ef = su_specttuner_channel_get_effective_freq(channel);
+  channel->center = 2 * SU_FLOOR(.5 * (ef + 1 * rbw) / (2 * PI) * window_size);
 
-  if (channel->center < 0)
+  if (channel->center < 0) {
     channel->center = 0;
+  }
   if (channel->center >= window_size)
     channel->center = window_size - 2;
 
   if (channel->params.precise) {
-    off = channel->center * (2 * PI) / (SUFLOAT) window_size - f0;
+    off = (channel->center) * rbw - ef;
     off *= channel->decimation;
-    su_ncqo_init_fixed(&channel->lo, SU_ANG2NORM_FREQ(off));
+    su_ncqo_set_angfreq(&channel->lo, off);
   }
 }
 
-SUBOOL
-su_specttuner_set_channel_bandwidth(
-    const su_specttuner_t *st,
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    set_channel_freq,
+    su_specttuner_channel_t *channel,
+    SUFLOAT f0)
+{
+  channel->params.f0 = f0;
+  channel->pending_freq = SU_TRUE;
+}
+
+SU_METHOD_CONST(
+    su_specttuner,
+    void,
+    set_channel_delta_f,
+    su_specttuner_channel_t *channel,
+    SUFLOAT delta_f)
+{
+  channel->params.delta_f = delta_f;
+  channel->pending_freq = SU_TRUE;
+}
+
+SU_METHOD_CONST(
+    su_specttuner,
+    SUBOOL,
+    set_channel_bandwidth,
     su_specttuner_channel_t *channel,
     SUFLOAT bw)
 {
   SUFLOAT k;
-  unsigned int min_size;
   unsigned int width;
 
-  unsigned int window_size = st->params.window_size;
+  unsigned int window_size = self->params.window_size;
 
   if (bw > 2 * PI)
     bw = 2 * PI;
@@ -192,38 +242,57 @@ su_specttuner_set_channel_bandwidth(
   SU_TRYCATCH(width <= channel->size, return SU_FALSE);
   SU_TRYCATCH(width > 1, return SU_FALSE);
 
-  channel->width  = width;
-  channel->halfw  = channel->width >> 1;
+  channel->width = width;
+  channel->halfw = channel->width >> 1;
 
-  su_specttuner_update_channel_filter(st, channel);
+  su_specttuner_update_channel_filter(self, channel);
 
   return SU_TRUE;
 }
 
-SUPRIVATE su_specttuner_channel_t *
-su_specttuner_channel_new(
+SUPRIVATE
+SU_INSTANCER(
+    su_specttuner_channel,
     const su_specttuner_t *owner,
     const struct sigutils_specttuner_channel_params *params)
 {
   su_specttuner_channel_t *new = NULL;
   unsigned int window_size = owner->params.window_size;
+  SUFLOAT rbw = 2 * PI / window_size;
   unsigned int n = 1;
   unsigned int i;
   unsigned int min_size;
   SUFLOAT actual_bw;
   SUFLOAT off;
   SUFLOAT corrbw;
-  SUBOOL  full_spectrum = SU_FALSE;
-  SU_TRYCATCH(params->guard >= 1, goto fail);
-  SU_TRYCATCH(params->bw > 0, goto fail);
-  SU_TRYCATCH(params->f0 >= 0 && params->f0 < 2 * PI, goto fail);
+  SUFLOAT effective_freq;
+  SUBOOL full_spectrum = SU_FALSE;
+
+  if (params->guard < 1) {
+    SU_ERROR(
+        "Guard bandwidth is smaller than channel bandwidth (guard = %g < 1)\n",
+        params->guard);
+    goto fail;
+  }
+
+  if (params->bw <= 0) {
+    SU_ERROR("Cannot open a zero-bandwidth channel\n");
+    goto fail;
+  }
+
+  effective_freq = params->f0 + params->delta_f;
+
+  if (effective_freq < 0 || effective_freq >= 2 * PI) {
+    SU_ERROR("Channel center frequency is outside the spectrum\n");
+    goto fail;
+  }
 
   corrbw = params->bw;
 
   if (corrbw > 2 * PI)
     corrbw = 2 * PI;
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_channel_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_specttuner_channel_t);
 
   actual_bw = corrbw * params->guard;
 
@@ -234,7 +303,6 @@ su_specttuner_channel_new(
 
   new->params = *params;
   new->index = -1;
-
 
   if (!full_spectrum) {
     /* Tentative configuration */
@@ -249,8 +317,10 @@ su_specttuner_channel_new(
      *
      * TODO: Look into this ASAP
      */
-    new->center = 2 * SU_ROUND(params->f0 / (4 * PI) * window_size);
-    min_size    = SU_CEIL(new->k * window_size);
+
+    new->center =
+        2 * SU_FLOOR(.5 * (effective_freq + 1 * rbw) / (2 * PI) * window_size);
+    min_size = SU_CEIL(new->k *window_size);
 
     /* Find the nearest power of 2 than can hold all these samples */
     while (n < min_size)
@@ -258,87 +328,87 @@ su_specttuner_channel_new(
 
     new->size = n;
 
-    new->width  = SU_CEIL(min_size / params->guard);
-    new->halfw  = new->width >> 1;
+    new->width = SU_CEIL(min_size / params->guard);
+    new->halfw = new->width >> 1;
   } else {
     new->k = 1. / (2 * PI / params->bw);
-    new->center = SU_ROUND(params->f0 / (2 * PI) * window_size);
-    new->size   = window_size;
-    new->width  = SU_CEIL(new->k * window_size);
+    new->center =
+        2 * SU_FLOOR(.5 * (effective_freq + 1 * rbw) / (2 * PI) * window_size);
+    new->size = window_size;
+    new->width = SU_CEIL(new->k *window_size);
     if (new->width > window_size)
       new->width = window_size;
-    new->halfw  = new->width >> 1;
+    new->halfw = new->width >> 1;
   }
 
   /* Adjust configuration to new size */
   new->decimation = window_size / new->size;
-  new->k = 1. / (new->decimation * new->size);
+  new->k = 1. / (new->decimation *new->size);
 
   /*
    * High precision mode: initialize local oscillator to compensate
    * for rounding errors introduced by bin index calculation
    */
   if (params->precise) {
-    off = new->center * (2 * PI) / (SUFLOAT) window_size - params->f0;
+    off = new->center *(2 * PI) / (SUFLOAT)window_size - effective_freq;
     off *= new->decimation;
-    su_ncqo_init_fixed(&new->lo, SU_ANG2NORM_FREQ(off));
+    su_ncqo_init(&new->lo, SU_ANG2NORM_FREQ(off));
   }
 
   new->halfsz = new->size >> 1;
   new->offset = new->size >> 2;
 
-  new->gain   = SU_SQRT(1.f / new->size);
+  new->gain = 1.f;
 
-  SU_TRYCATCH(new->width > 0, goto fail);
+  SU_TRY_FAIL(new->width > 0);
 
   /*
    * Window function. We leverage fftw(f)_malloc aligned addresses
    * to attempt some kind of cache efficiency here.
    */
-  SU_TRYCATCH(
-      new->window = SU_FFTW(_malloc)(new->size * sizeof(SUFLOAT)),
-      goto fail);
+  SU_TRY_FAIL(new->window = SU_FFTW(_malloc)(new->size * sizeof(SUFLOAT)));
 
-  SU_TRYCATCH(
-      new->h     = SU_FFTW(_malloc)(window_size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+  SU_TRY_FAIL(
+      new->h = SU_FFTW(_malloc)(window_size * sizeof(SU_FFTW(_complex))));
 
-  SU_TRYCATCH(su_specttuner_init_filter_response(owner, new), goto fail);
+  SU_TRY_FAIL(su_specttuner_init_filter_response(owner, new));
 
-  /*
-   * Squared cosine window. Seems odd, right? Well, it turns out that
-   * since we are storing the square of half a cycle, when we add the
-   * odd and even halves we are actually adding up something weighted
-   * by two squared cosine halves DELAYED one quarter of a cycle.
-   *
-   * This is equivalent to adding up something weighted by a squared SINE
-   * and a squared COSINE. And it can be proven that cos^2 + sin^2 = 1.
-   *
-   * In the end, we are favouring central IFFT values before those in
-   * the borders. This is something that we generally want.
-   *
-   * PS: We use SU_SIN instead of SU_COS because we are assuming that
-   * the 0 is at new->size/2.
-   */
-  for (i = 0; i < new->size; ++i) {
-    new->window[i] = SU_SIN(PI * (SUFLOAT) i / new->size);
-    new->window[i] *= new->window[i];
+  if (owner->params.early_windowing) {
+    for (i = 0; i < new->size; ++i)
+      new->window[i] = 1.;
+  } else {
+    /*
+     * Squared cosine window. Seems odd, right? Well, it turns out that
+     * since we are storing the square of half a cycle, when we add the
+     * odd and even halves we are actually adding up something weighted
+     * by two squared cosine halves DELAYED one quarter of a cycle.
+     *
+     * This is equivalent to adding up something weighted by a squared SINE
+     * and a squared COSINE. And it can be proven that cos^2 + sin^2 = 1.
+     *
+     * In the end, we are favouring central IFFT values before those in
+     * the borders. This is something that we generally want.
+     *
+     * PS: We use SU_SIN instead of SU_COS because we are assuming that
+     * the 0 is at new->size/2.
+     */
+    for (i = 0; i < new->size; ++i) {
+      new->window[i] = SU_SIN(PI * (SUFLOAT)i / new->size);
+      new->window[i] *= new->window[i];
+    }
   }
-
+  
   /* FFT initialization */
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->ifft[SU_SPECTTUNER_STATE_EVEN] =
-          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
-  SU_TRYCATCH(
+  SU_TRY_FAIL(
       new->ifft[SU_SPECTTUNER_STATE_ODD] =
-          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+          SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
-  SU_TRYCATCH(
-      new->fft = SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))),
-      goto fail);
+  SU_TRY_FAIL(
+      new->fft = SU_FFTW(_malloc)(new->size * sizeof(SU_FFTW(_complex))));
 
   memset(new->fft, 0, new->size * sizeof(SU_FFTW(_complex)));
 
@@ -352,167 +422,228 @@ su_specttuner_channel_new(
       0,
       new->size * sizeof(SU_FFTW(_complex)));
 
-  SU_TRYCATCH(
-      new->plan[SU_SPECTTUNER_STATE_EVEN] =
-          SU_FFTW(_plan_dft_1d)(
-              new->size,
-              new->fft,
-              new->ifft[SU_SPECTTUNER_STATE_EVEN],
-              FFTW_BACKWARD,
-              FFTW_ESTIMATE),
-          goto fail);
+  SU_TRY_FAIL(
+      new->plan[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+          new->size,
+          new->fft,
+          new->ifft[SU_SPECTTUNER_STATE_EVEN],
+          FFTW_BACKWARD,
+          FFTW_MEASURE));
 
-  SU_TRYCATCH(
-      new->plan[SU_SPECTTUNER_STATE_ODD] =
-          SU_FFTW(_plan_dft_1d)(
-              new->size,
-              new->fft,
-              new->ifft[SU_SPECTTUNER_STATE_ODD],
-              FFTW_BACKWARD,
-              FFTW_ESTIMATE),
-          goto fail);
+  SU_TRY_FAIL(
+      new->plan[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+          new->size,
+          new->fft,
+          new->ifft[SU_SPECTTUNER_STATE_ODD],
+          FFTW_BACKWARD,
+          FFTW_MEASURE));
 
   return new;
 
 fail:
   if (new != NULL)
-    su_specttuner_channel_destroy(new);
+    SU_DISPOSE(su_specttuner_channel, new);
 
   return NULL;
 }
 
-void
-su_specttuner_destroy(su_specttuner_t *st)
+SU_COLLECTOR(su_specttuner)
 {
   unsigned int i;
 
-  for (i = 0; i < st->channel_count; ++i)
-    if (st->channel_list[i] != NULL)
-      su_specttuner_close_channel(st, st->channel_list[i]);
+  for (i = 0; i < self->channel_count; ++i)
+    if (self->channel_list[i] != NULL)
+      (void)su_specttuner_close_channel(self, self->channel_list[i]);
 
-  if (st->channel_list != NULL)
-    free(st->channel_list);
+  if (self->channel_list != NULL)
+    free(self->channel_list);
 
-  if (st->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_destroy_plan) (st->plans[SU_SPECTTUNER_STATE_EVEN]);
+  if (self->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_EVEN]);
 
-  if (st->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_destroy_plan) (st->plans[SU_SPECTTUNER_STATE_ODD]);
+  if (self->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_ODD]);
 
-  if (st->fft != NULL)
-    SU_FFTW(_free) (st->fft);
+  if (self->fft != NULL)
+    SU_FFTW(_free)(self->fft);
 
-  if (st->window != NULL)
-    SU_FFTW(_free) (st->window);
+  if (self->wfunc != NULL)
+    free(self->wfunc);
 
-  free(st);
+  if (self->buffer != NULL)
+    SU_FFTW(_free)(self->buffer);
+
+  free(self);
 }
 
-su_specttuner_t *
-su_specttuner_new(const struct sigutils_specttuner_params *params)
+SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 {
   su_specttuner_t *new = NULL;
+  unsigned int i;
 
   SU_TRYCATCH((params->window_size & 1) == 0, goto fail);
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_specttuner_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_specttuner_t);
 
   new->params = *params;
   new->half_size = params->window_size >> 1;
   new->full_size = 3 * params->window_size;
 
-  /* Window is 3/2 the FFT size */
-  SU_TRYCATCH(
-      new->window = SU_FFTW(_malloc(
-          new->full_size * sizeof(SU_FFTW(_complex)))),
-      goto fail);
+  /* Early windowing enabled */
+  if (params->early_windowing) {
+    SU_TRY_FAIL(new->wfunc = malloc(params->window_size * sizeof(SUFLOAT)));
+
+    for (i = 0; i < params->window_size; ++i) {
+      new->wfunc[i]  = SU_SIN(PI * (SUFLOAT) i / params->window_size);
+      new->wfunc[i] *= new->wfunc[i];
+    }
+  }
+  
+  /* Buffer is 3/2 the FFT size */
+  SU_TRY_FAIL(
+      new->buffer =
+          SU_FFTW(_malloc(new->full_size * sizeof(SU_FFTW(_complex)))));
+  memset(new->buffer, 0, new->full_size * sizeof(SU_FFTW(_complex)));
 
   /* FFT is the size provided by params */
-  SU_TRYCATCH(
-      new->fft = SU_FFTW(_malloc(
-          params->window_size * sizeof(SU_FFTW(_complex)))),
-      goto fail);
+  SU_TRY_FAIL(
+      new->fft =
+          SU_FFTW(_malloc(params->window_size * sizeof(SU_FFTW(_complex)))));
 
-  /* Even plan starts at the beginning of the window */
-  SU_TRYCATCH(
-      new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
-          params->window_size,
-          new->window,
-          new->fft,
-          FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto fail);
+  memset(new->fft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
-  /* Odd plan stars at window_size / 2 */
-  SU_TRYCATCH(
-      new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
-          params->window_size,
-          new->window + new->half_size,
-          new->fft,
-          FFTW_FORWARD,
-          FFTW_ESTIMATE),
-      goto fail);
+  if (new->params.early_windowing) {
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->fft,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_MEASURE));
+
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->fft,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_MEASURE));
+  } else {
+    /* Even plan starts at the beginning of the window */
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->buffer,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_MEASURE));
+
+    /* Odd plan stars at window_size / 2 */
+    SU_TRY_FAIL(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+            params->window_size,
+            new->buffer + new->half_size,
+            new->fft,
+            FFTW_FORWARD,
+            FFTW_MEASURE));
+  }
 
   return new;
 
 fail:
   if (new != NULL)
-    su_specttuner_destroy(new);
+    SU_DISPOSE(su_specttuner, new);
 
   return NULL;
 }
 
+SU_METHOD(su_specttuner, void, run_fft)
+{
+  unsigned int i;
+
+  /* Early windowing, copy windowed input */
+  if (self->params.early_windowing) {
+    if (self->state == SU_SPECTTUNER_STATE_EVEN) {
+#ifdef SU_USE_VOLK
+      volk_32fc_32f_multiply_32fc(
+        self->fft,
+        self->buffer,
+        self->wfunc,
+        self->params.window_size);
+#else
+      for (i = 0; i < self->params.window_size; ++i)
+        self->fft[i] = self->buffer[i] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+    } else {
+#ifdef SU_USE_VOLK
+      volk_32fc_32f_multiply_32fc(
+        self->fft,
+        self->buffer + self->half_size,
+        self->wfunc,
+        self->params.window_size);
+#else
+      for (i = 0; i < self->params.window_size; ++i)
+        self->fft[i] = self->buffer[i + self->half_size] * self->wfunc[i];
+#endif /* SU_USE_VOLK */
+    }
+  }
+
+  /* Compute FFT */
+  SU_FFTW(_execute)(self->plans[self->state]);
+}
+
 SUINLINE SUSCOUNT
 __su_specttuner_feed_bulk(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
+    su_specttuner_t *self,
+    const SUCOMPLEX *__restrict buf,
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
-  SUSDIFF p;
+  SUSDIFF p, i;
+  
+  if (size + self->p > self->params.window_size)
+    size = self->params.window_size - self->p;
 
-  if (size + st->p > st->params.window_size)
-    size = st->params.window_size - st->p;
-
-  switch (st->state)
-  {
+  switch (self->state) {
     case SU_SPECTTUNER_STATE_EVEN:
       /* Just copy at the beginning */
-      memcpy(st->window + st->p, buf, size * sizeof(SUCOMPLEX));
+      memcpy(self->buffer + self->p, buf, size * sizeof(SUCOMPLEX));
       break;
 
     case SU_SPECTTUNER_STATE_ODD:
       /* Copy to the second third */
-      memcpy(st->window + st->p + st->half_size, buf, size * sizeof(SUCOMPLEX));
+      memcpy(
+          self->buffer + self->p + self->half_size,
+          buf,
+          size * sizeof(SUCOMPLEX));
 
       /* Did this copy populate the last third? */
-      if (st->p + size > st->half_size) {
-        halfsz = st->p + size - st->half_size;
-        p = st->p > st->half_size ? st->p : st->half_size;
+      if (self->p + size > self->half_size) {
+        halfsz = self->p + size - self->half_size;
+        p = self->p > self->half_size ? self->p : self->half_size;
 
         /* Don't take into account data already written */
-        halfsz -= p - st->half_size;
+        halfsz -= p - self->half_size;
 
         /* Copy to the first third */
         if (halfsz > 0)
           memcpy(
-              st->window + p - st->half_size,
-              st->window + p + st->half_size,
+              self->buffer + p - self->half_size,
+              self->buffer + p + self->half_size,
               halfsz * sizeof(SUCOMPLEX));
       }
   }
 
-  st->p += size;
+  self->p += size;
 
-  if (st->p == st->params.window_size) {
-    st->p = st->half_size;
+  if (self->p == self->params.window_size) {
+    self->p = self->half_size;
 
-    /* Compute FFT */
-    SU_FFTW(_execute) (st->plans[st->state]);
+    su_specttuner_run_fft(self);
 
     /* Toggle state */
-    st->state = !st->state;
-    st->ready = SU_TRUE;
+    self->state = !self->state;
+    self->ready = SU_TRUE;
   }
 
   return size;
@@ -520,18 +651,42 @@ __su_specttuner_feed_bulk(
 
 SUINLINE SUBOOL
 __su_specttuner_feed_channel(
-    const su_specttuner_t *st,
+    const su_specttuner_t *self,
     su_specttuner_channel_t *channel)
 {
   int p;
   int len;
-  int window_size = st->params.window_size;
+  int window_size = self->params.window_size;
   unsigned int i;
-  SUCOMPLEX phase;
+  SUCOMPLEX phase, phold;
   SUFLOAT alpha, beta;
+  SUBOOL changing_freqs = SU_FALSE;
+  int a_sign, b_sign;
   SUCOMPLEX *prev, *curr;
 
+  /*
+   * This is how the phase continuity trick works: as soon as a new
+   * center frequency is signaled, we make a copy of the current
+   * LO state. Next, during overlapping, the previous buffer is
+   * adjusted by the old LO, while the most recent buffer is
+   * adjusted by the new LO. Also, phase continuity between bins is
+   * ensured, as all bins refer to frequencies multiple of 2pi.
+   */
+
+  b_sign = 1 - (channel->center & 2);
+
+  if (!channel->state && channel->pending_freq) {
+    channel->pending_freq = SU_FALSE;
+
+    su_ncqo_copy(&channel->old_lo, &channel->lo);
+
+    su_specttuner_refresh_channel_center(self, channel);
+
+    changing_freqs = SU_TRUE;
+  }
+
   p = channel->center;
+  a_sign = 1 - (channel->center & 2);
 
   /***************************** Upper sideband ******************************/
   len = channel->halfw;
@@ -539,38 +694,34 @@ __su_specttuner_feed_channel(
     len = window_size - p;
 
   /* Copy to the end */
-  memcpy(
-      channel->fft,
-      st->fft + p,
-      len * sizeof(SUCOMPLEX));
+  memcpy(channel->fft, self->fft + p, len * sizeof(SUCOMPLEX));
 
   /* Copy remaining part */
   if (len < channel->halfw)
     memcpy(
         channel->fft + len,
-        st->fft,
+        self->fft,
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
   /***************************** Lower sideband ******************************/
   len = channel->halfw;
   if (p < len) /* Roll over */
-    len = p; /* Can copy up to p bytes */
-
+    len = p;   /* Can copy up to p bytes */
 
   /* Copy higher frequencies */
   memcpy(
       channel->fft + channel->size - len,
-      st->fft + p - len,
+      self->fft + p - len,
       len * sizeof(SUCOMPLEX));
 
   /* Copy remaining part */
   if (len < channel->halfw)
     memcpy(
         channel->fft + channel->size - channel->halfw,
-        st->fft + window_size - (channel->halfw - len),
+        self->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
-  /*********************** Apply filter and scaling **************************/
+    /*********************** Apply filter and scaling ************************/
 #ifdef SU_SPECTTUNER_SQUARE_FILTER
   for (i = 0; i < channel->halfw; ++i)
     channel->fft[i] *= channel->k;
@@ -585,78 +736,134 @@ __su_specttuner_feed_channel(
   }
 #endif
   /************************* Back to time domain******************************/
-  SU_FFTW(_execute) (channel->plan[channel->state]);
+  SU_FFTW(_execute)(channel->plan[channel->state]);
 
   curr = channel->ifft[channel->state];
   prev = channel->ifft[!channel->state] + channel->halfsz;
 
   /* Glue buffers */
   if (channel->params.precise) {
-    for (i = 0; i < channel->halfsz; ++i) {
-      alpha = channel->window[i]; /* Positive slope */
-      beta  = channel->window[i + channel->halfsz]; /* Negative slope */
+    if (changing_freqs) {
+      /* Do this only when switching frequencies */
+      if (self->params.early_windowing) {
+        /* Windowing already applied, no need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          phold = su_ncqo_read(&channel->old_lo);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] =
+              channel->gain * (phase * curr[i] + phold * prev[i]);
+        }
+      } else {
+        /* Late windowing, need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          alpha = channel->window[i];
+          beta = channel->window[i + channel->halfsz];
 
-      phase = su_ncqo_read(&channel->lo);
+          phold = su_ncqo_read(&channel->old_lo);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] =
+              channel->gain * (phase * alpha * curr[i] + phold * beta * prev[i]);
+        }
+      }
+    } else {
+      if (self->params.early_windowing) {
+        /* Early windowing, speed things up */
+        for (i = 0; i < channel->halfsz; ++i) {
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] = channel->gain * phase * (curr[i] + prev[i]);
+        }
+      } else {
+        /* Late windowing, need to apply it here */
+        for (i = 0; i < channel->halfsz; ++i) {
+          alpha = channel->window[i];                  /* Positive slope */
+          beta = channel->window[i + channel->halfsz]; /* Negative slope */
 
-      curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+          phase = su_ncqo_read(&channel->lo);
+          curr[i] = channel->gain * phase * (alpha * curr[i] + beta * prev[i]);
+        }
+      }
     }
   } else {
-    for (i = 0; i < channel->halfsz; ++i) {
-      alpha = channel->window[i]; /* Positive slope */
-      beta  = channel->window[i + channel->halfsz]; /* Negative slope */
+    if (self->params.early_windowing) {
+      /* Early windowing */
+      for (i = 0; i < channel->halfsz; ++i)
+        curr[i] = channel->gain * (a_sign * curr[i] + b_sign * prev[i]);
+    } else {
+      /* Late windowing */
+      for (i = 0; i < channel->halfsz; ++i) {
+        alpha = a_sign * channel->window[i];                  /* Positive slope */
+        beta = b_sign * channel->window[i + channel->halfsz]; /* Negative slope */
 
-      curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
+        curr[i] = channel->gain * (alpha * curr[i] + beta * prev[i]);
+      }
     }
   }
 
   channel->state = !channel->state;
 
   /************************** Call user callback *****************************/
-  return (channel->params.on_data) (
+  return (channel->params.on_data)(
       channel,
       channel->params.privdata,
       curr,
       channel->halfsz);
 }
 
-SUSDIFF
-su_specttuner_feed_bulk_single(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
+SU_METHOD(su_specttuner, SUBOOL, feed_all_channels)
+{
+  unsigned int i;
+  SUBOOL ok = SU_TRUE;
+
+  if (su_specttuner_new_data(self)) {
+    for (i = 0; i < self->channel_count; ++i)
+      if (self->channel_list[i] != NULL)
+        ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
+    su_specttuner_ack_data(self);
+  }
+
+  return ok;
+}
+
+SU_METHOD(
+    su_specttuner,
+    SUSDIFF,
+    feed_bulk_single,
+    const SUCOMPLEX *__restrict buf,
     SUSCOUNT size)
 {
   SUSDIFF got;
   SUSCOUNT ok = SU_TRUE;
   unsigned int i;
 
-  if (st->ready)
+  if (self->ready)
     return 0;
 
-  got = __su_specttuner_feed_bulk(st, buf, size);
+  got = __su_specttuner_feed_bulk(self, buf, size);
 
   /* Buffer full, feed channels */
-  if (st->ready)
-    for (i = 0; i < st->channel_count; ++i)
-      if (st->channel_list[i] != NULL)
-        ok = __su_specttuner_feed_channel(st, st->channel_list[i]) && ok;
+  if (self->ready)
+    for (i = 0; i < self->channel_count; ++i)
+      if (self->channel_list[i] != NULL)
+        ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
 
   return ok ? got : -1;
 }
 
-SUBOOL
-su_specttuner_feed_bulk(
-    su_specttuner_t *st,
-    const SUCOMPLEX *buf,
+SU_METHOD(
+    su_specttuner,
+    SUBOOL,
+    feed_bulk,
+    const SUCOMPLEX *__restrict buf,
     SUSCOUNT size)
 {
   SUSDIFF got;
   SUBOOL ok = SU_TRUE;
 
   while (size > 0) {
-    got = su_specttuner_feed_bulk_single(st, buf, size);
+    got = su_specttuner_feed_bulk_single(self, buf, size);
 
-    if (su_specttuner_new_data(st))
-      su_specttuner_ack_data(st);
+    if (su_specttuner_new_data(self))
+      su_specttuner_ack_data(self);
 
     if (got == -1)
       ok = SU_FALSE;
@@ -668,23 +875,22 @@ su_specttuner_feed_bulk(
   return ok;
 }
 
-su_specttuner_channel_t *
-su_specttuner_open_channel(
-    su_specttuner_t *st,
+SU_METHOD(
+    su_specttuner,
+    su_specttuner_channel_t *,
+    open_channel,
     const struct sigutils_specttuner_channel_params *params)
 {
   su_specttuner_channel_t *new = NULL;
   int index;
 
-  SU_TRYCATCH(new = su_specttuner_channel_new(st, params), goto fail);
+  SU_MAKE_FAIL(new, su_specttuner_channel, self, params);
 
-  SU_TRYCATCH(
-      (index = PTR_LIST_APPEND_CHECK(st->channel, new)) != -1,
-      goto fail);
+  SU_TRYC_FAIL(index = PTR_LIST_APPEND_CHECK(self->channel, new));
 
   new->index = index;
 
-  ++st->count;
+  ++self->count;
 
   return new;
 
@@ -695,22 +901,23 @@ fail:
   return NULL;
 }
 
-SUBOOL
-su_specttuner_close_channel(
-    su_specttuner_t *st,
+SU_METHOD(
+    su_specttuner,
+    SUBOOL,
+    close_channel,
     su_specttuner_channel_t *channel)
 {
   SU_TRYCATCH(channel->index >= 0, return SU_FALSE);
 
-  SU_TRYCATCH(channel->index < st->channel_count, return SU_FALSE);
+  SU_TRYCATCH(channel->index < self->channel_count, return SU_FALSE);
 
-  SU_TRYCATCH(st->channel_list[channel->index] == channel, return SU_FALSE);
+  SU_TRYCATCH(self->channel_list[channel->index] == channel, return SU_FALSE);
 
-  st->channel_list[channel->index] = NULL;
+  self->channel_list[channel->index] = NULL;
 
   su_specttuner_channel_destroy(channel);
 
-  --st->count;
+  --self->count;
 
   return SU_TRUE;
 }

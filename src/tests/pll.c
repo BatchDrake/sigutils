@@ -17,17 +17,15 @@
 
 */
 
+#include <sigutils/agc.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/pll.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <sigutils/sampling.h>
-#include <sigutils/ncqo.h>
-#include <sigutils/iir.h>
-#include <sigutils/agc.h>
-#include <sigutils/pll.h>
-
-#include <sigutils/sigutils.h>
 
 #include "test_list.h"
 #include "test_param.h"
@@ -41,7 +39,6 @@ su_test_pll(su_test_context_t *ctx)
   SUFLOAT *phierr = NULL;
   SUFLOAT *lock = NULL;
 
-  SUFLOAT t;
   su_ncqo_t ncqo = su_ncqo_INITIALIZER;
   su_pll_t pll = su_pll_INITIALIZER;
   unsigned int p = 0;
@@ -49,20 +46,19 @@ su_test_pll(su_test_context_t *ctx)
   SU_TEST_START_TICKLESS(ctx);
 
   /* Initialize */
-  SU_TEST_ASSERT(input  = su_test_ctx_getf(ctx, "x"));
+  SU_TEST_ASSERT(input = su_test_ctx_getf(ctx, "x"));
   SU_TEST_ASSERT(omgerr = su_test_ctx_getf(ctx, "oe"));
   SU_TEST_ASSERT(phierr = su_test_ctx_getf(ctx, "pe"));
-  SU_TEST_ASSERT(lock   = su_test_ctx_getf(ctx, "lock"));
+  SU_TEST_ASSERT(lock = su_test_ctx_getf(ctx, "lock"));
 
-  SU_TEST_ASSERT(su_pll_init(&pll,
-      SU_TEST_PLL_SIGNAL_FREQ * 0.5,
-      SU_TEST_PLL_BANDWIDTH));
+  SU_TEST_ASSERT(
+      su_pll_init(&pll, SU_TEST_PLL_SIGNAL_FREQ * 0.5, SU_TEST_PLL_BANDWIDTH));
 
   su_ncqo_init(&ncqo, SU_TEST_PLL_SIGNAL_FREQ);
 
   /* Create a falling sinusoid */
   for (p = 0; p < ctx->params->buffer_size; ++p) {
-    input[p] = 0 * (0.5 - rand() / (double) RAND_MAX);
+    input[p] = 0 * (0.5 - rand() / (double)RAND_MAX);
     input[p] += su_ncqo_read_i(&ncqo);
   }
 
@@ -73,11 +69,11 @@ su_test_pll(su_test_context_t *ctx)
 
   /* Feed the PLL and save phase value */
   for (p = 0; p < ctx->params->buffer_size; ++p) {
-    (void) su_ncqo_read_i(&ncqo); /* Used to compute phase errors */
+    (void)su_ncqo_read_i(&ncqo); /* Used to compute phase errors */
     su_pll_feed(&pll, input[p]);
-    input[p]  = su_ncqo_get_i(&pll.ncqo);
+    input[p] = su_ncqo_get_i(&pll.ncqo);
     phierr[p] = su_ncqo_get_phase(&pll.ncqo) - su_ncqo_get_phase(&ncqo);
-    lock[p]   = pll.lock;
+    lock[p] = pll.lock;
 
     if (phierr[p] < 0 || phierr[p] > 2 * PI) {
       phierr[p] -= 2 * PI * floor(phierr[p] / (2 * PI));
@@ -96,5 +92,3 @@ done:
 
   return ok;
 }
-
-

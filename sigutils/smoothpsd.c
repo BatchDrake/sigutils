@@ -19,49 +19,51 @@
 
 #define SU_LOG_DOMAIN "smoothpsd"
 
-#include <string.h>
-
 #include <sigutils/log.h>
 #include <sigutils/smoothpsd.h>
 #include <sigutils/taps.h>
+#include <string.h>
 
-#define _SWAP(a, b)     \
-  tmp = a;              \
-  a = b;                \
+#define _SWAP(a, b) \
+  tmp = a;          \
+  a = b;            \
   b = tmp;
 
-su_smoothpsd_t *
-su_smoothpsd_new(
+SU_INSTANCER(
+    su_smoothpsd,
     const struct sigutils_smoothpsd_params *params,
-    SUBOOL (*psd_func) (void *userdata, const SUFLOAT *psd, unsigned int size),
+    SUBOOL (*psd_func)(void *userdata, const SUFLOAT *psd, unsigned int size),
     void *userdata)
 {
   su_smoothpsd_t *new = NULL;
 
-  SU_TRYCATCH(new = calloc(1, sizeof(su_smoothpsd_t)), goto fail);
+  SU_ALLOCATE_FAIL(new, su_smoothpsd_t);
 
-  SU_TRYCATCH(pthread_mutex_init(&new->mutex, NULL) == 0, goto fail);
+  SU_TRYZ_FAIL(pthread_mutex_init(&new->mutex, NULL));
+
   new->mutex_init = SU_TRUE;
 
   new->psd_func = psd_func;
   new->userdata = userdata;
 
-  SU_TRYCATCH(su_smoothpsd_set_params(new, params), goto fail);
+  new->nominal_rate = params->samp_rate;
+  
+  SU_TRY_FAIL(su_smoothpsd_set_params(new, params));
 
   return new;
 
 fail:
   if (new != NULL)
-    su_smoothpsd_destroy(new);
+    SU_DISPOSE(su_smoothpsd, new);
 
   return NULL;
 }
 
-SUPRIVATE SUBOOL
-su_smoothpsd_exec_fft(su_smoothpsd_t *self)
+SUPRIVATE
+SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 {
   unsigned int i;
-  SUFLOAT wsizeinv = 1. / self->params.fft_size;
+  SUFLOAT wsizeinv = 1. / (self->params.fft_size * self->nominal_rate);
 
   /* Execute FFT */
   SU_FFTW(_execute(self->fft_plan));
@@ -72,28 +74,24 @@ su_smoothpsd_exec_fft(su_smoothpsd_t *self)
         wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
 
   SU_TRYCATCH(
-      (self->psd_func)(
-          self->userdata,
-          self->realfft,
-          self->params.fft_size),
+      (self->psd_func)(self->userdata, self->realfft, self->params.fft_size),
       return SU_FALSE);
 
   ++self->iters;
 
   return SU_TRUE;
 }
-SUBOOL
-su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
+
+SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 {
   unsigned int chunk;
   unsigned int i;
   unsigned int p;
-  SUFLOAT wsizeinv;
   SUBOOL mutex_acquired = SU_FALSE;
   SUBOOL ok = SU_FALSE;
-  SUBOOL exec_fft = SU_FALSE;
 
-  SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+  SU_TRYZ(pthread_mutex_lock(&self->mutex));
+
   mutex_acquired = SU_TRUE;
 
   if (self->max_p > 0) {
@@ -111,8 +109,8 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
           chunk = SU_MIN(size, self->max_p - self->fft_p);
         }
 
-        size        -= chunk;
-        data        += chunk;
+        size -= chunk;
+        data += chunk;
         self->fft_p += chunk;
 
         /* Time to trigger FFT! */
@@ -124,7 +122,7 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
 
-          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+          SU_TRY(su_smoothpsd_exec_fft(self));
         }
       }
 
@@ -132,9 +130,8 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
       /* Overlapped mode. This is a bit trickier. */
       while (size > 0) {
         /* We can copy this much */
-        chunk = SU_MIN(
-            self->max_p - self->fft_p,
-            self->params.fft_size - self->p);
+        chunk =
+            SU_MIN(self->max_p - self->fft_p, self->params.fft_size - self->p);
 
         /* But maybe we were not fed those many samples */
         if (size < chunk)
@@ -149,7 +146,7 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
         size -= chunk;
         data += chunk;
 
-        self->p     += chunk;
+        self->p += chunk;
         self->fft_p += chunk;
 
         if (self->p >= self->params.fft_size)
@@ -157,7 +154,6 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
 
         /* Time to trigger FFT! */
         if (self->fft_p >= self->max_p) {
-          wsizeinv = 1. / self->params.fft_size;
           self->fft_p = 0;
           p = self->p;
 
@@ -168,7 +164,7 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
               p = 0;
           }
 
-          SU_TRYCATCH(su_smoothpsd_exec_fft(self), goto done);
+          SU_TRY(su_smoothpsd_exec_fft(self));
         }
       }
     }
@@ -178,14 +174,15 @@ su_smoothpsd_feed(su_smoothpsd_t *self, const SUCOMPLEX *data, SUSCOUNT size)
 
 done:
   if (mutex_acquired)
-    (void) pthread_mutex_unlock(&self->mutex);
+    (void)pthread_mutex_unlock(&self->mutex);
 
   return ok;
 }
 
-SUBOOL
-su_smoothpsd_set_params(
-    su_smoothpsd_t *self,
+SU_METHOD(
+    su_smoothpsd,
+    SUBOOL,
+    set_params,
     const struct sigutils_smoothpsd_params *params)
 {
   unsigned int i;
@@ -193,9 +190,9 @@ su_smoothpsd_set_params(
   SUBOOL mutex_acquired = SU_FALSE;
 
   SU_FFTW(_complex) *window_func = NULL;
-  SU_FFTW(_complex) *buffer  = NULL;
-  SU_FFTW(_complex) *fftbuf  = NULL;
-  SU_FFTW(_plan)    fft_plan = NULL;
+  SU_FFTW(_complex) *buffer = NULL;
+  SU_FFTW(_complex) *fftbuf = NULL;
+  SU_FFTW(_plan) fft_plan = NULL;
 
   SUBOOL refresh_window_func = params->window != self->params.window;
   SUBOOL ok = SU_FALSE;
@@ -206,25 +203,25 @@ su_smoothpsd_set_params(
    * it from the modification of the current object.
    */
   if (params->fft_size != self->params.fft_size) {
-    if ((window_func
-        = SU_FFTW(_malloc)(
-            params->fft_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((window_func =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for window\n");
       goto done;
     }
 
-    if ((buffer
-        = SU_FFTW(_malloc)(
-            params->fft_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((buffer =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for circular buffer\n");
       goto done;
     }
 
     memset(buffer, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
-    if ((fftbuf
-        = SU_FFTW(_malloc)(
-            params->fft_size * sizeof(SU_FFTW(_complex)))) == NULL) {
+    if ((fftbuf =
+             SU_FFTW(_malloc)(params->fft_size * sizeof(SU_FFTW(_complex))))
+        == NULL) {
       SU_ERROR("cannot allocate memory for FFT buffer\n");
       goto done;
     }
@@ -233,22 +230,23 @@ su_smoothpsd_set_params(
 
     /* Direct FFT plan */
     if ((fft_plan = SU_FFTW(_plan_dft_1d)(
-        params->fft_size,
-        fftbuf,
-        fftbuf,
-        FFTW_FORWARD,
-        FFTW_ESTIMATE)) == NULL) {
+             params->fft_size,
+             fftbuf,
+             fftbuf,
+             FFTW_FORWARD,
+             FFTW_ESTIMATE))
+        == NULL) {
       SU_ERROR("failed to create FFT plan\n");
       goto done;
     }
 
-    SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+    SU_TRYZ(pthread_mutex_lock(&self->mutex));
     mutex_acquired = SU_TRUE;
 
     _SWAP(window_func, self->window_func);
-    _SWAP(buffer,      self->buffer);
-    _SWAP(fftbuf,      self->fft);
-    _SWAP(fft_plan,    self->fft_plan);
+    _SWAP(buffer, self->buffer);
+    _SWAP(fftbuf, self->fft);
+    _SWAP(fft_plan, self->fft_plan);
 
     self->p = 0;
 
@@ -256,7 +254,7 @@ su_smoothpsd_set_params(
   }
 
   if (!mutex_acquired) {
-    SU_TRYCATCH(pthread_mutex_lock(&self->mutex) == 0, goto done);
+    SU_TRYZ(pthread_mutex_lock(&self->mutex));
     mutex_acquired = SU_TRUE;
   }
 
@@ -272,15 +270,11 @@ su_smoothpsd_set_params(
         break;
 
       case SU_CHANNEL_DETECTOR_WINDOW_HAMMING:
-        su_taps_apply_hamming_complex(
-            self->window_func,
-            self->params.fft_size);
+        su_taps_apply_hamming_complex(self->window_func, self->params.fft_size);
         break;
 
       case SU_CHANNEL_DETECTOR_WINDOW_HANN:
-        su_taps_apply_hann_complex(
-            self->window_func,
-            self->params.fft_size);
+        su_taps_apply_hann_complex(self->window_func, self->params.fft_size);
         break;
 
       case SU_CHANNEL_DETECTOR_WINDOW_FLAT_TOP:
@@ -301,7 +295,7 @@ su_smoothpsd_set_params(
          * never happen either
          */
         SU_WARNING("Unsupported window function %d\n", self->params.window);
-        return SU_FALSE;
+        goto done;
     }
   }
 
@@ -322,7 +316,7 @@ su_smoothpsd_set_params(
 
 done:
   if (mutex_acquired)
-    (void) pthread_mutex_unlock(&self->mutex);
+    (void)pthread_mutex_unlock(&self->mutex);
 
   if (fft_plan != NULL)
     SU_FFTW(_destroy_plan)(fft_plan);
@@ -331,7 +325,7 @@ done:
     SU_FFTW(_free)(window_func);
 
   if (buffer != NULL)
-      SU_FFTW(_free)(buffer);
+    SU_FFTW(_free)(buffer);
 
   if (fftbuf != NULL)
     SU_FFTW(_free)(fftbuf);
@@ -339,8 +333,7 @@ done:
   return ok;
 }
 
-void
-su_smoothpsd_destroy(su_smoothpsd_t *self)
+SU_COLLECTOR(su_smoothpsd)
 {
   if (self->mutex_init)
     pthread_mutex_destroy(&self->mutex);
@@ -352,7 +345,7 @@ su_smoothpsd_destroy(su_smoothpsd_t *self)
     SU_FFTW(_free)(self->window_func);
 
   if (self->buffer != NULL)
-      SU_FFTW(_free)(self->buffer);
+    SU_FFTW(_free)(self->buffer);
 
   if (self->fft != NULL)
     SU_FFTW(_free)(self->fft);

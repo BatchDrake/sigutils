@@ -21,7 +21,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 set(SIGUTILS_VERSION_MAJOR 0)
-set(SIGUTILS_VERSION_MINOR 2)
+set(SIGUTILS_VERSION_MINOR 3)
 set(SIGUTILS_VERSION_PATCH 0)
 
 set(SIGUTILS_ABI_VERSION   1)
@@ -48,12 +48,14 @@ pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
 pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
 pkg_check_modules(VOLK              volk>=1.0)
 
+# Find cppcheck (if available)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
+include(CodeAnalysis)
+
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
-set(CODECDIR ${SRCDIR}/codecs)
-set(BLOCKDIR ${SRCDIR}/blocks)
-set(MODEMDIR ${SRCDIR}/modems)
+set(SPECDIR  ${SRCDIR}/specific)
 
 # Compiler configuration
 set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
@@ -113,20 +115,73 @@ install(
 set(SIGUTILS_UTIL_HEADERS ${UTILDIR}/util.h)
 set(SIGUTILS_UTIL_SOURCES ${UTILDIR}/util.c)
 
+set(SIGUTILS_COMPAT_SOURCES "")
+set(SIGUTILS_COMPAT_HEADERS
+   ${UTILDIR}/compat-mman.h
+   ${UTILDIR}/compat-time.h
+   ${UTILDIR}/compat-stat.h
+   ${UTILDIR}/compat-fcntl.h
+   ${UTILDIR}/compat-in.h
+   ${UTILDIR}/compat-inet.h
+   ${UTILDIR}/compat-netdb.h
+   ${UTILDIR}/compat-poll.h
+   ${UTILDIR}/compat-pwd.h
+   ${UTILDIR}/compat-select.h
+   ${UTILDIR}/compat-socket.h
+   ${UTILDIR}/compat-statvfs.h
+   ${UTILDIR}/compat-stdlib.h
+   ${UTILDIR}/compat-termios.h
+   ${UTILDIR}/compat-unistd.h)
+
+if(WIN32)
+  set(SIGUTILS_COMPAT_HEADERS
+    ${SIGUTILS_COMPAT_HEADERS}
+    ${UTILDIR}/win32-mman.h
+    ${UTILDIR}/win32-time.h
+    ${UTILDIR}/win32-stat.h
+    ${UTILDIR}/win32-fcntl.h
+    ${UTILDIR}/win32-in.h
+    ${UTILDIR}/win32-inet.h
+    ${UTILDIR}/win32-netdb.h
+    ${UTILDIR}/win32-poll.h
+    ${UTILDIR}/win32-pwd.h
+    ${UTILDIR}/win32-socket.h
+    ${UTILDIR}/win32-statvfs.h
+    ${UTILDIR}/win32-stdlib.h
+    ${UTILDIR}/win32-termios.h
+    ${UTILDIR}/win32-unistd.h)
+
+  set(SIGUTILS_COMPAT_SOURCES
+    ${SIGUTILS_COMPAT_SOURCES}
+    ${UTILDIR}/win32-fcntl.c
+    ${UTILDIR}/win32-mman.c
+    ${UTILDIR}/win32-time.c
+    ${UTILDIR}/win32-poll.c
+    ${UTILDIR}/win32-pwd.c
+    ${UTILDIR}/win32-statvfs.c
+    ${UTILDIR}/win32-stdlib.c
+    ${UTILDIR}/win32-termios.c
+    ${UTILDIR}/win32-unistd.c)
+endif()
+
+set(SIGUTILS_SPECIFIC_HEADERS
+    ${SPECDIR}/apt.h)
+set(SIGUTILS_SPECIFIC_SOURCES
+    ${SPECDIR}/apt.c)
+
 set(SIGUTILS_LIB_HEADERS
     ${SRCDIR}/agc.h
     ${SRCDIR}/block.h
     ${SRCDIR}/clock.h
-    ${SRCDIR}/codec.h
     ${SRCDIR}/coef.h
     ${SRCDIR}/decider.h
+    ${SRCDIR}/defs.h
     ${SRCDIR}/detect.h
     ${SRCDIR}/equalizer.h
     ${SRCDIR}/iir.h
     ${SRCDIR}/lfsr.h
     ${SRCDIR}/log.h
     ${SRCDIR}/matfile.h
-    ${SRCDIR}/modem.h
     ${SRCDIR}/ncqo.h
     ${SRCDIR}/pll.h
     ${SRCDIR}/property.h
@@ -144,7 +199,6 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/agc.c
     ${SRCDIR}/block.c
     ${SRCDIR}/clock.c
-    ${SRCDIR}/codec.c
     ${SRCDIR}/coef.c
     ${SRCDIR}/detect.c
     ${SRCDIR}/equalizer.c
@@ -153,7 +207,6 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/lib.c
     ${SRCDIR}/log.c
     ${SRCDIR}/matfile.c
-    ${SRCDIR}/modem.c
     ${SRCDIR}/ncqo.c
     ${SRCDIR}/pll.c
     ${SRCDIR}/property.c
@@ -163,30 +216,18 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/taps.c
     ${SRCDIR}/tvproc.c
     ${SRCDIR}/version.c)
-    
-set(SIGUTILS_BLOCK_SOURCES
-    ${BLOCKDIR}/agc.c
-    ${BLOCKDIR}/clock.c
-    ${BLOCKDIR}/pll.c
-    ${BLOCKDIR}/tuner.c
-    ${BLOCKDIR}/filt.c
-    ${BLOCKDIR}/siggen.c
-    ${BLOCKDIR}/wavfile.c)
-
-set(SIGUTILS_CODEC_SOURCES ${CODECDIR}/diff.c)
-set(SIGUTILS_MODEM_SOURCES ${MODEMDIR}/qpsk.c)
 
 link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
- 
+	
 add_library(
   sigutils SHARED
+  ${SIGUTILS_COMPAT_SOURCES}
+  ${SIGUTILS_COMPAT_HEADERS}
   ${SIGUTILS_UTIL_SOURCES}
   ${SIGUTILS_UTIL_HEADERS}
   ${SIGUTILS_LIB_SOURCES}
   ${SIGUTILS_LIB_HEADERS}
-  ${SIGUTILS_BLOCK_SOURCES}
-  ${SIGUTILS_CODEC_SOURCES}
-  ${SIGUTILS_MODEM_SOURCES})
+  ${SIGUTILS_SPECIFIC_SOURCES})
   
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
@@ -204,6 +245,11 @@ target_link_libraries(sigutils ${FFTW3_LIBRARIES})
 target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(sigutils m)
 
+if(WIN32)
+  # In Windows systems, winsock is required
+  target_link_libraries(sigutils ws2_32)
+endif()
+
 # Optional dependencies
 if(VOLK_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
@@ -216,7 +262,11 @@ install(
   DESTINATION include/sigutils/sigutils)
 
 install(
-  FILES ${SIGUTILS_UTIL_HEADERS} 
+  FILES ${SIGUTILS_SPECIFIC_HEADERS} 
+  DESTINATION include/sigutils/sigutils/specific)
+
+install(
+  FILES ${SIGUTILS_UTIL_HEADERS} ${SIGUTILS_COMPAT_HEADERS}
   DESTINATION include/sigutils/util)
 
 install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -245,7 +295,6 @@ set(SIGUTILS_TEST_SOURCES
   ${MAINDIR}/main.c
   ${TESTDIR}/mat.c
   ${TESTDIR}/ncqo.c
-  ${TESTDIR}/codec.c
   ${TESTDIR}/pll.c
   ${TESTDIR}/specttuner.c)
   

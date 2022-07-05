@@ -49,7 +49,7 @@ su_softtuner_init(
   assert(params->samp_rate > 0);
   assert(params->decimation > 0);
 
-  memset(tuner, 0, sizeof (su_softtuner_t));
+  memset(tuner, 0, sizeof(su_softtuner_t));
 
   tuner->params = *params;
   tuner->avginv = 1. / params->decimation;
@@ -68,8 +68,8 @@ su_softtuner_init(
             &tuner->antialias,
             SU_SOFTTUNER_ANTIALIAS_ORDER,
             .5 * SU_ABS2NORM_FREQ(params->samp_rate, params->bw)
-               * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
-         goto fail);
+                * SU_SOFTTUNER_ANTIALIAS_EXTRA_BW),
+        goto fail);
     tuner->filtered = SU_TRUE;
   }
 
@@ -82,12 +82,9 @@ fail:
 }
 
 SUSCOUNT
-su_softtuner_feed(
-    su_softtuner_t *tuner,
-    const SUCOMPLEX *input,
-    SUSCOUNT size)
+su_softtuner_feed(su_softtuner_t *tuner, const SUCOMPLEX *input, SUSCOUNT size)
 {
-  SUSCOUNT  i = 0;
+  SUSCOUNT i = 0;
   SUCOMPLEX x;
   SUSCOUNT avail;
   SUCOMPLEX *buf;
@@ -153,5 +150,5 @@ su_softtuner_finalize(su_softtuner_t *tuner)
 
   su_stream_finalize(&tuner->output);
 
-  memset(tuner, 0, sizeof (su_softtuner_t));
+  memset(tuner, 0, sizeof(su_softtuner_t));
 }

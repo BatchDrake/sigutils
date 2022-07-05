@@ -20,26 +20,27 @@
 #define SU_LOG_DOMAIN "matfile"
 
 #include "matfile.h"
-#include "log.h"
-#include "version.h"
 
 #include <stdarg.h>
 #include <string.h>
 
-#define SU_MAT_FILE_VERSION    0x100
+#include "log.h"
+#include "version.h"
+
+#define SU_MAT_FILE_VERSION 0x100
 #define SU_MAT_FILE_ENDIANNESS (('M' << 8) | ('I'))
-#define SU_MAT_FILE_ALIGNMENT   8
+#define SU_MAT_FILE_ALIGNMENT 8
 
 #define SU_MAT_ALIGN(x) __ALIGN(x, SU_MAT_FILE_ALIGNMENT)
-#define SU_MAT_miINT8   1
-#define SU_MAT_miUINT8  2
-#define SU_MAT_miINT16  3
+#define SU_MAT_miINT8 1
+#define SU_MAT_miUINT8 2
+#define SU_MAT_miINT16 3
 #define SU_MAT_miUINT16 4
-#define SU_MAT_miINT32  5
+#define SU_MAT_miINT32 5
 #define SU_MAT_miUINT32 6
 #define SU_MAT_miSINGLE 7
 #define SU_MAT_miDOUBLE 9
-#define SU_MAT_miINT64  12
+#define SU_MAT_miINT64 12
 #define SU_MAT_miUINT64 13
 #define SU_MAT_miMATRIX 14
 
@@ -56,20 +57,19 @@ struct sigutils_mat_tag {
     struct {
       uint16_t type;
       uint16_t size;
-      uint8_t  data[4];
+      uint8_t data[4];
     } small;
 
     struct {
       uint32_t type;
       uint32_t size;
-      uint8_t  data[0];
+      uint8_t data[0];
     } big;
   };
 } __attribute__((packed));
 
-SUPRIVATE SUBOOL su_mat_file_dump_matrix(
-    su_mat_file_t *self,
-    const su_mat_matrix_t *matrix);
+SUPRIVATE SUBOOL
+su_mat_file_dump_matrix(su_mat_file_t *self, const su_mat_matrix_t *matrix);
 
 SUBOOL
 su_mat_matrix_resize(su_mat_matrix_t *self, int rows, int cols)
@@ -126,7 +126,6 @@ su_mat_matrix_t *
 su_mat_matrix_new(const char *name, int rows, int cols)
 {
   su_mat_matrix_t *new = NULL;
-  int i;
 
   SU_TRYCATCH(rows > 0, goto fail);
   SU_TRYCATCH(new = calloc(1, sizeof(su_mat_matrix_t)), goto fail);
@@ -162,8 +161,8 @@ void
 su_mat_matrix_discard_cols(su_mat_matrix_t *self)
 {
   self->col_start += self->cols;
-  self->cols       = 0;
-  self->col_ptr    = 0;
+  self->cols = 0;
+  self->col_ptr = 0;
 }
 
 SUBOOL
@@ -204,7 +203,6 @@ su_mat_matrix_write_col(su_mat_matrix_t *self, ...)
 
   ok = su_mat_matrix_write_col_va(self, ap);
 
-done:
   va_end(ap);
 
   return ok;
@@ -213,7 +211,6 @@ done:
 SUBOOL
 su_mat_matrix_write_col_array(su_mat_matrix_t *self, const SUFLOAT *x)
 {
-  int i;
   int ptr = self->col_ptr;
 
   if (ptr >= self->cols)
@@ -263,16 +260,14 @@ fail:
 }
 
 int
-su_mat_file_lookup_matrix_handle(
-    const su_mat_file_t *self,
-    const char *name)
+su_mat_file_lookup_matrix_handle(const su_mat_file_t *self, const char *name)
 {
   unsigned int i;
 
   for (i = 0; i < self->matrix_count; ++i)
     if (self->matrix_list[i] != NULL
         && strcmp(self->matrix_list[i]->name, name) == 0)
-      return (int) i;
+      return (int)i;
 
   return -1;
 }
@@ -280,7 +275,7 @@ su_mat_file_lookup_matrix_handle(
 su_mat_matrix_t *
 su_mat_file_get_matrix_by_handle(const su_mat_file_t *self, int handle)
 {
-  if (handle < 0 || handle >= (int) self->matrix_count)
+  if (handle < 0 || handle >= (int)self->matrix_count)
     return NULL;
 
   return self->matrix_list[handle];
@@ -299,9 +294,7 @@ su_mat_file_give_matrix(su_mat_file_t *self, su_mat_matrix_t *mat)
 {
   SUBOOL ok = SU_FALSE;
 
-  SU_TRYCATCH(
-      su_mat_file_lookup_matrix(self, mat->name) == NULL,
-      goto done);
+  SU_TRYCATCH(su_mat_file_lookup_matrix(self, mat->name) == NULL, goto done);
 
   SU_TRYCATCH(PTR_LIST_APPEND_CHECK(self->matrix, mat) != -1, goto done);
 
@@ -311,17 +304,12 @@ done:
   return ok;
 }
 
-
 SUBOOL
-su_mat_file_give_streaming_matrix(
-    su_mat_file_t *self,
-    su_mat_matrix_t *mat)
+su_mat_file_give_streaming_matrix(su_mat_file_t *self, su_mat_matrix_t *mat)
 {
   SUBOOL ok = SU_FALSE;
 
-  SU_TRYCATCH(
-      su_mat_file_lookup_matrix(self, mat->name) == NULL,
-      goto done);
+  SU_TRYCATCH(su_mat_file_lookup_matrix(self, mat->name) == NULL, goto done);
 
   if (self->fp != NULL && self->sm != NULL)
     SU_TRYCATCH(su_mat_file_flush(self), goto done);
@@ -374,7 +362,6 @@ su_mat_file_stream_col(su_mat_file_t *self, ...)
 
   ok = su_mat_matrix_write_col_va(self->sm, ap);
 
-done:
   va_end(ap);
 
   return ok;
@@ -403,10 +390,7 @@ fail:
 }
 
 SUPRIVATE SUBOOL
-su_mat_file_write_big_tag(
-    su_mat_file_t *self,
-    uint32_t type,
-    uint32_t size)
+su_mat_file_write_big_tag(su_mat_file_t *self, uint32_t type, uint32_t size)
 {
   struct sigutils_mat_tag tag;
   tag.big.type = type;
@@ -450,13 +434,9 @@ su_mat_file_write_tag(
   if (size <= 4) {
     return su_mat_file_write_small_tag(self, type, size, data);
   } else {
-    SU_TRYCATCH(
-        su_mat_file_write_big_tag(self, type, size),
-        return SU_FALSE);
+    SU_TRYCATCH(su_mat_file_write_big_tag(self, type, size), return SU_FALSE);
 
-    SU_TRYCATCH(
-        fwrite(data, size, 1, self->fp) == 1,
-        return SU_FALSE);
+    SU_TRYCATCH(fwrite(data, size, 1, self->fp) == 1, return SU_FALSE);
 
     SU_TRYCATCH(
         fwrite(&align_pad_data, align_pad_size, 1, self->fp) == 1,
@@ -479,12 +459,10 @@ su_mat_file_write_int32(su_mat_file_t *self, int32_t val)
 }
 
 SUPRIVATE SUBOOL
-su_mat_file_dump_matrix(
-    su_mat_file_t *self,
-    const su_mat_matrix_t *matrix)
+su_mat_file_dump_matrix(su_mat_file_t *self, const su_mat_matrix_t *matrix)
 {
   uint32_t metadata_size = sizeof(struct sigutils_mat_tag) * 6;
-  uint32_t matrix_size   = SU_MAT_ALIGN(
+  uint32_t matrix_size = SU_MAT_ALIGN(
       sizeof(SUFLOAT) * matrix->rows * (matrix->cols + matrix->col_start));
   off_t last_off;
   uint32_t extra_size;
@@ -510,25 +488,15 @@ su_mat_file_dump_matrix(
 
   /* Array flags */
   SU_TRYCATCH(
-      su_mat_file_write_big_tag(
-          self,
-          SU_MAT_miUINT32,
-          2 * sizeof(uint32_t)),
+      su_mat_file_write_big_tag(self, SU_MAT_miUINT32, 2 * sizeof(uint32_t)),
       goto done);
-  SU_TRYCATCH(
-      su_mat_file_write_uint32(self, SU_MAT_mxSINGLE_CLASS),
-      goto done);
-  SU_TRYCATCH(
-      su_mat_file_write_uint32(self, 0),
-      goto done);
+  SU_TRYCATCH(su_mat_file_write_uint32(self, SU_MAT_mxSINGLE_CLASS), goto done);
+  SU_TRYCATCH(su_mat_file_write_uint32(self, 0), goto done);
 
   /* Dimensions array */
   SU_TRYCATCH(
-        su_mat_file_write_big_tag(
-            self,
-            SU_MAT_miINT32,
-            2 * sizeof(int32_t)),
-        goto done);
+      su_mat_file_write_big_tag(self, SU_MAT_miINT32, 2 * sizeof(int32_t)),
+      goto done);
   SU_TRYCATCH(su_mat_file_write_int32(self, matrix->rows), goto done);
   SU_TRYCATCH(
       su_mat_file_write_int32(self, matrix->cols + matrix->col_start),
@@ -547,22 +515,16 @@ su_mat_file_dump_matrix(
   if (matrix == self->sm)
     self->sm_contents_off = ftell(self->fp);
   SU_TRYCATCH(
-        su_mat_file_write_big_tag(
-            self,
-            SU_MAT_miSINGLE,
-            matrix_size),
-        goto done);
+      su_mat_file_write_big_tag(self, SU_MAT_miSINGLE, matrix_size),
+      goto done);
 
   for (i = 0; i < matrix->col_start * matrix->rows; ++i)
     SU_TRYCATCH(fwrite(&gap, sizeof(SUFLOAT), 1, self->fp) == 1, goto done);
 
   for (i = 0; i < matrix->cols; ++i)
     SU_TRYCATCH(
-        fwrite(
-            matrix->coef[i],
-            sizeof(SUFLOAT) * matrix->rows,
-            1,
-            self->fp) == 1,
+        fwrite(matrix->coef[i], sizeof(SUFLOAT) * matrix->rows, 1, self->fp)
+            == 1,
         goto done);
 
   if (matrix == self->sm)
@@ -604,14 +566,14 @@ su_mat_file_dump(su_mat_file_t *self, const char *path)
     goto done;
   }
 
-  memset(&header, 0, sizeof (struct sigutils_mat_header));
-  memset(header.description, ' ', sizeof (header.description));
+  memset(&header, 0, sizeof(struct sigutils_mat_header));
+  memset(header.description, ' ', sizeof(header.description));
 
   strcpy(
       header.description,
       "MATLAB 5.0 MAT-file, written by Sigutils " SIGUTILS_VERSION_STRING);
 
-  header.version    = SU_MAT_FILE_VERSION;
+  header.version = SU_MAT_FILE_VERSION;
   header.endianness = SU_MAT_FILE_ENDIANNESS;
 
   SU_TRYCATCH(
@@ -651,10 +613,9 @@ su_mat_file_flush(su_mat_file_t *self)
   off_t last_off;
   uint32_t extra_size;
   uint64_t pad = 0;
-  struct sigutils_mat_tag tag;
   uint32_t metadata_size = sizeof(struct sigutils_mat_tag) * 6;
   uint32_t matrix_size;
-  int total_cols;
+  uint64_t total_cols;
 
   SU_TRYCATCH(self->fp != NULL, goto done);
 
@@ -668,9 +629,7 @@ su_mat_file_flush(su_mat_file_t *self)
     last_off = ftell(self->fp);
     if (self->sm_last_col < total_cols) {
       extra_size =
-          (total_cols - self->sm_last_col)
-          * self->sm->rows
-          * sizeof(SUFLOAT);
+          (total_cols - self->sm_last_col) * self->sm->rows * sizeof(SUFLOAT);
 
       /* Increment matrix size */
       SU_TRYCATCH(fseek(self->fp, self->sm_off, SEEK_SET) != -1, goto done);
@@ -680,7 +639,6 @@ su_mat_file_flush(su_mat_file_t *self)
               SU_MAT_miMATRIX,
               metadata_size + matrix_size),
           goto done);
-
 
       /* Refresh matrix dimensions */
       SU_TRYCATCH(
@@ -694,24 +652,19 @@ su_mat_file_flush(su_mat_file_t *self)
           fseek(self->fp, self->sm_contents_off, SEEK_SET) != -1,
           goto done);
       SU_TRYCATCH(
-          su_mat_file_write_big_tag(
-              self,
-              SU_MAT_miSINGLE,
-              matrix_size),
+          su_mat_file_write_big_tag(self, SU_MAT_miSINGLE, matrix_size),
           goto done);
 
       SU_TRYCATCH(fseek(self->fp, last_off, SEEK_SET) != -1, goto done);
 
-      for (
-          i = self->sm_last_col - self->sm->col_start;
-          i < self->sm->cols;
-          ++i)
+      for (i = self->sm_last_col - self->sm->col_start; i < self->sm->cols; ++i)
         SU_TRYCATCH(
             fwrite(
                 self->sm->coef[i],
                 sizeof(SUFLOAT) * self->sm->rows,
                 1,
-                self->fp) == 1,
+                self->fp)
+                == 1,
             goto done);
 
       self->sm_last_col = total_cols;

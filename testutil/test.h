@@ -20,12 +20,10 @@
 #ifndef _TEST_H
 #define _TEST_H
 
-#include <util.h>
-
-#include <sigutils/types.h>
 #include <sigutils/log.h>
-
-#include <sys/time.h>
+#include <sigutils/types.h>
+#include <util.h>
+#include <util/compat-time.h>
 
 #define SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT 8000
 
@@ -46,15 +44,15 @@ enum sigutils_test_time_units {
 };
 
 struct sigutils_sigbuf {
-  char    *name;       /* Buffer name */
-  SUSCOUNT fs;         /* Sampling frequency */
-  size_t   size;       /* Buffer size */
-  SUBOOL   is_complex; /* Buffer type */
+  char *name;        /* Buffer name */
+  SUSCOUNT fs;       /* Sampling frequency */
+  size_t size;       /* Buffer size */
+  SUBOOL is_complex; /* Buffer type */
 
   union {
     void *buffer;
     SUCOMPLEX *as_complex;
-    SUFLOAT   *as_float;
+    SUFLOAT *as_float;
   };
 };
 
@@ -89,7 +87,7 @@ struct sigutils_test_context {
 
 typedef struct sigutils_test_context su_test_context_t;
 
-typedef SUBOOL (*su_test_cb_t) (su_test_context_t *);
+typedef SUBOOL (*su_test_cb_t)(su_test_context_t *);
 
 struct sigutils_test_entry {
   const char *name;
@@ -98,79 +96,81 @@ struct sigutils_test_entry {
 
 typedef struct sigutils_test_entry su_test_entry_t;
 
-#define su_test_run_params_INITIALIZER \
-{ \
-  SU_TEST_SIGNAL_BUFFER_SIZE, /* buffer_size */ \
-  SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT, /* fs */ \
-  SU_DUMP_FORMAT_NONE /* dump_fmt */ \
-}
-
-#define SU_TEST_ENTRY(name) { STRINGIFY(name), name }
-
-#define su_test_context_INITIALIZER \
-{ \
-  NULL, /* params */ \
-  NULL, /* entry */ \
-  NULL, /* pool */ \
-  0, /* testno */ \
-  {0, 0}, /* start */ \
-  {0, 0}, /* end */ \
-  0, /* elapsed_time */ \
-  SU_TIME_UNITS_UNDEFINED /* time units */ \
-}
-
-#define SU_SYSCALL_ASSERT(expr)                                 \
-  if ((expr) < 0) {                                             \
-    SU_ERROR(                                                   \
-          "Operation `%s' failed (negative value returned)\n",  \
-          STRINGIFY(expr));                                     \
-    goto fail;                                                  \
+#define su_test_run_params_INITIALIZER                          \
+  {                                                             \
+    SU_TEST_SIGNAL_BUFFER_SIZE,               /* buffer_size */ \
+        SU_SIGBUF_SAMPLING_FREQUENCY_DEFAULT, /* fs */          \
+        SU_DUMP_FORMAT_NONE                   /* dump_fmt */    \
   }
 
-#define SU_TEST_START(ctx)                     \
-  printf("[t:%3d] %s: start\n",                \
-         ctx->testno,                          \
-         ctx->entry->name);                    \
-  gettimeofday(&ctx->start, NULL);             \
+#define SU_TEST_ENTRY(name) \
+  {                         \
+    STRINGIFY(name), name   \
+  }
 
-#define SU_TEST_START_TICKLESS(ctx)            \
-  printf("[t:%3d] %s: start\n",                \
-         ctx->testno,                          \
-         ctx->entry->name);
+#define su_test_context_INITIALIZER                \
+  {                                                \
+    NULL,                       /* params */       \
+        NULL,                   /* entry */        \
+        NULL,                   /* pool */         \
+        0,                      /* testno */       \
+        {0, 0},                 /* start */        \
+        {0, 0},                 /* end */          \
+        0,                      /* elapsed_time */ \
+        SU_TIME_UNITS_UNDEFINED /* time units */   \
+  }
 
-#define SU_TEST_TICK(ctx)                      \
-  gettimeofday(&ctx->start, NULL)              \
+#define SU_SYSCALL_ASSERT(expr)                              \
+  if ((expr) < 0) {                                          \
+    SU_ERROR(                                                \
+        "Operation `%s' failed (negative value returned)\n", \
+        STRINGIFY(expr));                                    \
+    goto fail;                                               \
+  }
 
+#define SU_TEST_START(ctx)                                      \
+  printf("[t:%3u] %s: start\n", ctx->testno, ctx->entry->name); \
+  gettimeofday(&ctx->start, NULL);
 
-#define SU_TEST_END(ctx)                       \
-  gettimeofday(&(ctx)->end, NULL);             \
-  su_test_context_update_times(ctx);           \
-  printf("[t:%3d] %s: end (%g %s)\n",          \
-         ctx->testno,                          \
-         ctx->entry->name,                     \
-         ctx->elapsed_time,                    \
-         su_test_context_time_units(ctx));     \
+#define SU_TEST_START_TICKLESS(ctx) \
+  printf("[t:%3u] %s: start\n", ctx->testno, ctx->entry->name);
 
-#define SU_TEST_ASSERT(cond)                   \
-    if (!(cond)) {                             \
-      printf("[t:%3d] %s: assertion failed\n", \
-             ctx->testno,                      \
-             ctx->entry->name);                \
-      printf("[t:%3d] %s: !(%s)\n",            \
-             ctx->testno,                      \
-             ctx->entry->name,                 \
-             STRINGIFY(cond));                 \
-      goto done;                               \
-    }
+#define SU_TEST_TICK(ctx) gettimeofday(&ctx->start, NULL)
 
+#define SU_TEST_END(ctx)             \
+  gettimeofday(&(ctx)->end, NULL);   \
+  su_test_context_update_times(ctx); \
+  printf(                            \
+      "[t:%3u] %s: end (%g %s)\n",   \
+      ctx->testno,                   \
+      ctx->entry->name,              \
+      ctx->elapsed_time,             \
+      su_test_context_time_units(ctx));
+
+#define SU_TEST_ASSERT(cond)                                                 \
+  if (!(cond)) {                                                             \
+    printf("[t:%3u] %s: assertion failed\n", ctx->testno, ctx->entry->name); \
+    printf(                                                                  \
+        "[t:%3u] %s: !(%s)\n",                                               \
+        ctx->testno,                                                         \
+        ctx->entry->name,                                                    \
+        STRINGIFY(cond));                                                    \
+    goto done;                                                               \
+  }
 
 void su_test_context_update_times(su_test_context_t *ctx);
 
 const char *su_test_context_time_units(const su_test_context_t *ctx);
 
-SUFLOAT *su_test_ctx_getf_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size);
+SUFLOAT *su_test_ctx_getf_w_size(
+    su_test_context_t *ctx,
+    const char *name,
+    SUSCOUNT size);
 
-SUCOMPLEX *su_test_ctx_getc_w_size(su_test_context_t *ctx, const char *name, SUSCOUNT size);
+SUCOMPLEX *su_test_ctx_getc_w_size(
+    su_test_context_t *ctx,
+    const char *name,
+    SUSCOUNT size);
 
 SUFLOAT *su_test_ctx_getf(su_test_context_t *ctx, const char *name);
 
@@ -229,10 +229,8 @@ SUBOOL su_test_ctx_dumpc(
     const SUCOMPLEX *data,
     SUSCOUNT size);
 
-SUBOOL su_test_ctx_resize_buf(
-    su_test_context_t *ctx,
-    const char *name,
-    SUSCOUNT size);
+SUBOOL
+su_test_ctx_resize_buf(su_test_context_t *ctx, const char *name, SUSCOUNT size);
 
 void su_sigbuf_set_fs(su_sigbuf_t *sbuf, SUSCOUNT fs);
 

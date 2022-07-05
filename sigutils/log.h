@@ -20,14 +20,15 @@
 #ifndef _SIGUTILS_LOG_H
 #define _SIGUTILS_LOG_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <stdint.h>
 #include <sys/time.h>
 
+#include "defs.h"
 #include "types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 enum sigutils_log_severity {
   SU_LOG_SEVERITY_DEBUG,
@@ -46,28 +47,28 @@ struct sigutils_log_message {
   const char *message;
 };
 
-#define sigutils_log_message_INITIALIZER        \
-{                                               \
-  SU_LOG_SEVERITY_DEBUG, /* severity */         \
-  {0, 0}, /* time */                            \
-  NULL, /* domain */                            \
-  NULL, /* function */                          \
-  0, /* line */                                 \
-  NULL, /* message */                           \
-}
+#define sigutils_log_message_INITIALIZER  \
+  {                                       \
+    SU_LOG_SEVERITY_DEBUG, /* severity */ \
+        {0, 0},            /* time */     \
+        NULL,              /* domain */   \
+        NULL,              /* function */ \
+        0,                 /* line */     \
+        NULL,              /* message */  \
+  }
 
 struct sigutils_log_config {
   void *priv;
   SUBOOL exclusive;
-  void (*log_func) (void *priv, const struct sigutils_log_message *msg);
+  void (*log_func)(void *priv, const struct sigutils_log_message *msg);
 };
 
-#define sigutils_log_config_INITIALIZER         \
-{                                               \
-    NULL, /* private */                         \
-    SU_TRUE, /* exclusive */                    \
-    NULL, /* log_func */                        \
-}
+#define sigutils_log_config_INITIALIZER \
+  {                                     \
+    NULL,        /* private */          \
+        SU_TRUE, /* exclusive */        \
+        NULL,    /* log_func */         \
+  }
 
 #ifndef __FILENAME__
 #  define __FILENAME__ "(no file)"
@@ -77,43 +78,32 @@ struct sigutils_log_config {
 #  define SU_LOG_DOMAIN __FILENAME__
 #endif /* SU_LOG_DOMAIN */
 
-#define SU_ERROR(fmt, arg...)         \
-    su_logprintf(                     \
-        SU_LOG_SEVERITY_ERROR,        \
-        SU_LOG_DOMAIN,                \
-        __FUNCTION__,                 \
-        __LINE__,                     \
-        fmt,                          \
-        ##arg)
+#define SU_ERROR(fmt, arg...) \
+  su_logprintf(               \
+      SU_LOG_SEVERITY_ERROR,  \
+      SU_LOG_DOMAIN,          \
+      __FUNCTION__,           \
+      __LINE__,               \
+      fmt,                    \
+      ##arg)
 
-#define SU_WARNING(fmt, arg...)       \
-    su_logprintf(                     \
-        SU_LOG_SEVERITY_WARNING,      \
-        SU_LOG_DOMAIN,                \
-        __FUNCTION__,                 \
-        __LINE__,                     \
-        fmt,                          \
-        ##arg)
+#define SU_WARNING(fmt, arg...) \
+  su_logprintf(                 \
+      SU_LOG_SEVERITY_WARNING,  \
+      SU_LOG_DOMAIN,            \
+      __FUNCTION__,             \
+      __LINE__,                 \
+      fmt,                      \
+      ##arg)
 
-#define SU_INFO(fmt, arg...)          \
-    su_logprintf(                     \
-        SU_LOG_SEVERITY_INFO,         \
-        SU_LOG_DOMAIN,                \
-        __FUNCTION__,                 \
-        __LINE__,                     \
-        fmt,                          \
-        ##arg)
-
-/* Other useful macros */
-#define SU_TRYCATCH(expr, action)       \
-  if (!(expr)) {                        \
-    SU_ERROR(                           \
-      "exception in \"%s\" (%s:%d)\n",  \
-      STRINGIFY(expr),                  \
-      __FILENAME__,                     \
-      __LINE__);                        \
-      action;                           \
-  }
+#define SU_INFO(fmt, arg...) \
+  su_logprintf(              \
+      SU_LOG_SEVERITY_INFO,  \
+      SU_LOG_DOMAIN,         \
+      __FUNCTION__,          \
+      __LINE__,              \
+      fmt,                   \
+      ##arg)
 
 void su_log_mask_severity(enum sigutils_log_severity sev);
 

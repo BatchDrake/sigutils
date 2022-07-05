@@ -17,13 +17,14 @@
 
 */
 
+#include <fcntl.h>
 #include <math.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <time.h>
-#include <sys/stat.h>
+#include <util/compat-stat.h>
+
 #include "test.h"
 
 SUPRIVATE void
@@ -43,12 +44,12 @@ su_sigbuf_new(const char *name, SUSCOUNT size, SUBOOL is_complex)
 {
   su_sigbuf_t *new = NULL;
 
-  if ((new = calloc(1, sizeof (su_sigbuf_t))) == NULL)
+  if ((new = calloc(1, sizeof(su_sigbuf_t))) == NULL)
     goto fail;
 
-  if ((new->buffer = calloc(
-      size,
-      is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT))) == NULL)
+  if ((new->buffer =
+           calloc(size, is_complex ? sizeof(SUCOMPLEX) : sizeof(SUFLOAT)))
+      == NULL)
     goto fail;
 
   if ((new->name = strdup(name)) == NULL)
@@ -85,9 +86,9 @@ su_sigbuf_resize(su_sigbuf_t *sbuf, SUSCOUNT size)
 
   if (size > 0) {
     if ((new_buffer = realloc(
-        sbuf->buffer,
-        size
-          * (sbuf->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT)))) == NULL)
+             sbuf->buffer,
+             size * (sbuf->is_complex ? sizeof(SUCOMPLEX) : sizeof(SUFLOAT))))
+        == NULL)
       return SU_FALSE;
 
     sbuf->buffer = new_buffer;
@@ -100,11 +101,10 @@ su_sigbuf_resize(su_sigbuf_t *sbuf, SUSCOUNT size)
 void
 su_sigbuf_pool_destroy(su_sigbuf_pool_t *pool)
 {
-  unsigned int i;
   su_sigbuf_t *this;
 
   FOR_EACH_PTR(this, pool, sigbuf)
-    su_sigbuf_destroy(this);
+  su_sigbuf_destroy(this);
 
   if (pool->sigbuf_list != NULL)
     free(pool->sigbuf_list);
@@ -120,7 +120,7 @@ su_sigbuf_pool_new(const char *name)
 {
   su_sigbuf_pool_t *new = NULL;
 
-  if ((new = calloc(1, sizeof (su_sigbuf_pool_t))) == NULL)
+  if ((new = calloc(1, sizeof(su_sigbuf_pool_t))) == NULL)
     goto fail;
 
   if ((new->name = strdup(name)) == NULL)
@@ -140,12 +140,11 @@ fail:
 su_sigbuf_t *
 su_sigbuf_pool_lookup(su_sigbuf_pool_t *pool, const char *name)
 {
-  unsigned int i;
   su_sigbuf_t *this;
 
   FOR_EACH_PTR(this, pool, sigbuf)
-    if (strcmp(this->name, name) == 0)
-      return this;
+  if (strcmp(this->name, name) == 0)
+    return this;
 
   return NULL;
 }
@@ -206,15 +205,21 @@ su_sigbuf_pool_get_fs(const su_sigbuf_pool_t *pool)
 }
 
 SUFLOAT *
-su_sigbuf_pool_get_float(su_sigbuf_pool_t *pool, const char *name, SUSCOUNT size)
+su_sigbuf_pool_get_float(
+    su_sigbuf_pool_t *pool,
+    const char *name,
+    SUSCOUNT size)
 {
-  return (SUFLOAT *) su_sigbuf_pool_get(pool, name, size, SU_FALSE);
+  return (SUFLOAT *)su_sigbuf_pool_get(pool, name, size, SU_FALSE);
 }
 
 SUCOMPLEX *
-su_sigbuf_pool_get_complex(su_sigbuf_pool_t *pool, const char *name, SUSCOUNT size)
+su_sigbuf_pool_get_complex(
+    su_sigbuf_pool_t *pool,
+    const char *name,
+    SUSCOUNT size)
 {
-  return (SUCOMPLEX *) su_sigbuf_pool_get(pool, name, size, SU_TRUE);
+  return (SUCOMPLEX *)su_sigbuf_pool_get(pool, name, size, SU_TRUE);
 }
 
 SUBOOL
@@ -239,29 +244,30 @@ void
 su_sigbuf_pool_debug(const su_sigbuf_pool_t *pool)
 {
   su_sigbuf_t *this;
-  unsigned int i;
+  unsigned int i = 0;
   size_t allocation = 0;
   size_t total = 0;
 
   SU_INFO("Pool `%s' status:\n", pool->name);
   SU_INFO(" ID  Buf name   Type      Size   Allocation size\n");
   SU_INFO("------------------------------------------------\n");
-  FOR_EACH_PTR(this, pool, sigbuf) {
-    allocation = this->size *
-        (this->is_complex ? sizeof (SUCOMPLEX) : sizeof (SUFLOAT));
-    SU_INFO("[%2d] %-10s %-7s %8d %8d bytes\n",
-            i,
-            this->name,
-            this->is_complex ? "COMPLEX" : "FLOAT",
-            this->size,
-            allocation);
+  FOR_EACH_PTR(this, pool, sigbuf)
+  {
+    allocation =
+        this->size * (this->is_complex ? sizeof(SUCOMPLEX) : sizeof(SUFLOAT));
+    SU_INFO(
+        "[%2d] %-10s %-7s %8d %8d bytes\n",
+        ++i,
+        this->name,
+        this->is_complex ? "COMPLEX" : "FLOAT",
+        this->size,
+        allocation);
 
     total += allocation;
   }
   SU_INFO("------------------------------------------------\n");
   SU_INFO("Total: %d bytes\n", total);
 }
-
 
 SUBOOL
 su_sigbuf_pool_dump(const su_sigbuf_pool_t *pool, enum sigutils_dump_format f)
@@ -285,4 +291,3 @@ su_sigbuf_pool_dump(const su_sigbuf_pool_t *pool, enum sigutils_dump_format f)
 
   return SU_TRUE;
 }
-

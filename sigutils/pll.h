@@ -20,24 +20,36 @@
 #ifndef _SIGUTILS_PLL_H
 #define _SIGUTILS_PLL_H
 
-#include "types.h"
+#include "defs.h"
 #include "iir.h"
 #include "ncqo.h"
+#include "types.h"
+
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  endif  // __clang__
+extern "C" {
+#endif /* __cplusplus */
 
 #define SU_PLL_ORDER_DEFAULT 5
 #define SU_COSTAS_FIR_ORDER_THRESHOLD 20
 
 struct sigutils_pll {
-  SUFLOAT   alpha;
-  SUFLOAT   beta;
-  SUFLOAT   lock;
+  SUFLOAT alpha;
+  SUFLOAT beta;
+  SUFLOAT lock;
   SUCOMPLEX a;
   su_ncqo_t ncqo;
 };
 
 typedef struct sigutils_pll su_pll_t;
 
-#define su_pll_INITIALIZER {0., 0., 0., 0, su_ncqo_INITIALIZER}
+#define su_pll_INITIALIZER             \
+  {                                    \
+    0., 0., 0., 0, su_ncqo_INITIALIZER \
+  }
 
 enum sigutils_costas_kind {
   SU_COSTAS_KIND_NONE,
@@ -51,51 +63,48 @@ struct sigutils_costas {
   SUFLOAT a;
   SUFLOAT b;
   SUFLOAT lock;
-  su_iir_filt_t af; /* Arm filter */
-  SUCOMPLEX z; /* Arm filter output */
-  SUCOMPLEX y; /* Demodulation result */
+  su_iir_filt_t af;  /* Arm filter */
+  SUCOMPLEX z;       /* Arm filter output */
+  SUCOMPLEX y;       /* Demodulation result */
   SUCOMPLEX y_alpha; /* Result alpha */
-  SUFLOAT gain; /* Loop gain */
+  SUFLOAT gain;      /* Loop gain */
   su_ncqo_t ncqo;
 };
 
 typedef struct sigutils_costas su_costas_t;
 
-#define su_costas_INITIALIZER   \
-{                               \
-  SU_COSTAS_KIND_NONE,          \
-  0.,                           \
-  0.,                           \
-  0.,                           \
-  su_iir_filt_INITIALIZER,      \
-  0.,                           \
-  0.,                           \
-  0.,                           \
-  1.,                           \
-  su_ncqo_INITIALIZER           \
-}
+#define su_costas_INITIALIZER                                                 \
+  {                                                                           \
+    SU_COSTAS_KIND_NONE, 0., 0., 0., su_iir_filt_INITIALIZER, 0., 0., 0., 1., \
+        su_ncqo_INITIALIZER                                                   \
+  }
 
 /* Second order PLL */
-void su_pll_finalize(su_pll_t *);
-SUBOOL su_pll_init(su_pll_t *, SUFLOAT, SUFLOAT);
-SUCOMPLEX su_pll_track(su_pll_t *, SUCOMPLEX);
-void su_pll_feed(su_pll_t *, SUFLOAT);
+SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc);
+SU_DESTRUCTOR(su_pll);
+
+SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x);
+SU_METHOD(su_pll, void, feed, SUFLOAT x);
 
 /* QPSK costas loops are way more complex than that */
-void su_costas_finalize(su_costas_t *);
-
-SUBOOL su_costas_init(
-    su_costas_t *costas,
+SU_CONSTRUCTOR(
+    su_costas,
     enum sigutils_costas_kind kind,
     SUFLOAT fhint,
     SUFLOAT arm_bw,
     unsigned int arm_order,
     SUFLOAT loop_bw);
+SU_DESTRUCTOR(su_costas);
 
-void su_costas_set_kind(su_costas_t *costas, enum sigutils_costas_kind);
+SU_METHOD(su_costas, void, set_kind, enum sigutils_costas_kind kind);
+SU_METHOD(su_costas, void, set_loop_gain, SUFLOAT gain);
+SU_METHOD(su_costas, SUCOMPLEX, feed, SUCOMPLEX x);
 
-void su_costas_set_loop_gain(su_costas_t *costas, SUFLOAT gain);
-
-SUCOMPLEX su_costas_feed(su_costas_t *costas, SUCOMPLEX x);
+#ifdef __cplusplus
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif  // __clang__
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_PLL_H */

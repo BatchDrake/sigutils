@@ -20,6 +20,8 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <util/compat-time.h>
+
 #include "test.h"
 
 void
@@ -32,24 +34,25 @@ su_test_context_update_times(su_test_context_t *ctx)
   /* Hours */
   if (diff.tv_sec >= 3600) {
     ctx->elapsed_time = (diff.tv_sec + 1e-6 * diff.tv_usec) / 3600;
-    ctx->time_units   = SU_TIME_UNITS_HOUR;
+    ctx->time_units = SU_TIME_UNITS_HOUR;
   } else if (diff.tv_sec >= 60) {
     ctx->elapsed_time = (diff.tv_sec + 1e-6 * diff.tv_usec) / 60;
-    ctx->time_units   = SU_TIME_UNITS_MIN;
+    ctx->time_units = SU_TIME_UNITS_MIN;
   } else if (diff.tv_sec >= 1) {
     ctx->elapsed_time = diff.tv_sec + 1e-6 * diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_SEC;
+    ctx->time_units = SU_TIME_UNITS_SEC;
   } else if (diff.tv_usec >= 1000) {
     ctx->elapsed_time = 1e-3 * diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_MSEC;
+    ctx->time_units = SU_TIME_UNITS_MSEC;
   } else {
     ctx->elapsed_time = diff.tv_usec;
-    ctx->time_units   = SU_TIME_UNITS_USEC;
+    ctx->time_units = SU_TIME_UNITS_USEC;
   }
 }
 
 const char *
-su_test_context_time_units(const su_test_context_t *ctx) {
+su_test_context_time_units(const su_test_context_t *ctx)
+{
   switch (ctx->time_units) {
     case SU_TIME_UNITS_HOUR:
       return "hour";
@@ -76,13 +79,13 @@ su_test_context_time_units(const su_test_context_t *ctx) {
 SUFLOAT *
 su_test_buffer_new(unsigned int size)
 {
-  return calloc(size, sizeof (SUFLOAT));
+  return calloc(size, sizeof(SUFLOAT));
 }
 
 SUCOMPLEX *
 su_test_complex_buffer_new(unsigned int size)
 {
-  return calloc(size, sizeof (SUCOMPLEX));
+  return calloc(size, sizeof(SUCOMPLEX));
 }
 
 SUFLOAT
@@ -127,8 +130,6 @@ su_test_buffer_peak(const SUFLOAT *buffer, unsigned int size)
 SUFLOAT
 su_test_buffer_pp(const SUFLOAT *buffer, unsigned int size)
 {
-  SUFLOAT size_inv = 1. / size;
-  SUFLOAT result = 0.;
   SUFLOAT min = INFINITY;
   SUFLOAT max = -INFINITY;
 
@@ -158,10 +159,10 @@ su_test_complex_buffer_dump_raw(
 
   for (i = 0; i < size; ++i) {
     val = SU_C_REAL(buffer[i]);
-    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+    if (fwrite(&val, sizeof(float), 1, fp) < 1)
       goto fail;
     val = SU_C_IMAG(buffer[i]);
-    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+    if (fwrite(&val, sizeof(float), 1, fp) < 1)
       goto fail;
   }
 
@@ -191,7 +192,7 @@ su_test_buffer_dump_raw(
 
   for (i = 0; i < size; ++i) {
     val = buffer[i];
-    if (fwrite(&val, sizeof (float), 1, fp) < 1)
+    if (fwrite(&val, sizeof(float), 1, fp) < 1)
       goto fail;
   }
 
@@ -228,15 +229,16 @@ su_test_complex_buffer_dump_matlab(
         goto fail;
 
     if (fprintf(
-        fp,
-        SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
-        SU_C_REAL(buffer[i]),
-        SU_C_IMAG(buffer[i])) < 0)
+            fp,
+            SUFLOAT_PRECISION_FMT " + " SUFLOAT_PRECISION_FMT "i",
+            SU_C_REAL(buffer[i]),
+            SU_C_IMAG(buffer[i]))
+        < 0)
       goto fail;
   }
 
   if (fprintf(fp, "\n];\n") < 0)
-      goto fail;
+    goto fail;
 
   fclose(fp);
 
@@ -275,7 +277,7 @@ su_test_buffer_dump_matlab(
   }
 
   if (fprintf(fp, "\n];\n") < 0)
-      goto fail;
+    goto fail;
 
   fclose(fp);
 
@@ -359,7 +361,7 @@ su_test_context_reset(su_test_context_t *ctx)
   if (ctx->pool != NULL)
     su_sigbuf_pool_destroy(ctx->pool);
 
-  memset(ctx, 0, sizeof (su_test_context_t));
+  memset(ctx, 0, sizeof(su_test_context_t));
 
   ctx->time_units = SU_TIME_UNITS_UNDEFINED;
 }
@@ -367,7 +369,7 @@ su_test_context_reset(su_test_context_t *ctx)
 SUPRIVATE const char *
 su_test_dump_format_to_string(enum sigutils_dump_format fmt)
 {
-  switch(fmt) {
+  switch (fmt) {
     case SU_DUMP_FORMAT_NONE:
       return "none";
 
@@ -433,7 +435,7 @@ su_test_run(
     if ((test_list[i].cb)(&ctx))
       ++success;
     else {
-      printf("[t:%3d] TEST FAILED\n", i);
+      printf("[t:%3u] TEST FAILED\n", i);
     }
 
     if (params->dump_fmt) {
@@ -447,11 +449,11 @@ su_test_run(
 
     ++count;
 
-next_test:
+  next_test:
     su_test_context_reset(&ctx);
   }
 
-  printf("%d tests run, %d failed\n", count, count - success);
+  printf("%u tests run, %u failed\n", count, count - success);
 
   return count == success;
 }

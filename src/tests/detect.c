@@ -17,17 +17,16 @@
 
 */
 
+#include <fcntl.h>
+#include <sigutils/detect.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include <sigutils/sampling.h>
-#include <sigutils/sigutils.h>
-#include <sigutils/detect.h>
+#include <util/compat-mman.h>
 
 #include "test_list.h"
 #include "test_param.h"
@@ -61,7 +60,6 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   unsigned int p = 0;
   unsigned int sym;
   unsigned int n = 0;
-  unsigned int i;
   struct sigutils_channel *channel;
 
   SU_TEST_START_TICKLESS(ctx);
@@ -69,16 +67,16 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   /* Initialize some parameters */
   symbol_period = SU_TEST_COSTAS_SYMBOL_PERIOD;
   filter_period = SU_TEST_MF_SYMBOL_SPAN * symbol_period; /* Span: 6 symbols */
-  message       = 0x414c4f48; /* Some greeting message */
+  message = 0x414c4f48; /* Some greeting message */
 
   if (noisy)
-    N0          = SU_POWER_MAG(-10);
+    N0 = SU_POWER_MAG(-10);
   else
-    N0          = SU_POWER_MAG(-20);
+    N0 = SU_POWER_MAG(-20);
 
-  sigma         = sqrt(N0 / 2);
+  sigma = sqrt(N0 / 2);
 
-  phi0          = SU_C_EXP(I * M_PI / 4); /* Phase offset */
+  phi0 = SU_C_EXP(I * M_PI / 4); /* Phase offset */
 
   /* Initialize channel detector */
   params.samp_rate = 250000;
@@ -86,11 +84,11 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   params.window_size = 4096;
 
   /* Initialize buffers */
-  SU_TEST_ASSERT(input    = su_test_ctx_getc(ctx, "x"));
-  SU_TEST_ASSERT(data     = su_test_ctx_getc(ctx, "data"));
-  SU_TEST_ASSERT(tx       = su_test_ctx_getc(ctx, "tx"));
+  SU_TEST_ASSERT(input = su_test_ctx_getc(ctx, "x"));
+  SU_TEST_ASSERT(data = su_test_ctx_getc(ctx, "data"));
+  SU_TEST_ASSERT(tx = su_test_ctx_getc(ctx, "tx"));
   SU_TEST_ASSERT(
-      fft      = su_test_ctx_getf_w_size(ctx, "spectrogram", params.window_size));
+      fft = su_test_ctx_getf_w_size(ctx, "spectrogram", params.window_size));
 
   SU_TEST_ASSERT(detector = su_channel_detector_new(&params));
 
@@ -98,18 +96,10 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   su_ncqo_init(&ncqo, SU_TEST_CHANNEL_DETECTOR_SIGNAL_FREQ);
 
 #ifndef SU_TEST_COSTAS_USE_RRC
-  SU_TEST_ASSERT(
-      su_iir_rrc_init(
-          &mf,
-          filter_period,
-          symbol_period,
-          1));
+  SU_TEST_ASSERT(su_iir_rrc_init(&mf, filter_period, symbol_period, 1));
 #else
   SU_TEST_ASSERT(
-      su_iir_brickwall_init(
-          &mf,
-          filter_period,
-          SU_TEST_COSTAS_BANDWIDTH));
+      su_iir_brickwall_init(&mf, filter_period, SU_TEST_COSTAS_BANDWIDTH));
 #endif
 
   /* Create QPSK signal */
@@ -117,10 +107,10 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   SU_INFO("Modulating 0x%x in QPSK...\n", msgbuf);
   SU_INFO("  Noise: %lg dBFS\n", SU_POWER_DB(N0));
   SU_INFO("  Window size: %d samples\n", params.window_size);
-  SU_INFO("  Baudrate at fs=%d: %lg\n",
-          params.samp_rate,
-          SU_NORM2ABS_BAUD(params.samp_rate, 1. / symbol_period));
-
+  SU_INFO(
+      "  Baudrate at fs=%d: %lg\n",
+      params.samp_rate,
+      SU_NORM2ABS_BAUD(params.samp_rate, 1. / symbol_period));
 
   for (p = 0; p < ctx->params->buffer_size; ++p) {
     if (p % symbol_period == 0) {
@@ -142,8 +132,8 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
   SU_TEST_TICK(ctx);
 
   SU_INFO(
-        "Frequency step: %lg Hz\n",
-        (double) params.samp_rate / (double) params.window_size);
+      "Frequency step: %lg Hz\n",
+      (double)params.samp_rate / (double)params.window_size);
   SU_INFO(
       "  Will need %d samples before performing a detection\n",
       su_channel_detector_get_req_samples(detector));
@@ -160,10 +150,9 @@ __su_test_channel_detector_qpsk(su_test_context_t *ctx, SUBOOL noisy)
               SU_TEST_CHANNEL_DETECTOR_SIGNAL_FREQ)));
 
   SU_INFO("Channel found by detector:\n");
-  SU_INFO("  Actual frequency: %lg Hz\n",
-          SU_NORM2ABS_FREQ(
-              params.samp_rate,
-              SU_TEST_CHANNEL_DETECTOR_SIGNAL_FREQ));
+  SU_INFO(
+      "  Actual frequency: %lg Hz\n",
+      SU_NORM2ABS_FREQ(params.samp_rate, SU_TEST_CHANNEL_DETECTOR_SIGNAL_FREQ));
   SU_INFO("  Detected frequency: %lg Hz\n", channel->fc);
   SU_INFO("  Bandwidth: %lg Hz\n", channel->bw);
   SU_INFO("  SNR: %lg dB\n", channel->snr);
@@ -198,7 +187,7 @@ SUBOOL
 su_test_channel_detector_real_capture(su_test_context_t *ctx)
 {
   SUBOOL ok = SU_FALSE;
-  complex float *input = (complex float *) -1; /* Required by mmap */
+  complex float *input = (complex float *)-1; /* Required by mmap */
   SUCOMPLEX *fft;
   SUCOMPLEX *win;
   SUFLOAT *spect;
@@ -237,17 +226,18 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   SU_TEST_ASSERT(stat(SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE, &sbuf) != -1);
 
-  SU_TEST_ASSERT((fd = open(
-      SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE,
-      O_RDONLY)) != -1);
+  SU_TEST_ASSERT(
+      (fd = open(SU_CHANNEL_DETECTOR_SAMPLE_CAPTURE, O_RDONLY)) != -1);
 
-  SU_TEST_ASSERT((input = (complex float *) mmap(
-      NULL,         /* addr */
-      sbuf.st_size, /* size */
-      PROT_READ,    /* prot */
-      MAP_PRIVATE,  /* flags */
-      fd,           /* fd */
-      0             /* offset */)) != (complex float *) -1);
+  SU_TEST_ASSERT(
+      (input = (complex float *)mmap(
+           NULL,         /* addr */
+           sbuf.st_size, /* size */
+           PROT_READ,    /* prot */
+           MAP_PRIVATE,  /* flags */
+           fd,           /* fd */
+           0 /* offset */))
+      != (complex float *)-1);
 
   close(fd); /* We don't need this anymore */
   fd = -1;
@@ -271,16 +261,13 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       spmax = su_test_ctx_getf_w_size(ctx, "spmax", params.window_size));
   SU_TEST_ASSERT(
       spmin = su_test_ctx_getf_w_size(ctx, "spmin", params.window_size));
-  SU_TEST_ASSERT(
-      decim = su_test_ctx_getf_w_size(ctx, "decim", 1));
-  SU_TEST_ASSERT(
-      fc    = su_test_ctx_getf_w_size(ctx, "fc", 1));
+  SU_TEST_ASSERT(decim = su_test_ctx_getf_w_size(ctx, "decim", 1));
+  SU_TEST_ASSERT(fc = su_test_ctx_getf_w_size(ctx, "fc", 1));
   SU_TEST_ASSERT(
       n0est = su_test_ctx_getf_w_size(
           ctx,
           "n0est",
-          samples / params.window_size
-          + !!(samples % params.window_size)));
+          samples / params.window_size + !!(samples % params.window_size)));
 
   SU_TEST_ASSERT(detector = su_channel_detector_new(&params));
 
@@ -300,24 +287,18 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   SU_TEST_TICK(ctx);
 
   for (i = 0; i < samples; ++i) {
-    SU_TEST_ASSERT(
-        su_channel_detector_feed(
-            detector,
-            SU_C_CONJ((SUCOMPLEX) input[i]))); /* Gqrx inverts the Q channel */
+    SU_TEST_ASSERT(su_channel_detector_feed(
+        detector,
+        SU_C_CONJ((SUCOMPLEX)input[i]))); /* Gqrx inverts the Q channel */
 
     if ((i % params.window_size) == 0)
       n0est[j++] = detector->N0;
   }
 
   /* Print results */
-  su_channel_detector_get_channel_list(
-      detector,
-      &channel_list,
-      &channel_count);
+  su_channel_detector_get_channel_list(detector, &channel_list, &channel_count);
 
-  SU_INFO(
-      "Computed noise floor: %lg dB\n",
-      SU_POWER_DB(detector->N0));
+  SU_INFO("Computed noise floor: %lg dB\n", SU_POWER_DB(detector->N0));
   for (i = 0; i < channel_count; ++i)
     if (channel_list[i] != NULL)
       if (SU_CHANNEL_IS_VALID(channel_list[i])) {
@@ -361,10 +342,8 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
 
   SU_TEST_ASSERT(
       acorr = su_test_ctx_getf_w_size(ctx, "acorr", params.window_size));
-  SU_TEST_ASSERT(
-      fft   = su_test_ctx_getc_w_size(ctx, "fft",   params.window_size));
-  SU_TEST_ASSERT(
-      win   = su_test_ctx_getc_w_size(ctx, "win",   params.window_size));
+  SU_TEST_ASSERT(fft = su_test_ctx_getc_w_size(ctx, "fft", params.window_size));
+  SU_TEST_ASSERT(win = su_test_ctx_getc_w_size(ctx, "win", params.window_size));
 
   SU_TEST_ASSERT(baud_det = su_channel_detector_new(&params));
 
@@ -379,10 +358,10 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
       (req / (params.samp_rate)) % 60);
 
   for (i = 0; i < samples; ++i)
-    SU_TEST_ASSERT(
-        su_channel_detector_feed(
-            baud_det,
-            SU_C_CONJ((SUCOMPLEX) input[i % samples]))); /* Gqrx inverts the Q channel */
+    SU_TEST_ASSERT(su_channel_detector_feed(
+        baud_det,
+        SU_C_CONJ(
+            (SUCOMPLEX)input[i % samples]))); /* Gqrx inverts the Q channel */
 
   *decim = baud_det->params.decimation;
   for (i = 0; i < params.window_size; ++i) {
@@ -402,10 +381,10 @@ su_test_channel_detector_real_capture(su_test_context_t *ctx)
   SU_TEST_ASSERT(nonlinear_baud_det = su_channel_detector_new(&params));
 
   for (i = 0; i < samples; ++i)
-    SU_TEST_ASSERT(
-        su_channel_detector_feed(
-            nonlinear_baud_det,
-            SU_C_CONJ((SUCOMPLEX) input[i % samples]))); /* Gqrx inverts the Q channel */
+    SU_TEST_ASSERT(su_channel_detector_feed(
+        nonlinear_baud_det,
+        SU_C_CONJ(
+            (SUCOMPLEX)input[i % samples]))); /* Gqrx inverts the Q channel */
 
   if (nonlinear_baud_det->baud == 0)
     SU_INFO("  Not enough certainty to estimate baudrate\n");
@@ -434,5 +413,3 @@ done:
 
   return ok;
 }
-
-

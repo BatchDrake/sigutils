@@ -19,23 +19,20 @@
 
 #define SU_LOG_LEVEL "lfsr"
 
+#include "lfsr.h"
+
 #include <string.h>
 
 #include "log.h"
-#include "lfsr.h"
 
 SUBOOL
 su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order)
 {
   memset(lfsr, 0, sizeof(su_lfsr_t));
 
-  SU_TRYCATCH(
-      lfsr->coef = malloc(order * sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->coef = malloc(order * sizeof(SUBITS)), goto fail);
 
-  SU_TRYCATCH(
-      lfsr->buffer = calloc(order, sizeof(SUBITS)),
-      goto fail);
+  SU_TRYCATCH(lfsr->buffer = calloc(order, sizeof(SUBITS)), goto fail);
 
   memcpy(lfsr->coef, coef, order * sizeof(SUBITS));
   lfsr->order = order;
@@ -64,7 +61,6 @@ su_lfsr_set_mode(su_lfsr_t *lfsr, enum su_lfsr_mode mode)
   lfsr->mode = mode;
 }
 
-
 /*
  * There is a common part for both additive and multiplicative
  * descramblers, related to the shift register.
@@ -84,8 +80,8 @@ SUINLINE SUBITS
 su_lfsr_transfer(su_lfsr_t *lfsr, SUBITS x)
 {
   SUBITS F = 0;
-  int i;
-  int n = lfsr->p;
+  uint64_t i;
+  uint64_t n = lfsr->p;
 
   for (i = 1; i < lfsr->order; ++i) {
     if (++n == lfsr->order)
@@ -114,7 +110,6 @@ su_lfsr_set_buffer(su_lfsr_t *lfsr, const SUBITS *seq)
     lfsr->buffer[lfsr->order - i - 1] = seq[i];
   lfsr->p = lfsr->order - 1;
 }
-
 
 SUBITS
 su_lfsr_feed(su_lfsr_t *lfsr, SUBITS x)
