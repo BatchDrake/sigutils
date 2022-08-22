@@ -37,11 +37,6 @@ project(
 
 include(FindPkgConfig)
 
-# Make sure CMAKE_INSTALL_LIBDIR is defined for all systems
-if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR lib)
-endif()
-
 # Find requirements
 find_package(Threads)
 pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
