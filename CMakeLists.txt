@@ -44,20 +44,23 @@ include(CodeAnalysis)
 find_package(Threads)
 pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
 pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
-pkg_check_modules(VOLK              volk>=1.0)
+pkg_check_modules(VOLK             volk>=1.0)
 if(VOLK_FOUND)
   add_compile_definitions(HAVE_VOLK)
   link_directories(${VOLK_LIBRARY_DIRS})
+endif()
+
+# Project build options
+option(SIGUTILS_SINGLE_PRECISSION "Use single precission data types" 
+ON)
+if(SIGUTILS_SINGLE_PRECISSION)
+  add_compile_definitions(_SU_SINGLE_PRECISION)
 endif()
 
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
 set(SPECDIR  ${SRCDIR}/specific)
-
-# Compiler configuration
-add_compile_definitions(_SU_SINGLE_PRECISION)
-
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING
