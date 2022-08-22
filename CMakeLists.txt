@@ -18,7 +18,7 @@
 #
 #
   
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.12.0)
 
 set(SIGUTILS_VERSION_MAJOR 0)
 set(SIGUTILS_VERSION_MINOR 3)
@@ -58,9 +58,9 @@ set(UTILDIR  util)
 set(SPECDIR  ${SRCDIR}/specific)
 
 # Compiler configuration
-set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
+add_compile_definitions(_SU_SINGLE_PRECISION)
 if(VOLK_FOUND)
-  set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
+  add_compile_definitions(HAVE_VOLK)
   link_directories(${VOLK_LIBRARY_DIRS})
 endif()
 
@@ -71,7 +71,6 @@ MinSizeRel."
        FORCE )
 endif()
 
-set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${SIGUTILS_CONFIG_CFLAGS}")
 
 # The following hack exposes __FILENAME__ to source files as the relative
 # path of each source file.
