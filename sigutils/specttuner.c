@@ -144,7 +144,7 @@ SU_METHOD_CONST(
           channel->h,
           channel->h,
           FFTW_FORWARD,
-          FFTW_MEASURE));
+          FFTW_ESTIMATE));
 
   /* Forward plan */
   SU_TRY(
@@ -153,7 +153,7 @@ SU_METHOD_CONST(
           channel->h,
           channel->h,
           FFTW_BACKWARD,
-          FFTW_MEASURE));
+          FFTW_ESTIMATE));
 
   su_specttuner_update_channel_filter(self, channel);
 
@@ -428,7 +428,7 @@ SU_INSTANCER(
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_EVEN],
           FFTW_BACKWARD,
-          FFTW_MEASURE));
+          FFTW_ESTIMATE));
 
   SU_TRY_FAIL(
       new->plan[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
@@ -436,7 +436,7 @@ SU_INSTANCER(
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_ODD],
           FFTW_BACKWARD,
-          FFTW_MEASURE));
+          FFTW_ESTIMATE));
 
   return new;
 
@@ -519,7 +519,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->fft,
             new->fft,
             FFTW_FORWARD,
-            FFTW_MEASURE));
+            FFTW_ESTIMATE));
 
     SU_TRY_FAIL(
         new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
@@ -527,7 +527,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->fft,
             new->fft,
             FFTW_FORWARD,
-            FFTW_MEASURE));
+            FFTW_ESTIMATE));
   } else {
     /* Even plan starts at the beginning of the window */
     SU_TRY_FAIL(
@@ -536,7 +536,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->buffer,
             new->fft,
             FFTW_FORWARD,
-            FFTW_MEASURE));
+            FFTW_ESTIMATE));
 
     /* Odd plan stars at window_size / 2 */
     SU_TRY_FAIL(
@@ -545,7 +545,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             new->buffer + new->half_size,
             new->fft,
             FFTW_FORWARD,
-            FFTW_MEASURE));
+            FFTW_ESTIMATE));
   }
 
   return new;
