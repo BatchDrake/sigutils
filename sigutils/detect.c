@@ -456,7 +456,7 @@ SU_INSTANCER(
            new->window,
            new->fft,
            FFTW_FORWARD,
-           FFTW_ESTIMATE))
+           su_lib_fftw_strategy()))
       == NULL) {
     SU_ERROR("failed to create FFT plan\n");
     goto fail;
@@ -497,7 +497,7 @@ SU_INSTANCER(
                new->fft,
                new->ifft,
                FFTW_BACKWARD,
-               FFTW_ESTIMATE))
+               su_lib_fftw_strategy()))
           == NULL) {
         SU_ERROR("failed to create FFT plan\n");
         goto fail;

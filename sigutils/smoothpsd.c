@@ -19,7 +19,7 @@
 
 #define SU_LOG_DOMAIN "smoothpsd"
 
-#include <sigutils/log.h>
+#include <sigutils/sigutils.h>
 #include <sigutils/smoothpsd.h>
 #include <sigutils/taps.h>
 #include <string.h>
@@ -198,7 +198,7 @@ SU_METHOD(
   SUBOOL ok = SU_FALSE;
 
   /*
-   * We do not acquire the mutex here immediately. This is because FFTW_ESTIMATE
+   * We do not acquire the mutex here immediately. This is because FFTW_MEASURE
    * makes the initialization of the fft particularly slow and we can detach
    * it from the modification of the current object.
    */
@@ -234,7 +234,7 @@ SU_METHOD(
              fftbuf,
              fftbuf,
              FFTW_FORWARD,
-             FFTW_ESTIMATE))
+             su_lib_fftw_strategy()))
         == NULL) {
       SU_ERROR("failed to create FFT plan\n");
       goto done;

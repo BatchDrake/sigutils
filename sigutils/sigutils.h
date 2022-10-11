@@ -25,7 +25,17 @@
 #include "types.h"
 #include "version.h"
 
+/* Library initialization */
 SUBOOL su_lib_init_ex(const struct sigutils_log_config *logconfig);
 SUBOOL su_lib_init(void);
+
+/* FFT wisdom file handling */
+SUBOOL su_lib_is_using_wisdom(void);
+SUBOOL su_lib_set_wisdom_enabled(SUBOOL);
+SUBOOL su_lib_set_wisdom_file(const char *);
+SUBOOL su_lib_save_wisdom(void);
+
+/* Internal */
+int su_lib_fftw_strategy(void);
 
 #endif /* _SIGUTILS_SIGUTILS_H */

@@ -24,6 +24,8 @@
 #include "sigutils.h"
 
 SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
+SUPRIVATE SUBOOL su_measure_ffts = SU_FALSE;
+SUPRIVATE char *su_wisdom_file = NULL;
 
 SUPRIVATE char
 su_log_severity_to_char(enum sigutils_log_severity sev)
@@ -63,6 +65,66 @@ SUPRIVATE struct sigutils_log_config su_lib_log_config = {
     SU_TRUE,             /* exclusive */
     su_log_func_default, /* log_func */
 };
+
+SUBOOL
+su_lib_is_using_wisdom(void)
+{
+  return su_measure_ffts;
+}
+
+SUBOOL
+su_lib_set_wisdom_enabled(SUBOOL enabled)
+{
+  if (su_wisdom_file == NULL) {
+    SU_ERROR("Not enabling FFT wisdom: wisdom file path not set\n");
+    enabled = SU_FALSE;
+  }
+
+  su_measure_ffts = enabled;
+}
+
+SUBOOL
+su_lib_set_wisdom_file(const char *cpath)
+{
+  SUBOOL ok = SU_FALSE;
+  char *path = NULL;
+
+  SU_FFTW(_forget_wisdom)();
+
+  if (cpath != NULL) {
+    SU_TRY(path = strbuild(cpath));
+    if (!SU_FFTW(_import_wisdom_from_filename) (path)) {
+      SU_INFO("No previous FFT wisdom found (yet)\n");
+    }
+  } else {
+    su_measure_ffts = SU_FALSE;
+  }
+
+  if (su_wisdom_file != NULL)
+    free(su_wisdom_file);
+
+  su_wisdom_file = path;
+
+  ok = SU_TRUE;
+
+done:
+  return ok;
+}
+
+SUBOOL
+su_lib_save_wisdom(void)
+{
+  if (su_wisdom_file != NULL)
+    return SU_FFTW(_export_wisdom_to_filename) (su_wisdom_file);
+
+  return SU_TRUE;
+}
+
+int
+su_lib_fftw_strategy(void)
+{
+  return su_measure_ffts ? FFTW_MEASURE : FFTW_ESTIMATE;
+}
 
 SUBOOL
 su_lib_init_ex(const struct sigutils_log_config *logconfig)
