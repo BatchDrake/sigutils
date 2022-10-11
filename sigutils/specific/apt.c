@@ -21,7 +21,7 @@
 
 #include "apt.h"
 
-#include <sigutils/log.h>
+#include <sigutils/sigutils.h>
 #include <sigutils/taps.h>
 #include <stdio.h>
 #include <string.h>
@@ -506,7 +506,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
           new->sync_fft,
           new->sync_fft,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
+          su_lib_fftw_strategy()),
       goto done);
 
   SU_TRYCATCH(
@@ -515,7 +515,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
           new->samp_buffer,
           new->corr_fft,
           FFTW_FORWARD,
-          FFTW_ESTIMATE),
+          su_lib_fftw_strategy()),
       goto done);
 
   SU_TRYCATCH(
@@ -524,7 +524,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
           new->corr_fft,
           new->corr_fft,
           FFTW_BACKWARD,
-          FFTW_ESTIMATE),
+          su_lib_fftw_strategy()),
       goto done);
 
   su_pll_init(
