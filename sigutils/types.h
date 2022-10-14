@@ -48,11 +48,12 @@
 #  ifdef I
 #    undef I
 #  endif /* I */
-#  define I               \
+#  define SU_I            \
     std::complex<SUFLOAT> \
     {                     \
       0, 1                \
     }
+#  define I SU_I
 #  define SUCOMPLEX std::complex<SUFLOAT>
 #  define SU_C_REAL(c) (c).real()
 #  define SU_C_IMAG(c) (c).imag()
