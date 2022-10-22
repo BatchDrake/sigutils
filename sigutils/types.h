@@ -53,7 +53,6 @@
     {                     \
       0, 1                \
     }
-#  define I SU_I
 #  define SUCOMPLEX std::complex<SUFLOAT>
 #  define SU_C_REAL(c) (c).real()
 #  define SU_C_IMAG(c) (c).imag()
@@ -63,6 +62,7 @@
 #  define SU_C_CONJ(c) std::conj(c)
 #  define SU_C_SGN(x) SUCOMPLEX(SU_SGN(SU_C_REAL(x)), SU_SGN(SU_C_IMAG(x)))
 #else
+#  define SU_I I
 #  define SUCOMPLEX _Complex SUFLOAT
 #  define SU_C_REAL(c) (SU_ADDSFX(creal)(c))
 #  define SU_C_IMAG(c) (SU_ADDSFX(cimag)(c))
@@ -256,7 +256,7 @@ su_c_awgn(void)
   SUFLOAT SQ = SU_SQRT(-SU_LN(U1));
   SUFLOAT PH = 2 * PI * U2;
 
-  return SQ * (SU_COS(PH) + I * SU_SIN(PH));
+  return SQ * (SU_COS(PH) + SU_I * SU_SIN(PH));
 }
 
 #endif /* _SIGUTILS_TYPES_H */
