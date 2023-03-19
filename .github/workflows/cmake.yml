@@ -51,9 +51,14 @@ jobs:
     - name: Upload deb artifact
       uses: actions/upload-artifact@v2
       with:
-        name: libsigutils_0.3.0-1.deb
-        path: libsigutils_0.3.0-1.deb 
+        name: libsigutils_0.3.0-1_amd64.deb
+        path: libsigutils_0.3.0-1_amd64.deb 
 
+    - name: Upload dev deb artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: libsigutils-dev_0.3.0-1_amd64.deb
+        path: libsigutils-dev_0.3.0-1_amd64.deb
 
   build-macos:
     runs-on: macos-latest
