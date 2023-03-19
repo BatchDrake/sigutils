@@ -44,7 +44,16 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      
+
+    - name: Make Debian package
+      run: ./makedeb.sh 0.3.0-1
+
+    - name: Upload deb artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: libsigutils_0.3.0-1.deb
+        path: libsigutils_0.3.0-1.deb 
+
 
   build-macos:
     runs-on: macos-latest
