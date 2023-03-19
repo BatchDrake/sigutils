@@ -49,7 +49,7 @@ Version: $ver
 Section: base
 Priority: optional
 Architecture: amd64
-Depends: libsndfile1 (>= 1.0.31-2), libvolk2.4 (>= 2.4.1-2), libfftw3-3 (>= 3.3.8-2)
+Depends: libsndfile1 (>= 1.0.31-2), libvolk2.4 (>= 2.4.1-2), libfftw3-3 (>= 3.3.8-2), libsigutils (>= 0.3.0-1)
 Maintainer: arf20 <aruizfernandez05@gmail.com>
 Description: Small signal processing utility library development files
 EOF
