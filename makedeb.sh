@@ -11,7 +11,7 @@ mkdir -p DEBIAN/
 # create debian thing
 rm DEBIAN/control
 cat <<EOF >>DEBIAN/control
-Package: sigutils
+Package: libsigutils
 Version: $ver
 Section: base
 Priority: optional
@@ -44,7 +44,7 @@ mkdir -p DEBIAN/
 # create debian thing
 rm DEBIAN/control
 cat <<EOF >>DEBIAN/control
-Package: sigutils-dev
+Package: libsigutils-dev
 Version: $ver
 Section: base
 Priority: optional
