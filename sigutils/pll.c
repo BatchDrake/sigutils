@@ -60,6 +60,8 @@ SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x)
   su_ncqo_inc_angfreq(&self->ncqo, self->alpha * error);
   su_ncqo_inc_phase(&self->ncqo, self->beta * error);
 
+  self->lock += self->beta * (error * error - self->lock);
+
   return mix;
 }
 

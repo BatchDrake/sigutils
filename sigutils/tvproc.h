@@ -21,6 +21,7 @@
 #include "defs.h"
 #include "iir.h"
 #include "types.h"
+#include "pll.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,7 @@ struct sigutils_tv_processor_params {
   SUBOOL reverse;
   SUBOOL interlace;
   SUBOOL enable_agc;
+  SUBOOL enable_color;
   SUFLOAT x_off;
 
   /* Geometry */
@@ -48,6 +50,11 @@ struct sigutils_tv_processor_params {
   SUSCOUNT vsync_odd_trigger;
   SUBOOL dominance;
 
+  /* Chroma parameters */
+  SUFLOAT chroma_fhint;
+  SUFLOAT chroma_burst_start; /* Since the beginning of the line */
+  SUFLOAT chroma_burst_len;
+
   /* Tolerances */
   SUFLOAT t_tol; /* Timing tolerance */
   SUFLOAT l_tol; /* Level tolerance */
@@ -63,7 +70,7 @@ struct sigutils_tv_processor_params {
   SUFLOAT hsync_fast_track_tau; /* 9.5 */
   SUFLOAT hsync_slow_track_tau;
   SUFLOAT line_len_tau; /* 9.5 */
-
+  SUFLOAT chroma_res_tau;
   SUFLOAT agc_tau; /* 3 */
 };
 
@@ -100,6 +107,7 @@ SU_GETTER(su_pulse_finder, SUFLOAT, get_pos);
 struct sigutils_tv_frame_buffer {
   int width, height;
   SUFLOAT *buffer;
+  SUCOMPLEX *chroma;
   struct sigutils_tv_frame_buffer *next;
 };
 
@@ -117,12 +125,84 @@ enum sigutils_tv_processor_state {
   SU_TV_PROCESSOR_SYNCED,
 };
 
+struct sigutils_tv_pulse_separator {
+  SUBOOL   search;       /* On if no pulse found */
+  SUBOOL   syncing;      
+  SUFLOAT alpha;         /* Used to filter out chroma */
+  SUCOMPLEX y;           /* Result of the filtering */
+
+  FILE *fp;
+
+  SUSCOUNT n;
+  SUSCOUNT n_prev;
+  SUFLOAT  amp_gain_y;
+  SUFLOAT  max_level;    /* AGC (using the same alpha) */
+  SUSCOUNT gain_samples;
+  SUSCOUNT gain_updates;
+  SUBOOL   have_gain;
+  SUFLOAT  line_gain;
+  SUFLOAT  gain;
+  SUSCOUNT line_count;
+
+  SUSCOUNT retries;
+  SUSCOUNT max_loc;
+  
+  SUBOOL   negative;     /* Whether we must invert the sign of the sync */
+  
+  SUFLOAT  sync_level;   /* Parameter: level used for sync. Everything above this, is ignored */
+  SUFLOAT  sync_level_inv;
+  SUFLOAT  sync_pwr;
+  SUFLOAT  sync_accum;
+  SUFLOAT  sync_err;
+  SUFLOAT  sync_err_norm;
+  SUSDIFF  sync_count;
+  SUSCOUNT holdoff;
+  SUSCOUNT sync_len;     /* To know for how long we have to integrate */
+  SUSCOUNT window_len;   /* 2 * pulse_len */
+  
+
+  SUFLOAT  line_len_orig;
+  SUFLOAT  line_len;     /* line length (samples, adjusted) */
+  SUFLOAT  next_sync;    /* Prediction of where is the next sync to be found*/
+  SUFLOAT  round_err;
+
+  SUSDIFF search_start;  /* Where the next search starts */
+  SUSCOUNT search_end;   /* Where it ends */
+  SUFLOAT *history;
+  SUFLOAT *shape;
+
+  SUSCOUNT history_len; /* 1.5 * line_len */
+  SUSCOUNT ptr;
+};
+
+typedef struct sigutils_tv_pulse_separator su_tv_pulse_separator_t;
+
+SU_CONSTRUCTOR(su_tv_pulse_separator, SUFLOAT sync_len, SUFLOAT line_len, SUFLOAT sync_level);
+SU_METHOD(su_tv_pulse_separator, SUBOOL, feed, SUCOMPLEX);
+SU_DESTRUCTOR(su_tv_pulse_separator);
+
+
+struct sigutils_tv_comb_filter {
+  SUCOMPLEX *history;
+  SUSCOUNT   history_len;
+  SUSCOUNT   ptr;
+  SUBOOL     negative;
+};
+
+typedef struct sigutils_tv_comb_filter su_tv_comb_filter_t;
+
+SU_CONSTRUCTOR(su_tv_comb_filter, SUSCOUNT, SUBOOL);
+SU_METHOD(su_tv_comb_filter, SUCOMPLEX, feed, SUCOMPLEX);
+SU_DESTRUCTOR(su_tv_comb_filter);
+
 struct sigutils_tv_processor {
   struct sigutils_tv_processor_params params;
   enum sigutils_tv_processor_state state;
 
   struct sigutils_tv_frame_buffer *free_pool;
   struct sigutils_tv_frame_buffer *current;
+
+  su_tv_pulse_separator_t sync_sep;
 
   /* Sample counter */
   SUSCOUNT ptr;
@@ -143,17 +223,38 @@ struct sigutils_tv_processor {
   SUBOOL field_parity;
   SUBOOL field_complete;
   SUSCOUNT field_prev_ptr;
+  SUSCOUNT frame_count;
 
   /* Comb filter's delay line */
-  SUFLOAT *delay_line;
-  SUSCOUNT delay_line_len;
-  SUSCOUNT delay_line_ptr;
+  SUCOMPLEX *delay_line;
+  SUSCOUNT   delay_line_len;
+  SUSCOUNT   delay_line_ptr;
+  SUCOMPLEX  delay_out_positive;
+  SUCOMPLEX  delay_out_negative;
 
   /* AGC */
   SUFLOAT agc_gain;
   SUFLOAT agc_line_max;
   SUFLOAT agc_accum;
   SUSCOUNT agc_lines;
+
+  /* Luma */
+  SUFLOAT Y;
+
+  /* Chroma */
+  SUBOOL   chroma_sync;
+  su_ncqo_t chroma_precenter;
+  su_pll_t chroma_pll;
+  su_iir_filt_t chroma_bandpass_i;
+  su_iir_filt_t chroma_bandpass_q;
+  su_tv_comb_filter_t chroma_comb;
+  SUCOMPLEX chroma_x;
+  SUFLOAT chroma_alpha;
+  SUFLOAT chroma_gain;
+  SUBOOL   line_parity;
+  unsigned int line_count;
+  SUBOOL    chroma_off;
+  SUFLOAT chroma_acc;
 
   /* Pulse output */
   SUFLOAT pulse_x;
@@ -178,6 +279,8 @@ struct sigutils_tv_processor {
   SUFLOAT est_line_len;
   SUFLOAT est_line_len_accum;
   SUSCOUNT est_line_len_count;
+
+  FILE *chromafp;
 };
 
 typedef struct sigutils_tv_processor su_tv_processor_t;
@@ -200,7 +303,7 @@ SU_METHOD(
     SUBOOL,
     set_params,
     const struct sigutils_tv_processor_params *params);
-SU_METHOD(su_tv_processor, SUBOOL, feed, SUFLOAT x);
+SU_METHOD(su_tv_processor, SUBOOL, feed, SUCOMPLEX x);
 
 SU_METHOD(su_tv_processor, su_tv_frame_buffer_t *, take_frame);
 SU_METHOD(su_tv_processor, void, return_frame, su_tv_frame_buffer_t *);

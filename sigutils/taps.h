@@ -70,6 +70,12 @@ void su_taps_brickwall_bp_init(
     SUFLOAT if_nor,
     SUSCOUNT size);
 
+void su_taps_brickwall_bp_skew_init(
+  SUFLOAT *h,
+  SUFLOAT bw,
+  SUFLOAT if_nor,
+  SUSCOUNT size);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

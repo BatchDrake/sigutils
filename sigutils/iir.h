@@ -125,6 +125,12 @@ SUBOOL su_iir_brickwall_bp_init(
     SUFLOAT bw,
     SUFLOAT ifnor);
 
+SUBOOL su_iir_brickwall_bp_skew_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor);
+
 /* Destroy filter */
 void su_iir_filt_finalize(su_iir_filt_t *filt);
 

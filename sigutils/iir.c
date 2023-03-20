@@ -516,6 +516,36 @@ fail:
 }
 
 SUBOOL
+su_iir_brickwall_bp_skew_init(
+    su_iir_filt_t *filt,
+    SUSCOUNT n,
+    SUFLOAT bw,
+    SUFLOAT ifnor)
+{
+  SUFLOAT *b = NULL;
+
+  if (n < 1)
+    goto fail;
+
+  if ((b = malloc(n * sizeof(SUFLOAT))) == NULL)
+    goto fail;
+
+  su_taps_brickwall_bp_init(b, bw, ifnor, n);
+
+  if (!__su_iir_filt_init(filt, 0, NULL, n, b, SU_FALSE))
+    goto fail;
+
+  return SU_TRUE;
+
+fail:
+  if (b != NULL)
+    free(b);
+
+  return SU_FALSE;
+}
+
+
+SUBOOL
 su_iir_brickwall_lp_init(su_iir_filt_t *filt, SUSCOUNT n, SUFLOAT fc)
 {
   SUFLOAT *b = NULL;

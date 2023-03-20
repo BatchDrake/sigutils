@@ -247,3 +247,22 @@ su_taps_brickwall_bp_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size)
     su_taps_apply_hamming(h, size);
   }
 }
+
+void
+su_taps_brickwall_bp_skew_init(SUFLOAT *h, SUFLOAT bw, SUFLOAT if_nor, SUSCOUNT size)
+{
+  unsigned int i;
+  SUFLOAT t = 0;
+  SUFLOAT omega = SU_NORM2ANG_FREQ(if_nor);
+
+  if (if_nor <= .5 * bw) {
+    su_taps_brickwall_lp_init(h, if_nor + .5 * bw, size);
+  } else {
+    for (i = 0; i < size; ++i) {
+      t = i - .5 * size;
+      h[i] = bw * su_sinc(.5 * bw * t) * SU_SIN(omega * t);
+    }
+
+    su_taps_apply_hamming(h, size);
+  }
+}
