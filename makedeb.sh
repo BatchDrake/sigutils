@@ -1,22 +1,51 @@
 #!/bin/bash
+#
+#  Copyright (C) 2023 Ángel Ruiz Fernández
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as
+#  published by the Free Software Foundation, version 3.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public
+#  License along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>
+#
 
-ver=$1
+if [ "$#" != "1" ]; then
+    echo $0: Usage:
+    echo "         $0 version"
+    exit 1
+fi
 
+PKG_VERSION=$1
+PKG_ARCH=`dpkg --print-architecture`
+PKG_DEPENDS='libsndfile1 (>= 1.0.31-2), libvolk2-bin (>= 2.4.1-2), libfftw3-bin (>= 3.3.8-2)'
+PKG_DEV_DEPENDS='libsndfile1-dev (>= 1.0.31-2), libvolk2-dev (>= 2.4.1-2), libfftw3-dev (>= 3.3.8-2)'
+
+BINDIR=libsigutils_${PKG_VERSION}_${PKG_ARCH}
+DEVDIR=libsigutils-dev_${PKG_VERSION}
+############################ Binary package ####################################
 # create structure
-mkdir libsigutils_${ver}_amd64
-cd libsigutils_${ver}_amd64
+rm -Rf $BINDIR
+mkdir $BINDIR
+cd $BINDIR
 mkdir -p usr/lib/
 mkdir -p DEBIAN/
 
 # create debian thing
-rm DEBIAN/control
+rm -f DEBIAN/control
 cat <<EOF >>DEBIAN/control
 Package: libsigutils
-Version: $ver
+Version: $PKG_VERSION
 Section: base
 Priority: optional
-Architecture: amd64
-Depends: libsndfile1 (>= 1.0.31-2), libvolk2.4 (>= 2.4.1-2), libfftw3-3 (>= 3.3.8-2)
+Architecture: $PKG_ARCH
+Depends: $PKG_DEPENDS
 Maintainer: arf20 <aruizfernandez05@gmail.com>
 Description: Small signal processing utility library
 EOF
@@ -26,30 +55,30 @@ cp ../build/libsigutils* usr/lib/
 
 # set permissions
 cd ..
-chmod 755 -R libsigutils_${ver}_amd64/
+chmod 755 -R libsigutils_${PKG_VERSION}_${PKG_ARCH}/
 
 # build deb
-dpkg-deb --build libsigutils_${ver}_amd64
+dpkg-deb --build libsigutils_${PKG_VERSION}_${PKG_ARCH}
 
-
-# dev
+############################ Development package ###############################
 # create structure
-mkdir libsigutils-dev_${ver}_amd64
-cd libsigutils-dev_${ver}_amd64
+rm -Rf $DEVDIR
+mkdir $DEVDIR
+cd $DEVDIR
 mkdir -p usr/lib/pkgconfig/
 mkdir -p usr/include/sigutils/sigutils/specific/
 mkdir -p usr/include/sigutils/sigutils/util/
 mkdir -p DEBIAN/
 
 # create debian thing
-rm DEBIAN/control
+rm -f DEBIAN/control
 cat <<EOF >>DEBIAN/control
 Package: libsigutils-dev
-Version: $ver
+Version: $PKG_VERSION
 Section: base
 Priority: optional
-Architecture: amd64
-Depends: libsndfile1 (>= 1.0.31-2), libvolk2.4 (>= 2.4.1-2), libfftw3-3 (>= 3.3.8-2), libsigutils (>= 0.3.0-1)
+Architecture: $PKG_ARCH
+Depends: libsigutils (= $PKG_VERSION), $PKG_DEV_DEPENDS, pkg-config
 Maintainer: arf20 <aruizfernandez05@gmail.com>
 Description: Small signal processing utility library development files
 EOF
@@ -62,7 +91,7 @@ cp ../util/*.h usr/include/sigutils/sigutils/util
 
 # set permissions
 cd ..
-chmod 755 -R libsigutils-dev_${ver}_amd64/
+chmod 755 -R libsigutils-dev_${PKG_VERSION}
 
 # build deb
-dpkg-deb --build libsigutils-dev_${ver}_amd64
+dpkg-deb --build libsigutils-dev_${PKG_VERSION}
