@@ -28,7 +28,7 @@ PKG_DEPENDS='libsndfile1 (>= 1.0.31-2), libvolk2-bin (>= 2.4.1-2), libfftw3-bin 
 PKG_DEV_DEPENDS='libsndfile1-dev (>= 1.0.31-2), libvolk2-dev (>= 2.4.1-2), libfftw3-dev (>= 3.3.8-2)'
 
 BINDIR=libsigutils_${PKG_VERSION}_${PKG_ARCH}
-DEVDIR=libsigutils-dev_${PKG_VERSION}
+DEVDIR=libsigutils-dev_${PKG_VERSION}_${PKG_ARCH}
 ############################ Binary package ####################################
 # create structure
 rm -Rf $BINDIR
@@ -42,7 +42,7 @@ rm -f DEBIAN/control
 cat <<EOF >>DEBIAN/control
 Package: libsigutils
 Version: $PKG_VERSION
-Section: base
+Section: libs
 Priority: optional
 Architecture: $PKG_ARCH
 Depends: $PKG_DEPENDS
@@ -55,10 +55,10 @@ cp ../build/libsigutils* usr/lib/
 
 # set permissions
 cd ..
-chmod 755 -R libsigutils_${PKG_VERSION}_${PKG_ARCH}/
+chmod 755 -R $BINDIR/
 
 # build deb
-dpkg-deb --build libsigutils_${PKG_VERSION}_${PKG_ARCH}
+dpkg-deb --build $BINDIR
 
 ############################ Development package ###############################
 # create structure
@@ -75,7 +75,7 @@ rm -f DEBIAN/control
 cat <<EOF >>DEBIAN/control
 Package: libsigutils-dev
 Version: $PKG_VERSION
-Section: base
+Section: libdevel
 Priority: optional
 Architecture: $PKG_ARCH
 Depends: libsigutils (= $PKG_VERSION), $PKG_DEV_DEPENDS, pkg-config
@@ -91,7 +91,7 @@ cp ../util/*.h usr/include/sigutils/sigutils/util
 
 # set permissions
 cd ..
-chmod 755 -R libsigutils-dev_${PKG_VERSION}
+chmod 755 -R $DEVDIR
 
 # build deb
-dpkg-deb --build libsigutils-dev_${PKG_VERSION}
+dpkg-deb --build $DEVDIR
