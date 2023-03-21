@@ -45,20 +45,24 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Get short hash
+      id: vars
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
     - name: Make Debian package
-      run: ./makedeb.sh 0.3.0-${{github.sha}}
+      run: ./makedeb.sh 0.3.0-${{steps.vars.outputs.sha_short}}
 
     - name: Upload deb artifact
       uses: actions/upload-artifact@v2
       with:
-        name: libsigutils_0.3.0-${{github.sha}}_amd64.deb
-        path: libsigutils_0.3.0-${{github.sha}}_amd64.deb 
+        name: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
+        path: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb 
 
     - name: Upload dev deb artifact
       uses: actions/upload-artifact@v2
       with:
-        name: libsigutils-dev_0.3.0-${{github.sha}}_amd64.deb
-        path: libsigutils-dev_0.3.0-${{github.sha}}_amd64.deb
+        name: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
+        path: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
 
   build-macos:
     runs-on: macos-latest
