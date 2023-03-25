@@ -24,8 +24,8 @@ fi
 
 PKG_VERSION=$1
 PKG_ARCH=`dpkg --print-architecture`
-PKG_DEPENDS='libsndfile1 (>= 1.0.31-2), libvolk2-bin (>= 2.4.1-2), libfftw3-bin (>= 3.3.8-2)'
-PKG_DEV_DEPENDS='libsndfile1-dev (>= 1.0.31-2), libvolk2-dev (>= 2.4.1-2), libfftw3-dev (>= 3.3.8-2)'
+PKG_DEPENDS='libsndfile1 (>= 1.0.31-2build1), libvolk2.5 (>= 2.5.1-1), libfftw3-single3 (>= 3.3.8-2)'
+PKG_DEV_DEPENDS='libsndfile1-dev (>= 1.0.31-2build1), libvolk2-dev (>= 2.5.1-1), libfftw3-dev (>= 3.3.8-2)'
 
 BINDIR=libsigutils_${PKG_VERSION}_${PKG_ARCH}
 DEVDIR=libsigutils-dev_${PKG_VERSION}_${PKG_ARCH}
