@@ -58,7 +58,7 @@ cd ..
 chmod 755 -R $BINDIR/
 
 # build deb
-dpkg-deb --build $BINDIR
+dpkg-deb -Zgzip --build $BINDIR
 
 ############################ Development package ###############################
 # create structure
