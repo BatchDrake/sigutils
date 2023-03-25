@@ -46,7 +46,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Make Debian package
-      run: ./makedeb.sh 0.3.0-1
+      run: ./makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
 
     - name: Upload deb artifact
       uses: actions/upload-artifact@v2

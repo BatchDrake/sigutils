@@ -16,13 +16,18 @@
 #  <http://www.gnu.org/licenses/>
 #
 
-if [ "$#" != "1" ]; then
+if [ "$#" -lt "1" ] || [ "$#" -gt "2" ]; then
     echo $0: Usage:
-    echo "         $0 version"
+    echo "         $0 version [subversion]"
     exit 1
 fi
 
-PKG_VERSION=$1
+if [ "$#" == "1" ]; then
+    PKG_VERSION=$1
+else
+    PKG_VERSION=$1-$2
+fi
+
 PKG_ARCH=`dpkg --print-architecture`
 PKG_DEPENDS='libsndfile1 (>= 1.0.31-2build1), libvolk2.5 (>= 2.5.1-1), libfftw3-single3 (>= 3.3.8-2)'
 PKG_DEV_DEPENDS='libsndfile1-dev (>= 1.0.31-2build1), libvolk2-dev (>= 2.5.1-1), libfftw3-dev (>= 3.3.8-2)'
