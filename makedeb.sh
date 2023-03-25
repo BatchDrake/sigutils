@@ -99,4 +99,4 @@ cd ..
 chmod 755 -R $DEVDIR
 
 # build deb
-dpkg-deb --build $DEVDIR
+dpkg-deb -Zgzip --build $DEVDIR
