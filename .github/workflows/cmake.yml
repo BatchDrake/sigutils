@@ -39,6 +39,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Get short hash
+      id: vars
+      run: cd ${{github.workspace}}/suscan/ && echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
