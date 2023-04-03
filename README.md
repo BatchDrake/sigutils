@@ -3,7 +3,7 @@
 The sigutils library is a digital signal processing library written in C, designed for blind signal analysis and automatic demodulation in GNU/Linux.
 
 ## Requirements and dependencies
-**sigutils** has been tested in GNU/Linux (i386, x86_64 and armhf), but it will probably work in many other architectures as well. CMake 3.7.2 or higher is required for the build. The following libraries (along with their respective development files) must also be present:
+**sigutils** has been tested in GNU/Linux (i386, x86_64 and armhf), but it will probably work in many other architectures as well. CMake 3.12.0 or higher is required for the build. The following libraries (along with their respective development files) must also be present:
 
 * sndfile (1.0.2 or later)
 * fftw3 (3.0 or later)
