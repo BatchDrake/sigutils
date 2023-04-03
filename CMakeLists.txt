@@ -18,7 +18,7 @@
 #
 #
   
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.12.0)
 
 set(SIGUTILS_VERSION_MAJOR 0)
 set(SIGUTILS_VERSION_MINOR 3)
@@ -35,43 +35,37 @@ project(
   VERSION ${SIGUTILS_VERSION}
   LANGUAGES C)
 
+# CMake modules
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 include(FindPkgConfig)
-
-# Make sure CMAKE_INSTALL_LIBDIR is defined for all systems
-if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR lib)
-endif()
+include(CodeAnalysis)
 
 # Find requirements
 find_package(Threads)
 pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
 pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
-pkg_check_modules(VOLK              volk>=1.0)
+pkg_check_modules(VOLK             volk>=1.0)
+if(VOLK_FOUND)
+  add_compile_definitions(HAVE_VOLK)
+  link_directories(${VOLK_LIBRARY_DIRS})
+endif()
 
-# Find cppcheck (if available)
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
-include(CodeAnalysis)
+# Project build options
+option(SIGUTILS_SINGLE_PRECISSION "Use single precission data types" ON)
+if(SIGUTILS_SINGLE_PRECISSION)
+  add_compile_definitions(_SU_SINGLE_PRECISION)
+endif()
 
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
 set(SPECDIR  ${SRCDIR}/specific)
 
-# Compiler configuration
-set(SIGUTILS_CONFIG_CFLAGS   "-D_SU_SINGLE_PRECISION")
-if(VOLK_FOUND)
-  set(SIGUTILS_CONFIG_CFLAGS "${SIGUTILS_CONFIG_CFLAGS} -DHAVE_VOLK=1")
-  link_directories(${VOLK_LIBRARY_DIRS})
-endif()
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING
-       "Choose the type of build, options are: None Debug Release RelWithDebInfo
-MinSizeRel."
+       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
        FORCE )
 endif()
-
-set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${SIGUTILS_CONFIG_CFLAGS}")
 
 # The following hack exposes __FILENAME__ to source files as the relative
 # path of each source file.
