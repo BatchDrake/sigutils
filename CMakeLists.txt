@@ -39,6 +39,7 @@ project(
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 include(FindPkgConfig)
 include(CodeAnalysis)
+include(GNUInstallDirs)
 
 # Find requirements
 find_package(Threads)
@@ -87,17 +88,18 @@ set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -s -DNDEBUG")
 
 ########################## pkg-config description #############################
-if("${CMAKE_INSTALL_LIBDIR}" STREQUAL "")
-  set(CMAKE_INSTALL_LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
-endif()
-
 set(SIGUTILS_PC_FILE_PATH "${PROJECT_BINARY_DIR}/sigutils.pc")
   
 set(
   INSTALL_PKGCONFIG_DIR 
   "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
-set(SU_PC_CFLAGS "${SIGUTILS_CONFIG_CFLAGS}")
+if(SIGUTILS_SINGLE_PRECISSION)
+  set(SU_PC_CFLAGS   "-D_SU_SINGLE_PRECISION")
+endif()
+if(VOLK_FOUND)
+  set(SU_PC_CFLAGS "${SU_PC_CFLAGS} -DHAVE_VOLK=1")
+endif()
 string(REPLACE ";" " " SNDFILE_SPC_LDFLAGS "${SNDFILE_LDFLAGS}")
 string(REPLACE ";" " " FFTW3_SPC_LDFLAGS "${FFTW3_LDFLAGS}")
 string(REPLACE ";" " " VOLK_SPC_LDFLAGS "${VOLK_LDFLAGS}")
