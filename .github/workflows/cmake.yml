@@ -51,13 +51,13 @@ jobs:
       run: ./makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
 
     - name: Upload deb artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
         path: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
 
     - name: Upload dev deb artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
         path: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
@@ -107,7 +107,7 @@ jobs:
       run: /mingw64/bin/cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
 
     - name: Upload dll file
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: libsigutils.dll
         path: ${{github.workspace}}/build/libsigutils.dll
