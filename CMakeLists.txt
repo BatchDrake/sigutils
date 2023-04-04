@@ -20,26 +20,27 @@
   
 cmake_minimum_required(VERSION 3.12.0)
 
-set(SIGUTILS_VERSION_MAJOR 0)
-set(SIGUTILS_VERSION_MINOR 3)
-set(SIGUTILS_VERSION_PATCH 0)
+# CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+include(GNUInstallDirs)
+include(FindPkgConfig)
+include(CodeAnalysis)
+include(GitVersionDetect)
 
+# Use git version detect to obtain a version
+set(SIGUTILS_VERSION_MAJOR ${GITVERSIONDETECT_VERSION_MAJOR})
+set(SIGUTILS_VERSION_MINOR ${GITVERSIONDETECT_VERSION_MINOR})
+set(SIGUTILS_VERSION_PATCH ${GITVERSIONDETECT_VERSION_PATCH})
+set(SIGUTILS_VERSION ${SIGUTILS_VERSION_MAJOR}.${SIGUTILS_VERSION_MINOR}.${SIGUTILS_VERSION_PATCH})
+
+# Set the ABI version manually
 set(SIGUTILS_ABI_VERSION   1)
 
-set(
-  SIGUTILS_VERSION
-  ${SIGUTILS_VERSION_MAJOR}.${SIGUTILS_VERSION_MINOR}.${SIGUTILS_VERSION_PATCH})
-
+# Define the project
 project(
   sigutils
   VERSION ${SIGUTILS_VERSION}
   LANGUAGES C)
-
-# CMake modules
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
-include(FindPkgConfig)
-include(CodeAnalysis)
-include(GNUInstallDirs)
 
 # Find requirements
 find_package(Threads)
