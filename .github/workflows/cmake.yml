@@ -37,6 +37,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Unshallow
+      run: git fetch --tags --prune --unshallow origin
+
     - name: Get short hash
       id: vars
       run: cd ${{github.workspace}}/sigutils/ && echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -81,6 +84,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Unshallow
+      run: git fetch --tags --prune --unshallow origin
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 
@@ -94,12 +100,16 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@v3
+    
     - uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
         update: true
-        install: mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
-        
+        install: git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+
+    - name: Unshallow
+      run: git fetch --tags --prune --unshallow origin
+
     - name: Configure CMake
       run: /mingw64/bin/cmake -B '${{github.workspace}}/build' -G"MinGW Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=/mingw64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
       
