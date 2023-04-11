@@ -1,54 +1,35 @@
-name: CI
+name: Build
 
 on:
   push:
   pull_request:
   workflow_dispatch:
-    inputs:
-      debug_enabled:
-        description: 'Build and run interactive shell'     
-        required: false
-        default: false
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
-  # Installation of dependencies is too OS-dependent now, we don't
-  # miss that much by particularizing this in a per-OS basis.
-
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - name: Setup interactive shell session
-      uses: mxschmitt/action-tmate@v3
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-    - name: Install sndfile
-      run: sudo apt-get install libsndfile1-dev
-
-    - name: Install Volk
-      run: sudo apt-get install libvolk2-dev
-
-    - name: Install FFTW3
-      run: sudo apt-get install libfftw3-dev
+    - name: Install dependencies
+      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
 
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-    - name: Unshallow
-      run: git fetch --tags --prune --unshallow origin
-
-    - name: Get short hash
-      id: vars
-      run: cd ${{github.workspace}}/sigutils/ && echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-    - name: Configure CMake
+    - name: Configure
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Get short hash
+      id: vars
+      run: cd ${{github.workspace}}/sigutils/ && echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
     - name: Make Debian package
       run: ./makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
@@ -68,26 +49,15 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - name: Setup interactive shell session
-      uses: mxschmitt/action-tmate@v3
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
-      
-    - name: Install sndfile
-      run: brew install libsndfile
-
-    - name: Install Volk
-      run: brew install volk
-
-    - name: Install FFTW3
-      run: brew install fftw
+    - name: Install dependencies
+      run: brew install libsndfile volk fftw
 
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-    - name: Unshallow
-      run: git fetch --tags --prune --unshallow origin
-
-    - name: Configure CMake
+    - name: Configure
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 
     - name: Build
@@ -99,22 +69,22 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
     - uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
         update: true
-        install: git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+        install: mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
 
-    - name: Unshallow
-      run: git fetch --tags --prune --unshallow origin
-
-    - name: Configure CMake
-      run: /mingw64/bin/cmake -B '${{github.workspace}}/build' -G"MinGW Makefiles" -DCMAKE_INSTALL_PREFIX:PATH=/mingw64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+    - name: Configure
+      run: cmake -B '${{github.workspace}}/build' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
       
     - name: Build
-      run: /mingw64/bin/cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
+      run: cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
 
     - name: Upload dll file
       uses: actions/upload-artifact@v3
