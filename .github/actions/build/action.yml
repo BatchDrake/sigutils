@@ -1,0 +1,25 @@
+name: Build
+description: 'Build a CMake project with optional configuration and building parameters'
+
+inputs:
+  shell:
+    required: false
+    default: bash
+  cmake_build_type:
+    default: 'Release'
+    required: false
+  cmake_configuration_parameters: 
+    required: false
+  cmake_build_paramters:
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+  - name: Configure
+    shell:  ${{inputs.shell}}
+    run: cmake -B build -DCMAKE_BUILD_TYPE=${{inputs.cmake_build_type}} ${{inputs.cmake_configuration_parameters}}
+
+  - name: Build
+    shell:  ${{inputs.shell}}
+    run: cmake --build build --config ${{inputs.cmake_build_type}} --verbose ${{inputs.cmake_build_paramters}}

@@ -5,9 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -21,11 +18,8 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Configure
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      uses: "./.github/actions/build"
 
     - name: Get short hash
       id: vars
@@ -57,11 +51,8 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Configure
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      uses: "./.github/actions/build"
 
   build-windows:
     runs-on: windows-latest
@@ -69,22 +60,22 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+    - name: Install dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
 
-    - name: Configure
-      run: cmake -B '${{github.workspace}}/build' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-      
     - name: Build
-      run: cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
+      uses: "./.github/actions/build"
+      with:
+        shell: msys2 {0}
 
     - name: Upload dll file
       uses: actions/upload-artifact@v3
