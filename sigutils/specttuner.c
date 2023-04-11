@@ -736,6 +736,25 @@ __su_specttuner_feed_channel(
   }
 #endif
   /************************* Back to time domain******************************/
+  if (channel->params.domain == SU_SPECTTUNER_CHANNEL_FREQUENCY_DOMAIN) {
+    /* Channel is defined in the frequency domain. This means that we
+       do not need to perform get back to the time domain (hence we can
+       go ahead and skip one IFFT completely) */
+    
+    channel->state = !channel->state;
+
+    if (channel->state == SU_SPECTTUNER_STATE_EVEN) {
+      curr = channel->fft;
+      return (channel->params.on_data)(
+        channel,
+        channel->params.privdata,
+        curr,
+        channel->size);
+    } else {
+      return SU_TRUE;
+    }
+  }
+
   SU_FFTW(_execute)(channel->plan[channel->state]);
 
   curr = channel->ifft[channel->state];

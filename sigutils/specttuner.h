@@ -48,6 +48,11 @@ enum sigutils_specttuner_state {
   SU_SPECTTUNER_STATE_ODD,
 };
 
+enum sigutils_specttuner_channel_domain {
+  SU_SPECTTUNER_CHANNEL_TIME_DOMAIN,
+  SU_SPECTTUNER_CHANNEL_FREQUENCY_DOMAIN
+};
+
 struct sigutils_specttuner_channel;
 
 struct sigutils_specttuner_channel_params {
@@ -56,6 +61,7 @@ struct sigutils_specttuner_channel_params {
   SUFLOAT bw;      /* Bandwidth (angular frequency) */
   SUFLOAT guard;   /* Relative extra bandwidth */
   SUBOOL precise;  /* Precision mode */
+  enum sigutils_specttuner_channel_domain domain; /* Domain */
   void *privdata;  /* Private data */
   SUBOOL(*on_data)
   (const struct sigutils_specttuner_channel *channel,
@@ -65,15 +71,16 @@ struct sigutils_specttuner_channel_params {
    SUSCOUNT size);
 };
 
-#define sigutils_specttuner_channel_params_INITIALIZER \
-  {                                                    \
-    0,            /* f0 */                             \
-        0,        /* delta_f */                        \
-        0,        /* bw */                             \
-        1,        /* guard */                          \
-        SU_FALSE, /* precise */                        \
-        NULL,     /* private */                        \
-        NULL,     /* on_data */                        \
+#define sigutils_specttuner_channel_params_INITIALIZER  \
+  {                                                     \
+    0,            /* f0 */                              \
+        0,        /* delta_f */                         \
+        0,        /* bw */                              \
+        1,        /* guard */                           \
+        SU_FALSE, /* precise */                         \
+        SU_SPECTTUNER_CHANNEL_TIME_DOMAIN, /* domain */ \
+        NULL,     /* private */                         \
+        NULL,     /* on_data */                         \
   }
 
 struct sigutils_specttuner_channel {
@@ -133,6 +140,16 @@ SUINLINE
 SU_GETTER(su_specttuner_channel, SUFLOAT, get_delta_f)
 {
   return self->params.delta_f;
+}
+
+SUINLINE
+SU_METHOD(
+  su_specttuner_channel,
+  void,
+  set_domain,
+  enum sigutils_specttuner_channel_domain dom)
+{
+  self->params.domain = dom;
 }
 
 SUINLINE
