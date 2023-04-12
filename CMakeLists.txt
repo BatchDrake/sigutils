@@ -22,7 +22,6 @@ cmake_minimum_required(VERSION 3.12.0)
 
 # CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-include(GNUInstallDirs)
 include(FindPkgConfig)
 include(CodeAnalysis)
 include(GitVersionDetect)
@@ -42,51 +41,57 @@ project(
   VERSION ${SIGUTILS_VERSION}
   LANGUAGES C)
 
+# Late module imports that depend on project definitions
+include(GNUInstallDirs)
+
 # Find requirements
 find_package(Threads)
+
 pkg_check_modules(SNDFILE REQUIRED sndfile>=1.0.2)
+include_directories(${SNDFILE_INCLUDE_DIRS})
+link_directories(${SNDFILE_LIBRARY_DIRS})
+
 pkg_check_modules(FFTW3   REQUIRED fftw3f>=3.0)
+include_directories(${FFTW3_INCLUDE_DIRS})
+link_directories(${FFTW3_LIBRARY_DIRS})
+
 pkg_check_modules(VOLK             volk>=1.0)
 if(VOLK_FOUND)
   add_compile_definitions(HAVE_VOLK)
+  include_directories(${VOLK_INCLUDE_DIRS})
   link_directories(${VOLK_LIBRARY_DIRS})
 endif()
 
 # Project build options
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING
+       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+       FORCE)
+endif()
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ffast-math -s")
+endif()
+
 option(SIGUTILS_SINGLE_PRECISSION "Use single precission data types" ON)
 if(SIGUTILS_SINGLE_PRECISSION)
   add_compile_definitions(_SU_SINGLE_PRECISION)
 endif()
 
+if (DEFINED PKGVERSION)
+  # If you are building sigutils for your own software distribution, you may want
+  # to set PKGVERSION to some descriptive string.
+  add_compile_definitions(SIGUTILS_PKGVERSION="${PKGVERSION}")
+endif()
+
+# General CMake hacks
+# The following hack exposes __FILENAME__ to source files as the relative
+# path of each source file.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
+
 # Source location
 set(SRCDIR   sigutils)
 set(UTILDIR  util)
 set(SPECDIR  ${SRCDIR}/specific)
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING
-       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-       FORCE )
-endif()
-
-# The following hack exposes __FILENAME__ to source files as the relative
-# path of each source file.
-set(CMAKE_C_FLAGS
-  "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
-
-#
-# If you are building sigutils for your own software distribution, you may want
-# to set PKGVERSION to some descriptive string.
-#
-
-if (DEFINED PKGVERSION)
-  set(
-    CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -DSIGUTILS_PKGVERSION='\"${PKGVERSION}\"'")
-endif()
-  
-set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -s -DNDEBUG")
 
 ########################## pkg-config description #############################
 set(SIGUTILS_PC_FILE_PATH "${PROJECT_BINARY_DIR}/sigutils.pc")
@@ -218,7 +223,7 @@ set(SIGUTILS_LIB_SOURCES
     ${SRCDIR}/tvproc.c
     ${SRCDIR}/version.c)
 
-link_directories(${PROJECT_BINARY_DIR} ${SNDFILE_LIBRARY_DIRS} ${FFTW3_LIBRARY_DIRS})
+link_directories(${PROJECT_BINARY_DIR})
 	
 add_library(
   sigutils SHARED
@@ -237,12 +242,8 @@ set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
 target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
 # Required dependencies
-target_include_directories(sigutils SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
 target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
-
-target_include_directories(sigutils SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
 target_link_libraries(sigutils ${FFTW3_LIBRARIES})
-
 target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(sigutils m)
 
@@ -253,8 +254,6 @@ endif()
 
 # Optional dependencies
 if(VOLK_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_VOLK=1")
-  target_include_directories(sigutils SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sigutils ${VOLK_LIBRARIES})
 endif()
 
@@ -317,18 +316,12 @@ target_include_directories(
 
 # Required dependencies
 target_link_libraries(sutest sigutils)
-
-target_include_directories(sutest SYSTEM PUBLIC ${SNDFILE_INCLUDE_DIRS})
 target_link_libraries(sutest ${SNDFILE_LIBRARIES})
-
-target_include_directories(sutest SYSTEM PUBLIC ${FFTW3_INCLUDE_DIRS})
 target_link_libraries(sutest ${FFTW3_LIBRARIES})
-
 target_link_libraries(sutest ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(sutest m)
 
 # Optional dependencies
 if(VOLK_FOUND)
-  target_include_directories(sutest SYSTEM PUBLIC ${VOLK_INCLUDE_DIRS})
   target_link_libraries(sutest ${VOLK_LIBRARIES})
 endif()
