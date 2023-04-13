@@ -70,12 +70,8 @@ struct sigutils_log_config {
         NULL,    /* log_func */         \
   }
 
-#ifndef __FILENAME__
-#  define __FILENAME__ "(no file)"
-#endif /* __FILENAME__ */
-
 #ifndef SU_LOG_DOMAIN
-#  define SU_LOG_DOMAIN __FILENAME__
+#  define SU_LOG_DOMAIN __REL_FILE__
 #endif /* SU_LOG_DOMAIN */
 
 #define SU_ERROR(fmt, arg...) \

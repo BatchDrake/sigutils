@@ -25,6 +25,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 include(FindPkgConfig)
 include(CodeAnalysis)
 include(GitVersionDetect)
+include(RelativeFileMacro)
 
 # Use git version detect to obtain a version
 set(SIGUTILS_VERSION_MAJOR ${GITVERSIONDETECT_VERSION_MAJOR})
@@ -82,11 +83,6 @@ if (DEFINED PKGVERSION)
   # to set PKGVERSION to some descriptive string.
   add_compile_definitions(SIGUTILS_PKGVERSION="${PKGVERSION}")
 endif()
-
-# General CMake hacks
-# The following hack exposes __FILENAME__ to source files as the relative
-# path of each source file.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
 
 # Source location
 set(SRCDIR   sigutils)
@@ -234,6 +230,8 @@ add_library(
   ${SIGUTILS_LIB_SOURCES}
   ${SIGUTILS_LIB_HEADERS}
   ${SIGUTILS_SPECIFIC_SOURCES})
+
+target_add_relative_file_macro(sigutils)
   
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
