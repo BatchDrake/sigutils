@@ -32,4 +32,14 @@
 #  undef interface
 #endif /* interface */
 
+static inline void
+win32_graceful_socket_close(SOCKET s)
+{
+  char discard;
+
+  shutdown(s, SD_SEND);
+  (void) recv(s, &discard, sizeof(char), 0);
+  closesocket(s);
+}
+
 #endif /* _UTIL_SOCKET_H */
