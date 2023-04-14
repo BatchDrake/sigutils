@@ -1,3 +1,34 @@
+# Distributed under the GPL v3 License. 
+
+#[=======================================================================[.rst:
+GitVersionDetect
+-------
+
+Derives a program version from Git tags. Only tags starting with a "v" will be
+used for version inference.
+
+
+Result Variables
+^^^^^^^^^^^^^^^^
+
+This will define the following variables:
+
+``GITVERSIONDETECT_VERSION``
+  Full git tag as git describe --dirty would produce.
+``GITVERSIONDETECT_VERSION_MAJOR``
+  Major version matched from GITVERSIONDETECT_VERSION.
+``GITVERSIONDETECT_VERSION_MINOR``
+  Minor version matched from GITVERSIONDETECT_VERSION.
+``GITVERSIONDETECT_VERSION_PATCH``
+  Patch version matched from GITVERSIONDETECT_VERSION.
+``GITVERSIONDETECT_VERSION_COMMIT_NUM``
+  Number of commits that separate current source from the detected version
+  tag.
+``GITVERSIONDETECT_VERSION_COMMIT_SHA``
+  Latest commit sha.
+
+#]=======================================================================]
+
 # Required packages
 find_package(Git)
 

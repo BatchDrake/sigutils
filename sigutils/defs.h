@@ -98,12 +98,20 @@
 #define SU_DESTRUCT(class, dest) JOIN(class, _finalize)(dest)
 #define SU_DISPOSE(class, dest) JOIN(class, _destroy)(dest)
 
+/* __REL_FILE__ is provided byt the build system, use it.
+  Otherwise, set the variable to an empty string as we
+  don't want to leak full paths into the binary.
+*/
+#ifndef __REL_FILE__
+#  define __REL_FILE__ ""
+#endif /* __REL_FILE__ */
+
 #define SU_TRYCATCH(expr, action)        \
   if (!(expr)) {                         \
     SU_ERROR(                            \
         "exception in \"%s\" (%s:%d)\n", \
         STRINGIFY(expr),                 \
-        __FILENAME__,                    \
+        __REL_FILE__,                    \
         __LINE__);                       \
     action;                              \
   }
