@@ -1,9 +1,6 @@
 name: Build
 
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build-linux:
@@ -20,25 +17,13 @@ jobs:
 
     - name: Build
       uses: "./.github/actions/build"
-
-    - name: Get short hash
-      id: vars
-      run:  echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-    - name: Make Debian package
-      run: src/makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
-
-    - name: Upload deb artifact
-      uses: actions/upload-artifact@v3
       with:
-        name: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
-        path: libsigutils_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
+        cmake_configuration_parameters: -DCMAKE_INSTALL_PREFIX=/usr
 
-    - name: Upload dev deb artifact
-      uses: actions/upload-artifact@v3
+    - name: Package
+      uses: "./.github/actions/package"
       with:
-        name: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
-        path: libsigutils-dev_0.3.0-${{steps.vars.outputs.sha_short}}_amd64.deb
+        generators: TGZ;DEB
 
   build-macos:
     runs-on: macos-latest
@@ -53,6 +38,11 @@ jobs:
 
     - name: Build
       uses: "./.github/actions/build"
+
+    - name: Package
+      uses: "./.github/actions/package"
+      with:
+        generators: TGZ
 
   build-windows:
     runs-on: windows-latest
@@ -77,8 +67,7 @@ jobs:
       with:
         shell: msys2 {0}
 
-    - name: Upload dll file
-      uses: actions/upload-artifact@v3
+    - name: Package
+      uses: "./.github/actions/package"
       with:
-        name: libsigutils.dll
-        path: ${{github.workspace}}/build/libsigutils.dll
+        generators: ZIP

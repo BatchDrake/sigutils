@@ -110,6 +110,28 @@ endif()
 target_pc_file_generate(sigutils "Digital signal processing utility library")
 
 # File install
-install(DIRECTORY include/sigutils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES ${PROJECT_BINARY_DIR}/src/sigutils.pc DESTINATION ${CMAKE_INSTALL_PKGCONFIGDIR})
+install(TARGETS sigutils LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LIB)
+install(DIRECTORY include/sigutils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT DEVEL)
+install(FILES ${PROJECT_BINARY_DIR}/src/sigutils.pc DESTINATION ${CMAKE_INSTALL_PKGCONFIGDIR} COMPONENT DEVEL)
+
+# General packaging settings
+set(CPACK_PACKAGE_NAME sigutils)
+set(CPACK_PACKAGE_DIRECTORY ${PROJECT_BINARY_DIR}/dist)
+
+# DEB packaging settings
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "BatchDrake <BatchDrake@gmail.com>")
+set(CPACK_DEBIAN_LIB_PACKAGE_DEPENDS "libsndfile1 (>= 1.0.31-2build1), libvolk2.5 (>= 2.5.1-1), libfftw3-single3 (>= 3.3.8-2)")
+set(CPACK_DEBIAN_DEVEL_PACKAGE_DEPENDS "libsndfile1-dev (>= 1.0.31-2build1), libvolk2-dev (>= 2.5.1-1), libfftw3-dev (>= 3.3.8-2)")
+set(CPACK_DEBIAN_LIB_PACKAGE_NAME "libsigutils")
+set(CPACK_DEBIAN_DEVEL_PACKAGE_NAME "libsigutils-dev")
+set(CPACK_DEBIAN_LIB_PACKAGE_SECTION "libs")
+set(CPACK_DEBIAN_DEVEL_PACKAGE_SECTION "libdevel")
+
+# Include CPack
+include(CPack)
+
+# CPack component information
+cpack_add_component(LIB DISPLAY_NAME "Runtime library")
+cpack_add_component(DEVEL DISPLAY_NAME "Development files" DEPENDS LIB)
