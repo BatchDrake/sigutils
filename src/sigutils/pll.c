@@ -17,15 +17,15 @@
 
 */
 
-#include "pll.h"
+#include <sigutils/pll.h>
 
 #include <string.h>
 
-#include "coef.h"
-#include "log.h"
-#include "sampling.h"
-#include "taps.h"
-#include "types.h"
+#include <sigutils/coef.h>
+#include <sigutils/log.h>
+#include <sigutils/sampling.h>
+#include <sigutils/taps.h>
+#include <sigutils/types.h>
 
 SU_DESTRUCTOR(su_pll)
 {

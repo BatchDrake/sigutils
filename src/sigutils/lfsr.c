@@ -19,11 +19,11 @@
 
 #define SU_LOG_LEVEL "lfsr"
 
-#include "lfsr.h"
+#include <sigutils/lfsr.h>
 
 #include <string.h>
 
-#include "log.h"
+#include <sigutils/log.h>
 
 SUBOOL
 su_lfsr_init_coef(su_lfsr_t *lfsr, const SUBITS *coef, SUSCOUNT order)

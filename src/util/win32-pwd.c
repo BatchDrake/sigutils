@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-pwd.h"
+#include <sigutils/util/win32-pwd.h>
 
 #include <Shlobj.h>
 

@@ -20,8 +20,8 @@
 #ifndef _DECIDER_H
 #define _DECIDER_H
 
-#include "defs.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/types.h>
 
 struct sigutils_decider_params {
   SUFLOAT min_val;

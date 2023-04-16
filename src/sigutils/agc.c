@@ -17,12 +17,12 @@
 
 */
 
-#include "agc.h"
+#include <sigutils/agc.h>
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "log.h"
+#include <sigutils/log.h>
 
 SU_CONSTRUCTOR(su_agc, const struct su_agc_params *params)
 {

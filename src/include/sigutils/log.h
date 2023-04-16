@@ -23,8 +23,8 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-#include "defs.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

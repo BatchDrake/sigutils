@@ -20,10 +20,10 @@
 #ifndef _SIGUTILS_PLL_H
 #define _SIGUTILS_PLL_H
 
-#include "defs.h"
-#include "iir.h"
-#include "ncqo.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 #  ifdef __clang__

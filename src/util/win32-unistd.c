@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-unistd.h"
+#include <sigutils/util/win32-unistd.h>
 
 #include <windows.h>
 

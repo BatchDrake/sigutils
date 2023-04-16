@@ -19,14 +19,14 @@
 
 #define SU_LOG_DOMAIN "specttuner"
 
-#include "specttuner.h"
+#include <sigutils/specttuner.h>
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "sigutils.h"
-#include "sampling.h"
-#include "taps.h"
+#include <sigutils/sigutils.h>
+#include <sigutils/sampling.h>
+#include <sigutils/taps.h>
 
 #ifdef SU_USE_VOLK
 #  define calloc su_volk_calloc
