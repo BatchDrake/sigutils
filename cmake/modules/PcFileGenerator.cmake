@@ -42,7 +42,7 @@ Name: @TARGET@
 Description: @TARGET_DESCRIPTION@
 URL: @PROJECT_HOMEPAGE_URL@
 Version: @PROJECT_VERSION@ 
-Cflags: -I\$\{includedir\} @COMPILE_FLAGS@
+Cflags: -I\$\{includedir\} -I\$\{includedir\}/@TARGET@ @COMPILE_FLAGS@
 Libs: -L\$\{libdir\} -l@TARGET@ @LINK_FLAGS@
 ")
 
