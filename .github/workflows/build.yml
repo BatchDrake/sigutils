@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
+      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev catch2
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -21,6 +21,14 @@ jobs:
         target: sigutils
         cmake_configuration_parameters: -DCMAKE_INSTALL_PREFIX=/usr
 
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
+
     - name: Package
       uses: "./.github/actions/package"
       with:
@@ -30,7 +38,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Install dependencies
-      run: brew install libsndfile volk fftw
+      run: brew install libsndfile volk fftw catch2
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -42,6 +50,14 @@ jobs:
       uses: "./.github/actions/build"
       with:
         target: sigutils
+
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
 
     - name: Package
       uses: "./.github/actions/package"
@@ -59,7 +75,7 @@ jobs:
       with:
         msystem: MINGW64
         update: true
-        install: git mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk
+        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk mingw-w64-x86_64-catch
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -72,6 +88,17 @@ jobs:
       with:
         shell: msys2 {0}
         target: sigutils
+
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        shell: msys2 {0}
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
+      with:
+        shell: msys2 {0}
 
     - name: Package
       uses: "./.github/actions/package"
