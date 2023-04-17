@@ -26,6 +26,7 @@ include(FindPkgConfig)
 include(CodeAnalysis)
 include(GitVersionDetect)
 include(RelativeFileMacro)
+include(PcFileGenerator)
 
 # Use git version detect to obtain a version
 set(SIGUTILS_VERSION_MAJOR ${GITVERSIONDETECT_VERSION_MAJOR})
@@ -40,6 +41,7 @@ set(SIGUTILS_ABI_VERSION   1)
 project(
   sigutils
   VERSION ${SIGUTILS_VERSION}
+  HOMEPAGE_URL "http://github.org/BatchDrake/sigutils"
   LANGUAGES C)
 
 # Late module imports that depend on project definitions
@@ -58,7 +60,6 @@ link_directories(${FFTW3_LIBRARY_DIRS})
 
 pkg_check_modules(VOLK             volk>=1.0)
 if(VOLK_FOUND)
-  add_compile_definitions(HAVE_VOLK)
   include_directories(${VOLK_INCLUDE_DIRS})
   link_directories(${VOLK_LIBRARY_DIRS})
 endif()
@@ -74,9 +75,6 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 endif()
 
 option(SIGUTILS_SINGLE_PRECISSION "Use single precission data types" ON)
-if(SIGUTILS_SINGLE_PRECISSION)
-  add_compile_definitions(_SU_SINGLE_PRECISION)
-endif()
 
 if (DEFINED PKGVERSION)
   # If you are building sigutils for your own software distribution, you may want
@@ -89,28 +87,15 @@ set(SRCDIR   sigutils)
 set(UTILDIR  util)
 set(SPECDIR  ${SRCDIR}/specific)
 
-########################## pkg-config description #############################
-set(SIGUTILS_PC_FILE_PATH "${PROJECT_BINARY_DIR}/sigutils.pc")
-  
+########################## pkg-config description #############################  
 set(
   INSTALL_PKGCONFIG_DIR 
   "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
   CACHE PATH "Installation directory for pkgconfig (.pc) files")
-if(SIGUTILS_SINGLE_PRECISSION)
-  set(SU_PC_CFLAGS   "-D_SU_SINGLE_PRECISION")
-endif()
-if(VOLK_FOUND)
-  set(SU_PC_CFLAGS "${SU_PC_CFLAGS} -DHAVE_VOLK=1")
-endif()
-string(REPLACE ";" " " SNDFILE_SPC_LDFLAGS "${SNDFILE_LDFLAGS}")
-string(REPLACE ";" " " FFTW3_SPC_LDFLAGS "${FFTW3_LDFLAGS}")
-string(REPLACE ";" " " VOLK_SPC_LDFLAGS "${VOLK_LDFLAGS}")
 
-set(SU_PC_LIBRARIES "-lm")
-configure_file(sigutils.pc.in "${SIGUTILS_PC_FILE_PATH}" @ONLY)
 
 install(
-  FILES "${SIGUTILS_PC_FILE_PATH}"
+  FILES "${PROJECT_BINARY_DIR}/sigutils.pc"
   DESTINATION "${INSTALL_PKGCONFIG_DIR}")
   
 ########################## Sigutils library build #############################
@@ -231,8 +216,16 @@ add_library(
   ${SIGUTILS_LIB_HEADERS}
   ${SIGUTILS_SPECIFIC_SOURCES})
 
+if(SIGUTILS_SINGLE_PRECISSION)
+  target_compile_definitions(sigutils PUBLIC _SU_SINGLE_PRECISION)
+endif()
+
+if(VOLK_FOUND)
+target_compile_definitions(sigutils PUBLIC HAVE_VOLK)
+endif()
+
 target_add_relative_file_macro(sigutils)
-  
+
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
 
@@ -268,3 +261,5 @@ install(
   DESTINATION include/sigutils/util)
 
 install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+target_pc_file_generate(sigutils "Digital signal processing utility library")
