@@ -23,10 +23,10 @@ jobs:
 
     - name: Get short hash
       id: vars
-      run: cd ${{github.workspace}}/sigutils/ && echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      run:  echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
     - name: Make Debian package
-      run: ./makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
+      run: src/makedeb.sh 0.3.0 ${{steps.vars.outputs.sha_short}}
 
     - name: Upload deb artifact
       uses: actions/upload-artifact@v3
