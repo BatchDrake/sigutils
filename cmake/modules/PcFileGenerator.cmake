@@ -51,12 +51,16 @@ function(target_pc_file_generate TARGET TARGET_DESCRIPTION)
   # Get target linked libraries
   get_target_property(LINK_LIBRARIES ${TARGET} INTERFACE_LINK_LIBRARIES)
   string(REPLACE ";" " -l" LINK_FLAGS "${LINK_LIBRARIES}")
-  string(PREPEND LINK_FLAGS "-l")
+  if (NOT "${LINK_FLAGS}" STREQUAL "")
+    string(PREPEND LINK_FLAGS "-l")
+  endif()
 
   # Get compiler flags
   get_target_property(COMPILE_DEFS ${TARGET} INTERFACE_COMPILE_DEFINITIONS)
   string(REPLACE ";" " -D" COMPILE_FLAGS "${COMPILE_DEFS}")
-  string(PREPEND COMPILE_FLAGS "-D")
+  if (NOT "${COMPILE_FLAGS}" STREQUAL "")
+    string(PREPEND COMPILE_FLAGS "-D")
+  endif()
 
   # Generate the PC file
   #string(CONFIGURE ${PCFILEGENERATOR_PC_TEMPLATE} OUTPUT @ONLY)
