@@ -209,6 +209,7 @@ set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
 target_include_directories(sigutils PRIVATE . util ${SRCDIR})
 
 # Required dependencies
+message("Pthread lib: ${CMAKE_THREAD_LIBS_INIT}")
 target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
 target_link_libraries(sigutils ${FFTW3_LIBRARIES})
 target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
