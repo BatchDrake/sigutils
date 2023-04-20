@@ -50,11 +50,17 @@ Libs: -L\$\{libdir\} -l@TARGET@ @LINK_FLAGS@
 function(target_pc_file_generate TARGET TARGET_DESCRIPTION)
   # Get target linked libraries
   get_target_property(LINK_LIBRARIES ${TARGET} INTERFACE_LINK_LIBRARIES)
+  
+  # Fix crappy 3rd party modules
+  string(REPLACE "^-l" "" LINK_LIBRARIES "${LINK_LIBRARIES}")
+  string(REPLACE ";-l" ";" LINK_LIBRARIES "${LINK_LIBRARIES}")
+
   string(REPLACE ";" " -l" LINK_FLAGS "${LINK_LIBRARIES}")
   if (NOT "${LINK_FLAGS}" STREQUAL "")
     string(PREPEND LINK_FLAGS "-l")
   endif()
 
+  
   # Get compiler flags
   get_target_property(COMPILE_DEFS ${TARGET} INTERFACE_COMPILE_DEFINITIONS)
   string(REPLACE ";" " -D" COMPILE_FLAGS "${COMPILE_DEFS}")
