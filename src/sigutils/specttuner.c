@@ -305,9 +305,6 @@ SU_INSTANCER(
   new->index = -1;
 
   if (!full_spectrum) {
-    /* Tentative configuration */
-    new->k = 1. / (2 * PI / actual_bw);
-
     /*
      * XXX: THERE IS SOMETHING HERE I COULD NOT FULLY UNDERSTAND
      *
@@ -331,7 +328,6 @@ SU_INSTANCER(
     new->width = SU_CEIL(min_size / params->guard);
     new->halfw = new->width >> 1;
   } else {
-    new->k = 1. / (2 * PI / params->bw);
     new->center =
         2 * SU_FLOOR(.5 * (effective_freq + 1 * rbw) / (2 * PI) * window_size);
     new->size = window_size;
@@ -343,7 +339,7 @@ SU_INSTANCER(
 
   /* Adjust configuration to new size */
   new->decimation = window_size / new->size;
-  new->k = 1. / (new->decimation *new->size);
+  new->k = 1. / window_size;
 
   /*
    * High precision mode: initialize local oscillator to compensate
