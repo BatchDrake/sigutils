@@ -20,7 +20,7 @@
 #ifndef _SIGUTILS_DEFS_H
 #define _SIGUTILS_DEFS_H
 
-#include <util/util.h>
+#include <sigutils/util/util.h>
 
 #ifndef su_calloc
 #  define su_calloc(len, size) calloc(len, size)

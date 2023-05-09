@@ -20,10 +20,10 @@
 #ifndef _SIGUTILS_NCQO_H
 #define _SIGUTILS_NCQO_H
 
-#include "defs.h"
-#include "log.h"
-#include "sampling.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/log.h>
+#include <sigutils/sampling.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 #  ifdef __clang__

@@ -20,7 +20,7 @@
 #ifndef _SIGUTILS_COEF_H
 #define _SIGUTILS_COEF_H
 
-#include "types.h"
+#include <sigutils/types.h>
 
 SUFLOAT *su_dcof_bwlp(int n, SUFLOAT fcf);
 SUFLOAT *su_dcof_bwhp(int n, SUFLOAT fcf);

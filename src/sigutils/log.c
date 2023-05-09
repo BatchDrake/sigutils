@@ -17,16 +17,16 @@
 
 */
 
-#include "log.h"
+#include <sigutils/log.h>
 
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <util.h>
-#include <util/compat-time.h>
+#include <sigutils/util/util.h>
+#include <sigutils/util/compat-time.h>
 
-#include "types.h"
+#include <sigutils/types.h>
 
 SUPRIVATE struct sigutils_log_config log_config;
 SUPRIVATE uint32_t log_mask;

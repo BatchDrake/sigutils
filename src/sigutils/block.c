@@ -18,12 +18,12 @@
 */
 
 #include <string.h>
-#include <util.h>
+#include <sigutils/util/util.h>
 
 #define SU_LOG_LEVEL "block"
 
-#include "block.h"
-#include "log.h"
+#include <sigutils/block.h>
+#include <sigutils/log.h>
 
 static unsigned int class_storage;
 static unsigned int class_count;

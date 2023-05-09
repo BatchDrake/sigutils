@@ -28,7 +28,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <util.h>
+#include <sigutils/util/util.h>
 
 #if defined(__cplusplus)
 #  define SU_USE_CPP_COMPLEX_API

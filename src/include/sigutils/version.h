@@ -18,7 +18,7 @@
 #ifndef _SIGUTILS_VERSION
 #define _SIGUTILS_VERSION
 
-#include "util.h"
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

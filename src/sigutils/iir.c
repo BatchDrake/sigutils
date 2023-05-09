@@ -17,15 +17,15 @@
 
 */
 
-#include "iir.h"
+#include <sigutils/iir.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "coef.h"
-#include "sampling.h"
-#include "taps.h"
+#include <sigutils/coef.h>
+#include <sigutils/sampling.h>
+#include <sigutils/taps.h>
 
 /*
   Somehow the Volk enhancement of IIR filters corrupts the

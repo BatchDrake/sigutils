@@ -43,8 +43,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iir.h"
-#include "log.h"
+#include <sigutils/iir.h>
+#include <sigutils/log.h>
 
 /**********************************************************************
   binomial_mult - multiplies a series of binomials together and returns

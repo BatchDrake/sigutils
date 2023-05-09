@@ -18,7 +18,7 @@
 #  include_next <poll.h>
 #else
 
-#  include <util/compat-socket.h>
+#  include <sigutils/util/compat-socket.h>
 
 /* Type used for the number of file descriptors. */
 typedef unsigned long int nfds_t;

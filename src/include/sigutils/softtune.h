@@ -20,11 +20,11 @@
 #ifndef _SIGUTILS_SOFTTUNE_H
 #define _SIGUTILS_SOFTTUNE_H
 
-#include "block.h"
-#include "iir.h"
-#include "ncqo.h"
-#include "sampling.h"
-#include "sigutils.h"
+#include <sigutils/block.h>
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/sampling.h>
+#include <sigutils/sigutils.h>
 
 /* Extra bandwidth given to antialias filter */
 #define SU_SOFTTUNER_ANTIALIAS_EXTRA_BW 2

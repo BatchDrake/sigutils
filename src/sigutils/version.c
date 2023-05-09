@@ -17,7 +17,7 @@
 
 */
 
-#include "version.h"
+#include <sigutils/version.h>
 
 #ifndef SIGUTILS_PKGVERSION
 #  define SIGUTILS_PKGVERSION \

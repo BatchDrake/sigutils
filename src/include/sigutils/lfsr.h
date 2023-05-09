@@ -20,7 +20,7 @@
 #ifndef _SIGUTILS_LFSR_H
 #define _SIGUTILS_LFSR_H
 
-#include "types.h"
+#include <sigutils/types.h>
 
 enum su_lfsr_mode {
   SU_LFSR_MODE_ADDITIVE,

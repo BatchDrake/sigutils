@@ -19,12 +19,12 @@
 
 #define SU_LOG_DOMAIN "tvproc"
 
-#include "tvproc.h"
+#include <sigutils/tvproc.h>
 
 #include <string.h>
 
-#include "log.h"
-#include "sampling.h"
+#include <sigutils/log.h>
+#include <sigutils/sampling.h>
 
 /***************************** Pulse finder ***********************************/
 SU_INSTANCER(

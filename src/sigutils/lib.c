@@ -21,7 +21,7 @@
 
 #define SU_LOG_LEVEL "lib"
 
-#include "sigutils.h"
+#include <sigutils/sigutils.h>
 
 SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
 SUPRIVATE SUBOOL su_measure_ffts = SU_FALSE;

@@ -64,178 +64,52 @@ if (DEFINED PKGVERSION)
 endif()
 
 # Source location
-set(SRCDIR   sigutils)
-set(UTILDIR  util)
-set(SPECDIR  ${SRCDIR}/specific)
-
-########################## pkg-config description #############################  
-
-install(
-  FILES "${PROJECT_BINARY_DIR}/src/sigutils.pc"
-  DESTINATION "${CMAKE_INSTALL_PKGCONFIGDIR}")
-  
-########################## Sigutils library build #############################
-set(SIGUTILS_UTIL_HEADERS ${UTILDIR}/util.h)
-set(SIGUTILS_UTIL_SOURCES ${UTILDIR}/util.c)
-
-set(SIGUTILS_COMPAT_SOURCES "")
-set(SIGUTILS_COMPAT_HEADERS
-   ${UTILDIR}/compat-mman.h
-   ${UTILDIR}/compat-time.h
-   ${UTILDIR}/compat-stat.h
-   ${UTILDIR}/compat-fcntl.h
-   ${UTILDIR}/compat-in.h
-   ${UTILDIR}/compat-inet.h
-   ${UTILDIR}/compat-netdb.h
-   ${UTILDIR}/compat-poll.h
-   ${UTILDIR}/compat-pwd.h
-   ${UTILDIR}/compat-select.h
-   ${UTILDIR}/compat-socket.h
-   ${UTILDIR}/compat-statvfs.h
-   ${UTILDIR}/compat-stdlib.h
-   ${UTILDIR}/compat-termios.h
-   ${UTILDIR}/compat-unistd.h)
-
-if(WIN32)
-  set(SIGUTILS_COMPAT_HEADERS
-    ${SIGUTILS_COMPAT_HEADERS}
-    ${UTILDIR}/win32-mman.h
-    ${UTILDIR}/win32-time.h
-    ${UTILDIR}/win32-stat.h
-    ${UTILDIR}/win32-fcntl.h
-    ${UTILDIR}/win32-in.h
-    ${UTILDIR}/win32-inet.h
-    ${UTILDIR}/win32-netdb.h
-    ${UTILDIR}/win32-poll.h
-    ${UTILDIR}/win32-pwd.h
-    ${UTILDIR}/win32-socket.h
-    ${UTILDIR}/win32-statvfs.h
-    ${UTILDIR}/win32-stdlib.h
-    ${UTILDIR}/win32-termios.h
-    ${UTILDIR}/win32-unistd.h)
-
-  set(SIGUTILS_COMPAT_SOURCES
-    ${SIGUTILS_COMPAT_SOURCES}
-    ${UTILDIR}/win32-fcntl.c
-    ${UTILDIR}/win32-mman.c
-    ${UTILDIR}/win32-time.c
-    ${UTILDIR}/win32-poll.c
-    ${UTILDIR}/win32-pwd.c
-    ${UTILDIR}/win32-statvfs.c
-    ${UTILDIR}/win32-stdlib.c
-    ${UTILDIR}/win32-termios.c
-    ${UTILDIR}/win32-unistd.c)
+file(GLOB_RECURSE SRCS LIST_DIRECTORIES false *.c)
+file(GLOB_RECURSE SRCS_WIN LIST_DIRECTORIES false win32-*.c)
+if(NOT WIN32)
+  list(REMOVE_ITEM SRCS ${SRCS_WIN})
 endif()
 
-set(SIGUTILS_SPECIFIC_HEADERS
-    ${SPECDIR}/apt.h)
-set(SIGUTILS_SPECIFIC_SOURCES
-    ${SPECDIR}/apt.c)
+# Define the library target	
+add_library(sigutils SHARED ${SRCS})
 
-set(SIGUTILS_LIB_HEADERS
-    ${SRCDIR}/agc.h
-    ${SRCDIR}/block.h
-    ${SRCDIR}/clock.h
-    ${SRCDIR}/coef.h
-    ${SRCDIR}/decider.h
-    ${SRCDIR}/defs.h
-    ${SRCDIR}/detect.h
-    ${SRCDIR}/equalizer.h
-    ${SRCDIR}/iir.h
-    ${SRCDIR}/lfsr.h
-    ${SRCDIR}/log.h
-    ${SRCDIR}/matfile.h
-    ${SRCDIR}/ncqo.h
-    ${SRCDIR}/pll.h
-    ${SRCDIR}/property.h
-    ${SRCDIR}/sampling.h
-    ${SRCDIR}/sigutils.h
-    ${SRCDIR}/smoothpsd.h
-    ${SRCDIR}/softtune.h
-    ${SRCDIR}/specttuner.h
-    ${SRCDIR}/taps.h
-    ${SRCDIR}/tvproc.h
-    ${SRCDIR}/types.h
-    ${SRCDIR}/version.h)
-    
-set(SIGUTILS_LIB_SOURCES 
-    ${SRCDIR}/agc.c
-    ${SRCDIR}/block.c
-    ${SRCDIR}/clock.c
-    ${SRCDIR}/coef.c
-    ${SRCDIR}/detect.c
-    ${SRCDIR}/equalizer.c
-    ${SRCDIR}/iir.c
-    ${SRCDIR}/lfsr.c
-    ${SRCDIR}/lib.c
-    ${SRCDIR}/log.c
-    ${SRCDIR}/matfile.c
-    ${SRCDIR}/ncqo.c
-    ${SRCDIR}/pll.c
-    ${SRCDIR}/property.c
-    ${SRCDIR}/smoothpsd.c
-    ${SRCDIR}/softtune.c
-    ${SRCDIR}/specttuner.c
-    ${SRCDIR}/taps.c
-    ${SRCDIR}/tvproc.c
-    ${SRCDIR}/version.c)
+# Define relative filename macros
+target_add_relative_file_macro(sigutils)
 
-link_directories(${PROJECT_BINARY_DIR})
-	
-add_library(
-  sigutils SHARED
-  ${SIGUTILS_COMPAT_SOURCES}
-  ${SIGUTILS_COMPAT_HEADERS}
-  ${SIGUTILS_UTIL_SOURCES}
-  ${SIGUTILS_UTIL_HEADERS}
-  ${SIGUTILS_LIB_SOURCES}
-  ${SIGUTILS_LIB_HEADERS}
-  ${SIGUTILS_SPECIFIC_SOURCES})
+# Add public include directories
+target_include_directories(sigutils PUBLIC include/)
 
+# Extra compilation definitions
 if(SIGUTILS_SINGLE_PRECISSION)
   target_compile_definitions(sigutils PUBLIC _SU_SINGLE_PRECISION)
 endif()
 
 if(VOLK_FOUND)
-target_compile_definitions(sigutils PUBLIC HAVE_VOLK)
+  target_compile_definitions(sigutils PUBLIC HAVE_VOLK)
 endif()
 
-target_add_relative_file_macro(sigutils)
-
+# Target properties
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
 
-# Private header directories
-target_include_directories(sigutils PRIVATE . util ${SRCDIR})
-
-# Required dependencies
+# Target dependencies
 target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
 target_link_libraries(sigutils ${FFTW3_LIBRARIES})
 target_link_libraries(sigutils ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(sigutils m)
 
 if(WIN32)
-  # In Windows systems, winsock is required
   target_link_libraries(sigutils ws2_32)
 endif()
 
-# Optional dependencies
 if(VOLK_FOUND)
   target_link_libraries(sigutils ${VOLK_LIBRARIES})
 endif()
 
+# PC file generation
 target_pc_file_generate(sigutils "Digital signal processing utility library")
 
-install(
-  FILES ${SIGUTILS_LIB_HEADERS} 
-  DESTINATION include/sigutils/sigutils)
-
-install(
-  FILES ${SIGUTILS_SPECIFIC_HEADERS} 
-  DESTINATION include/sigutils/sigutils/specific)
-
-install(
-  FILES ${SIGUTILS_UTIL_HEADERS} ${SIGUTILS_COMPAT_HEADERS}
-  DESTINATION include/sigutils/util)
-
+# File install
+install(DIRECTORY include/sigutils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(TARGETS sigutils DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${PROJECT_BINARY_DIR}/src/sigutils.pc DESTINATION ${CMAKE_INSTALL_PKGCONFIGDIR})

@@ -17,10 +17,10 @@
 
 */
 
-#include "taps.h"
+#include <sigutils/taps.h>
 
-#include "sampling.h"
-#include "types.h"
+#include <sigutils/sampling.h>
+#include <sigutils/types.h>
 
 /************************* Real window functions *****************************/
 SUPRIVATE void

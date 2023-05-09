@@ -11,7 +11,7 @@
  * Brent Cook <bcook@openbsd.org>
  */
 
-#include "win32-poll.h"
+#include <sigutils/util/win32-poll.h>
 
 #include <conio.h>
 #include <errno.h>
