@@ -21,8 +21,9 @@
 
 #define SU_LOG_LEVEL "clock"
 
-#include "clock.h"
-#include "log.h"
+#include <sigutils/clock.h>
+#include <sigutils/log.h>
+
 
 /*
  * Fixed sampler

@@ -20,7 +20,7 @@
 #ifndef _SIGUTILS_SAMPLING_H
 #define _SIGUTILS_SAMPLING_H
 
-#include "types.h"
+#include <sigutils/types.h>
 
 /*
  * Conventions used for frequency representation

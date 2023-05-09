@@ -20,10 +20,11 @@
 #ifndef _SIGUTILS_DETECT_H
 #define _SIGUTILS_DETECT_H
 
-#include "iir.h"
-#include "ncqo.h"
-#include "sigutils.h"
-#include "softtune.h"
+#include <sigutils/iir.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/sigutils.h>
+#include <sigutils/softtune.h>
+
 
 #ifdef __cplusplus
 #  ifdef __clang__

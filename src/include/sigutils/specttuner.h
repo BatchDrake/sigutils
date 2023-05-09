@@ -20,9 +20,9 @@
 #ifndef _SIGUTILS_SPECTTUNER_H
 #define _SIGUTILS_SPECTTUNER_H
 
-#include "defs.h"
-#include "ncqo.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 #  ifdef __clang__

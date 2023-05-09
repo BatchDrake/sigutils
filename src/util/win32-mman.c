@@ -14,7 +14,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-mman.h"
+#include <sigutils/util/win32-mman.h>
 
 #include <errno.h>
 #include <io.h>

@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-stdlib.h"
+#include <sigutils/util/win32-stdlib.h>
 
 #include <stdlib.h>
 

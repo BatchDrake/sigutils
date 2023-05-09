@@ -20,10 +20,10 @@
 #ifndef _SIGUTILS_SIGUTILS_H
 #define _SIGUTILS_SIGUTILS_H
 
-#include "block.h"
-#include "log.h"
-#include "types.h"
-#include "version.h"
+#include <sigutils/block.h>
+#include <sigutils/log.h>
+#include <sigutils/types.h>
+#include <sigutils/version.h>
 
 /* Library initialization */
 SUBOOL su_lib_init_ex(const struct sigutils_log_config *logconfig);

@@ -18,9 +18,9 @@
 #ifndef _SIGUTILS_TVPROC_H
 #define _SIGUTILS_TVPROC_H
 
-#include "defs.h"
-#include "iir.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/iir.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

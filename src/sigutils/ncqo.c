@@ -23,9 +23,9 @@
 
 #define SU_LOG_DOMAIN "ncqo"
 
-#include "log.h"
-#include "ncqo.h"
-#include "sampling.h"
+#include <sigutils/log.h>
+#include <sigutils/ncqo.h>
+#include <sigutils/sampling.h>
 
 /* Expects: relative frequency */
 SU_CONSTRUCTOR_TYPED(void, su_ncqo, SUFLOAT fnor)

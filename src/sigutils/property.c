@@ -19,11 +19,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <util.h>
+#include <sigutils/util/util.h>
 #define SU_LOG_LEVEL "property"
 
-#include "log.h"
-#include "property.h"
+#include <sigutils/log.h>
+#include <sigutils/property.h>
 
 /************************** su_block_property API ****************************/
 su_property_t *

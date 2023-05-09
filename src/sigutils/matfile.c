@@ -19,13 +19,13 @@
 
 #define SU_LOG_DOMAIN "matfile"
 
-#include "matfile.h"
+#include <sigutils/matfile.h>
 
 #include <stdarg.h>
 #include <string.h>
 
-#include "log.h"
-#include "version.h"
+#include <sigutils/log.h>
+#include <sigutils/version.h>
 
 #define SU_MAT_FILE_VERSION 0x100
 #define SU_MAT_FILE_ENDIANNESS (('M' << 8) | ('I'))

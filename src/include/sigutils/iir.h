@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 
-#include "types.h"
+#include <sigutils/types.h>
 
 #define SU_FLOAT_GUARD INFINITY
 

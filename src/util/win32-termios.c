@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-termios.h"
+#include <sigutils/util/win32-termios.h>
 
 #include <conio.h>
 

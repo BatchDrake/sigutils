@@ -20,8 +20,8 @@
 #ifndef _SIGUTILS_CLOCK_H
 #define _SIGUTILS_CLOCK_H
 
-#include "block.h"
-#include "types.h"
+#include <sigutils/block.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

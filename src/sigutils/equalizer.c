@@ -17,12 +17,12 @@
 
 */
 
-#include "equalizer.h"
+#include <sigutils/equalizer.h>
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "log.h"
+#include <sigutils/log.h>
 
 SUPRIVATE void
 su_equalizer_push_x(su_equalizer_t *eq, SUCOMPLEX x)

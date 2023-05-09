@@ -17,13 +17,13 @@
 
 */
 
-#include "detect.h"
+#include <sigutils/detect.h>
 
 #include <string.h>
 
-#include "assert.h"
-#include "sampling.h"
-#include "taps.h"
+#include <assert.h>
+#include <sigutils/sampling.h>
+#include <sigutils/taps.h>
 
 SU_CONSTRUCTOR(su_peak_detector, unsigned int size, SUFLOAT thres)
 {

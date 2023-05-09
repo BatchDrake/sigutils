@@ -22,8 +22,8 @@
 
 #define SU_LOG_DOMAIN "softtuner"
 
-#include "sampling.h"
-#include "softtune.h"
+#include <sigutils/sampling.h>
+#include <sigutils/softtune.h>
 
 void
 su_softtuner_params_adjust_to_channel(

@@ -19,7 +19,7 @@
 
 #define _SU_LOG_DOMAIN "apt"
 
-#include "apt.h"
+#include <sigutils/specific/apt.h>
 
 #include <sigutils/sigutils.h>
 #include <sigutils/taps.h>

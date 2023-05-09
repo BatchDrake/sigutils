@@ -23,11 +23,11 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <util.h>
+#include <sigutils/util/util.h>
 
-#include "defs.h"
-#include "property.h"
-#include "types.h"
+#include <sigutils/defs.h>
+#include <sigutils/property.h>
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

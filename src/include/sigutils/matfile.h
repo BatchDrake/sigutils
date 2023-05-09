@@ -22,7 +22,7 @@
 
 #include <stdarg.h>
 
-#include "types.h"
+#include <sigutils/types.h>
 
 #ifdef __cplusplus
 extern "C" {

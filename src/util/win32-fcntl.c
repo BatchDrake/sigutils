@@ -12,9 +12,9 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "win32-fcntl.h"
+#include <sigutils/util/win32-fcntl.h>
 
-#include "win32-socket.h"
+#include <sigutils/util/win32-socket.h>
 
 /* WARN: EXTREMELY ADHOC */
 int

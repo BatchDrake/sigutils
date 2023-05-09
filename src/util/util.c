@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>
 */
 
-#include "util.h"
+#include <sigutils/util/util.h>
 
 #include <ctype.h>
 #include <stdarg.h>
