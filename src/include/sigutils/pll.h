@@ -86,6 +86,12 @@ SU_DESTRUCTOR(su_pll);
 SU_METHOD(su_pll, SUCOMPLEX, track, SUCOMPLEX x);
 SU_METHOD(su_pll, void, feed, SUFLOAT x);
 
+SUINLINE
+SU_METHOD(su_pll, SUFLOAT, locksig)
+{
+  return self->lock;
+}
+
 /* QPSK costas loops are way more complex than that */
 SU_CONSTRUCTOR(
     su_costas,

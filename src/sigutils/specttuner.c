@@ -172,7 +172,8 @@ SU_METHOD_CONST(
 {
   unsigned int window_size = self->params.window_size;
   SUFLOAT rbw = 2 * PI / window_size;
-  SUFLOAT off, ef;
+  SUFLOAT off = 0, ef;
+  const su_ncqo_t *old = NULL, *new = NULL;
 
   ef = su_specttuner_channel_get_effective_freq(channel);
   channel->center = 2 * SU_FLOOR(.5 * (ef + 1 * rbw) / (2 * PI) * window_size);
@@ -187,6 +188,20 @@ SU_METHOD_CONST(
     off = (channel->center) * rbw - ef;
     off *= channel->decimation;
     su_ncqo_set_angfreq(&channel->lo, off);
+  }
+
+  if (channel->params.on_freq_changed != NULL) {
+    if (channel->params.precise) {
+      old = &channel->old_lo;
+      new = &channel->lo;
+    }
+
+    channel->params.on_freq_changed(
+      channel,
+      channel->params.privdata,
+      channel->center * rbw,
+      old,
+      new);
   }
 }
 

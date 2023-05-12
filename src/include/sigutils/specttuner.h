@@ -63,12 +63,19 @@ struct sigutils_specttuner_channel_params {
   SUBOOL precise;  /* Precision mode */
   enum sigutils_specttuner_channel_domain domain; /* Domain */
   void *privdata;  /* Private data */
-  SUBOOL(*on_data)
-  (const struct sigutils_specttuner_channel *channel,
-   void *privdata,
-   const SUCOMPLEX
-       *data, /* This pointer remains valid until the next call to feed */
-   SUSCOUNT size);
+  
+  SUBOOL (*on_data) (
+    const struct sigutils_specttuner_channel *channel,
+    void *privdata,
+    const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
+    SUSCOUNT size);
+
+  void (*on_freq_changed) (
+    const struct sigutils_specttuner_channel *channel,
+    void *privdata,
+    SUFLOAT f0_bin,
+    const su_ncqo_t *old_lo,
+    const su_ncqo_t *new_lo);
 };
 
 #define sigutils_specttuner_channel_params_INITIALIZER  \
@@ -81,6 +88,7 @@ struct sigutils_specttuner_channel_params {
         SU_SPECTTUNER_CHANNEL_TIME_DOMAIN, /* domain */ \
         NULL,     /* private */                         \
         NULL,     /* on_data */                         \
+        NULL      /* on_freq_changed */                 \
   }
 
 struct sigutils_specttuner_channel {
