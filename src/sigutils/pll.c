@@ -37,14 +37,7 @@ SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
 
   memset(self, 0, sizeof(su_pll_t));
 
-  fc = SU_NORM2ANG_FREQ(fc);
-
-  /* Settings taken from GNU Radio */
-  dinv = 1.f / (1.f + 2.f * .707f * fc + fc * fc);
-
-  self->alpha = 4 * fc * fc * dinv;
-  self->beta = 4 * 0.707 * fc * dinv;
-
+  su_pll_set_cutoff(self, fc);
   su_ncqo_init(&self->ncqo, fhint);
 
   return SU_TRUE;

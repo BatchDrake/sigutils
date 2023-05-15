@@ -92,6 +92,50 @@ SU_METHOD(su_pll, SUFLOAT, locksig)
   return self->lock;
 }
 
+SUINLINE
+SU_METHOD(su_pll, void, set_angfreq, SUFLOAT omega)
+{
+  su_ncqo_set_angfreq(&self->ncqo, omega);
+}
+
+SUINLINE
+SU_METHOD(su_pll, void, set_freq, SUFLOAT omega)
+{
+  su_ncqo_set_freq(&self->ncqo, omega);
+}
+
+SUINLINE
+SU_METHOD(su_pll, void, inc_angfreq, SUFLOAT delta)
+{
+  su_ncqo_inc_angfreq(&self->ncqo, delta);
+}
+
+SUINLINE
+SU_GETTER(su_pll, SUFREQ, get_freq)
+{
+  return su_ncqo_get_freq(&self->ncqo);
+}
+
+SUINLINE
+SU_GETTER(su_pll, SUFREQ, get_angfreq)
+{
+  return su_ncqo_get_angfreq(&self->ncqo);
+}
+
+SUINLINE
+SU_METHOD(su_pll, void, set_cutoff, SUFLOAT fc)
+{
+  SUFLOAT dinv;
+
+  fc = SU_NORM2ANG_FREQ(fc);
+
+  /* Settings taken from GNU Radio */
+  dinv = 1.f / (1.f + 2.f * .707f * fc + fc * fc);
+
+  self->alpha = 4 * fc * fc * dinv;
+  self->beta = 4 * 0.707 * fc * dinv;
+}
+
 /* QPSK costas loops are way more complex than that */
 SU_CONSTRUCTOR(
     su_costas,
