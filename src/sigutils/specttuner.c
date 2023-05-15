@@ -199,9 +199,8 @@ SU_METHOD_CONST(
     channel->params.on_freq_changed(
       channel,
       channel->params.privdata,
-      channel->center * rbw,
-      old,
-      new);
+      channel->old_f0,
+      channel->params.f0);
   }
 }
 
@@ -212,6 +211,7 @@ SU_METHOD_CONST(
     su_specttuner_channel_t *channel,
     SUFLOAT f0)
 {
+  channel->old_f0 = channel->params.f0;
   channel->params.f0 = f0;
   channel->pending_freq = SU_TRUE;
 }

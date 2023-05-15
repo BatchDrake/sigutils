@@ -55,6 +55,18 @@ enum sigutils_specttuner_channel_domain {
 
 struct sigutils_specttuner_channel;
 
+typedef SUBOOL (*su_specttuner_channel_data_func_t) (
+    const struct sigutils_specttuner_channel *channel,
+    void *privdata,
+    const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
+    SUSCOUNT size);
+
+typedef void (*su_specttuner_channel_new_freq_func_t) (
+    const struct sigutils_specttuner_channel *channel,
+    void *privdata,
+    SUFLOAT prev_f0,
+    SUFLOAT new_f0);
+
 struct sigutils_specttuner_channel_params {
   SUFLOAT f0;      /* Central frequency (angular frequency) */
   SUFLOAT delta_f; /* Frequency correction (angular frequency) */
@@ -64,18 +76,9 @@ struct sigutils_specttuner_channel_params {
   enum sigutils_specttuner_channel_domain domain; /* Domain */
   void *privdata;  /* Private data */
   
-  SUBOOL (*on_data) (
-    const struct sigutils_specttuner_channel *channel,
-    void *privdata,
-    const SUCOMPLEX *data, /* This pointer remains valid until the next call to feed */
-    SUSCOUNT size);
-
-  void (*on_freq_changed) (
-    const struct sigutils_specttuner_channel *channel,
-    void *privdata,
-    SUFLOAT f0_bin,
-    const su_ncqo_t *old_lo,
-    const su_ncqo_t *new_lo);
+  /* Callbacks */
+  su_specttuner_channel_data_func_t     on_data;
+  su_specttuner_channel_new_freq_func_t on_freq_changed;
 };
 
 #define sigutils_specttuner_channel_params_INITIALIZER  \
@@ -101,6 +104,7 @@ struct sigutils_specttuner_channel {
   su_ncqo_t lo;        /* Local oscillator to correct imprecise centering */
   su_ncqo_t old_lo;    /* Copy of the old local oscillator */
   SUBOOL pending_freq; /* Pending frequency adjustment */
+  SUFLOAT old_f0;      /* Old frequency */
   unsigned int center; /* FFT center bin */
   unsigned int size;   /* FFT bins to allocate */
   unsigned int width;  /* FFT bins to copy (for guard bands, etc) */
