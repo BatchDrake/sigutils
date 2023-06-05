@@ -1,0 +1,9 @@
+[submodule "cmake/cmake-gitversiondetect"]
+	path = cmake/cmake-gitversiondetect
+	url = https://github.com/antoniovazquezblanco/cmake-gitversiondetect.git
+[submodule "cmake/cmake-pcfilegenerator"]
+	path = cmake/cmake-pcfilegenerator
+	url = https://github.com/antoniovazquezblanco/cmake-pcfilegenerator.git
+[submodule "cmake/cmake-relativefilemacro"]
+	path = cmake/cmake-relativefilemacro
+	url = https://github.com/antoniovazquezblanco/cmake-relativefilemacro.git
