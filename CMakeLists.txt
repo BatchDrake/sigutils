@@ -21,7 +21,8 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 # CMake modules search path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+file(GLOB MODULE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*/" LIST_DIRECTORIES true)
+list(APPEND CMAKE_MODULE_PATH "${MODULE_DIRS}")
 
 # Use git version detect to obtain a project version based on tags
 include(GitVersionDetect)
