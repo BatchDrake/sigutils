@@ -35,6 +35,7 @@ set(SIGUTILS_VERSION ${SIGUTILS_VERSION_MAJOR}.${SIGUTILS_VERSION_MINOR}.${SIGUT
 project(
   sigutils
   VERSION ${SIGUTILS_VERSION}
+  DESCRIPTION "Small signal processing utility library"
   HOMEPAGE_URL "http://github.org/BatchDrake/sigutils"
   LANGUAGES C)
 
