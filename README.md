@@ -14,7 +14,7 @@ Optional **volk** support requires version 1.0 or higher.
 Just clone it from the GitHub repository:
 
 ```
-% git clone https://github.com/BatchDrake/sigutils.git
+% git clone --recurse-submodules https://github.com/BatchDrake/sigutils.git
 ```
 
 ## Building and installing sigutils
