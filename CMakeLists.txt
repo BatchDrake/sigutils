@@ -24,6 +24,22 @@ cmake_minimum_required(VERSION 3.20.0)
 file(GLOB MODULE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*/" LIST_DIRECTORIES true)
 list(APPEND CMAKE_MODULE_PATH "${MODULE_DIRS}")
 
+# Check that all required submodules are there
+set(
+  GIT_CMAKE_SUBMODULES
+  cmake-gitversiondetect
+  cmake-pcfilegenerator
+  cmake-relativefilemacro)
+
+foreach (submodule IN ITEMS ${GIT_CMAKE_SUBMODULES})
+  if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${submodule}/.git")
+  message( SEND_ERROR "Required CMake submodule `${submodule}' not found. This \
+  is most likely caused by an incomplete clone from the main repository. Please run:
+  $ git submodule update --init --recursive
+to clone all required submodules and run CMake again.")
+  endif()
+endforeach()
+
 # Use git version detect to obtain a project version based on tags
 include(GitVersionDetect)
 set(SIGUTILS_VERSION_MAJOR ${GITVERSIONDETECT_VERSION_MAJOR})
