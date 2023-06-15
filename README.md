@@ -11,7 +11,7 @@ The sigutils library is a digital signal processing library written in C, design
 Optional **volk** support requires version 1.0 or higher.
 
 ## Getting the code
-Just clone it from the GitHub repository:
+Just clone it from the GitHub repository. Make sure you pass `--recurse-submodules` to `git clone` so all required submodules are also cloned:
 
 ```
 % git clone --recurse-submodules https://github.com/BatchDrake/sigutils.git
