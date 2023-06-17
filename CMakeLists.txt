@@ -57,3 +57,6 @@ project(
 
 # The library code is in src
 add_subdirectory(src)
+
+# The documentation is in doc
+add_subdirectory(doc)
