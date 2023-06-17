@@ -1,0 +1,47 @@
+name: Documentation
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  id-token: write
+  pages: write
+
+jobs:
+  build-documentation:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+
+    - name: Build documentation
+      uses: "./.github/actions/build"
+      with:
+        target: doxygen
+
+    - name: Upload documentation artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: build/doc/html/
+
+    - name: Setup Pages
+      if: contains('develop', github.ref)
+      uses: actions/configure-pages@v3
+      with:
+        enablement: true
+
+    - name: Upload documentation to Github Pages
+      if: contains('develop', github.ref)
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: build/doc/html/
+
+    - name: Deploy to GitHub Pages
+      if: contains('develop', github.ref)
+      uses: actions/deploy-pages@v2
