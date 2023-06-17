@@ -12,6 +12,8 @@ inputs:
     required: false
   cmake_build_paramters:
     required: false
+  target:
+    default: 'all'
 
 runs:
   using: "composite"
@@ -22,4 +24,4 @@ runs:
 
   - name: Build
     shell:  ${{inputs.shell}}
-    run: cmake --build build --config ${{inputs.cmake_build_type}} --verbose ${{inputs.cmake_build_paramters}}
+    run: cmake --build build --config ${{inputs.cmake_build_type}} --verbose ${{inputs.cmake_build_paramters}} --target ${{inputs.target}}

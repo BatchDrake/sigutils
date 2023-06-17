@@ -6,7 +6,6 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-
     - name: Install dependencies
       run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
 
@@ -19,6 +18,7 @@ jobs:
     - name: Build
       uses: "./.github/actions/build"
       with:
+        target: sigutils
         cmake_configuration_parameters: -DCMAKE_INSTALL_PREFIX=/usr
 
     - name: Package
@@ -40,6 +40,8 @@ jobs:
 
     - name: Build
       uses: "./.github/actions/build"
+      with:
+        target: sigutils
 
     - name: Package
       uses: "./.github/actions/package"
@@ -69,6 +71,7 @@ jobs:
       uses: "./.github/actions/build"
       with:
         shell: msys2 {0}
+        target: sigutils
 
     - name: Package
       uses: "./.github/actions/package"
