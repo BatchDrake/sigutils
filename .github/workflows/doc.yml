@@ -5,13 +5,16 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   id-token: write
   pages: write
+  pull-requests: write
 
 jobs:
   build-documentation:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen
+      run: |
+        sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen python3-pip
+        sudo pip3 install coverxygen
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -45,3 +48,25 @@ jobs:
     - name: Deploy to GitHub Pages
       if: contains(github.ref, 'develop')
       uses: actions/deploy-pages@v2
+
+    - name: Documentation coverage
+      if: github.event_name == 'pull_request'
+      uses: "./.github/actions/build"
+      with:
+        target: coverxygen_summary
+
+    - name: Documentation coverage report generation
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "Documentation coverage report"      >  build/doc/doc-coverage.markdown.info
+        echo ""                                   >> build/doc/doc-coverage.markdown.info
+        echo "| Element     | Value           |"  >> build/doc/doc-coverage.markdown.info
+        echo "|-------------|-----------------|"  >> build/doc/doc-coverage.markdown.info
+        cat build/doc/doc-coverage.summary.info | grep -v - | tr ':' '|' | while read line; do echo "| $line |"; done >> build/doc/doc-coverage.markdown.info
+
+    - name: Documentation coverage report
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        path: build/doc/doc-coverage.markdown.info
