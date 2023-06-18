@@ -12,3 +12,6 @@ sigutils:
 
 documentation:
   - doc/**/*
+
+tests:
+  - tests/**/*

@@ -53,10 +53,18 @@ project(
   VERSION ${SIGUTILS_VERSION}
   DESCRIPTION "Small signal processing utility library"
   HOMEPAGE_URL "http://github.org/BatchDrake/sigutils"
-  LANGUAGES C)
+  LANGUAGES C CXX)
+
+# Always use top level dir for generated targets to avoid linker problems
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # The library code is in src
 add_subdirectory(src)
 
 # The documentation is in doc
 add_subdirectory(doc)
+
+# Tests are in the tests dir
+include(CTest)
+add_subdirectory(tests)

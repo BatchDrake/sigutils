@@ -19,13 +19,6 @@ runs:
       name: linux-deb.zip
       path: build/dist/*.deb
 
-  - name: Upload RPM artifact
-    if: runner.os == 'Linux'
-    uses: actions/upload-artifact@v3
-    with:
-      name: linux-rpm.zip
-      path: build/dist/*.rpm
-
   - name: Upload TGZ artifact
     if: runner.os == 'Linux'
     uses: actions/upload-artifact@v3
