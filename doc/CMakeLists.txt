@@ -12,7 +12,7 @@ else()
     endif()
 
     # Add a Doxygen target
-    doxygen_add_docs(doxygen "../src")
+    doxygen_add_docs(doxygen "../src" ".")
 endif()
 
 if (DOXYGEN_FOUND AND NOT Coverxygen_FOUND)

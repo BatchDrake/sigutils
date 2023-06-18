@@ -1,14 +1,14 @@
-# Building
+\page building Building
 
 **sigutils** has been tested in GNU/Linux (i386, x86_64 and armhf), but it will probably work in many other architectures as well.
 
 
 ## Getting the code
 
-Just clone it from the GitHub repository:
+Just clone it from the GitHub repository. Make sure you pass `--recurse-submodules` to `git clone` so all required submodules are also cloned, and `-b develop` to get the latest changes from the development branch.
 
 ```bash
-git clone https://github.com/BatchDrake/sigutils.git
+git clone -b develop --recurse-submodules https://github.com/BatchDrake/sigutils.git
 ```
 
 
@@ -42,22 +42,12 @@ pacman -S mingw-w64-x86_64-cc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw
 
 ## Building and installing sigutils
 
-### Creating and moving to a build environment
-
-First, you must create a build directory:
-
-```bash
-mkdir build
-cd build
-```
-
-
 ### Configuring the project
 
-From the build directory, the project must be configured with CMake.
+You can configure the project into a `build/` folder by executing the following command. This will check for dependencies automatically.
 
 ```bash
-cmake ..
+cmake -B build .
 ```
 
 You may want to specify extra options.
@@ -77,7 +67,7 @@ In Windows you may want to instruct that you want MSYS makefiles and the mingw P
 If the previous commands were successful, you can start the build by typing:
 
 ```bash
-make
+cmake --build build
 ```
 
 
@@ -86,5 +76,5 @@ make
 You may want to install the built library in your system:
 
 ```bash
-sudo make install
+sudo cmake --build build --target install
 ```
