@@ -20,6 +20,8 @@
 
 cmake_minimum_required(VERSION 3.20.0)
 
+option(BUILD_TESTS "Build test programs" OFF)
+
 # CMake modules search path
 file(GLOB MODULE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*/" LIST_DIRECTORIES true)
 list(APPEND CMAKE_MODULE_PATH "${MODULE_DIRS}")
@@ -65,6 +67,8 @@ add_subdirectory(src)
 # The documentation is in doc
 add_subdirectory(doc)
 
-# Tests are in the tests dir
-include(CTest)
-add_subdirectory(tests)
+if (BUILD_TESTS)
+  # Tests are in the tests dir
+  include(CTest)
+  add_subdirectory(tests)
+endif()
