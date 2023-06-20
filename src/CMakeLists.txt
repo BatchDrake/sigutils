@@ -79,7 +79,7 @@ target_add_relative_file_macro(sigutils)
 # Add public include directories
 target_include_directories(sigutils
         INTERFACE $<INSTALL_INTERFACE:include>
-        PRIVATE ${CMAKE_SOURCE_DIR}/include/)
+        PRIVATE ${CMAKE_SOURCE_DIR}/src/include/)
 
 # Extra compilation definitions
 if(SIGUTILS_SINGLE_PRECISSION)
@@ -93,6 +93,7 @@ endif()
 # Target properties
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
+set_property(TARGET sigutils PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 # Target dependencies
 target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
@@ -150,7 +151,7 @@ write_basic_package_version_file(
         COMPATIBILITY SameMajorVersion)
 
 install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/sigutlsConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/sigutilsConfig.cmake
         ${CMAKE_BINARY_DIR}/sigutilsConfigVersion.cmake
         DESTINATION ${INSTALL_EXPORTS_DIR}
         )
