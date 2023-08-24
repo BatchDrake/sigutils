@@ -24,6 +24,11 @@
 #include <sigutils/taps.h>
 #include <string.h>
 
+#if defined(_SU_SINGLE_PRECISION) && HAVE_VOLK
+#  define SU_USE_VOLK
+#  include <volk/volk.h>
+#endif
+
 #define _SWAP(a, b) \
   tmp = a;          \
   a = b;            \
@@ -47,7 +52,7 @@ SU_INSTANCER(
   new->userdata = userdata;
 
   new->nominal_rate = params->samp_rate;
-  
+
   SU_TRY_FAIL(su_smoothpsd_set_params(new, params));
 
   return new;
@@ -69,9 +74,17 @@ SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
   SU_FFTW(_execute(self->fft_plan));
 
   /* Keep real coefficients only */
+#ifdef SU_USE_VOLK
+  // self->fft (and its alias self->realfft) are SIMD aligned by fftwf_malloc
+  // thus, they should also meet volk's alignment needs
+  volk_32fc_x2_multiply_conjugate_32fc(self->fft, self->fft, self->fft, self->params.fft_size);
+  volk_32fc_deinterleave_real_32f(self->realfft, self->fft, self->params.fft_size);
+  volk_32f_s32f_multiply_32f(self->realfft, self->realfft, wsizeinv, self->params.fft_size);
+#else
   for (i = 0; i < self->params.fft_size; ++i)
     self->realfft[i] =
         wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
+#endif
 
   SU_TRYCATCH(
       (self->psd_func)(self->userdata, self->realfft, self->params.fft_size),
@@ -118,8 +131,13 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
           self->p = 0;
 
           /* Apply window function */
+#ifdef SU_USE_VOLK
+          volk_32fc_x2_multiply_32fc(self->fft, self->fft, self->window_func,
+                  self->params.fft_size);
+#else
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
+#endif
 
           SU_TRY(su_smoothpsd_exec_fft(self));
         }
@@ -161,8 +179,13 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
           memcpy(self->fft + copy_cnt, self->buffer, self->p * sizeof(SUCOMPLEX));
 
           /* Apply window function */
+#ifdef SU_USE_VOLK
+          volk_32fc_x2_multiply_32fc(self->fft, self->fft, self->window_func,
+                  self->params.fft_size);
+#else
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
+#endif
 
           SU_TRY(su_smoothpsd_exec_fft(self));
         }
