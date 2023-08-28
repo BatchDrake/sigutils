@@ -4,12 +4,6 @@
 
 The sigutils library is a digital signal processing library written in C, designed for blind signal analysis and automatic demodulation.
 
+## Documentation
 
-## Building
-
-Please, check out [doc/BUILDING.md](doc/BUILDING.md) for information about building sigutils.
-
-
-## API
-
-Please, check out [doc/API.md](doc/API.md) for information about the API exposed by the sigutils library.
+Project documentation and instructions on how to build and install the project can be found at https://batchdrake.github.io/sigutils/.

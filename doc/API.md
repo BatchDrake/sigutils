@@ -1,4 +1,4 @@
-# Sigutils API overview
+\page api API overview
 
 ## Sigutils type foundation
 
