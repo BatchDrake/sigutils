@@ -86,7 +86,6 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 {
   unsigned int chunk;
   unsigned int i;
-  unsigned int p;
   SUBOOL mutex_acquired = SU_FALSE;
   SUBOOL ok = SU_FALSE;
 
@@ -154,15 +153,16 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 
         /* Time to trigger FFT! */
         if (self->fft_p >= self->max_p) {
+          unsigned int copy_cnt = self->params.fft_size - self->p;
           self->fft_p = 0;
-          p = self->p;
+
+          /* put ring buffer time domain IQ data in sequential order */
+          memcpy(self->fft, self->buffer + self->p, copy_cnt * sizeof(SUCOMPLEX));
+          memcpy(self->fft + copy_cnt, self->buffer, self->p * sizeof(SUCOMPLEX));
 
           /* Apply window function */
-          for (i = 0; i < self->params.fft_size; ++i) {
-            self->fft[i] = self->buffer[p++] * self->window_func[i];
-            if (p >= self->params.fft_size)
-              p = 0;
-          }
+          for (i = 0; i < self->params.fft_size; ++i)
+            self->fft[i] *= self->window_func[i];
 
           SU_TRY(su_smoothpsd_exec_fft(self));
         }
@@ -229,7 +229,7 @@ SU_METHOD(
     memset(fftbuf, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
     /* Direct FFT plan */
-    if ((fft_plan = SU_FFTW(_plan_dft_1d)(
+    if ((fft_plan = su_lib_plan_dft_1d(
              params->fft_size,
              fftbuf,
              fftbuf,

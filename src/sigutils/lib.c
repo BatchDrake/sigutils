@@ -22,10 +22,12 @@
 #define SU_LOG_LEVEL "lib"
 
 #include <sigutils/sigutils.h>
+#include <pthread.h>
 
 SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
 SUPRIVATE SUBOOL su_measure_ffts = SU_FALSE;
 SUPRIVATE char *su_wisdom_file = NULL;
+SUPRIVATE pthread_mutex_t fft_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 SUPRIVATE char
 su_log_severity_to_char(enum sigutils_log_severity sev)
@@ -126,6 +128,30 @@ su_lib_fftw_strategy(void)
   return su_measure_ffts ? FFTW_MEASURE : FFTW_ESTIMATE;
 }
 
+SU_FFTW(_plan)
+su_lib_plan_dft_1d(int n, SU_FFTW(_complex) *in, SU_FFTW(_complex) *out,
+        int sign, unsigned flags)
+{
+  SU_FFTW(_plan) plan;
+  int nthreads;
+
+  if (n < 32768)
+    nthreads = 1;
+  else if (n == 32768)
+    nthreads = 2;
+  else
+    nthreads = 4;
+
+  if (pthread_mutex_lock(&fft_plan_mutex) == -1)
+    return NULL;
+  SU_FFTW(_plan_with_nthreads)(nthreads);
+  plan = SU_FFTW(_plan_dft_1d)(n, in, out, sign, flags);
+  SU_FFTW(_plan_with_nthreads)(1);
+  pthread_mutex_unlock(&fft_plan_mutex);
+
+  return plan;
+}
+
 SUBOOL
 su_lib_init_ex(const struct sigutils_log_config *logconfig)
 {
@@ -135,6 +161,9 @@ su_lib_init_ex(const struct sigutils_log_config *logconfig)
     logconfig = &su_lib_log_config;
 
   su_log_init(logconfig);
+
+  SU_FFTW(_init_threads)();
+  SU_FFTW(_make_planner_thread_safe)();
 
   return SU_TRUE;
 }

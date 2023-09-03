@@ -451,7 +451,7 @@ SU_INSTANCER(
   SU_ALLOCATE_MANY_FAIL(new->_r_alloc, params->window_size, SUFLOAT);
 
   /* Direct FFT plan */
-  if ((new->fft_plan = SU_FFTW(_plan_dft_1d)(
+  if ((new->fft_plan = su_lib_plan_dft_1d(
            params->window_size,
            new->window,
            new->fft,
@@ -492,7 +492,7 @@ SU_INSTANCER(
 
       memset(new->ifft, 0, params->window_size * sizeof(SU_FFTW(_complex)));
 
-      if ((new->fft_plan_rev = SU_FFTW(_plan_dft_1d)(
+      if ((new->fft_plan_rev = su_lib_plan_dft_1d(
                params->window_size,
                new->fft,
                new->ifft,
