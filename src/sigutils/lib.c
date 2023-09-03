@@ -24,10 +24,10 @@
 #include <sigutils/sigutils.h>
 #include <pthread.h>
 
-SUPRIVATE SUBOOL su_log_cr = SU_TRUE;
-SUPRIVATE SUBOOL su_measure_ffts = SU_FALSE;
-SUPRIVATE char *su_wisdom_file = NULL;
-SUPRIVATE pthread_mutex_t fft_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+SUPRIVATE SUBOOL          g_su_log_cr       = SU_TRUE;
+SUPRIVATE SUBOOL          g_su_measure_ffts = SU_FALSE;
+SUPRIVATE char           *g_su_wisdom_file  = NULL;
+SUPRIVATE pthread_mutex_t g_fft_plan_mutex  = PTHREAD_MUTEX_INITIALIZER;
 
 SUPRIVATE char
 su_log_severity_to_char(enum sigutils_log_severity sev)
@@ -63,7 +63,7 @@ su_log_func_default(void *private, const struct sigutils_log_message *msg)
 
 /* Log config */
 SUPRIVATE struct sigutils_log_config su_lib_log_config = {
-    &su_log_cr,          /* private */
+    &g_su_log_cr,          /* private */
     SU_TRUE,             /* exclusive */
     su_log_func_default, /* log_func */
 };
@@ -71,18 +71,18 @@ SUPRIVATE struct sigutils_log_config su_lib_log_config = {
 SUBOOL
 su_lib_is_using_wisdom(void)
 {
-  return su_measure_ffts;
+  return g_su_measure_ffts;
 }
 
 SUBOOL
 su_lib_set_wisdom_enabled(SUBOOL enabled)
 {
-  if (su_wisdom_file == NULL) {
+  if (g_su_wisdom_file == NULL) {
     SU_ERROR("Not enabling FFT wisdom: wisdom file path not set\n");
     enabled = SU_FALSE;
   }
 
-  su_measure_ffts = enabled;
+  g_su_measure_ffts = enabled;
 }
 
 SUBOOL
@@ -99,13 +99,13 @@ su_lib_set_wisdom_file(const char *cpath)
       SU_INFO("No previous FFT wisdom found (yet)\n");
     }
   } else {
-    su_measure_ffts = SU_FALSE;
+    g_su_measure_ffts = SU_FALSE;
   }
 
-  if (su_wisdom_file != NULL)
-    free(su_wisdom_file);
+  if (g_su_wisdom_file != NULL)
+    free(g_su_wisdom_file);
 
-  su_wisdom_file = path;
+  g_su_wisdom_file = path;
 
   ok = SU_TRUE;
 
@@ -116,8 +116,8 @@ done:
 SUBOOL
 su_lib_save_wisdom(void)
 {
-  if (su_wisdom_file != NULL)
-    return SU_FFTW(_export_wisdom_to_filename) (su_wisdom_file);
+  if (g_su_wisdom_file != NULL)
+    return SU_FFTW(_export_wisdom_to_filename) (g_su_wisdom_file);
 
   return SU_TRUE;
 }
@@ -125,14 +125,15 @@ su_lib_save_wisdom(void)
 int
 su_lib_fftw_strategy(void)
 {
-  return su_measure_ffts ? FFTW_MEASURE : FFTW_ESTIMATE;
+  return g_su_measure_ffts ? FFTW_MEASURE : FFTW_ESTIMATE;
 }
 
 SU_FFTW(_plan)
 su_lib_plan_dft_1d(int n, SU_FFTW(_complex) *in, SU_FFTW(_complex) *out,
         int sign, unsigned flags)
 {
-  SU_FFTW(_plan) plan;
+  SU_FFTW(_plan) plan = NULL;
+  SUBOOL mutex_acquired = SU_FALSE;
   int nthreads;
 
   if (n < 32768)
@@ -142,12 +143,17 @@ su_lib_plan_dft_1d(int n, SU_FFTW(_complex) *in, SU_FFTW(_complex) *out,
   else
     nthreads = 4;
 
-  if (pthread_mutex_lock(&fft_plan_mutex) == -1)
-    return NULL;
+  SU_TRYZ(pthread_mutex_lock(&g_fft_plan_mutex));
+  mutex_acquired = SU_TRUE;
+
   SU_FFTW(_plan_with_nthreads)(nthreads);
-  plan = SU_FFTW(_plan_dft_1d)(n, in, out, sign, flags);
-  SU_FFTW(_plan_with_nthreads)(1);
-  pthread_mutex_unlock(&fft_plan_mutex);
+  SU_TRY(plan = SU_FFTW(_plan_dft_1d)(n, in, out, sign, flags));
+  
+done:
+  if (mutex_acquired) {
+    SU_FFTW(_plan_with_nthreads)(1);
+    pthread_mutex_unlock(&g_fft_plan_mutex);
+  }
 
   return plan;
 }
