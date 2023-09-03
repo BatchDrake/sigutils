@@ -37,5 +37,7 @@ SUBOOL su_lib_save_wisdom(void);
 
 /* Internal */
 int su_lib_fftw_strategy(void);
+SU_FFTW(_plan) su_lib_plan_dft_1d(int n, SU_FFTW(_complex) *in,
+        SU_FFTW(_complex) *out, int sign, unsigned flags);
 
 #endif /* _SIGUTILS_SIGUTILS_H */
