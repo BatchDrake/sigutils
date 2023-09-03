@@ -1,21 +1,14 @@
-/*
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2016-2023 Gonzalo José Carracedo Carballal
+ * Copyright (C) 2023      Antonio Vázquez Blanco
+ */
 
-  Copyright (C) 2016 Gonzalo José Carracedo Carballal
-
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation, version 3.
-
-  This program is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>
-
-*/
+/**
+ * \brief Numerically-controlled quadrature oscillator.
+ *
+ * This file exposes the API to instaniate and interact with the
+ * implementation of a numerically-controlled quadrature oscillator.
+ */
 
 #ifndef _SIGUTILS_NCQO_H
 #define _SIGUTILS_NCQO_H
@@ -33,30 +26,33 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define SU_NCQO_USE_PRECALC_BUFFER
+#define SU_NCQO_USE_PRECALC_BUFFER  /**< Use a precalculated buffer for the oscillator. */
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
 #  define SU_NCQO_PRECALC_BUFFER_LEN 1024
 #endif /* SU_NCQO_USE_PRECALC_BUFFER */
 
-/* The numerically-controlled quadruature oscillator definition */
+/**
+ * This structure holds the internal state of an instance of a
+ * numerically-controlled quadrature oscillator.
+ */
 struct sigutils_ncqo {
 #ifdef SU_NCQO_USE_PRECALC_BUFFER
-  SUFLOAT phi_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUFLOAT sin_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUFLOAT cos_buffer[SU_NCQO_PRECALC_BUFFER_LEN];
-  SUBOOL pre_c;
-  unsigned int p; /* Pointer in precalc buffer */
+  SUFLOAT phi_buffer[SU_NCQO_PRECALC_BUFFER_LEN]; /**< Precalculated angular positions of the oscillator */
+  SUFLOAT sin_buffer[SU_NCQO_PRECALC_BUFFER_LEN]; /**< Precalculated sine values of the oscillator */
+  SUFLOAT cos_buffer[SU_NCQO_PRECALC_BUFFER_LEN]; /**< Precalculated cosine values of the oscillator */
+  SUBOOL pre_c;   /**< Current instance is using precalculated values */
+  unsigned int p; /**< Current index in use in the precalcalculated buffers */
 #endif            /* SU_NCQO_USE_PRECALC_BUFFER */
 
-  SUFLOAT phi;
-  SUFLOAT omega; /* Normalized angular frequency */
-  SUFLOAT fnor;  /* Normalized frequency in hcps */
+  SUFLOAT phi;   /**< Current angular position of the oscillator */
+  SUFLOAT omega; /**< Normalized angular frequency */
+  SUFLOAT fnor;  /**< Normalized frequency in hcps */
 
-  SUBOOL sin_updated;
-  SUFLOAT sin;
+  SUBOOL sin_updated; /**< Flag to indicate that sine value is updated */
+  SUFLOAT sin;        /**< Sine value for the current angular position of the oscillator */
 
-  SUBOOL cos_updated;
-  SUFLOAT cos;
+  SUBOOL cos_updated; /**< Flag to indicate that cosine value is updated */
+  SUFLOAT cos;        /**< Cosine value for the current angular position of the oscillator */
 };
 
 typedef struct sigutils_ncqo su_ncqo_t;

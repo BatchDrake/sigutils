@@ -9,9 +9,12 @@ build_system:
 
 sigutils:
   - src/**/*
+  - '!src/CMakeLists.txt'
 
 documentation:
   - doc/**/*
+  - '!doc/CMakeLists.txt'
 
 tests:
   - tests/**/*
+  - '!tests/CMakeLists.txt'

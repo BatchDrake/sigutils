@@ -16,9 +16,18 @@ jobs:
         sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen python3-pip
         sudo pip3 install coverxygen
 
+    - name: Determine checkout ref
+      uses: haya14busa/action-cond@v1
+      id: fetch_ref
+      with:
+        cond: ${{ github.event_name == 'pull_request_target' }}
+        if_true: "${{ github.event.pull_request.merge_commit_sha }}"
+        if_false: ""
+
     - name: Checkout
       uses: actions/checkout@v3
       with:
+        ref: "${{ steps.fetch_ref.outputs.value }}"
         fetch-depth: 0
         submodules: true
 
@@ -58,15 +67,16 @@ jobs:
     - name: Documentation coverage report generation
       if: github.event_name == 'pull_request_target'
       run: |
-        echo "Documentation coverage report"      >  build/doc/doc-coverage.markdown.info
-        echo ""                                   >> build/doc/doc-coverage.markdown.info
-        echo "| Element     | Value           |"  >> build/doc/doc-coverage.markdown.info
-        echo "|-------------|-----------------|"  >> build/doc/doc-coverage.markdown.info
-        cat build/doc/doc-coverage.summary.info | grep -v - | tr ':' '|' | while read line; do echo "| $line |"; done >> build/doc/doc-coverage.markdown.info
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "report<<$EOF" >> "$GITHUB_ENV"
+        cat build/doc/doc-coverage.markdown-summary.info >> "$GITHUB_ENV"
+        echo "$EOF" >> "$GITHUB_ENV"
 
     - name: Documentation coverage report
       if: github.event_name == 'pull_request_target'
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         recreate: true
-        path: build/doc/doc-coverage.markdown.info
+        message: |
+          Documentation coverage report
+          ${{ env.report }}

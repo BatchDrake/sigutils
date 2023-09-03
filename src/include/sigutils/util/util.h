@@ -25,13 +25,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef linux
-#  include <linux/unistd.h>
-#  define TID_FUNC (int)syscall(224)
-#else
-#  define TID_FUNC (int)getpid()
-#endif
-
 #define RECOMMENDED_LINE_SIZE 256
 
 #ifndef MIN
