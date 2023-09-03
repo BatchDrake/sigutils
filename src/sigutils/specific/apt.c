@@ -501,7 +501,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
   bw = SU_ABS2NORM_FREQ(fs, SU_APT_AM_BANDWIDTH);
 
   SU_TRYCATCH(
-      pattern_plan = SU_FFTW(_plan_dft_1d)(
+      pattern_plan = su_lib_plan_dft_1d(
           SU_APT_BUFF_LEN,
           new->sync_fft,
           new->sync_fft,
@@ -510,7 +510,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
       goto done);
 
   SU_TRYCATCH(
-      new->direct_plan = SU_FFTW(_plan_dft_1d)(
+      new->direct_plan = su_lib_plan_dft_1d(
           SU_APT_BUFF_LEN,
           new->samp_buffer,
           new->corr_fft,
@@ -519,7 +519,7 @@ su_apt_decoder_new(SUFLOAT fs, const struct sigutils_apt_decoder_callbacks *cb)
       goto done);
 
   SU_TRYCATCH(
-      new->reverse_plan = SU_FFTW(_plan_dft_1d)(
+      new->reverse_plan = su_lib_plan_dft_1d(
           SU_APT_BUFF_LEN,
           new->corr_fft,
           new->corr_fft,

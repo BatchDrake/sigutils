@@ -229,7 +229,7 @@ SU_METHOD(
     memset(fftbuf, 0, params->fft_size * sizeof(SU_FFTW(_complex)));
 
     /* Direct FFT plan */
-    if ((fft_plan = SU_FFTW(_plan_dft_1d)(
+    if ((fft_plan = su_lib_plan_dft_1d(
              params->fft_size,
              fftbuf,
              fftbuf,

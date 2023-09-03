@@ -139,7 +139,7 @@ SU_METHOD_CONST(
 
   /* Backward plan */
   SU_TRY(
-      channel->forward = SU_FFTW(_plan_dft_1d)(
+      channel->forward = su_lib_plan_dft_1d(
           window_size,
           channel->h,
           channel->h,
@@ -148,7 +148,7 @@ SU_METHOD_CONST(
 
   /* Forward plan */
   SU_TRY(
-      channel->backward = SU_FFTW(_plan_dft_1d)(
+      channel->backward = su_lib_plan_dft_1d(
           window_size,
           channel->h,
           channel->h,
@@ -437,7 +437,7 @@ SU_INSTANCER(
       new->size * sizeof(SU_FFTW(_complex)));
 
   SU_TRY_FAIL(
-      new->plan[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+      new->plan[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
           new->size,
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_EVEN],
@@ -445,7 +445,7 @@ SU_INSTANCER(
           su_lib_fftw_strategy()));
 
   SU_TRY_FAIL(
-      new->plan[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+      new->plan[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
           new->size,
           new->fft,
           new->ifft[SU_SPECTTUNER_STATE_ODD],
@@ -528,7 +528,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 
   if (new->params.early_windowing) {
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
             params->window_size,
             new->fft,
             new->fft,
@@ -536,7 +536,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
             su_lib_fftw_strategy()));
 
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
             params->window_size,
             new->fft,
             new->fft,
@@ -545,7 +545,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
   } else {
     /* Even plan starts at the beginning of the window */
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_EVEN] = SU_FFTW(_plan_dft_1d)(
+        new->plans[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
             params->window_size,
             new->buffer,
             new->fft,
@@ -554,7 +554,7 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 
     /* Odd plan stars at window_size / 2 */
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_ODD] = SU_FFTW(_plan_dft_1d)(
+        new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
             params->window_size,
             new->buffer + new->half_size,
             new->fft,
