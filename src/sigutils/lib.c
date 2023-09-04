@@ -24,6 +24,7 @@
 #include <sigutils/sigutils.h>
 #include <pthread.h>
 
+SUPRIVATE SUBOOL          g_fftw_init       = SU_FALSE;
 SUPRIVATE SUBOOL          g_su_log_cr       = SU_TRUE;
 SUPRIVATE SUBOOL          g_su_measure_ffts = SU_FALSE;
 SUPRIVATE char           *g_su_wisdom_file  = NULL;
@@ -62,7 +63,7 @@ su_log_func_default(void *private, const struct sigutils_log_message *msg)
 }
 
 /* Log config */
-SUPRIVATE struct sigutils_log_config su_lib_log_config = {
+SUPRIVATE struct sigutils_log_config g_su_lib_log_config = {
     &g_su_log_cr,          /* private */
     SU_TRUE,             /* exclusive */
     su_log_func_default, /* log_func */
@@ -163,13 +164,14 @@ su_lib_init_ex(const struct sigutils_log_config *logconfig)
 {
   unsigned int i = 0;
 
-  if (logconfig == NULL)
-    logconfig = &su_lib_log_config;
+  if (logconfig != NULL)
+    su_log_init(logconfig);
 
-  su_log_init(logconfig);
-
-  SU_FFTW(_init_threads)();
-  SU_FFTW(_make_planner_thread_safe)();
+  if (!g_fftw_init) {
+    SU_FFTW(_init_threads)();
+    SU_FFTW(_make_planner_thread_safe)();
+    g_fftw_init = SU_TRUE;
+  }
 
   return SU_TRUE;
 }
@@ -177,5 +179,5 @@ su_lib_init_ex(const struct sigutils_log_config *logconfig)
 SUBOOL
 su_lib_init(void)
 {
-  return su_lib_init_ex(NULL);
+  return su_lib_init_ex(&g_su_lib_log_config);
 }
