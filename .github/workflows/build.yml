@@ -10,7 +10,7 @@ jobs:
       run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev catch2
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
         fetch-depth: 0
@@ -41,7 +41,7 @@ jobs:
       run: brew install libsndfile volk fftw catch2
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
         fetch-depth: 0
@@ -78,7 +78,7 @@ jobs:
         install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk mingw-w64-x86_64-catch
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
         fetch-depth: 0
