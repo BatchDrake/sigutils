@@ -25,7 +25,7 @@ jobs:
         if_false: ""
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: "${{ steps.fetch_ref.outputs.value }}"
         fetch-depth: 0
