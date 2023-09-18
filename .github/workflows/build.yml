@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev catch2
+      run: sudo apt-get update && sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev catch2
 
     - name: Checkout
       uses: actions/checkout@v4
