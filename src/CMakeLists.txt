@@ -77,7 +77,9 @@ add_library(sigutils SHARED ${SRCS})
 target_add_relative_file_macro(sigutils)
 
 # Add public include directories
-target_include_directories(sigutils PUBLIC include/)
+target_include_directories(sigutils
+        INTERFACE $<INSTALL_INTERFACE:include>
+        PRIVATE ${CMAKE_SOURCE_DIR}/src/include/)
 
 # Extra compilation definitions
 if(SIGUTILS_SINGLE_PRECISSION)
@@ -91,6 +93,7 @@ endif()
 # Target properties
 set_property(TARGET sigutils PROPERTY VERSION   ${SIGUTILS_VERSION})
 set_property(TARGET sigutils PROPERTY SOVERSION ${SIGUTILS_ABI_VERSION})
+set_property(TARGET sigutils PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 # Target dependencies
 target_link_libraries(sigutils ${SNDFILE_LIBRARIES})
@@ -111,9 +114,49 @@ endif()
 target_pc_file_generate(sigutils "Digital signal processing utility library")
 
 # File install
-install(TARGETS sigutils LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LIB)
+install(TARGETS sigutils
+        EXPORT sigutils-export
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT LIB)
+
 install(DIRECTORY include/sigutils DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT DEVEL)
+
 install(FILES ${PROJECT_BINARY_DIR}/src/sigutils.pc DESTINATION ${CMAKE_INSTALL_PKGCONFIGDIR} COMPONENT DEVEL)
+
+set(INSTALL_EXPORTS_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR})
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+
+install(EXPORT sigutils-export
+        FILE sigutilsTargets.cmake
+        NAMESPACE sigutils::
+        DESTINATION ${INSTALL_EXPORTS_DIR}
+        )
+
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+        ${CMAKE_SOURCE_DIR}/cmake/sigutilsConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/sigutilsConfig.cmake
+        INSTALL_DESTINATION ${INSTALL_EXPORTS_DIR}
+        PATH_VARS INCLUDE_INSTALL_DIR)
+
+write_basic_package_version_file(
+        ${CMAKE_BINARY_DIR}/sigutilsConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion)
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/sigutilsConfig.cmake
+        ${CMAKE_BINARY_DIR}/sigutilsConfigVersion.cmake
+        DESTINATION ${INSTALL_EXPORTS_DIR}
+        )
+
 
 # General packaging settings
 set(CPACK_PACKAGE_NAME sigutils)

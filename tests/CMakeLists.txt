@@ -3,7 +3,7 @@ find_package(Catch2)
 if(Catch2_FOUND)
     # General options
     file(GLOB_RECURSE TEST_SRCS LIST_DIRECTORIES false *.cpp)
-    add_executable(sigutils_test EXCLUDE_FROM_ALL ${TEST_SRCS})
+    add_executable(sigutils_test EXCLUDE_FROM_ALL ${TEST_SRCS} cmake_tests/test.c)
     target_include_directories(sigutils_test PUBLIC $<TARGET_PROPERTY:sigutils,INCLUDE_DIRECTORIES>)
     target_compile_definitions(sigutils_test PUBLIC $<TARGET_PROPERTY:sigutils,COMPILE_DEFINITIONS>)
     target_link_libraries(sigutils_test $<TARGET_LINKER_FILE:sigutils>)
