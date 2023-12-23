@@ -469,9 +469,11 @@ SU_METHOD(
 {
   su_specttuner_plan_t *new = NULL;
   SUBOOL ok = SU_FALSE;
+  SUSCOUNT offset;
 
-  /* TODO: EARLY WINDOWING PLANS DO NOT WORK LIKE THIS. */
-  SU_MAKE(new, su_specttuner_plan, in, self->fft, self->params.window_size);
+  offset = in == self->fft ? 0 : self->params.window_size / 2;
+
+  SU_MAKE(new, su_specttuner_plan, in, self->fft, self->params.window_size, offset);
 
   SU_TRYC(PTR_LIST_APPEND_CHECK(self->plan, new));
 
@@ -518,7 +520,12 @@ SU_COLLECTOR(su_specttuner)
   free(self);
 }
 
-SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size)
+SU_INSTANCER(
+  su_specttuner_plan,
+  SUCOMPLEX *in,
+  SUCOMPLEX *out,
+  SUSCOUNT size,
+  SUSCOUNT offset)
 {
   su_specttuner_plan_t *new = NULL;
 
@@ -536,7 +543,7 @@ SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size)
   SU_TRY_FAIL(
       new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
           size,
-          in + (size >> 1),
+          in + offset,
           out,
           FFTW_FORWARD,
           su_lib_fftw_strategy()));

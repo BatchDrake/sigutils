@@ -183,7 +183,7 @@ struct sigutils_specttuner_plan {
 
 typedef struct sigutils_specttuner_plan su_specttuner_plan_t;
 
-SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size);
+SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size, SUSCOUNT offset);
 SU_COLLECTOR(su_specttuner_plan);
 
 SUINLINE
