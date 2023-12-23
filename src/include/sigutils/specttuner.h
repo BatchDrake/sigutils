@@ -33,14 +33,16 @@ extern "C" {
 #endif /* __cplusplus */
 
 struct sigutils_specttuner_params {
-  SUSCOUNT window_size;
-  SUBOOL   early_windowing;
+  SUSCOUNT   window_size;
+  SUBOOL     early_windowing;
+  SUCOMPLEX *buffer;
 };
 
 #define sigutils_specttuner_params_INITIALIZER \
   {                                            \
     4096, /* window_size */                    \
     SU_TRUE, /* early_windowing */             \
+    NULL, /* buffer */                         \
   }
 
 enum sigutils_specttuner_state {
@@ -175,6 +177,21 @@ SU_GETTER(su_specttuner_channel, SUFLOAT, get_effective_freq)
   return ef;
 }
 
+struct sigutils_specttuner_plan {
+  SU_FFTW(_plan) plans[2]; /* Even and odd plans */
+};
+
+typedef struct sigutils_specttuner_plan su_specttuner_plan_t;
+
+SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size);
+SU_COLLECTOR(su_specttuner_plan);
+
+SUINLINE
+SU_METHOD(su_specttuner_plan, void, execute, int which)
+{
+  SU_FFTW(_execute)(self->plans[which]);
+}
+
 /*
  * The spectral tuner leverages its 3/2-sized window buffer by keeping
  * two FFT plans (even & odd) and conditionally saving the same sample
@@ -208,10 +225,9 @@ struct sigutils_specttuner {
   SU_FFTW(_complex) * fft;
 
   enum sigutils_specttuner_state state;
-  SU_FFTW(_plan) plans[2]; /* Even and odd plans */
+  su_specttuner_plan_t *default_plan;
 
   unsigned int half_size; /* 3/2 of window size */
-  unsigned int full_size; /* 3/2 of window size */
   unsigned int p;         /* From 0 to window_size - 1 */
 
   unsigned int count; /* Active channels */
@@ -220,6 +236,9 @@ struct sigutils_specttuner {
 
   /* Channel list */
   PTR_LIST(struct sigutils_specttuner_channel, channel);
+
+  /* Plan allocation */
+  PTR_LIST(su_specttuner_plan_t, plan)
 };
 
 typedef struct sigutils_specttuner su_specttuner_t;
@@ -248,7 +267,7 @@ SU_METHOD(su_specttuner, void, ack_data)
 SU_METHOD(su_specttuner, SUBOOL, feed_all_channels);
 
 /* Internal */
-SU_METHOD(su_specttuner, void, run_fft);
+SU_METHOD(su_specttuner, void, run_fft, su_specttuner_plan_t *);
 
 SUINLINE
 SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
@@ -277,7 +296,7 @@ SU_METHOD(su_specttuner, SUBOOL, feed_sample, SUCOMPLEX x)
     self->p = halfsz;
 
     /* Compute FFT */
-    su_specttuner_run_fft(self);
+    su_specttuner_run_fft(self, self->default_plan);
 
     /* Toggle state */
     self->state = !self->state;
@@ -304,6 +323,15 @@ SU_METHOD(
     feed_bulk,
     const SUCOMPLEX *__restrict buf,
     SUSCOUNT size);
+
+/* The FFT is triggered from a circular buffer. */
+SU_METHOD(su_specttuner, SUBOOL, trigger, su_specttuner_plan_t *);
+
+SU_METHOD(
+    su_specttuner,
+    su_specttuner_plan_t *,
+    make_plan,
+    SUCOMPLEX *);
 
 SU_METHOD(
     su_specttuner,

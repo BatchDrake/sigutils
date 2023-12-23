@@ -461,6 +461,33 @@ fail:
   return NULL;
 }
 
+SU_METHOD(
+    su_specttuner,
+    su_specttuner_plan_t *,
+    make_plan,
+    SUCOMPLEX *in)
+{
+  su_specttuner_plan_t *new = NULL;
+  SUBOOL ok = SU_FALSE;
+
+  /* TODO: EARLY WINDOWING PLANS DO NOT WORK LIKE THIS. */
+  SU_MAKE(new, su_specttuner_plan, in, self->fft, self->params.window_size);
+
+  SU_TRYC(PTR_LIST_APPEND_CHECK(self->plan, new));
+
+  ok = SU_TRUE;
+
+done:
+  if (!ok) {
+    if (new != NULL) {
+      su_specttuner_plan_destroy(new);
+      new = NULL;
+    }
+  }
+
+  return new;
+}
+
 SU_COLLECTOR(su_specttuner)
 {
   unsigned int i;
@@ -472,39 +499,86 @@ SU_COLLECTOR(su_specttuner)
   if (self->channel_list != NULL)
     free(self->channel_list);
 
-  if (self->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
-    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_EVEN]);
+  for (i = 0; i < self->plan_count; ++i)
+    if (self->plan_list[i] != NULL)
+      su_specttuner_plan_destroy(self->plan_list[i]);
 
-  if (self->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
-    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_ODD]);
-
+  if (self->plan_list != NULL)
+    free(self->plan_list);
+  
   if (self->fft != NULL)
     SU_FFTW(_free)(self->fft);
 
   if (self->wfunc != NULL)
     free(self->wfunc);
 
-  if (self->buffer != NULL)
+  if (self->buffer != NULL && self->params.buffer != self->buffer)
     SU_FFTW(_free)(self->buffer);
 
   free(self);
 }
 
+SU_INSTANCER(su_specttuner_plan, SUCOMPLEX *in, SUCOMPLEX *out, SUSCOUNT size)
+{
+  su_specttuner_plan_t *new = NULL;
+
+  SU_ALLOCATE_FAIL(new, su_specttuner_plan_t);
+
+  SU_TRY_FAIL(
+      new->plans[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
+          size,
+          in,
+          out,
+          FFTW_FORWARD,
+          su_lib_fftw_strategy()));
+
+  /* Odd plan stars at window_size / 2 */
+  SU_TRY_FAIL(
+      new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
+          size,
+          in + (size >> 1),
+          out,
+          FFTW_FORWARD,
+          su_lib_fftw_strategy()));
+  
+  return new;
+
+fail:
+  if (new != NULL)
+    su_specttuner_plan_destroy(new);
+
+  return NULL;
+}
+
+SU_COLLECTOR(su_specttuner_plan)
+{
+  if (self->plans[SU_SPECTTUNER_STATE_EVEN] != NULL)
+    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_EVEN]);
+
+  if (self->plans[SU_SPECTTUNER_STATE_ODD] != NULL)
+    SU_FFTW(_destroy_plan)(self->plans[SU_SPECTTUNER_STATE_ODD]);
+}
+
 SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 {
   su_specttuner_t *new = NULL;
+  unsigned int full_size;
   unsigned int i;
 
   SU_TRYCATCH((params->window_size & 1) == 0, goto fail);
 
   SU_ALLOCATE_FAIL(new, su_specttuner_t);
 
-  new->params = *params;
+  new->params    = *params;
   new->half_size = params->window_size >> 1;
-  new->full_size = 3 * params->window_size;
+  full_size      = 3 * new->half_size;
 
+  /* If we use this with custom buffers, we never do early windowing */
+  if (new->params.buffer == NULL)
+    new->params.early_windowing = SU_FALSE;
+  
   /* Early windowing enabled */
-  if (params->early_windowing) {
+  if (new->params.early_windowing) {
     SU_TRY_FAIL(new->wfunc = malloc(params->window_size * sizeof(SUFLOAT)));
 
     for (i = 0; i < params->window_size; ++i) {
@@ -513,11 +587,15 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
     }
   }
   
-  /* Buffer is 3/2 the FFT size */
-  SU_TRY_FAIL(
-      new->buffer =
-          SU_FFTW(_malloc(new->full_size * sizeof(SU_FFTW(_complex)))));
-  memset(new->buffer, 0, new->full_size * sizeof(SU_FFTW(_complex)));
+  if (new->params.buffer == NULL) {
+    /* Custom buffer: 3/2 the FFT size */
+    SU_TRY_FAIL(
+        new->buffer =
+            SU_FFTW(_malloc(full_size * sizeof(SU_FFTW(_complex)))));
+    memset(new->buffer, 0, full_size * sizeof(SU_FFTW(_complex)));
+  } else {
+    new->buffer = new->params.buffer;
+  }
 
   /* FFT is the size provided by params */
   SU_TRY_FAIL(
@@ -528,38 +606,10 @@ SU_INSTANCER(su_specttuner, const struct sigutils_specttuner_params *params)
 
   if (new->params.early_windowing) {
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
-            params->window_size,
-            new->fft,
-            new->fft,
-            FFTW_FORWARD,
-            su_lib_fftw_strategy()));
-
-    SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
-            params->window_size,
-            new->fft,
-            new->fft,
-            FFTW_FORWARD,
-            su_lib_fftw_strategy()));
+      new->default_plan = su_specttuner_make_plan(new, new->fft));
   } else {
-    /* Even plan starts at the beginning of the window */
     SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_EVEN] = su_lib_plan_dft_1d(
-            params->window_size,
-            new->buffer,
-            new->fft,
-            FFTW_FORWARD,
-            su_lib_fftw_strategy()));
-
-    /* Odd plan stars at window_size / 2 */
-    SU_TRY_FAIL(
-        new->plans[SU_SPECTTUNER_STATE_ODD] = su_lib_plan_dft_1d(
-            params->window_size,
-            new->buffer + new->half_size,
-            new->fft,
-            FFTW_FORWARD,
-            su_lib_fftw_strategy()));
+      new->default_plan = su_specttuner_make_plan(new, new->buffer));
   }
 
   return new;
@@ -571,7 +621,7 @@ fail:
   return NULL;
 }
 
-SU_METHOD(su_specttuner, void, run_fft)
+SU_METHOD(su_specttuner, void, run_fft, su_specttuner_plan_t *plan)
 {
   unsigned int i;
 
@@ -603,7 +653,7 @@ SU_METHOD(su_specttuner, void, run_fft)
   }
 
   /* Compute FFT */
-  SU_FFTW(_execute)(self->plans[self->state]);
+  su_specttuner_plan_execute(plan, self->state);
 }
 
 SUINLINE SUSCOUNT
@@ -631,7 +681,11 @@ __su_specttuner_feed_bulk(
           buf,
           size * sizeof(SUCOMPLEX));
 
-      /* Did this copy populate the last third? */
+      /* 
+       * Did this copy populate the last third? In that case, the
+       * contents of the last third must be mirrored to the
+       * first third.
+       */
       if (self->p + size > self->half_size) {
         halfsz = self->p + size - self->half_size;
         p = self->p > self->half_size ? self->p : self->half_size;
@@ -653,7 +707,7 @@ __su_specttuner_feed_bulk(
   if (self->p == self->params.window_size) {
     self->p = self->half_size;
 
-    su_specttuner_run_fft(self);
+    su_specttuner_run_fft(self, self->default_plan);
 
     /* Toggle state */
     self->state = !self->state;
@@ -853,6 +907,28 @@ SU_METHOD(su_specttuner, SUBOOL, feed_all_channels)
         ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
     su_specttuner_ack_data(self);
   }
+
+  return ok;
+}
+
+/* 
+ * This assumes that the buffers are appropriately populated, with the
+ * mirrored thirds in each place.
+ */
+
+SU_METHOD(su_specttuner, SUBOOL, trigger, su_specttuner_plan_t *plan)
+{
+  unsigned int i;
+  SUBOOL ok = SU_TRUE;
+
+  self->p = self->half_size;
+  su_specttuner_run_fft(self, plan);
+  self->state = !self->state;
+  self->ready = SU_TRUE;
+
+  for (i = 0; i < self->channel_count; ++i)
+    if (self->channel_list[i] != NULL)
+      ok = __su_specttuner_feed_channel(self, self->channel_list[i]) && ok;
 
   return ok;
 }
