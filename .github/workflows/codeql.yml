@@ -37,7 +37,7 @@ jobs:
         languages: ${{ matrix.language }}
         
     - name: Install dependencies
-      run: sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
+      run: sudo apt-get update && sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
       
     - name: Autobuild
       uses: github/codeql-action/autobuild@v2
