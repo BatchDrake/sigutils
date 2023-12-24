@@ -452,6 +452,8 @@ SU_INSTANCER(
           FFTW_BACKWARD,
           su_lib_fftw_strategy()));
 
+  new->state = owner->state;
+
   return new;
 
 fail:
@@ -749,6 +751,7 @@ __su_specttuner_feed_channel(
    */
 
   b_sign = 1 - (channel->center & 2);
+  channel->state = !self->state;
 
   if (!channel->state && channel->pending_freq) {
     channel->pending_freq = SU_FALSE;
@@ -895,6 +898,7 @@ __su_specttuner_feed_channel(
 
   channel->state = !channel->state;
 
+
   /************************** Call user callback *****************************/
   return (channel->params.on_data)(
       channel,
@@ -1036,4 +1040,15 @@ SU_METHOD(
   --self->count;
 
   return SU_TRUE;
+}
+
+SU_METHOD(su_specttuner, void, force_state, SUBOOL state)
+{
+  self->state = state;
+
+  unsigned int i;
+
+  for (i = 0; i < self->channel_count; ++i)
+    if (self->channel_list[i] != NULL)
+      self->channel_list[i]->state = state;
 }

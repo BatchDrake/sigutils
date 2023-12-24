@@ -366,6 +366,7 @@ SU_METHOD_CONST(
     su_specttuner_channel_t *channel,
     SUFLOAT bw);
 
+SU_METHOD(su_specttuner, void, force_state, SUBOOL state);
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
