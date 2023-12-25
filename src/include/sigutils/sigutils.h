@@ -25,6 +25,10 @@
 #include <sigutils/types.h>
 #include <sigutils/version.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* Library initialization */
 SUBOOL su_lib_init_ex(const struct sigutils_log_config *logconfig);
 SUBOOL su_lib_init(void);
@@ -34,10 +38,15 @@ SUBOOL su_lib_is_using_wisdom(void);
 SUBOOL su_lib_set_wisdom_enabled(SUBOOL);
 SUBOOL su_lib_set_wisdom_file(const char *);
 SUBOOL su_lib_save_wisdom(void);
+void   su_lib_gen_wisdom(void);
 
 /* Internal */
 int su_lib_fftw_strategy(void);
 SU_FFTW(_plan) su_lib_plan_dft_1d(int n, SU_FFTW(_complex) *in,
         SU_FFTW(_complex) *out, int sign, unsigned flags);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _SIGUTILS_SIGUTILS_H */

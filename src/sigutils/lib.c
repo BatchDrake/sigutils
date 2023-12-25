@@ -24,6 +24,9 @@
 #include <sigutils/sigutils.h>
 #include <pthread.h>
 
+#define SU_MIN_PRECALC_FFT_EXP 9  /* 512 bin FFT */
+#define SU_MAX_PRECALC_FFT_EXP 20 /* 1M  bin FFT */
+
 SUPRIVATE SUBOOL          g_fftw_init       = SU_FALSE;
 SUPRIVATE SUBOOL          g_su_log_cr       = SU_TRUE;
 SUPRIVATE SUBOOL          g_su_measure_ffts = SU_FALSE;
@@ -157,6 +160,34 @@ done:
   }
 
   return plan;
+}
+
+void
+su_lib_gen_wisdom(void)
+{
+  unsigned e;
+  int size;
+  SU_FFTW(_complex) *buffer = NULL;
+
+  SU_TRY(buffer = SU_FFTW(_malloc) ((1 << 20) * sizeof(SUCOMPLEX)));
+
+  for (e = SU_MIN_PRECALC_FFT_EXP; e <= SU_MAX_PRECALC_FFT_EXP; ++e) {
+    size = 1 << e;
+
+    SU_FFTW(_plan) plan = su_lib_plan_dft_1d(
+      size,
+      buffer,
+      buffer,
+      FFTW_FORWARD,
+      FFTW_MEASURE);
+    
+    if (plan != NULL)
+      SU_FFTW(_destroy_plan) (plan);
+  }
+
+done:
+  if (buffer != NULL)
+    SU_FFTW(_free)(buffer);
 }
 
 SUBOOL
