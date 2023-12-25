@@ -261,7 +261,7 @@ SU_METHOD(su_specttuner, void, ack_data)
 }
 
 SUINLINE
-SU_METHOD(su_specttuner, void, force_state, SUBOOL state)
+SU_METHOD(su_specttuner, void, force_state, enum sigutils_specttuner_state state)
 {
   self->state = state;
 }
@@ -371,7 +371,6 @@ SU_METHOD_CONST(
     su_specttuner_channel_t *channel,
     SUFLOAT bw);
 
-SU_METHOD(su_specttuner, void, force_state, SUBOOL state);
 #ifdef __cplusplus
 #  ifdef __clang__
 #    pragma clang diagnostic pop
