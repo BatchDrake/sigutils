@@ -452,8 +452,6 @@ SU_INSTANCER(
           FFTW_BACKWARD,
           su_lib_fftw_strategy()));
 
-  new->state = owner->state;
-
   return new;
 
 fail:
@@ -751,9 +749,8 @@ __su_specttuner_feed_channel(
    */
 
   b_sign = 1 - (channel->center & 2);
-  channel->state = !self->state;
 
-  if (!channel->state && channel->pending_freq) {
+  if (self->state && channel->pending_freq) {
     channel->pending_freq = SU_FALSE;
 
     su_ncqo_copy(&channel->old_lo, &channel->lo);
@@ -819,9 +816,7 @@ __su_specttuner_feed_channel(
        do not need to perform get back to the time domain (hence we can
        go ahead and skip one IFFT completely) */
     
-    channel->state = !channel->state;
-
-    if (channel->state == SU_SPECTTUNER_STATE_EVEN) {
+    if (self->state == SU_SPECTTUNER_STATE_EVEN) {
       curr = channel->fft;
       return (channel->params.on_data)(
         channel,
@@ -833,10 +828,10 @@ __su_specttuner_feed_channel(
     }
   }
 
-  SU_FFTW(_execute)(channel->plan[channel->state]);
+  SU_FFTW(_execute)(channel->plan[self->state]);
 
-  curr = channel->ifft[channel->state];
-  prev = channel->ifft[!channel->state] + channel->halfsz;
+  curr = channel->ifft[self->state];
+  prev = channel->ifft[!self->state] + channel->halfsz;
 
   /* Glue buffers */
   if (channel->params.precise) {
@@ -895,9 +890,6 @@ __su_specttuner_feed_channel(
       }
     }
   }
-
-  channel->state = !channel->state;
-
 
   /************************** Call user callback *****************************/
   return (channel->params.on_data)(
@@ -1040,15 +1032,4 @@ SU_METHOD(
   --self->count;
 
   return SU_TRUE;
-}
-
-SU_METHOD(su_specttuner, void, force_state, SUBOOL state)
-{
-  self->state = state;
-
-  unsigned int i;
-
-  for (i = 0; i < self->channel_count; ++i)
-    if (self->channel_list[i] != NULL)
-      self->channel_list[i]->state = state;
 }

@@ -118,7 +118,6 @@ struct sigutils_specttuner_channel {
    * Again, we have to keep 2 buffers: this way we can perform
    * a good windowing that does not rely on rectangular windows
    */
-  enum sigutils_specttuner_state state;
   SU_FFTW(_complex) * fft; /* Filtered spectrum */
   SU_FFTW(_complex) * h;   /* Frequency response of filter */
   SU_FFTW(_plan) plan[2];  /* Even & Odd plans */
@@ -259,6 +258,12 @@ SUINLINE
 SU_METHOD(su_specttuner, void, ack_data)
 {
   self->ready = SU_FALSE;
+}
+
+SUINLINE
+SU_METHOD(su_specttuner, void, force_state, SUBOOL state)
+{
+  self->state = state;
 }
 
 #ifndef __cplusplus
