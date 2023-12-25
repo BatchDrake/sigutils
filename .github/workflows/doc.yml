@@ -57,7 +57,7 @@ jobs:
 
     - name: Deploy to GitHub Pages
       if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
-      uses: actions/deploy-pages@v3
+      uses: actions/deploy-pages@v4
 
     - name: Documentation coverage
       if: github.event_name == 'pull_request_target'
