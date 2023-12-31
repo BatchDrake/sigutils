@@ -38,7 +38,7 @@ jobs:
         target: doxygen
 
     - name: Upload documentation artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: documentation
         path: build/doc/html/
