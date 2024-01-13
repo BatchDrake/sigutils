@@ -1,25 +1,30 @@
 ci:
-- changed-files:
-  - any-glob-to-any-file: '.github/**'
+- all:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
 
 build_system:
-- changed-files:
-  - any-glob-to-any-file:
-    - 'CMake*'
-    - '**/CMakeLists.txt'
-    - '**/*.cmake'
+- all:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'CMake*'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
 
 sigutils:
-- changed-files:
-  - any-glob-to-any-file: 'src/**'
-  - all-globs-to-all-files: '!src/CMakeLists.txt'
+- all:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**'
+    - all-globs-to-all-files: '!src/CMakeLists.txt'
 
 documentation:
-- changed-files:
-  - any-glob-to-any-file: 'doc/**'
-  - all-globs-to-all-files: '!doc/CMakeLists.txt'
+- all:
+  - changed-files:
+    - any-glob-to-any-file: 'doc/**'
+    - all-globs-to-all-files: '!doc/CMakeLists.txt'
 
 tests:
-- changed-files:
-  - any-glob-to-any-file: 'tests/**'
-  - all-globs-to-all-files: '!tests/CMakeLists.txt'
+- all:
+  - changed-files:
+    - any-glob-to-any-file: 'tests/**'
+    - all-globs-to-all-files: '!tests/CMakeLists.txt'
