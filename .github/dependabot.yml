@@ -5,11 +5,11 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "develop"
+    target-branch: "master"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gitsubmodule"
     directory: "/"
-    target-branch: "develop"
+    target-branch: "master"
     schedule:
       interval: "weekly"

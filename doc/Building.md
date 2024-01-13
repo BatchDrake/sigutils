@@ -5,10 +5,10 @@
 
 ## Getting the code
 
-Just clone it from the GitHub repository. Make sure you pass `--recurse-submodules` to `git clone` so all required submodules are also cloned, and `-b develop` to get the latest changes from the development branch.
+Just clone it from the GitHub repository. Make sure you pass `--recurse-submodules` to `git clone` so all required submodules are also cloned.
 
 ```bash
-git clone -b develop --recurse-submodules https://github.com/BatchDrake/sigutils.git
+git clone --recurse-submodules https://github.com/BatchDrake/sigutils.git
 ```
 
 
