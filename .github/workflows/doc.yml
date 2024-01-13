@@ -44,19 +44,19 @@ jobs:
         path: build/doc/html/
 
     - name: Setup Pages
-      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
       uses: actions/configure-pages@v4
       with:
         enablement: true
 
     - name: Upload documentation to Github Pages
-      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
       uses: actions/upload-pages-artifact@v3
       with:
         path: build/doc/html/
 
     - name: Deploy to GitHub Pages
-      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
       uses: actions/deploy-pages@v4
 
     - name: Documentation coverage
