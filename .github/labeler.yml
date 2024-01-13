@@ -1,0 +1,16 @@
+ci:
+- .github/**
+
+build_system:
+- 'CMake*'
+- '**/CMakeLists.txt'
+- '**/*.cmake'
+
+sigutils:
+- any: ['src/**', '!src/CMakeLists.txt']
+
+documentation:
+- any: ['doc/**', '!doc/CMakeLists.txt']
+
+tests:
+- any: ['tests/**', '!tests/CMakeLists.txt']

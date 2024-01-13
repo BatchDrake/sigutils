@@ -1,0 +1,41 @@
+name: Package
+description: 'Package a CMake project with CPack support'
+
+inputs:
+  generators: 
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Package
+    shell: bash
+    run: cpack --config build/CPackConfig.cmake --verbose -G "${{inputs.generators}}"
+
+  - name: Upload DEB artifact
+    if: runner.os == 'Linux'
+    uses: actions/upload-artifact@v3
+    with:
+      name: linux-deb.zip
+      path: build/dist/*.deb
+
+  - name: Upload TGZ artifact
+    if: runner.os == 'Linux'
+    uses: actions/upload-artifact@v3
+    with:
+      name: linux-tgz.zip
+      path: build/dist/*.tar.gz
+
+  - name: Upload TGZ artifact
+    if: runner.os == 'MacOS'
+    uses: actions/upload-artifact@v3
+    with:
+      name: macos-tgz.zip
+      path: build/dist/*.tar.gz
+
+  - name: Upload ZIP artifact
+    if: runner.os == 'Windows'
+    uses: actions/upload-artifact@v3
+    with:
+      name: windows-zip.zip
+      path: build/dist/*.zip

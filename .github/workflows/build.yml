@@ -1,0 +1,106 @@
+name: Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev catch2
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Build
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils
+        cmake_configuration_parameters: -DCMAKE_INSTALL_PREFIX=/usr
+
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
+
+    - name: Package
+      uses: "./.github/actions/package"
+      with:
+        generators: TGZ;DEB
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Install dependencies
+      run: brew install libsndfile volk fftw catch2
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Build
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils
+
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
+
+    - name: Package
+      uses: "./.github/actions/package"
+      with:
+        generators: TGZ
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Install dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: git mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-cmake mingw-w64-x86_64-libsndfile mingw-w64-x86_64-fftw mingw-w64-x86_64-volk mingw-w64-x86_64-catch
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Build
+      uses: "./.github/actions/build"
+      with:
+        shell: msys2 {0}
+        target: sigutils
+
+    - name: Build tests
+      uses: "./.github/actions/build"
+      with:
+        shell: msys2 {0}
+        target: sigutils_test
+
+    - name: Test
+      uses: "./.github/actions/test"
+      with:
+        shell: msys2 {0}
+
+    - name: Package
+      uses: "./.github/actions/package"
+      with:
+        generators: ZIP

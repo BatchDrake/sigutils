@@ -1,0 +1,83 @@
+name: Documentation
+
+on: [push, pull_request_target, workflow_dispatch]
+
+permissions:
+  id-token: write
+  pages: write
+  pull-requests: write
+
+jobs:
+  build-documentation:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen python3-pip
+        sudo pip3 install coverxygen
+
+    - name: Determine checkout ref
+      uses: haya14busa/action-cond@v1
+      id: fetch_ref
+      with:
+        cond: ${{ github.event_name == 'pull_request_target' }}
+        if_true: "${{ github.event.pull_request.merge_commit_sha }}"
+        if_false: ""
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: "${{ steps.fetch_ref.outputs.value }}"
+        fetch-depth: 0
+        submodules: true
+
+    - name: Build documentation
+      uses: "./.github/actions/build"
+      with:
+        target: doxygen
+
+    - name: Upload documentation artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: build/doc/html/
+
+    - name: Setup Pages
+      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      uses: actions/configure-pages@v4
+      with:
+        enablement: true
+
+    - name: Upload documentation to Github Pages
+      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: build/doc/html/
+
+    - name: Deploy to GitHub Pages
+      if: contains(github.ref, 'develop') && (github.event_name != 'pull_request_target')
+      uses: actions/deploy-pages@v4
+
+    - name: Documentation coverage
+      if: github.event_name == 'pull_request_target'
+      uses: "./.github/actions/build"
+      with:
+        target: coverxygen_summary
+
+    - name: Documentation coverage report generation
+      if: github.event_name == 'pull_request_target'
+      run: |
+        EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "report<<$EOF" >> "$GITHUB_ENV"
+        cat build/doc/doc-coverage.markdown-summary.info >> "$GITHUB_ENV"
+        echo "$EOF" >> "$GITHUB_ENV"
+
+    - name: Documentation coverage report
+      if: github.event_name == 'pull_request_target'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        message: |
+          Documentation coverage report
+          ${{ env.report }}
