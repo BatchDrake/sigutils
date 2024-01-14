@@ -1,6 +1,6 @@
 # The sigutils library - Getting started
 
-[![CI](https://github.com/BatchDrake/sigutils/actions/workflows/cmake.yml/badge.svg)](https://github.com/BatchDrake/sigutils/actions/workflows/cmake.yml)
+[![Build](https://github.com/BatchDrake/sigutils/actions/workflows/build.yml/badge.svg)](https://github.com/BatchDrake/sigutils/actions/workflows/build.yml)
 
 The sigutils library is a digital signal processing library written in C, designed for blind signal analysis and automatic demodulation.
 
