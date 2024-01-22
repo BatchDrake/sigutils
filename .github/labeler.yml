@@ -7,24 +7,23 @@ build_system:
 - all:
   - changed-files:
     - any-glob-to-any-file:
-      - 'CMake*'
-      - '**/CMakeLists.txt'
-      - '**/*.cmake'
+      - meson_options.txt
+      - '**/meson.build'
 
 sigutils:
 - all:
   - changed-files:
     - any-glob-to-any-file: 'src/**'
-    - all-globs-to-all-files: '!src/CMakeLists.txt'
+    - all-globs-to-all-files: '!**/meson.build'
 
 documentation:
 - all:
   - changed-files:
     - any-glob-to-any-file: 'doc/**'
-    - all-globs-to-all-files: '!doc/CMakeLists.txt'
+    - all-globs-to-all-files: '!**/meson.build'
 
 tests:
 - all:
   - changed-files:
     - any-glob-to-any-file: 'tests/**'
-    - all-globs-to-all-files: '!tests/CMakeLists.txt'
+    - all-globs-to-all-files: '!**/meson.build'
