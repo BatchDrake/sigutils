@@ -796,38 +796,49 @@ __su_specttuner_feed_channel(
         self->fft + window_size - (channel->halfw - len),
         (channel->halfw - len) * sizeof(SUCOMPLEX));
 
+  if (channel->params.domain == SU_SPECTTUNER_CHANNEL_TIME_DOMAIN) {
     /*********************** Apply filter and scaling ************************/
 #ifdef SU_SPECTTUNER_SQUARE_FILTER
-  for (i = 0; i < channel->halfw; ++i)
-    channel->fft[i] *= channel->k;
+    for (i = 0; i < channel->halfw; ++i)
+      channel->fft[i] *= channel->k;
 
-  for (i = channel->size - channel->halfw; i < channel->size; ++i)
-    channel->fft[i] *= channel->k;
+    for (i = channel->size - channel->halfw; i < channel->size; ++i)
+      channel->fft[i] *= channel->k;
 #else
-  for (i = 0; i < channel->halfsz; ++i) {
-    channel->fft[i] *= channel->k * channel->h[i];
-    channel->fft[channel->size - i - 1] *=
-        channel->k * channel->h[window_size - i - 1];
-  }
+    for (i = 0; i < channel->halfsz; ++i) {
+      channel->fft[i] *= channel->k * channel->h[i];
+      channel->fft[channel->size - i - 1] *=
+          channel->k * channel->h[window_size - i - 1];
+    }
 #endif
-  /************************* Back to time domain******************************/
-  if (channel->params.domain == SU_SPECTTUNER_CHANNEL_FREQUENCY_DOMAIN) {
+  } else {
     /* Channel is defined in the frequency domain. This means that we
        do not need to perform get back to the time domain (hence we can
        go ahead and skip one IFFT completely) */
     
     if (self->state == SU_SPECTTUNER_STATE_EVEN) {
+      memcpy(
+        channel->fft + channel->halfw,
+        channel->fft + channel->size - channel->halfw,
+        channel->halfw * sizeof(SUCOMPLEX));
+      
+      for (i = 0; i < channel->width; ++i)
+        channel->fft[i] *= channel->k;
+      
       curr = channel->fft;
+
+      printf("Done, delivering %d/%d\n", channel->width, channel->size);
       return (channel->params.on_data)(
         channel,
         channel->params.privdata,
         curr,
-        channel->size);
+        channel->width);
     } else {
       return SU_TRUE;
     }
   }
 
+  /************************* Back to time domain******************************/
   SU_FFTW(_execute)(channel->plan[self->state]);
 
   curr = channel->ifft[self->state];
