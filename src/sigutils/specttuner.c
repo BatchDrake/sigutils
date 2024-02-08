@@ -827,7 +827,6 @@ __su_specttuner_feed_channel(
       
       curr = channel->fft;
 
-      printf("Done, delivering %d/%d\n", channel->width, channel->size);
       return (channel->params.on_data)(
         channel,
         channel->params.privdata,
