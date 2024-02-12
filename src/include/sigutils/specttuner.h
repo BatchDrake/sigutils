@@ -266,6 +266,13 @@ SU_METHOD(su_specttuner, void, force_state, enum sigutils_specttuner_state state
   self->state = state;
 }
 
+SUINLINE
+SU_GETTER(su_specttuner, SUBOOL, uses_early_windowing)
+{
+  return self->params.early_windowing;
+}
+
+
 #ifndef __cplusplus
 
 /* Internal */
