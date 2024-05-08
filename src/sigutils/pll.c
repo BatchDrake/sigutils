@@ -33,8 +33,6 @@ SU_DESTRUCTOR(su_pll)
 
 SU_CONSTRUCTOR(su_pll, SUFLOAT fhint, SUFLOAT fc)
 {
-  SUFLOAT dinv;
-
   memset(self, 0, sizeof(su_pll_t));
 
   su_pll_set_cutoff(self, fc);

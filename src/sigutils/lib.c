@@ -87,6 +87,8 @@ su_lib_set_wisdom_enabled(SUBOOL enabled)
   }
 
   g_su_measure_ffts = enabled;
+
+  return SU_TRUE;
 }
 
 SUBOOL
@@ -193,8 +195,6 @@ done:
 SUBOOL
 su_lib_init_ex(const struct sigutils_log_config *logconfig)
 {
-  unsigned int i = 0;
-
   if (logconfig != NULL)
     su_log_init(logconfig);
 

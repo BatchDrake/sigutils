@@ -67,7 +67,6 @@ fail:
 SUPRIVATE
 SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 {
-  unsigned int i;
   SUFLOAT wsizeinv = 1. / (self->params.fft_size * self->nominal_rate);
 
   /* Execute FFT */
@@ -81,6 +80,8 @@ SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
   volk_32fc_deinterleave_real_32f(self->realfft, self->fft, self->params.fft_size);
   volk_32f_s32f_multiply_32f(self->realfft, self->realfft, wsizeinv, self->params.fft_size);
 #else
+    unsigned int i;
+
   for (i = 0; i < self->params.fft_size; ++i)
     self->realfft[i] =
         wsizeinv * SU_C_REAL(self->fft[i] * SU_C_CONJ(self->fft[i]));
@@ -98,7 +99,6 @@ SU_METHOD(su_smoothpsd, SUBOOL, exec_fft)
 SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
 {
   unsigned int chunk;
-  unsigned int i;
   SUBOOL mutex_acquired = SU_FALSE;
   SUBOOL ok = SU_FALSE;
 
@@ -135,6 +135,7 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
           volk_32fc_x2_multiply_32fc(self->fft, self->fft, self->window_func,
                   self->params.fft_size);
 #else
+          unsigned int i;
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
 #endif

@@ -25,9 +25,6 @@
 #include <sigutils/block.h>
 #include <sigutils/log.h>
 
-static unsigned int class_storage;
-static unsigned int class_count;
-
 /****************************** su_stream API ********************************/
 SU_CONSTRUCTOR(su_stream, SUSCOUNT size)
 {

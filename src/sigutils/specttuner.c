@@ -173,7 +173,6 @@ SU_METHOD_CONST(
   unsigned int window_size = self->params.window_size;
   SUFLOAT rbw = 2 * PI / window_size;
   SUFLOAT off = 0, ef;
-  const su_ncqo_t *old = NULL, *new = NULL;
 
   ef = su_specttuner_channel_get_effective_freq(channel);
   channel->center = 2 * SU_FLOOR(.5 * (ef + 1 * rbw) / (2 * PI) * window_size);
@@ -191,11 +190,6 @@ SU_METHOD_CONST(
   }
 
   if (channel->params.on_freq_changed != NULL) {
-    if (channel->params.precise) {
-      old = &channel->old_lo;
-      new = &channel->lo;
-    }
-
     channel->params.on_freq_changed(
       channel,
       channel->params.privdata,
@@ -630,8 +624,6 @@ fail:
 
 SU_METHOD(su_specttuner, void, run_fft, su_specttuner_plan_t *plan)
 {
-  unsigned int i;
-
   /* Early windowing, copy windowed input */
   if (self->params.early_windowing) {
     if (self->state == SU_SPECTTUNER_STATE_EVEN) {
@@ -642,6 +634,7 @@ SU_METHOD(su_specttuner, void, run_fft, su_specttuner_plan_t *plan)
         self->wfunc,
         self->params.window_size);
 #else
+      unsigned int i;
       for (i = 0; i < self->params.window_size; ++i)
         self->fft[i] = self->buffer[i] * self->wfunc[i];
 #endif /* SU_USE_VOLK */
@@ -653,6 +646,7 @@ SU_METHOD(su_specttuner, void, run_fft, su_specttuner_plan_t *plan)
         self->wfunc,
         self->params.window_size);
 #else
+      unsigned int i;
       for (i = 0; i < self->params.window_size; ++i)
         self->fft[i] = self->buffer[i + self->half_size] * self->wfunc[i];
 #endif /* SU_USE_VOLK */
@@ -670,7 +664,7 @@ __su_specttuner_feed_bulk(
     SUSCOUNT size)
 {
   SUSDIFF halfsz;
-  SUSDIFF p, i;
+  SUSDIFF p;
   
   if (size + self->p > self->params.window_size)
     size = self->params.window_size - self->p;
