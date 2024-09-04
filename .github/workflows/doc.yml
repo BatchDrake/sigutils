@@ -14,7 +14,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev doxygen python3-pip
+        sudo apt-get install meson libsndfile1-dev libvolk2-dev libfftw3-dev doxygen graphviz python3-pip
         sudo pip3 install coverxygen
 
     - name: Determine checkout ref
@@ -30,18 +30,18 @@ jobs:
       with:
         ref: "${{ steps.fetch_ref.outputs.value }}"
         fetch-depth: 0
-        submodules: true
+
+    - name: Configure
+      run: meson setup builddir
 
     - name: Build documentation
-      uses: "./.github/actions/build"
-      with:
-        target: doxygen
+      run: meson compile -C builddir docs
 
     - name: Upload documentation artifact
       uses: actions/upload-artifact@v4
       with:
         name: documentation
-        path: build/doc/html/
+        path: builddir/doc/html/
 
     - name: Setup Pages
       if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
@@ -53,7 +53,7 @@ jobs:
       if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
       uses: actions/upload-pages-artifact@v3
       with:
-        path: build/doc/html/
+        path: builddir/doc/html/
 
     - name: Deploy to GitHub Pages
       if: contains(github.ref, 'master') && (github.event_name != 'pull_request_target')
@@ -61,16 +61,14 @@ jobs:
 
     - name: Documentation coverage
       if: github.event_name == 'pull_request_target'
-      uses: "./.github/actions/build"
-      with:
-        target: coverxygen_summary
+      run: meson compile -C builddir docs_coverage
 
     - name: Documentation coverage report generation
       if: github.event_name == 'pull_request_target'
       run: |
         EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
         echo "report<<$EOF" >> "$GITHUB_ENV"
-        cat build/doc/doc-coverage.markdown-summary.info >> "$GITHUB_ENV"
+        cat builddir/doc/coverxygen.md >> "$GITHUB_ENV"
         echo "$EOF" >> "$GITHUB_ENV"
 
     - name: Documentation coverage report
