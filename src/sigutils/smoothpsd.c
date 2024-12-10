@@ -184,6 +184,7 @@ SU_METHOD(su_smoothpsd, SUBOOL, feed, const SUCOMPLEX *data, SUSCOUNT size)
           volk_32fc_x2_multiply_32fc(self->fft, self->fft, self->window_func,
                   self->params.fft_size);
 #else
+          unsigned int i;
           for (i = 0; i < self->params.fft_size; ++i)
             self->fft[i] *= self->window_func[i];
 #endif
