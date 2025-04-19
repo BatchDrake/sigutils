@@ -127,22 +127,23 @@ su_tv_processor_params_ntsc(
     struct sigutils_tv_processor_params *self,
     SUFLOAT samp_rate)
 {
-  self->enable_sync = SU_TRUE;
-  self->reverse = SU_FALSE;
-  self->interlace = SU_TRUE;
-  self->enable_agc = SU_TRUE;
-  self->x_off = 0;
-  self->dominance = SU_TRUE;
-  self->frame_lines = 525;
+  self->enable_sync   = SU_TRUE;
+  self->reverse       = SU_FALSE;
+  self->interlace     = SU_TRUE;
+  self->enable_agc    = SU_TRUE;
+  self->x_off         = 0;
+  self->dominance     = SU_TRUE;
+  self->frame_lines   = 525;
+  self->frame_spacing = 0.0;
+  
+  self->enable_comb   = SU_TRUE;
+  self->comb_reverse  = SU_FALSE;
 
-  self->enable_comb = SU_TRUE;
-  self->comb_reverse = SU_FALSE;
-
-  self->hsync_len = SU_T2N_FLOAT(samp_rate, 4.749e-6);
-  self->vsync_len = SU_T2N_FLOAT(samp_rate, 2.375e-6);
-  self->line_len = SU_T2N_FLOAT(samp_rate, 63.556e-6);
+  self->hsync_len    = SU_T2N_FLOAT(samp_rate, 4.749e-6);
+  self->vsync_len    = SU_T2N_FLOAT(samp_rate, 2.375e-6);
+  self->line_len     = SU_T2N_FLOAT(samp_rate, 63.556e-6);
   self->vsync_odd_trigger = 6; /* VSYNC counter to trigger vertical sync */
-
+  
   self->t_tol = 1e-1; /* Timing error tolerance */
   self->l_tol = 1e-1; /* Level error tolerance */
   self->g_tol = 1e-1; /* Geometry adjustment tolerance */
@@ -166,20 +167,21 @@ su_tv_processor_params_pal(
     struct sigutils_tv_processor_params *self,
     SUFLOAT samp_rate)
 {
-  self->enable_sync = SU_TRUE;
-  self->reverse = SU_FALSE;
-  self->interlace = SU_TRUE;
-  self->enable_agc = SU_TRUE;
-  self->x_off = 0;
-  self->dominance = SU_TRUE;
-  self->frame_lines = 625;
+  self->enable_sync   = SU_TRUE;
+  self->reverse       = SU_FALSE;
+  self->interlace     = SU_TRUE;
+  self->enable_agc    = SU_TRUE;
+  self->x_off         = 0;
+  self->dominance     = SU_TRUE;
+  self->frame_lines   = 625;
+  self->frame_spacing = 0.0;
 
-  self->enable_comb = SU_TRUE;
+  self->enable_comb  = SU_TRUE;
   self->comb_reverse = SU_FALSE;
 
-  self->hsync_len = SU_T2N_FLOAT(samp_rate, 4e-6);
-  self->vsync_len = SU_T2N_FLOAT(samp_rate, 2e-6);
-  self->line_len = SU_T2N_FLOAT(samp_rate, 64e-6);
+  self->hsync_len    = SU_T2N_FLOAT(samp_rate, 4e-6);
+  self->vsync_len    = SU_T2N_FLOAT(samp_rate, 2e-6);
+  self->line_len     = SU_T2N_FLOAT(samp_rate, 64e-6);
   self->vsync_odd_trigger = 5; /* VSYNC counter to trigger vertical sync */
 
   self->t_tol = 1e-1; /* Timing error tolerance */
@@ -211,7 +213,10 @@ SU_INSTANCER(
   new->width = SU_CEIL(params->line_len);
   new->height = params->frame_lines;
 
-  SU_ALLOCATE_MANY_FAIL(new->buffer, new->width *new->height, SUFLOAT);
+  /*
+   * Allocate extra line for fractional line numbers.
+   */
+  SU_ALLOCATE_MANY_FAIL(new->buffer, new->width * (new->height + 1), SUFLOAT);
 
   return new;
 
@@ -274,11 +279,22 @@ fail:
 SUINLINE
 SU_METHOD(su_tv_processor, void, swap_field)
 {
+  SUBOOL spacing = SU_TRUE;
+
   if (self->params.interlace) {
+    spacing = self->field_parity;
     self->field_parity = !self->field_parity;
     self->field_lines = self->params.frame_lines / 2 + self->field_parity;
   } else {
     self->field_lines = self->params.frame_lines;
+  }
+
+  if (spacing) {
+    self->field_line_due += self->params.frame_spacing;
+    if (self->field_line_due >= 1) {
+      self->field_line_due -= 1.;
+      ++self->field_lines;
+    }
   }
 }
 
@@ -359,6 +375,9 @@ SU_METHOD(
     self->agc_lines = 0;
   }
 
+  /* Reset line due */
+  self->field_line_due   = 0.;
+
   /* Reset pulse filter state */
   self->pulse_x = 0;
 
@@ -423,7 +442,7 @@ SU_METHOD(
   self->hsync_slow_track_alpha = SU_SPLPF_ALPHA(params->hsync_slow_track_tau);
   self->hsync_fast_track_alpha = SU_SPLPF_ALPHA(params->hsync_fast_track_tau);
   self->line_len_alpha = SU_SPLPF_ALPHA(params->line_len_tau);
-
+  
   ok = SU_TRUE;
 
 fail:

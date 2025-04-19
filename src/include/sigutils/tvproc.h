@@ -36,6 +36,7 @@ struct sigutils_tv_processor_params {
 
   /* Geometry */
   SUSCOUNT frame_lines;
+  SUFLOAT  frame_spacing;
 
   /* Filtering */
   SUBOOL enable_comb;
@@ -137,6 +138,7 @@ struct sigutils_tv_processor {
   SUFLOAT line_len_alpha;
 
   /* Frame state */
+  SUFLOAT  field_line_due;
   SUSCOUNT field_x;
   SUFLOAT field_x_dec;
   SUSCOUNT field_y;
