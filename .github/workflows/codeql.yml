@@ -28,7 +28,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: true
         fetch-depth: 0
 
     - name: Initialize CodeQL
@@ -37,8 +36,10 @@ jobs:
         languages: ${{ matrix.language }}
         
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install libsndfile1-dev libvolk2-dev libfftw3-dev
-      
+      run: |
+        sudo apt-get update
+        sudo apt-get install meson libsndfile1-dev libvolk2-dev libfftw3-dev
+
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
 
