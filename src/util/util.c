@@ -325,10 +325,10 @@ strlist_new(void)
   return new;
 }
 
-void
+int
 strlist_append_string(struct strlist *list, const char *string)
 {
-  ptr_list_append(
+  return ptr_list_append_check(
       (void ***)&list->strings_list,
       &list->strings_count,
       xstrdup(string));

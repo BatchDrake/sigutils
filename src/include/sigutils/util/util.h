@@ -190,7 +190,7 @@ void errno_save(void);
 void errno_restore(void);
 
 struct strlist *strlist_new(void);
-void strlist_append_string(struct strlist *, const char *);
+int strlist_append_string(struct strlist *, const char *);
 void strlist_walk(struct strlist *, void *, void (*)(const char *, void *));
 void strlist_destroy(struct strlist *);
 void strlist_debug(const struct strlist *);
