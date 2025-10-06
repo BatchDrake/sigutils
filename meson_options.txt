@@ -1,0 +1,1 @@
+option('double_precission', type : 'boolean', value : false)
